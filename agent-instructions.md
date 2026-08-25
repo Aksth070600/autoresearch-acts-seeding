@@ -1,7 +1,7 @@
 # ACTS Seeding Autoresearch Agent Instructions
 
 This repository is an ACTS Seeding2 autoresearch platform.
-The goal is to find faster or more efficient ACTS Seeding2 implementations while preserving physics correctness and the fixed evaluation protocol.
+The goal is to find faster or more efficient ACTS Seeding2 implementations while preserving physics correctness and the fixed validation protocol.
 
 ## Setup
 
@@ -66,17 +66,6 @@ make evolve
 It returns a candidate implementation commit selected from successful results.
 Inspect that implementation and form a new hypothesis from it, a prior result, an implementation detail, or a documented algorithm idea.
 
-Evaluation is captain-controlled and is not part of the ordinary loop.
-The captain selects a top-N set after development comparison, then runs each selected candidate with:
-
-```text
-make evaluate CANDIDATE=<candidate-name> EVALUATION=1
-make record CANDIDATE=<candidate-name> EVALUATION=1
-```
-
-The 200-event summaries are compared against each other and the baseline before a final claim.
-Do not run evaluation automatically after every kept candidate.
-
 ## Candidate objective
 
 A candidate is promising when it passes all requested stages and improves at least one of these against the selected baseline:
@@ -101,16 +90,17 @@ For each attempt:
 
 1. Inspect the current branch and commit.
 2. Confirm there are no uncommitted changes outside `records/` and `agent-learnings.md`.
-3. Run `make evolve` to get an inspiration implementation.
-4. Choose one hypothesis based on that implementation, a prior result, an implementation detail, or a documented algorithm idea.
-5. Modify only the permitted experiment files.
-6. Inspect the diff and commit the candidate before running it.
-7. Run `make evaluate CANDIDATE=<candidate-name>`.
-8. Run `make record CANDIDATE=<candidate-name>` and judge success, failure, and improvement from its output.
-9. Add a concise lesson to `agent-learnings.md` when the attempt teaches something reusable.
-10. Keep a passing improvement; otherwise restore the previous candidate with a safe, non-force operation on the campaign branch.
-11. Use the simplification skill to curate `agent-learnings.md` when it reaches 250 lines.
-12. Never allow `agent-learnings.md` to exceed 500 lines.
+3. Read `agent-learnings.md` for promising approaches and failed ideas.
+4. Run `make evolve` to get an inspiration implementation.
+5. Choose one hypothesis based on that implementation, a prior result, an implementation detail, or a documented algorithm idea.
+6. Modify only the permitted experiment files.
+7. Inspect the diff and commit the candidate before running it.
+8. Run `make evaluate CANDIDATE=<candidate-name>`.
+9. Run `make record CANDIDATE=<candidate-name>` and judge success, failure, and improvement from its output.
+10. Add a concise lesson to `agent-learnings.md` when the attempt teaches something reusable.
+11. Keep a passing improvement; otherwise restore the previous candidate with a safe, non-force operation on the campaign branch.
+12. Use the simplification skill to curate `agent-learnings.md` when it reaches 250 lines.
+13. Never allow `agent-learnings.md` to exceed 500 lines.
 
 Each candidate name must be unique.
 Do not overwrite generated results.
