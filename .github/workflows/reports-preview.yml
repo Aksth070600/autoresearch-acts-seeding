@@ -1,0 +1,30 @@
+name: Preview ACTS report
+
+on:
+  pull_request:
+    paths:
+      - 'records/**'
+      - 'orchestration-files/report.py'
+      - 'orchestration-files/visualizations/**'
+      - '.github/workflows/reports-preview.yml'
+      - 'Makefile'
+
+permissions:
+  contents: read
+
+jobs:
+  build-report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out pull request
+        uses: actions/checkout@v4
+
+      - name: Build interactive report
+        run: python3 orchestration-files/report.py --dataset all --output reports/site
+
+      - name: Upload interactive report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: acts-report-preview-${{ github.event.pull_request.number }}
+          path: reports/site
+          if-no-files-found: error
