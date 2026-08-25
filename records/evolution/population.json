@@ -25,56 +25,6 @@
         -0.973561
       ],
       "record": "Development/20260825T125540Z-baseline/summary.json"
-    },
-    {
-      "candidate": "fake-better-seeding",
-      "category": "Development",
-      "commit": "1111111111111111111111111111111111111111",
-      "metrics": {
-        "clean_ambiguity_efficiency": 0.974161,
-        "clean_ckf_efficiency": 0.974807,
-        "clean_seeding_efficiency": 0.983884,
-        "clean_seeding_time_per_event_ms": 227.7975,
-        "clean_total_time_per_event_ms": 2530.47,
-        "timed_ambiguity_efficiency": 0.973561,
-        "timed_ckf_efficiency": 0.974195,
-        "timed_seeding_efficiency": 0.983409,
-        "timed_seeding_time_per_event_ms": 226.695,
-        "timed_total_time_per_event_ms": 2509.72
-      },
-      "objectives": [
-        2509.72,
-        226.695,
-        -0.983409,
-        -0.974195,
-        -0.973561
-      ],
-      "record": "Development/20260825T140000Z-fake-better-seeding/summary.json"
-    },
-    {
-      "candidate": "fake-better-balanced",
-      "category": "Development",
-      "commit": "2222222222222222222222222222222222222222",
-      "metrics": {
-        "clean_ambiguity_efficiency": 0.9761610000000001,
-        "clean_ckf_efficiency": 0.976807,
-        "clean_seeding_efficiency": 0.985884,
-        "clean_seeding_time_per_event_ms": 273.357,
-        "clean_total_time_per_event_ms": 2437.02,
-        "timed_ambiguity_efficiency": 0.975561,
-        "timed_ckf_efficiency": 0.976195,
-        "timed_seeding_efficiency": 0.985409,
-        "timed_seeding_time_per_event_ms": 272.034,
-        "timed_total_time_per_event_ms": 2417.24
-      },
-      "objectives": [
-        2417.24,
-        272.034,
-        -0.985409,
-        -0.976195,
-        -0.975561
-      ],
-      "record": "Development/20260825T140100Z-fake-better-balanced/summary.json"
     }
   ],
   "baseline": {
@@ -97,32 +47,25 @@
   },
   "dataset": "development",
   "efficiency_kind": "particles",
-  "generated_at": "2026-08-25T16:18:27.747307+00:00",
-  "generation": 1,
+  "generated_at": "2026-08-25T17:18:48.621333+00:00",
+  "generation": 2,
   "recommendation": {
-    "candidate": "fake-better-seeding",
+    "candidate": "baseline",
     "category": "Development",
-    "commit": "1111111111111111111111111111111111111111",
+    "commit": "be0853578b3da06142cbb3ac034c90b92118a81b",
     "metrics": {
       "clean_ambiguity_efficiency": 0.974161,
       "clean_ckf_efficiency": 0.974807,
       "clean_seeding_efficiency": 0.983884,
-      "clean_seeding_time_per_event_ms": 227.7975,
-      "clean_total_time_per_event_ms": 2530.47,
+      "clean_seeding_time_per_event_ms": 303.73,
+      "clean_total_time_per_event_ms": 2654.43,
       "timed_ambiguity_efficiency": 0.973561,
       "timed_ckf_efficiency": 0.974195,
       "timed_seeding_efficiency": 0.983409,
-      "timed_seeding_time_per_event_ms": 226.695,
-      "timed_total_time_per_event_ms": 2509.72
+      "timed_seeding_time_per_event_ms": 302.26,
+      "timed_total_time_per_event_ms": 2632.91
     },
-    "objectives": [
-      2509.72,
-      226.695,
-      -0.983409,
-      -0.974195,
-      -0.973561
-    ],
-    "record": "Development/20260825T140000Z-fake-better-seeding/summary.json"
+    "record": "Development/20260825T125540Z-baseline/summary.json"
   },
   "stage": "timed"
 }
