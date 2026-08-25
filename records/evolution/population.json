@@ -1,71 +1,71 @@
 {
   "active_population": [
     {
-      "candidate": "baseline",
+      "candidate": "Genesis",
       "category": "Development",
-      "commit": "be0853578b3da06142cbb3ac034c90b92118a81b",
+      "commit": "05f255ae8dfa61cdc6b4e8acdf7feef274719c53",
       "is_baseline": true,
       "metrics": {
-        "clean_ambiguity_efficiency": 0.974161,
-        "clean_ckf_efficiency": 0.974807,
-        "clean_seeding_efficiency": 0.983884,
-        "clean_seeding_time_per_event_ms": 303.73,
-        "clean_total_time_per_event_ms": 2654.43,
-        "timed_ambiguity_efficiency": 0.973561,
-        "timed_ckf_efficiency": 0.974195,
-        "timed_seeding_efficiency": 0.983409,
-        "timed_seeding_time_per_event_ms": 302.26,
-        "timed_total_time_per_event_ms": 2632.91
+        "clean_ambiguity_efficiency": 0.97367,
+        "clean_ckf_efficiency": 0.974283,
+        "clean_seeding_efficiency": 0.98349,
+        "clean_seeding_time_per_event_ms": 303.93,
+        "clean_total_time_per_event_ms": 2692.15,
+        "timed_ambiguity_efficiency": 0.973666,
+        "timed_ckf_efficiency": 0.974282,
+        "timed_seeding_efficiency": 0.983351,
+        "timed_seeding_time_per_event_ms": 305.5,
+        "timed_total_time_per_event_ms": 2656.82
       },
       "objectives": [
-        2632.91,
-        302.26,
-        -0.983409,
-        -0.974195,
-        -0.973561
+        2656.82,
+        305.5,
+        -0.983351,
+        -0.974282,
+        -0.973666
       ],
-      "record": "Development/20260825T125540Z-baseline/summary.json"
+      "record": "Development/20260825T182639Z-Genesis/summary.json"
     }
   ],
   "baseline": {
-    "candidate": "baseline",
+    "candidate": "Genesis",
     "category": "Development",
-    "commit": "be0853578b3da06142cbb3ac034c90b92118a81b",
+    "commit": "05f255ae8dfa61cdc6b4e8acdf7feef274719c53",
     "metrics": {
-      "clean_ambiguity_efficiency": 0.974161,
-      "clean_ckf_efficiency": 0.974807,
-      "clean_seeding_efficiency": 0.983884,
-      "clean_seeding_time_per_event_ms": 303.73,
-      "clean_total_time_per_event_ms": 2654.43,
-      "timed_ambiguity_efficiency": 0.973561,
-      "timed_ckf_efficiency": 0.974195,
-      "timed_seeding_efficiency": 0.983409,
-      "timed_seeding_time_per_event_ms": 302.26,
-      "timed_total_time_per_event_ms": 2632.91
+      "clean_ambiguity_efficiency": 0.97367,
+      "clean_ckf_efficiency": 0.974283,
+      "clean_seeding_efficiency": 0.98349,
+      "clean_seeding_time_per_event_ms": 303.93,
+      "clean_total_time_per_event_ms": 2692.15,
+      "timed_ambiguity_efficiency": 0.973666,
+      "timed_ckf_efficiency": 0.974282,
+      "timed_seeding_efficiency": 0.983351,
+      "timed_seeding_time_per_event_ms": 305.5,
+      "timed_total_time_per_event_ms": 2656.82
     },
-    "record": "Development/20260825T125540Z-baseline/summary.json"
+    "record": "Development/20260825T182639Z-Genesis/summary.json"
   },
   "dataset": "development",
   "efficiency_kind": "particles",
-  "generated_at": "2026-08-25T17:18:48.621333+00:00",
-  "generation": 2,
+  "generated_at": "2026-08-25T18:46:45.924138+00:00",
+  "generation": 4,
   "recommendation": {
-    "candidate": "baseline",
+    "candidate": "Genesis",
     "category": "Development",
-    "commit": "be0853578b3da06142cbb3ac034c90b92118a81b",
+    "commit": "05f255ae8dfa61cdc6b4e8acdf7feef274719c53",
     "metrics": {
-      "clean_ambiguity_efficiency": 0.974161,
-      "clean_ckf_efficiency": 0.974807,
-      "clean_seeding_efficiency": 0.983884,
-      "clean_seeding_time_per_event_ms": 303.73,
-      "clean_total_time_per_event_ms": 2654.43,
-      "timed_ambiguity_efficiency": 0.973561,
-      "timed_ckf_efficiency": 0.974195,
-      "timed_seeding_efficiency": 0.983409,
-      "timed_seeding_time_per_event_ms": 302.26,
-      "timed_total_time_per_event_ms": 2632.91
+      "clean_ambiguity_efficiency": 0.97367,
+      "clean_ckf_efficiency": 0.974283,
+      "clean_seeding_efficiency": 0.98349,
+      "clean_seeding_time_per_event_ms": 303.93,
+      "clean_total_time_per_event_ms": 2692.15,
+      "timed_ambiguity_efficiency": 0.973666,
+      "timed_ckf_efficiency": 0.974282,
+      "timed_seeding_efficiency": 0.983351,
+      "timed_seeding_time_per_event_ms": 305.5,
+      "timed_total_time_per_event_ms": 2656.82
     },
-    "record": "Development/20260825T125540Z-baseline/summary.json"
+    "record": "Development/20260825T182639Z-Genesis/summary.json"
   },
   "stage": "timed"
 }
