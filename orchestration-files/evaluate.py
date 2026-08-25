@@ -8,6 +8,7 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -373,6 +374,16 @@ def write_failure_logs(folder: Path, outputs: dict[str, str]) -> None:
         (logs / f"{name}.log").write_text(output, encoding="utf-8")
 
 
+def prune_previous_genesis_records(category: str, current_folder: Path) -> None:
+    category_root = RECORDS_ROOT / category
+    if not category_root.is_dir():
+        return
+    for path in category_root.glob("*-Genesis"):
+        if path.resolve() == current_folder.resolve() or path.is_symlink():
+            continue
+        shutil.rmtree(path)
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("candidate_name")
@@ -548,10 +559,23 @@ def main() -> int:
     if error:
         summary["error"] = error
 
-    folder = RECORDS_ROOT / category / run_id
+    record_name = (
+        "Genesis"
+        if args.candidate_name == "Genesis" and category in {"Development", "Evaluation"}
+        else run_id
+    )
+    folder = RECORDS_ROOT / category / record_name
     write_summary(folder, summary)
     if category in {"Failed", "Errors"}:
         write_failure_logs(folder, outputs)
+    if args.candidate_name == "Genesis" and category in {"Development", "Evaluation"}:
+        try:
+            prune_previous_genesis_records(category, folder)
+        except OSError as exc:
+            print(
+                f"warning: could not prune previous {category} Genesis records: {exc}",
+                file=sys.stderr,
+            )
 
     print(json.dumps(summary, indent=2, sort_keys=True))
     return 0 if category in {"Development", "Evaluation"} else 1
