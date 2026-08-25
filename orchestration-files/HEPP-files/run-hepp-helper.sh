@@ -23,11 +23,12 @@ fi
 
 start_marker="ACTS_HELPER_START[$RUN_ID]"
 end_marker="ACTS_HELPER_DONE[$RUN_ID]"
-remote_command="printf '%s\\n' '$start_marker'; cd $(printf '%q' "$HEPP_STORAGE") && ACTS_SOURCE=$(printf '%q' "$ACTS_SOURCE") ACTS_BUILD_DIR=$(printf '%q' "$ACTS_BUILD_DIR") bash $(printf '%q' "HEPP-files/$HELPER")"
+remote_log="/tmp/acts-helper-$RUN_ID.log"
+remote_command="printf '%s\\n' '$start_marker'; (cd $(printf '%q' "$HEPP_STORAGE") && ACTS_SOURCE=$(printf '%q' "$ACTS_SOURCE") ACTS_BUILD_DIR=$(printf '%q' "$ACTS_BUILD_DIR") bash $(printf '%q' "HEPP-files/$HELPER")"
 for argument in "$@"; do
   remote_command+=" $(printf '%q' "$argument")"
 done
-remote_command+="; rc=\$?; printf '%s%s%s rc=%s\\n' 'ACTS_HELPER_DONE[' '$RUN_ID' ']' \"\$rc\""
+remote_command+=") > $(printf '%q' "$remote_log") 2>&1; rc=\$?; printf '%s%s%s rc=%s\\n' 'ACTS_HELPER_DONE[' '$RUN_ID' ']' \"\$rc\""
 
 ssh "$HEPP_HOST" "tmux has-session -t '$HEPP_TMUX_TARGET' && tmux send-keys -t '$HEPP_TMUX_TARGET' $(printf '%q' "$remote_command") C-m"
 
@@ -48,15 +49,15 @@ if (( done != 1 )); then
   exit 1
 fi
 
-printf '%s\n' "$captured" | awk -v start="$start_marker" -v end="$end_marker" '
-  index($0, start) == 1 { inside=1; next }
-  index($0, end) == 1 { exit }
-  inside { print }
-'
 remote_rc="$(printf '%s\n' "$captured" | awk -v marker="$end_marker" 'index($0, marker) == 1 { sub(/^.* rc=/, ""); print; exit }')"
 if [[ -z "$remote_rc" ]]; then
   echo "error: helper completion status was missing: $HELPER" >&2
   exit 1
 fi
+helper_output="$(ssh "$HEPP_HOST" "cat '$remote_log'; rm -f -- '$remote_log'")" || {
+  echo "error: could not retrieve helper output: $HELPER" >&2
+  exit 1
+}
+printf '%s\n' "$helper_output"
 printf 'ACTS_HELPER_RESULT[%s] rc=%s\n' "$RUN_ID" "$remote_rc"
 exit "$remote_rc"
