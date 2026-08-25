@@ -6,6 +6,10 @@ on:
       - 'records/**'
       - 'orchestration-files/report.py'
       - 'orchestration-files/visualizations/**'
+      - 'optimization-files/**'
+      - 'agent-instructions.md'
+      - 'agent-learnings.md'
+      - 'reports/campaigns/**'
       - '.github/workflows/reports-preview.yml'
       - 'Makefile'
 
