@@ -35,6 +35,7 @@ HTML_TEMPLATE = r"""<!doctype html>
   <h1>ACTS Seeding Pareto comparison</h1>
   <p class="lede">Lower X is better. Higher Y is better. The reference lines show the selected baseline.</p>
   <section class="controls" aria-label="Chart controls">
+    <label>Dataset<select id="dataset"></select></label>
     <label>X metric<select id="x-metric"></select></label>
     <label>Y metric<select id="y-metric"></select></label>
     <label>Baseline<select id="baseline"></select></label>
@@ -51,6 +52,7 @@ const metricLabels = REPORT.metric_labels || {};
 const metricKeys = REPORT.metric_keys || [];
 const xSelect = document.getElementById('x-metric');
 const ySelect = document.getElementById('y-metric');
+const datasetSelect = document.getElementById('dataset');
 const baselineSelect = document.getElementById('baseline');
 const summary = document.getElementById('summary');
 
@@ -64,15 +66,28 @@ metricKeys.forEach((key) => {
   option(xSelect, key, metricLabels[key] || key);
   option(ySelect, key, metricLabels[key] || key);
 });
-const baselineNames = [...new Set(rows.map((row) => row.candidate))].sort();
-baselineNames.forEach((name) => option(baselineSelect, name, name));
+option(datasetSelect, 'all', 'All datasets');
+[...new Set(rows.map((row) => row.category))].sort().forEach((category) => {
+  option(datasetSelect, category, category);
+});
 xSelect.value = DEFAULTS.x_metric;
 ySelect.value = DEFAULTS.y_metric;
-baselineSelect.value = baselineNames.includes(DEFAULTS.baseline) ? DEFAULTS.baseline : (baselineNames[0] || '');
 
-function validRows(xKey, yKey) {
-  return rows.filter((row) => Number.isFinite(row.metrics[xKey]) && Number.isFinite(row.metrics[yKey]));
+function scopedRows() {
+  return datasetSelect.value === 'all'
+    ? rows
+    : rows.filter((row) => row.category === datasetSelect.value);
 }
+function updateBaselineOptions() {
+  const baselineNames = [...new Set(scopedRows().map((row) => row.candidate))].sort();
+  baselineSelect.replaceChildren();
+  baselineNames.forEach((name) => option(baselineSelect, name, name));
+  baselineSelect.value = baselineNames.includes(DEFAULTS.baseline) ? DEFAULTS.baseline : (baselineNames[0] || '');
+}
+function validRows(xKey, yKey) {
+  return scopedRows().filter((row) => Number.isFinite(row.metrics[xKey]) && Number.isFinite(row.metrics[yKey]));
+}
+updateBaselineOptions();
 function frontier(points) {
   const sorted = [...points].sort((a, b) => a.metrics[xSelect.value] - b.metrics[xSelect.value]);
   const result = [];
@@ -102,12 +117,12 @@ function render() {
   if (!baseline) {
     summary.textContent = `No baseline record contains both ${xLabel} and ${yLabel}.`;
   } else {
-    summary.textContent = `${points.length} records. Baseline: ${baselineName} (${xLabel} = ${baseline.metrics[xKey].toFixed(2)}, ${yLabel} = ${baseline.metrics[yKey].toFixed(6)}).`;
+    summary.textContent = `${points.length} records in ${datasetSelect.value}. Baseline: ${baselineName} (${xLabel} = ${baseline.metrics[xKey].toFixed(2)}, ${yLabel} = ${baseline.metrics[yKey].toFixed(6)}).`;
   }
   const traces = [{
     x: points.map((row) => row.metrics[xKey]),
     y: points.map((row) => row.metrics[yKey]),
-    text: points.map((row) => row.candidate),
+    text: points.map((row) => `${row.candidate} (${row.category})`),
     customdata: points.map((row) => [row.category, row.record, row.commit]),
     mode: 'markers',
     type: 'scatter',
@@ -153,6 +168,10 @@ function render() {
   }, { responsive: true, displaylogo: false });
 }
 [xSelect, ySelect, baselineSelect].forEach((select) => select.addEventListener('change', render));
+datasetSelect.addEventListener('change', () => {
+  updateBaselineOptions();
+  render();
+});
 render();
 </script>
 </body>

@@ -27,7 +27,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--dataset",
         choices=("development", "evaluation", "all"),
-        default="development",
+        default="all",
         help="record category to include",
     )
     parser.add_argument("--baseline", default="Genesis")

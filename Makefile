@@ -12,6 +12,7 @@ ITK_PILEUP ?= 200
 ITK_STAGE ?= full
 ITK_METRICS ?= none
 EVOLUTION_PYTHON ?= /usr/bin/python3
+REPORT_DATASET ?= all
 HEPP_RUN_TIMEOUT ?= 1800
 HEPP_HOST ?= thomaaks@hepp02.hpc.uio.no
 HEPP_STORAGE ?= /storage/thomaaks
@@ -22,7 +23,7 @@ HEPP_APPTAINER ?= /cvmfs/atlas.cern.ch/repo/containers/sw/apptainer/x86_64-el9/c
 HEPP_CONTAINER_IMAGE ?= /cvmfs/atlas.cern.ch/repo/containers/images/singularity/x86_64-almalinux9.img
 HEPP_CONTAINER_BINDS ?= -B /cvmfs -B /storage -B /home/aksth
 
-.PHONY: help setupActs setup build export-hepp-files hepp02-tmux-create hepp02-tmux-attach hepp02-tmux hepp02-tmux-status hepp02-setupActs hepp02-build hepp02-setup hepp02-setup-and-build hepp02-full-chain-itk evaluate report evolve record
+.PHONY: help setupActs setup build export-hepp-files hepp02-tmux-create hepp02-tmux-attach hepp02-tmux hepp02-tmux-status hepp02-setupActs hepp02-build hepp02-setup hepp02-setup-and-build hepp02-full-chain-itk evaluate report evolve record select-evaluation evaluate-selected
 
 help:
 	@printf '%s\n' \
@@ -45,6 +46,8 @@ help:
 	  'make report                 Build the interactive local comparison report.' \
 	  'make evolve                 Select a candidate with historical NSGA-II.' \
 	  'make record CANDIDATE=name  Print the latest candidate result and failure logs.' \
+	  'make select-evaluation      Show Genesis plus four unique evaluation candidates.' \
+	  'make evaluate-selected      Evaluate the selected candidates and rebuild the report.' \
 	  '' \
 	  'After local setup, use: source orchestration-files/HEPP-files/setup.sh' \
 	  'Override HEPP_HOST, HEPP_STORAGE, or HEPP_TMUX_TARGET for another remote.'
@@ -95,7 +98,7 @@ evaluate:
 	python3 orchestration-files/evaluate.py "$(CANDIDATE)" $(if $(filter 1 true yes,$(EVALUATION)),--evaluation,)
 
 report:
-	python3 orchestration-files/report.py --dataset development --output reports/site
+	python3 orchestration-files/report.py --dataset '$(REPORT_DATASET)' --output reports/site
 
 evolve:
 	$(EVOLUTION_PYTHON) orchestration-files/evolution.py --dataset development
@@ -103,6 +106,13 @@ evolve:
 record:
 	@if [ -z "$(CANDIDATE)" ]; then echo 'usage: make record CANDIDATE=name [EVALUATION=1]' >&2; exit 2; fi
 	$(EVOLUTION_PYTHON) orchestration-files/record.py "$(CANDIDATE)" $(if $(filter 1 true yes,$(EVALUATION)),--evaluation,)
+
+select-evaluation:
+	$(EVOLUTION_PYTHON) orchestration-files/select-evaluation.py --json
+
+evaluate-selected:
+	$(EVOLUTION_PYTHON) orchestration-files/evaluate-selected.py
+	$(MAKE) report
 
 hepp02-full-chain-itk: export-hepp-files hepp02-tmux-create
 	@run_id=$$(date +%s); \
