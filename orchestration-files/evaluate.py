@@ -178,6 +178,11 @@ def stage_completion_code(output: str) -> int | None:
     return int(matches[-1]) if matches else None
 
 
+def helper_completion_code(output: str) -> int | None:
+    matches = re.findall(r"ACTS_HELPER_RESULT\[[^]]+\] rc=(\d+)", output)
+    return int(matches[-1]) if matches else None
+
+
 def run_hepp_helper(helper: str, run_id: str, *arguments: str) -> CommandResult:
     return run_command([str(HEPP_HELPER), helper, run_id, *arguments])
 
@@ -224,7 +229,8 @@ def run_stage(
     stage_results.append(stage_result)
 
     if result.returncode != 0:
-        if completion_code is None:
+        helper_code = helper_completion_code(result.output)
+        if "helper timed out" in result.output or helper_code is None:
             raise EvaluationError(f"stage did not complete cleanly: {name}")
         raise CandidateFailure(f"candidate failed stage: {name}")
 

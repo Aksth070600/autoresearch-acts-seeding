@@ -58,4 +58,5 @@ if [[ -z "$remote_rc" ]]; then
   echo "error: helper completion status was missing: $HELPER" >&2
   exit 1
 fi
+printf 'ACTS_HELPER_RESULT[%s] rc=%s\n' "$RUN_ID" "$remote_rc"
 exit "$remote_rc"
