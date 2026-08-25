@@ -148,7 +148,7 @@ def choose_baseline(rows: list[dict[str, Any]], candidate_name: str) -> dict[str
     if not matches:
         raise EvolutionError(f"baseline candidate not found: {candidate_name}")
     development = [row for row in matches if row["category"].lower() == "development"]
-    return (development or matches)[0]
+    return max(development or matches, key=lambda row: row["record"])
 
 
 def required_metrics(stage: str) -> tuple[str, ...]:
@@ -162,15 +162,15 @@ def improved_over_baseline(row: dict[str, Any], baseline: dict[str, Any], stage:
     base = baseline["metrics"]
     if any(name not in metrics or name not in base for name in required_metrics(stage)):
         return False
-    lower_time_gain = any(
-        metrics[f"{stage}_{name}"] < base[f"{stage}_{name}"]
-        for name in TIME_METRICS
+    total_time_gain = (
+        metrics[f"{stage}_total_time_per_event_ms"]
+        < base[f"{stage}_total_time_per_event_ms"]
     )
-    higher_efficiency_gain = any(
-        metrics[f"{stage}_{algorithm}_efficiency"] > base[f"{stage}_{algorithm}_efficiency"]
-        for algorithm in ALGORITHMS
+    ambiguity_gain = (
+        metrics[f"{stage}_ambiguity_efficiency"]
+        > base[f"{stage}_ambiguity_efficiency"]
     )
-    return lower_time_gain or higher_efficiency_gain
+    return total_time_gain or ambiguity_gain
 
 
 def objective_vector(row: dict[str, Any], stage: str) -> list[float]:

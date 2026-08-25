@@ -5,8 +5,8 @@ The goal is to find faster or more efficient ACTS Seeding2 implementations while
 
 ## Setup
 
-1. Agree on a run tag based on the current date, such as `aug25`.
-2. Confirm that `autoresearch-acts-seeding/<tag>` does not already exist.
+1. Agree on a run tag based on the current UTC date, such as `aug25`.
+2. If `autoresearch-acts-seeding/<tag>` already exists, append the next numeric suffix, such as `aug25-2` or `aug25-3`, and confirm that the resulting branch does not exist.
 3. Create the campaign branch from current `main`:
 
    ```text
@@ -23,6 +23,7 @@ The goal is to find faster or more efficient ACTS Seeding2 implementations while
 
 The Genesis run is required even when an older Genesis record exists.
 It anchors the campaign against current infrastructure drift.
+The fresh Genesis record is the campaign baseline; use its record path when judging candidates, not an older Genesis result selected by `make evolve`.
 Do not start mutation experiments until the baseline completes or its failure is understood.
 
 ## Experiment surface
@@ -64,20 +65,17 @@ make evolve
 ```
 
 It returns a candidate implementation commit selected from successful results.
-Inspect that implementation and form a new hypothesis from it, a prior result, an implementation detail, or a documented algorithm idea.
+If it returns Genesis because no distinct candidate is eligible, inspect the current Genesis implementation and form one focused hypothesis from it, a prior result, an implementation detail, or a documented algorithm idea.
 
 ## Candidate objective
 
-A candidate is promising when it passes all requested stages and improves at least one of these against the selected Genesis baseline:
+A candidate is eligible to remain the active experiment base when it passes all requested stages and improves at least one of these against the selected Genesis baseline:
 
 - Lower total full-chain time per event.
-- Lower seeding time per event.
-- Higher seeding efficiency.
-- Higher CKF efficiency.
 - Higher ambiguity-resolution efficiency.
 
-Lower CKF or ambiguity time alone is not an eligibility criterion.
-CKF and ambiguity improvements count through their efficiencies.
+A candidate that improves ambiguity efficiency while worsening total time may remain active for a follow-up recovery experiment, but report it as a mixed result and do not call it an overall improvement.
+Seeding time, seeding efficiency, and CKF efficiency remain useful diagnostics and historical inspiration, but do not by themselves keep a candidate as the active base.
 Prefer a meaningful improvement without unnecessary complexity.
 If performance is equal, prefer the simpler implementation.
 
@@ -98,7 +96,8 @@ For each attempt:
 8. Run `make evaluate CANDIDATE=<candidate-name>`.
 9. Run `make record CANDIDATE=<candidate-name>` and judge success, failure, and improvement from its output.
 10. Add a concise lesson to `agent-learnings.md` when the attempt teaches something reusable.
-11. Keep a passing improvement; otherwise restore the previous candidate with a safe, non-force operation on the campaign branch.
+11. Keep a candidate that meets the active-base criteria. Otherwise restore the previous candidate with a safe, non-force operation on the campaign branch.
+    Keep a mixed ambiguity-improvement candidate when a follow-up experiment is explicitly targeting recovery of its total time, but do not present it as an overall improvement.
 12. Use the simplification skill to curate `agent-learnings.md` when it reaches 250 lines.
 13. Never allow `agent-learnings.md` to exceed 500 lines.
 
@@ -122,7 +121,10 @@ Do not inspect or edit generated summaries and logs directly during the ordinary
 Use `make record` for run output and `make evolve` for historical selection.
 Use `make report` for interactive comparison when the captain requests a broader visual review.
 
-Successful candidates are retained by the evaluator.
+The current successful Genesis summaries live at `records/Development/Genesis/summary.json` and `records/Evaluation/Genesis/summary.json`.
+Each successful Genesis run overwrites only its same-category summary and removes older timestamped Genesis directories after the new summary is valid.
+A failed Genesis run leaves the previous successful summary intact.
+Successful non-Genesis candidates are retained by the evaluator.
 Do not commit failure logs, temporary output, or runtime state.
 
 ## Agent learnings

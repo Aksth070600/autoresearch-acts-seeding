@@ -34,6 +34,9 @@ def candidate_directories(candidate: str, evaluation: bool) -> list[Path]:
         category_root = RECORDS_ROOT / category
         if not category_root.is_dir():
             continue
+        canonical = category_root / candidate
+        if (canonical / "summary.json").is_file():
+            return [canonical]
         directories = [
             path for path in category_root.glob(f"*-{candidate}") if (path / "summary.json").is_file()
         ]
