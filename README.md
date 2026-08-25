@@ -7,6 +7,14 @@ Each change must preserve reconstruction correctness, physics validity, and clea
 
 The initial focus is ITk seeding with ACTS on HEPP02.
 
+## Interactive reports
+
+Open the latest interactive comparison report on [GitHub Pages](https://aksth070600.github.io/autoresearch-acts-seeding/).
+
+To regenerate it, open the repository's **Actions** tab, select **Publish ACTS reports**, and choose **Run workflow**.
+The workflow supports development, evaluation, or all records, plus configurable X-axis, Y-axis, and baseline selections.
+Pushes to `main` also publish the report automatically.
+
 ## Principles
 
 - Measure performance with reproducible workloads.
