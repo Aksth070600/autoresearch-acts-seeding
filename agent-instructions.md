@@ -15,13 +15,13 @@ The goal is to find faster or more efficient ACTS Seeding2 implementations while
    git switch -c autoresearch-acts-seeding/<tag>
    ```
 
-4. Keep the first baseline run in every campaign:
+4. Keep the first Genesis baseline run in every campaign:
 
    ```text
-   make evaluate CANDIDATE=baseline
+   make evaluate CANDIDATE=Genesis
    ```
 
-The baseline run is required even when an older baseline record exists.
+The Genesis run is required even when an older Genesis record exists.
 It anchors the campaign against current infrastructure drift.
 Do not start mutation experiments until the baseline completes or its failure is understood.
 
@@ -68,7 +68,7 @@ Inspect that implementation and form a new hypothesis from it, a prior result, a
 
 ## Candidate objective
 
-A candidate is promising when it passes all requested stages and improves at least one of these against the selected baseline:
+A candidate is promising when it passes all requested stages and improves at least one of these against the selected Genesis baseline:
 
 - Lower total full-chain time per event.
 - Lower seeding time per event.

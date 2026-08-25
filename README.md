@@ -13,13 +13,14 @@ Open the latest interactive comparison report on [GitHub Pages](https://aksth070
 
 To regenerate it, open the repository's **Actions** tab, select **Publish ACTS reports**, and choose **Run workflow**.
 The workflow supports development, evaluation, or all records, plus configurable X-axis, Y-axis, and baseline selections.
+The default baseline candidate is `Genesis`.
 Pushes to `main` also publish the report automatically.
 
 ## Candidate evolution
 
 Run `make evolve` to maintain a historical NSGA-II population from successful records.
-The baseline is always retained.
-A non-baseline candidate enters the eligible pool when it improves total time per event, seeding time per event, or one of the selected seeding, CKF, or ambiguity efficiencies.
+The `Genesis` baseline candidate is always retained.
+A non-Genesis candidate enters the eligible pool when it improves total time per event, seeding time per event, or one of the selected seeding, CKF, or ambiguity efficiencies.
 The selected population is saved in `records/evolution/population.json`.
 The command returns a candidate implementation commit for the next optimization attempt.
 

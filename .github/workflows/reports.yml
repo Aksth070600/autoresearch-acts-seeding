@@ -38,7 +38,7 @@ on:
       baseline:
         description: Candidate name used for the reference lines
         required: true
-        default: baseline
+        default: Genesis
         type: string
 
 permissions:
@@ -54,7 +54,7 @@ env:
   DATASET: ${{ inputs.dataset || 'development' }}
   X_METRIC: ${{ inputs.x_metric || 'timed_total_time_ms' }}
   Y_METRIC: ${{ inputs.y_metric || 'timed_ambiguity_particle_efficiency' }}
-  BASELINE: ${{ inputs.baseline || 'baseline' }}
+  BASELINE: ${{ inputs.baseline || 'Genesis' }}
 
 jobs:
   build:
