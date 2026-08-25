@@ -17,7 +17,7 @@ from typing import Any
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 OPTIMIZATION_ROOT = PROJECT_ROOT / "optimization-files"
-RECORDS_ROOT = PROJECT_ROOT / "Records"
+RECORDS_ROOT = PROJECT_ROOT / "records"
 HEPP_HELPER = PROJECT_ROOT / "orchestration-files" / "HEPP-files" / "run-hepp-helper.sh"
 EXPORT_OPTIMIZATION = PROJECT_ROOT / "orchestration-files" / "HEPP-files" / "export-optimization-files.sh"
 
@@ -101,7 +101,7 @@ def require_clean_repository() -> str:
             "--untracked-files=all",
             "--",
             ".",
-            ":(exclude)Records",
+            ":(exclude)records",
         ],
         cwd=PROJECT_ROOT,
         text=True,
