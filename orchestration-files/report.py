@@ -30,7 +30,7 @@ def parse_args() -> argparse.Namespace:
         default="development",
         help="record category to include",
     )
-    parser.add_argument("--baseline", default="baseline")
+    parser.add_argument("--baseline", default="Genesis")
     parser.add_argument("--x-metric", default="timed_total_time_ms")
     parser.add_argument(
         "--y-metric",

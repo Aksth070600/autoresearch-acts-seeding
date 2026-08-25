@@ -22,7 +22,7 @@ HEPP_APPTAINER ?= /cvmfs/atlas.cern.ch/repo/containers/sw/apptainer/x86_64-el9/c
 HEPP_CONTAINER_IMAGE ?= /cvmfs/atlas.cern.ch/repo/containers/images/singularity/x86_64-almalinux9.img
 HEPP_CONTAINER_BINDS ?= -B /cvmfs -B /storage -B /home/aksth
 
-.PHONY: help setupActs setup build export-hepp-files hepp02-tmux-create hepp02-tmux-attach hepp02-tmux hepp02-tmux-status hepp02-setupActs hepp02-build hepp02-setup hepp02-setup-and-build hepp02-full-chain-itk evaluate report evolve
+.PHONY: help setupActs setup build export-hepp-files hepp02-tmux-create hepp02-tmux-attach hepp02-tmux hepp02-tmux-status hepp02-setupActs hepp02-build hepp02-setup hepp02-setup-and-build hepp02-full-chain-itk evaluate report evolve record
 
 help:
 	@printf '%s\n' \
@@ -44,6 +44,7 @@ help:
 	  'make evaluate CANDIDATE=name  Run development stages for a committed candidate.' \
 	  'make report                 Build the interactive local comparison report.' \
 	  'make evolve                 Select a candidate with historical NSGA-II.' \
+	  'make record CANDIDATE=name  Print the latest candidate result and failure logs.' \
 	  '' \
 	  'After local setup, use: source orchestration-files/HEPP-files/setup.sh' \
 	  'Override HEPP_HOST, HEPP_STORAGE, or HEPP_TMUX_TARGET for another remote.'
@@ -98,6 +99,10 @@ report:
 
 evolve:
 	$(EVOLUTION_PYTHON) orchestration-files/evolution.py --dataset development
+
+record:
+	@if [ -z "$(CANDIDATE)" ]; then echo 'usage: make record CANDIDATE=name [EVALUATION=1]' >&2; exit 2; fi
+	$(EVOLUTION_PYTHON) orchestration-files/record.py "$(CANDIDATE)" $(if $(filter 1 true yes,$(EVALUATION)),--evaluation,)
 
 hepp02-full-chain-itk: export-hepp-files hepp02-tmux-create
 	@run_id=$$(date +%s); \

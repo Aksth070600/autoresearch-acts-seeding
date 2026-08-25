@@ -61,7 +61,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--records", type=Path, default=DEFAULT_RECORDS)
     parser.add_argument("--state", type=Path, default=DEFAULT_STATE)
     parser.add_argument("--dataset", choices=("development", "evaluation", "all"), default="development")
-    parser.add_argument("--baseline", default="baseline")
+    parser.add_argument("--baseline", default="Genesis")
     parser.add_argument("--stage", choices=("clean", "timed"), default="timed")
     parser.add_argument("--efficiency-kind", choices=("particles", "tracks"), default="particles")
     parser.add_argument("--population-size", type=int, default=10)
