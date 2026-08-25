@@ -12,49 +12,116 @@ HTML_TEMPLATE = r"""<!doctype html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ACTS Seeding comparison</title>
+  <title>ACTS Seeding Autoresearch</title>
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
   <style>
-    :root { color-scheme: light; font-family: system-ui, sans-serif; }
-    body { margin: 0; background: #f5f7fb; color: #172033; }
+    :root { color-scheme: dark; font-family: system-ui, sans-serif; }
+    body { margin: 0; background: #0b1120; color: #e5e7eb; }
     main { max-width: 1280px; margin: 0 auto; padding: 24px; }
     h1 { margin: 0 0 8px; }
-    .lede { color: #536078; margin: 0 0 20px; }
-    .controls { display: flex; flex-wrap: wrap; gap: 14px; align-items: end;
-      background: white; border: 1px solid #dce2ef; border-radius: 10px; padding: 16px; }
+    .lede { color: #a5b4fc; margin: 0 0 20px; }
+    .controls { display: grid; grid-template-columns: repeat(2, minmax(230px, 1fr)); gap: 14px; align-items: end;
+      background: #111827; border: 1px solid #334155; border-radius: 10px; padding: 16px; }
     label { display: grid; gap: 5px; font-size: 0.9rem; font-weight: 650; }
-    select { min-width: 230px; padding: 7px; border: 1px solid #b8c2d6; border-radius: 6px; background: white; }
-    #summary { margin: 14px 0 0; color: #536078; min-height: 1.4em; }
-    #chart { height: 680px; margin-top: 8px; background: white; border: 1px solid #dce2ef; border-radius: 10px; }
-    .note { color: #536078; font-size: 0.88rem; }
-    code { background: #e9edf5; padding: 2px 5px; border-radius: 4px; }
+    select { min-width: 0; padding: 7px; border: 1px solid #475569; border-radius: 6px; background: #1e293b; color: #e5e7eb; }
+    .axis-picker { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(180px, 1fr)); gap: 12px; border: 1px solid #334155; border-radius: 8px; padding: 12px; margin: 0; }
+    .axis-picker legend { color: #c4b5fd; font-weight: 700; padding: 0 6px; }
+    .axis-picker label[hidden] { display: none; }
+    @media (max-width: 700px) { .controls { grid-template-columns: 1fr; } .axis-picker { grid-template-columns: 1fr; } }
+    #summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 14px 0 0; }
+    .summary-card { display: grid; gap: 4px; min-height: 62px; padding: 12px 14px; background: #111827; border: 1px solid #334155; border-radius: 12px; }
+    .summary-heading { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .summary-label { color: #94a3b8; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+    .summary-chip { padding: 3px 8px; background: #1e293b; border: 1px solid #475569; border-radius: 999px; color: #cbd5e1; font-size: 0.76rem; font-weight: 650; }
+    .summary-value { color: #f8fafc; font-size: 1.1rem; font-weight: 750; }
+    @media (max-width: 700px) { #summary { grid-template-columns: 1fr; } }
+    #chart-frame { position: relative; height: 680px; margin-top: 8px; background: #111827; border: 1px solid #334155; border-radius: 10px; overflow: hidden; }
+    #chart { height: 100%; }
+    #corner-overlays { position: absolute; inset: 28px 30px; z-index: 10; pointer-events: none; }
+    .corner-stack { position: absolute; display: grid; gap: 5px; }
+    .corner-stack.top-left { top: 18px; left: 49px; }
+    .corner-stack.top-right { top: 18px; right: 2px; justify-items: end; }
+    .corner-stack.bottom-left { bottom: 30px; left: 49px; justify-items: start; }
+    .corner-stack.bottom-right { right: 2px; bottom: 30px; justify-items: end; }
+    .corner-badge { width: max-content; padding: 4px 8px; border: 1px solid; border-radius: 999px; font-size: 0.72rem; font-weight: 750; letter-spacing: 0.03em; }
+    .corner-badge.better { background: rgba(34,197,94,0.85); border-color: #4ade80; color: #052e16; }
+    .corner-badge.worse { background: rgba(239,68,68,0.85); border-color: #f87171; color: #450a0a; }
+    @media (max-width: 700px) { #corner-overlays { inset: 16px; } .corner-badge { font-size: 0.64rem; } }
+    .note { color: #94a3b8; font-size: 0.88rem; }
+    code { background: #334155; padding: 2px 5px; border-radius: 4px; }
   </style>
 </head>
 <body>
 <main>
-  <h1>ACTS Seeding Pareto comparison</h1>
+  <h1>ACTS Seeding Autoresearch</h1>
   <p class="lede">Lower X is better. Higher Y is better. The reference lines show the selected baseline.</p>
   <section class="controls" aria-label="Chart controls">
     <label>Dataset<select id="dataset"></select></label>
-    <label>X metric<select id="x-metric"></select></label>
-    <label>Y metric<select id="y-metric"></select></label>
     <label>Baseline<select id="baseline"></select></label>
+    <fieldset class="axis-picker">
+      <legend>X axis</legend>
+      <label>Type<select id="x-kind"></select></label>
+      <label>Stage<select id="x-stage"></select></label>
+      <label id="x-metric-label">Metric<select id="x-metric"></select></label>
+    </fieldset>
+    <fieldset class="axis-picker">
+      <legend>Y axis</legend>
+      <label>Type<select id="y-kind"></select></label>
+      <label>Stage<select id="y-stage"></select></label>
+      <label id="y-metric-label">Metric<select id="y-metric"></select></label>
+    </fieldset>
   </section>
-  <p id="summary"></p>
-  <div id="chart" role="img" aria-label="Interactive Pareto comparison chart"></div>
-  <p class="note">Points above and left of the baseline are faster and more efficient. The orange line is the Pareto frontier.</p>
+  <section id="summary" aria-live="polite">
+    <div class="summary-card"><span class="summary-label">Records</span><strong id="summary-count" class="summary-value"></strong></div>
+    <div class="summary-card"><span class="summary-label">Baseline</span><strong id="summary-baseline" class="summary-value"></strong></div>
+    <div class="summary-card"><div class="summary-heading"><span class="summary-label">X axis baseline</span><span id="summary-x-label" class="summary-chip"></span></div><strong id="summary-x-value" class="summary-value"></strong></div>
+    <div class="summary-card"><div class="summary-heading"><span class="summary-label">Y axis baseline</span><span id="summary-y-label" class="summary-chip"></span></div><strong id="summary-y-value" class="summary-value"></strong></div>
+  </section>
+  <div id="chart-frame">
+    <div id="chart" role="img" aria-label="Interactive Pareto comparison chart"></div>
+    <div id="corner-overlays" aria-hidden="true">
+      <div id="corner-top-left" class="corner-stack top-left"></div>
+      <div id="corner-top-right" class="corner-stack top-right"></div>
+      <div id="corner-bottom-left" class="corner-stack bottom-left"></div>
+      <div id="corner-bottom-right" class="corner-stack bottom-right"></div>
+    </div>
+  </div>
+
 </main>
 <script>
 const REPORT = __REPORT_JSON__;
 const DEFAULTS = __DEFAULTS_JSON__;
 const rows = REPORT.rows || [];
-const metricLabels = REPORT.metric_labels || {};
-const metricKeys = REPORT.metric_keys || [];
-const xSelect = document.getElementById('x-metric');
-const ySelect = document.getElementById('y-metric');
 const datasetSelect = document.getElementById('dataset');
 const baselineSelect = document.getElementById('baseline');
-const summary = document.getElementById('summary');
+const summaryCount = document.getElementById('summary-count');
+const summaryBaseline = document.getElementById('summary-baseline');
+const summaryXValue = document.getElementById('summary-x-value');
+const summaryXLabel = document.getElementById('summary-x-label');
+const summaryYValue = document.getElementById('summary-y-value');
+const summaryYLabel = document.getElementById('summary-y-label');
+const cornerOverlays = {
+  topLeft: document.getElementById('corner-top-left'),
+  topRight: document.getElementById('corner-top-right'),
+  bottomLeft: document.getElementById('corner-bottom-left'),
+  bottomRight: document.getElementById('corner-bottom-right')
+};
+
+const STAGES = {
+  seeding: { label: 'Seeding', time: 'timed_seeding_time_per_event_ms' },
+  ckf: { label: 'CKF', time: 'timed_ckf_time_per_event_ms' },
+  ambiguity: { label: 'Ambiguity', time: 'timed_ambiguity_time_per_event_ms' },
+  full_chain: { label: 'Full chain', time: 'timed_total_time_per_event_ms' }
+};
+const QUALITY_METRICS = [
+  ['particle_efficiency', 'Particle efficiency'],
+  ['track_efficiency', 'Track efficiency'],
+  ['particle_fake_ratio', 'Particle fake ratio'],
+  ['track_fake_ratio', 'Track fake ratio'],
+  ['particle_duplicate_ratio', 'Particle duplicate ratio'],
+  ['track_duplicate_ratio', 'Track duplicate ratio']
+];
+const AXES = ['x', 'y'];
 
 function option(select, value, label) {
   const element = document.createElement('option');
@@ -62,116 +129,212 @@ function option(select, value, label) {
   element.textContent = label;
   select.appendChild(element);
 }
-metricKeys.forEach((key) => {
-  option(xSelect, key, metricLabels[key] || key);
-  option(ySelect, key, metricLabels[key] || key);
-});
+
 option(datasetSelect, 'all', 'All datasets');
-[...new Set(rows.map((row) => row.category))].sort().forEach((category) => {
-  option(datasetSelect, category, category);
-});
-xSelect.value = DEFAULTS.x_metric;
-ySelect.value = DEFAULTS.y_metric;
+[...new Set(rows.map((row) => row.category))].sort().forEach((category) => option(datasetSelect, category, category));
 
 function scopedRows() {
-  return datasetSelect.value === 'all'
-    ? rows
-    : rows.filter((row) => row.category === datasetSelect.value);
+  return datasetSelect.value === 'all' ? rows : rows.filter((row) => row.category === datasetSelect.value);
 }
 function updateBaselineOptions() {
-  const baselineNames = [...new Set(scopedRows().map((row) => row.candidate))].sort();
+  const names = [...new Set(scopedRows().map((row) => row.candidate))].sort();
   baselineSelect.replaceChildren();
-  baselineNames.forEach((name) => option(baselineSelect, name, name));
-  baselineSelect.value = baselineNames.includes(DEFAULTS.baseline) ? DEFAULTS.baseline : (baselineNames[0] || '');
+  names.forEach((name) => option(baselineSelect, name, name));
+  baselineSelect.value = names.includes(DEFAULTS.baseline) ? DEFAULTS.baseline : (names[0] || '');
+}
+function axisElements(axis) {
+  return {
+    kind: document.getElementById(`${axis}-kind`),
+    stage: document.getElementById(`${axis}-stage`),
+    metric: document.getElementById(`${axis}-metric`),
+    metricLabel: document.getElementById(`${axis}-metric-label`)
+  };
+}
+function updateAxisOptions(axis) {
+  const elements = axisElements(axis);
+  const previousStage = elements.stage.value;
+  const previousMetric = elements.metric.value;
+  elements.stage.replaceChildren();
+  Object.entries(STAGES)
+    .filter(([key]) => elements.kind.value === 'time' || key !== 'full_chain')
+    .forEach(([key, stage]) => option(elements.stage, key, stage.label));
+  elements.stage.value = [...elements.stage.options].some((item) => item.value === previousStage)
+    ? previousStage
+    : elements.stage.options[0]?.value || '';
+  elements.metricLabel.hidden = elements.kind.value === 'time';
+  elements.metric.replaceChildren();
+  if (elements.kind.value === 'time') {
+    option(elements.metric, 'time_per_event', 'Time per event');
+  } else {
+    QUALITY_METRICS.forEach(([value, label]) => option(elements.metric, value, label));
+  }
+  elements.metric.value = [...elements.metric.options].some((item) => item.value === previousMetric)
+    ? previousMetric
+    : elements.metric.options[0]?.value || '';
+}
+function axisKey(axis) {
+  const elements = axisElements(axis);
+  if (elements.kind.value === 'time') return STAGES[elements.stage.value].time;
+  return `timed_${elements.stage.value}_${elements.metric.value}`;
+}
+function axisLabel(axis) {
+  const elements = axisElements(axis);
+  const stageLabel = STAGES[elements.stage.value].label;
+  if (elements.kind.value === 'time') return `${stageLabel} TIME/EVENT`.toUpperCase();
+  const metricLabel = QUALITY_METRICS.find(([value]) => value === elements.metric.value)?.[1] || elements.metric.value;
+  return `${stageLabel} ${metricLabel}`.toUpperCase();
+}
+function axisDefaults(axis, defaultKey) {
+  const elements = axisElements(axis);
+  const timeStage = Object.entries(STAGES).find(([, stage]) => stage.time === defaultKey);
+  const qualityMatch = /^timed_(seeding|ckf|ambiguity)_(.+)$/.exec(defaultKey || '');
+  if (timeStage) {
+    elements.kind.value = 'time';
+    updateAxisOptions(axis);
+    elements.stage.value = timeStage[0];
+  } else if (qualityMatch) {
+    elements.kind.value = 'metric';
+    updateAxisOptions(axis);
+    elements.stage.value = qualityMatch[1];
+    updateAxisOptions(axis);
+    elements.metric.value = qualityMatch[2];
+  } else {
+    elements.kind.value = axis === 'x' ? 'time' : 'metric';
+    updateAxisOptions(axis);
+  }
+}
+AXES.forEach((axis) => {
+  const elements = axisElements(axis);
+  option(elements.kind, 'time', 'Time');
+  option(elements.kind, 'metric', 'Metric');
+});
+axisDefaults('x', DEFAULTS.x_metric);
+axisDefaults('y', DEFAULTS.y_metric);
+updateBaselineOptions();
+
+function formatAxisValue(axis, value) {
+  if (!Number.isFinite(value)) return 'Unavailable';
+  const elements = axisElements(axis);
+  return elements.kind.value === 'time' ? `${value.toFixed(2)} ms` : `${(value * 100).toFixed(2)}%`;
+}
+function axisDirection(axis) {
+  const elements = axisElements(axis);
+  if (elements.kind.value === 'time') return { lowerBetter: true, good: 'faster', bad: 'slower' };
+  const metric = elements.metric.value;
+  if (metric.includes('efficiency')) return { lowerBetter: false, good: 'higher efficiency', bad: 'lower efficiency' };
+  if (metric.includes('fake_ratio')) return { lowerBetter: true, good: 'lower fake rate', bad: 'higher fake rate' };
+  return { lowerBetter: true, good: 'lower duplicate rate', bad: 'higher duplicate rate' };
+}
+function badge(text, good) {
+  return `<span class="corner-badge ${good ? 'better' : 'worse'}">${text.toUpperCase()}</span>`;
+}
+function renderCornerOverlays(baseline) {
+  if (!baseline) {
+    Object.values(cornerOverlays).forEach((overlay) => { overlay.replaceChildren(); });
+    return;
+  }
+  const x = axisDirection('x');
+  const y = axisDirection('y');
+  const badges = (xLower, yHigher) => {
+    const xGood = x.lowerBetter === xLower;
+    const yGood = y.lowerBetter !== yHigher;
+    return `${badge(xGood ? x.good : x.bad, xGood)}${badge(yGood ? y.good : y.bad, yGood)}`;
+  };
+  cornerOverlays.topLeft.innerHTML = badges(true, true);
+  cornerOverlays.topRight.innerHTML = badges(false, true);
+  cornerOverlays.bottomLeft.innerHTML = badges(true, false);
+  cornerOverlays.bottomRight.innerHTML = badges(false, false);
+}
+function quadrantFill(xLower, yHigher) {
+  const x = axisDirection('x');
+  const y = axisDirection('y');
+  const good = Number(x.lowerBetter === xLower) + Number(y.lowerBetter !== yHigher);
+  if (good === 2) return 'rgba(34,197,94,0.14)';
+  if (good === 0) return 'rgba(239,68,68,0.14)';
+  return 'rgba(234,179,8,0.14)';
+}
+function candidateColor(row, baseline, xKey, yKey) {
+  if (!baseline) return '#94a3b8';
+  if (row.candidate === baselineSelect.value) return '#fbbf24';
+  const x = axisDirection('x');
+  const y = axisDirection('y');
+  const xBetter = x.lowerBetter ? row.metrics[xKey] <= baseline.metrics[xKey] : row.metrics[xKey] >= baseline.metrics[xKey];
+  const yBetter = y.lowerBetter ? row.metrics[yKey] <= baseline.metrics[yKey] : row.metrics[yKey] >= baseline.metrics[yKey];
+  if (xBetter && yBetter) return '#22c55e';
+  if (!xBetter && !yBetter) return '#ef4444';
+  return '#eab308';
 }
 function validRows(xKey, yKey) {
   return scopedRows().filter((row) => Number.isFinite(row.metrics[xKey]) && Number.isFinite(row.metrics[yKey]));
 }
-updateBaselineOptions();
-function frontier(points) {
-  const sorted = [...points].sort((a, b) => a.metrics[xSelect.value] - b.metrics[xSelect.value]);
-  const result = [];
-  let bestY = -Infinity;
-  sorted.forEach((point) => {
-    const y = point.metrics[ySelect.value];
-    if (y >= bestY) {
-      result.push(point);
-      bestY = y;
-    }
-  });
-  return result;
+function paddedRange(points, key) {
+  const values = points.map((row) => row.metrics[key]);
+  const minimum = Math.min(...values);
+  const maximum = Math.max(...values);
+  const span = maximum - minimum || Math.max(Math.abs(maximum), 1);
+  return [minimum - span * 0.20, maximum + span * 0.20];
 }
 function render() {
-  const xKey = xSelect.value;
-  const yKey = ySelect.value;
+  const xKey = axisKey('x');
+  const yKey = axisKey('y');
   const points = validRows(xKey, yKey);
   const baselineName = baselineSelect.value;
   const baseline = points.find((row) => row.candidate === baselineName);
-  const xLabel = metricLabels[xKey] || xKey;
-  const yLabel = metricLabels[yKey] || yKey;
+  const xLabel = axisLabel('x');
+  const yLabel = axisLabel('y');
+  summaryCount.textContent = String(points.length);
+  summaryBaseline.textContent = baselineName || 'Unavailable';
+  summaryXValue.textContent = baseline ? formatAxisValue('x', baseline.metrics[xKey]) : 'Unavailable';
+  summaryXLabel.textContent = xLabel;
+  summaryYValue.textContent = baseline ? formatAxisValue('y', baseline.metrics[yKey]) : 'Unavailable';
+  summaryYLabel.textContent = yLabel;
+  renderCornerOverlays(baseline);
   if (!points.length) {
-    summary.textContent = 'No records contain both selected metrics.';
     Plotly.purge('chart');
     return;
-  }
-  if (!baseline) {
-    summary.textContent = `No baseline record contains both ${xLabel} and ${yLabel}.`;
-  } else {
-    summary.textContent = `${points.length} records in ${datasetSelect.value}. Baseline: ${baselineName} (${xLabel} = ${baseline.metrics[xKey].toFixed(2)}, ${yLabel} = ${baseline.metrics[yKey].toFixed(6)}).`;
   }
   const traces = [{
     x: points.map((row) => row.metrics[xKey]),
     y: points.map((row) => row.metrics[yKey]),
     text: points.map((row) => `${row.candidate} (${row.category})`),
     customdata: points.map((row) => [row.category, row.record, row.commit]),
-    mode: 'markers',
-    type: 'scatter',
-    name: 'Candidates',
-    marker: { size: 12, color: points.map((row) => row.candidate === baselineName ? '#2563eb' : '#64748b'), line: { width: 1, color: '#172033' } },
+    mode: 'markers', type: 'scatter', name: 'Candidates',
+    marker: { size: points.map((row) => row.candidate === baselineName ? 16 : 12), symbol: points.map((row) => row.candidate === baselineName ? 'star' : 'circle'), color: points.map((row) => candidateColor(row, baseline, xKey, yKey)), line: { width: 1, color: '#e2e8f0' } },
     hovertemplate: '<b>%{text}</b><br>X: %{x}<br>Y: %{y}<br>Category: %{customdata[0]}<br>Record: %{customdata[1]}<br>Commit: %{customdata[2]}<extra></extra>'
   }];
-  const pareto = frontier(points);
-  if (pareto.length > 1) {
-    traces.push({
-      x: pareto.map((row) => row.metrics[xKey]),
-      y: pareto.map((row) => row.metrics[yKey]),
-      mode: 'lines+markers',
-      type: 'scatter',
-      name: 'Pareto frontier',
-      line: { color: '#f97316', width: 3 },
-      marker: { size: 7, color: '#f97316' },
-      hoverinfo: 'skip'
-    });
-  }
-  const xValues = points.map((row) => row.metrics[xKey]);
-  const yValues = points.map((row) => row.metrics[yKey]);
+  const xRange = paddedRange(points, xKey);
+  const yRange = paddedRange(points, yKey);
   const shapes = [];
-  const annotations = [];
   if (baseline) {
     const bx = baseline.metrics[xKey];
     const by = baseline.metrics[yKey];
-    shapes.push({ type: 'line', x0: bx, x1: bx, y0: 0, y1: 1, yref: 'paper', line: { color: '#2563eb', dash: 'dash', width: 2 } });
-    shapes.push({ type: 'line', x0: 0, x1: 1, xref: 'paper', y0: by, y1: by, line: { color: '#2563eb', dash: 'dash', width: 2 } });
-    annotations.push({ x: 0.02, y: 0.98, xref: 'paper', yref: 'paper', text: 'faster + more efficient', showarrow: false, font: { color: '#15803d' }, bgcolor: 'rgba(255,255,255,0.8)' });
-    annotations.push({ x: 0.98, y: 0.05, xref: 'paper', yref: 'paper', text: 'slower + less efficient', showarrow: false, xanchor: 'right', font: { color: '#b91c1c' }, bgcolor: 'rgba(255,255,255,0.8)' });
+    [
+      [xRange[0], bx, by, yRange[1], true, true],
+      [bx, xRange[1], by, yRange[1], false, true],
+      [xRange[0], bx, yRange[0], by, true, false],
+      [bx, xRange[1], yRange[0], by, false, false]
+    ].forEach(([x0, x1, y0, y1, xLower, yHigher]) => {
+      shapes.push({ type: 'rect', x0, x1, y0, y1, layer: 'below', fillcolor: quadrantFill(xLower, yHigher), line: { width: 0 } });
+    });
+    shapes.push({ type: 'line', x0: bx, x1: bx, y0: 0, y1: 1, yref: 'paper', layer: 'below', line: { color: 'rgba(96,165,250,0.55)', width: 2 } });
+    shapes.push({ type: 'line', x0: 0, x1: 1, xref: 'paper', y0: by, y1: by, layer: 'below', line: { color: 'rgba(96,165,250,0.55)', width: 2 } });
   }
   Plotly.react('chart', traces, {
-    title: 'Baseline-relative performance',
-    xaxis: { title: xLabel, zeroline: false },
-    yaxis: { title: yLabel, zeroline: false },
-    hovermode: 'closest',
-    shapes,
-    annotations,
-    margin: { l: 80, r: 30, t: 70, b: 80 },
-    legend: { orientation: 'h' },
-    paper_bgcolor: 'white', plot_bgcolor: 'white'
+    xaxis: { range: xRange, zeroline: false, showgrid: true, gridcolor: 'rgba(71,85,105,0.35)', tickfont: { color: '#cbd5e1', size: 14 } },
+    yaxis: { range: yRange, zeroline: false, showgrid: true, gridcolor: 'rgba(71,85,105,0.35)', tickfont: { color: '#cbd5e1', size: 14 } },
+    hovermode: 'closest', shapes, margin: { l: 80, r: 30, t: 45, b: 55 },
+    legend: { orientation: 'h', x: 0, y: 1.12, xanchor: 'left', yanchor: 'bottom', font: { color: '#cbd5e1' } },
+    paper_bgcolor: '#111827', plot_bgcolor: '#0b1120', font: { color: '#cbd5e1' }
   }, { responsive: true, displaylogo: false });
 }
-[xSelect, ySelect, baselineSelect].forEach((select) => select.addEventListener('change', render));
-datasetSelect.addEventListener('change', () => {
-  updateBaselineOptions();
-  render();
+AXES.forEach((axis) => {
+  const elements = axisElements(axis);
+  elements.kind.addEventListener('change', () => { updateAxisOptions(axis); render(); });
+  elements.stage.addEventListener('change', render);
+  elements.metric.addEventListener('change', render);
 });
+datasetSelect.addEventListener('change', () => { updateBaselineOptions(); render(); });
+baselineSelect.addEventListener('change', render);
 render();
 </script>
 </body>
