@@ -23,6 +23,7 @@ flowchart LR
 - `make evolve` selects a promising implementation from successful history.
 - `make evaluate CANDIDATE=name` runs the controlled development workload.
 - `make record CANDIDATE=name` returns the latest summary and failure details without editing the archive.
+- `make evaluate-selected` evaluates Genesis, the two strongest ambiguity-efficiency candidates, and two lowest-time candidates, filling overlaps with the next unique candidates.
 - `records/` stores reproducible summaries used by evolution and reports.
 - `agent-learnings.md` stores short lessons so agents do not repeat failed ideas.
 - `Genesis` is the canonical starting point for every campaign.
@@ -44,6 +45,8 @@ The full operating contract is in [`agent-instructions.md`](agent-instructions.m
 make evolve
 make evaluate CANDIDATE=<candidate-name>
 make record CANDIDATE=<candidate-name>
+make select-evaluation
+make evaluate-selected
 make report
 ```
 
