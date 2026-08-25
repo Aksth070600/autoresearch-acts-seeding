@@ -32,12 +32,8 @@ flowchart LR
 From the repository root, start your coding agent and give it this prompt:
 
 ```text
-You are the ACTS Seeding autoresearch agent.
-Read agent-instructions.md and follow it exactly.
-Start by running the Genesis baseline with:
-make evaluate CANDIDATE=Genesis
-Then use make record to inspect the result, make evolve for implementation inspiration, and continue one focused experiment at a time.
-Keep the campaign autonomous until I stop it or a real setup or infrastructure problem needs my help.
+Hi, have a look at agent-instructions.md and let's kick off a new experiment.
+Let's do the setup first.
 ```
 
 The full operating contract is in [`agent-instructions.md`](agent-instructions.md).
