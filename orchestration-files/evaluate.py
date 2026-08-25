@@ -243,7 +243,6 @@ def parse_run_metrics(output: str) -> dict[str, Any]:
             timing[name] = {
                 "total_time_ms": float(timing_match.group(2)),
                 "time_per_event_ms": float(timing_match.group(3)),
-                "fraction_percent": float(timing_match.group(4)),
             }
 
     metrics: dict[str, Any] = {}
@@ -255,9 +254,19 @@ def parse_run_metrics(output: str) -> dict[str, Any]:
         metrics["timing"] = timing
         required_timing = ("seeding", "ckf", "ambiguity_resolution")
         if all(name in timing for name in required_timing):
+            total_time_ms = sum(timing[name]["total_time_ms"] for name in required_timing)
+            total_time_per_event_ms = sum(
+                timing[name]["time_per_event_ms"] for name in required_timing
+            )
+            for name in required_timing:
+                timing[name]["fraction_percent"] = round(
+                    100.0 * timing[name]["total_time_ms"] / total_time_ms,
+                    6,
+                )
             metrics["timing_total"] = {
-                "total_time_ms": sum(timing[name]["total_time_ms"] for name in required_timing),
-                "time_per_event_ms": sum(timing[name]["time_per_event_ms"] for name in required_timing),
+                "total_time_ms": total_time_ms,
+                "time_per_event_ms": total_time_per_event_ms,
+                "fraction_percent": 100.0,
             }
     return metrics
 
