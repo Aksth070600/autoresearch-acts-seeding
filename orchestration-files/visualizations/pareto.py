@@ -274,6 +274,11 @@ function paddedRange(points, key) {
   const span = maximum - minimum || Math.max(Math.abs(maximum), 1);
   return [minimum - span * 0.20, maximum + span * 0.20];
 }
+function axisTickFormat(axis) {
+  return axisElements(axis).kind.value === 'time'
+    ? { tickformat: '.2f', ticksuffix: ' ms' }
+    : { tickformat: '.1%' };
+}
 function render() {
   const xKey = axisKey('x');
   const yKey = axisKey('y');
@@ -320,8 +325,8 @@ function render() {
     shapes.push({ type: 'line', x0: 0, x1: 1, xref: 'paper', y0: by, y1: by, layer: 'below', line: { color: 'rgba(96,165,250,0.55)', width: 2 } });
   }
   Plotly.react('chart', traces, {
-    xaxis: { range: xRange, zeroline: false, showgrid: true, gridcolor: 'rgba(71,85,105,0.35)', tickfont: { color: '#cbd5e1', size: 14 } },
-    yaxis: { range: yRange, zeroline: false, showgrid: true, gridcolor: 'rgba(71,85,105,0.35)', tickfont: { color: '#cbd5e1', size: 14 } },
+    xaxis: { ...axisTickFormat('x'), range: xRange, zeroline: false, showgrid: true, gridcolor: 'rgba(71,85,105,0.35)', tickfont: { color: '#cbd5e1', size: 14 } },
+    yaxis: { ...axisTickFormat('y'), range: yRange, zeroline: false, showgrid: true, gridcolor: 'rgba(71,85,105,0.35)', tickfont: { color: '#cbd5e1', size: 14 } },
     hovermode: 'closest', shapes, margin: { l: 80, r: 30, t: 45, b: 55 },
     legend: { orientation: 'h', x: 0, y: 1.12, xanchor: 'left', yanchor: 'bottom', font: { color: '#cbd5e1' } },
     paper_bgcolor: '#111827', plot_bgcolor: '#0b1120', font: { color: '#cbd5e1' }
