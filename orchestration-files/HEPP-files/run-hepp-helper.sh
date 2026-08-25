@@ -27,7 +27,7 @@ remote_command="printf '%s\\n' '$start_marker'; cd $(printf '%q' "$HEPP_STORAGE"
 for argument in "$@"; do
   remote_command+=" $(printf '%q' "$argument")"
 done
-remote_command+='; rc=$?; printf '\''%s rc=%s\n'\'' '\''ACTS_HELPER_DONE['"$RUN_ID"']'\'' "$rc"'
+remote_command+="; rc=\$?; printf '%s%s%s rc=%s\\n' 'ACTS_HELPER_DONE[' '$RUN_ID' ']' \"\$rc\""
 
 ssh "$HEPP_HOST" "tmux has-session -t '$HEPP_TMUX_TARGET' && tmux send-keys -t '$HEPP_TMUX_TARGET' $(printf '%q' "$remote_command") C-m"
 
