@@ -183,6 +183,20 @@ def helper_completion_code(output: str) -> int | None:
     return int(matches[-1]) if matches else None
 
 
+def expected_fpe_completion(output: str, events: int) -> dict[str, int] | None:
+    fpe_matches = re.findall(r"Encountered (\d+) unmasked FPEs", output)
+    processed_matches = re.findall(r"Processed (\d+) events in", output)
+    if not fpe_matches or not processed_matches:
+        return None
+    processed_events = int(processed_matches[-1])
+    if processed_events != events:
+        return None
+    return {
+        "unmasked_fpes": int(fpe_matches[-1]),
+        "processed_events": processed_events,
+    }
+
+
 def run_hepp_helper(helper: str, run_id: str, *arguments: str) -> CommandResult:
     return run_command([str(HEPP_HELPER), helper, run_id, *arguments])
 
@@ -216,19 +230,27 @@ def run_stage(
     record_command_output(outputs, name, result)
     completion_code = stage_completion_code(result.output)
     parsed_metrics = parse_metrics(result.output)
+    expected_fpes = expected_fpe_completion(result.output, events)
+    accepted_expected_fpes = result.returncode != 0 and expected_fpes is not None
+    raw_exit_code = completion_code if completion_code is not None else result.returncode
+    stage_passed = result.returncode == 0 or accepted_expected_fpes
     stage_result: dict[str, Any] = {
         "name": name,
         "events": events,
         "stage": stage,
         "metrics_mode": metrics,
-        "exit_code": completion_code if completion_code is not None else result.returncode,
-        "status": "passed" if result.returncode == 0 else "failed",
+        "exit_code": 0 if stage_passed else raw_exit_code,
+        "status": "passed" if stage_passed else "failed",
     }
+    if raw_exit_code != 0:
+        stage_result["raw_exit_code"] = raw_exit_code
+    if expected_fpes is not None:
+        stage_result["expected_nonfatal"] = expected_fpes
     if parsed_metrics:
         stage_result["metrics"] = parsed_metrics
     stage_results.append(stage_result)
 
-    if result.returncode != 0:
+    if not stage_passed:
         helper_code = helper_completion_code(result.output)
         if "helper timed out" in result.output or helper_code is None:
             raise EvaluationError(f"stage did not complete cleanly: {name}")
