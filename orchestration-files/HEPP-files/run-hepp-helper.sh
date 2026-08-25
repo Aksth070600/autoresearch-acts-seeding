@@ -49,7 +49,7 @@ if (( done != 1 )); then
   exit 1
 fi
 
-remote_rc="$(printf '%s\n' "$captured" | awk -v marker="$end_marker" 'index($0, marker) == 1 { sub(/^.* rc=/, ""); print; exit }')"
+remote_rc="$(printf '%s\n' "$captured" | awk -v marker="$end_marker" 'index($0, marker) == 1 { sub(/^.* rc=/, ""); sub(/[^0-9].*$/, ""); print; exit }')"
 if [[ -z "$remote_rc" ]]; then
   echo "error: helper completion status was missing: $HELPER" >&2
   exit 1
