@@ -1,41 +1,58 @@
-# Autoresearch ACTS Seeding
+# ACTS Seeding Autoresearch
 
-Autoresearch ACTS Seeding is an experiment platform for improving the performance of ACTS Seeding2 track reconstruction.
+An experiment platform for making ACTS Seeding2 faster without sacrificing reconstruction quality.
+It runs controlled candidates on the fixed ITk workload through ACTS on HEPP02, keeps the results, and helps the next experiment build on what worked.
 
-The project explores candidate algorithm and configuration changes through controlled, reproducible experiments.
-Each change must preserve reconstruction correctness, physics validity, and clear evidence about the environment and data used.
+[Open the interactive report](https://aksth070600.github.io/autoresearch-acts-seeding/)
 
-The initial focus is ITk seeding with ACTS on HEPP02.
+## How the repository works
 
-## Interactive reports
+```mermaid
+flowchart LR
+    A[Experiment agent] --> B[make evolve]
+    B --> C[Edit optimization-files/]
+    C --> D[make evaluate]
+    D --> E[make record]
+    E --> F[records/]
+    F --> B
+    F --> G[make report]
+    H[agent-learnings.md] --> A
+```
 
-Open the latest interactive comparison report on [GitHub Pages](https://aksth070600.github.io/autoresearch-acts-seeding/).
+- `optimization-files/` contains the ACTS implementation files an experiment may change.
+- `make evolve` selects a promising implementation from successful history.
+- `make evaluate CANDIDATE=name` runs the controlled development workload.
+- `make record CANDIDATE=name` returns the latest summary and failure details without editing the archive.
+- `records/` stores reproducible summaries used by evolution and reports.
+- `agent-learnings.md` stores short lessons so agents do not repeat failed ideas.
+- `Genesis` is the canonical starting point for every campaign.
 
-To regenerate it, open the repository's **Actions** tab, select **Publish ACTS reports**, and choose **Run workflow**.
-The workflow supports development, evaluation, or all records, plus configurable X-axis, Y-axis, and baseline selections.
-The default baseline candidate is `Genesis`.
-Pushes to `main` also publish the report automatically.
+## Start an experiment agent
 
-## Candidate evolution
+From the repository root, start your coding agent and give it this prompt:
 
-Run `make evolve` to maintain a historical NSGA-II population from successful records.
-The `Genesis` baseline candidate is always retained.
-A non-Genesis candidate enters the eligible pool when it improves total time per event, seeding time per event, or one of the selected seeding, CKF, or ambiguity efficiencies.
-The selected population is saved in `records/evolution/population.json`.
-The command returns a candidate implementation commit for the next optimization attempt.
+```text
+You are the ACTS Seeding autoresearch agent.
+Read agent-instructions.md and follow it exactly.
+Start by running the Genesis baseline with:
+make evaluate CANDIDATE=Genesis
+Then use make record to inspect the result, make evolve for implementation inspiration, and continue one focused experiment at a time.
+Keep the campaign autonomous until I stop it or a real setup or infrastructure problem needs my help.
+```
 
-Install the pinned local dependency with:
+The full operating contract is in [`agent-instructions.md`](agent-instructions.md).
+
+## Useful commands
+
+```text
+make evolve
+make evaluate CANDIDATE=<candidate-name>
+make record CANDIDATE=<candidate-name>
+make report
+```
+
+The pinned Python dependency is installed with:
 
 ```text
 /usr/bin/python3 -m pip install --user -r orchestration-files/requirements.txt
 ```
-
-## Principles
-
-- Measure performance with reproducible workloads.
-- Keep candidate changes isolated and reviewable.
-- Preserve correctness before optimizing speed or efficiency.
-- Record the software, data, configuration, and results for each experiment.
-- Distinguish development experiments from final scientific claims.
-
-This project is in its initial setup phase.
