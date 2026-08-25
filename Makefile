@@ -11,6 +11,7 @@ ITK_SEED ?= 42
 ITK_PILEUP ?= 200
 ITK_STAGE ?= full
 ITK_METRICS ?= none
+EVOLUTION_PYTHON ?= /usr/bin/python3
 HEPP_RUN_TIMEOUT ?= 1800
 HEPP_HOST ?= thomaaks@hepp02.hpc.uio.no
 HEPP_STORAGE ?= /storage/thomaaks
@@ -21,7 +22,7 @@ HEPP_APPTAINER ?= /cvmfs/atlas.cern.ch/repo/containers/sw/apptainer/x86_64-el9/c
 HEPP_CONTAINER_IMAGE ?= /cvmfs/atlas.cern.ch/repo/containers/images/singularity/x86_64-almalinux9.img
 HEPP_CONTAINER_BINDS ?= -B /cvmfs -B /storage -B /home/aksth
 
-.PHONY: help setupActs setup build export-hepp-files hepp02-tmux-create hepp02-tmux-attach hepp02-tmux hepp02-tmux-status hepp02-setupActs hepp02-build hepp02-setup hepp02-setup-and-build hepp02-full-chain-itk evaluate report
+.PHONY: help setupActs setup build export-hepp-files hepp02-tmux-create hepp02-tmux-attach hepp02-tmux hepp02-tmux-status hepp02-setupActs hepp02-build hepp02-setup hepp02-setup-and-build hepp02-full-chain-itk evaluate report evolve
 
 help:
 	@printf '%s\n' \
@@ -42,6 +43,7 @@ help:
 	  '  ITK_METRICS=time adds GNU time RSS and CPU metrics; none runs clean.' \
 	  'make evaluate CANDIDATE=name  Run development stages for a committed candidate.' \
 	  'make report                 Build the interactive local comparison report.' \
+	  'make evolve                 Select a candidate with historical NSGA-II.' \
 	  '' \
 	  'After local setup, use: source orchestration-files/HEPP-files/setup.sh' \
 	  'Override HEPP_HOST, HEPP_STORAGE, or HEPP_TMUX_TARGET for another remote.'
@@ -93,6 +95,9 @@ evaluate:
 
 report:
 	python3 orchestration-files/report.py --dataset development --output reports/site
+
+evolve:
+	$(EVOLUTION_PYTHON) orchestration-files/evolution.py --dataset development
 
 hepp02-full-chain-itk: export-hepp-files hepp02-tmux-create
 	@run_id=$$(date +%s); \

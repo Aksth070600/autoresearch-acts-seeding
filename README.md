@@ -15,6 +15,20 @@ To regenerate it, open the repository's **Actions** tab, select **Publish ACTS r
 The workflow supports development, evaluation, or all records, plus configurable X-axis, Y-axis, and baseline selections.
 Pushes to `main` also publish the report automatically.
 
+## Candidate evolution
+
+Run `make evolve` to maintain a historical NSGA-II population from successful records.
+The baseline is always retained.
+A non-baseline candidate enters the eligible pool when it improves total time per event, seeding time per event, or one of the selected seeding, CKF, or ambiguity efficiencies.
+The selected population is saved in `records/evolution/population.json`.
+The command returns a candidate implementation commit for the next optimization attempt.
+
+Install the pinned local dependency with:
+
+```text
+/usr/bin/python3 -m pip install --user -r orchestration-files/requirements.txt
+```
+
 ## Principles
 
 - Measure performance with reproducible workloads.
