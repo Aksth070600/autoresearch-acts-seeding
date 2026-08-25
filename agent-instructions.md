@@ -127,6 +127,21 @@ A failed Genesis run leaves the previous successful summary intact.
 Successful non-Genesis candidates are retained by the evaluator.
 Do not commit failure logs, temporary output, or runtime state.
 
+## GitHub campaign review
+
+Make each campaign reviewable on GitHub through one draft pull request.
+After creating the campaign branch, push it and open one draft PR before the first mutation experiment.
+After every candidate attempt, push the branch so the draft PR shows the new implementation and its evidence.
+Keep every candidate implementation commit reachable on the campaign branch, including candidates that are later rejected; restore a rejected candidate with a safe revert commit instead of resetting away its history.
+
+After `make record`, commit the candidate's `summary.json` and any concise `agent-learnings.md` lesson in a separate evidence commit.
+Commit successful and failed summaries when they exist, but never commit failure logs, temporary output, or runtime state.
+The canonical Genesis summary replacement is evidence and should be included in the campaign branch when it changes.
+
+Create or update the draft PR with `gh-axi` and keep its body current with the campaign tag, candidate name, hypothesis, changed files, development result, and whether the candidate is the active base.
+Use PR comments for additional candidate results when rewriting the body would hide history.
+Never merge the campaign PR autonomously; leave that decision to the captain.
+
 ## Agent learnings
 
 `agent-learnings.md` is a concise memory of reusable experiment lessons.
