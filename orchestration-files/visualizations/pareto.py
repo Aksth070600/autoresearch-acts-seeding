@@ -276,8 +276,8 @@ function paddedRange(points, key) {
 }
 function axisTickFormat(axis) {
   return axisElements(axis).kind.value === 'time'
-    ? { tickformat: '.2f', ticksuffix: ' ms' }
-    : { tickformat: '.1%' };
+    ? { tickformat: '.0f', ticksuffix: ' ms' }
+    : { tickformat: '.3%' };
 }
 function render() {
   const xKey = axisKey('x');
