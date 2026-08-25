@@ -1,0 +1,89 @@
+name: Publish ACTS reports
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      dataset:
+        description: Record category to plot
+        required: true
+        default: development
+        type: choice
+        options:
+          - development
+          - evaluation
+          - all
+      x_metric:
+        description: Default X-axis metric
+        required: true
+        default: timed_total_time_ms
+        type: choice
+        options:
+          - timed_total_time_ms
+          - clean_total_time_ms
+          - timed_time_per_event_ms
+          - clean_time_per_event_ms
+      y_metric:
+        description: Default Y-axis metric
+        required: true
+        default: timed_ambiguity_particle_efficiency
+        type: choice
+        options:
+          - timed_ambiguity_particle_efficiency
+          - clean_ambiguity_particle_efficiency
+          - timed_ambiguity_track_efficiency
+          - clean_ambiguity_track_efficiency
+      baseline:
+        description: Candidate name used for the reference lines
+        required: true
+        default: baseline
+        type: string
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+env:
+  DATASET: ${{ inputs.dataset || 'development' }}
+  X_METRIC: ${{ inputs.x_metric || 'timed_total_time_ms' }}
+  Y_METRIC: ${{ inputs.y_metric || 'timed_ambiguity_particle_efficiency' }}
+  BASELINE: ${{ inputs.baseline || 'baseline' }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Build interactive report
+        run: |
+          python3 orchestration-files/report.py \
+            --dataset "$DATASET" \
+            --x-metric "$X_METRIC" \
+            --y-metric "$Y_METRIC" \
+            --baseline "$BASELINE" \
+            --output reports/site
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: reports/site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

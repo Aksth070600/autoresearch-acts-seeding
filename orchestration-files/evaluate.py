@@ -173,6 +173,104 @@ def parse_metrics(output: str) -> dict[str, Any]:
     }
 
 
+def parse_run_metrics(output: str) -> dict[str, Any]:
+    metric_pattern = re.compile(
+        r"RootTrackFin\s+INFO\s+(.+?) = "
+        r"([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)$"
+    )
+    metric_names = {
+        "Efficiency with tracks (nMatchedTracks/ nAllTracks)": "efficiency_tracks",
+        "Fake ratio with tracks (nFakeTracks/nAllTracks)": "fake_ratio_tracks",
+        "Duplicate ratio with tracks (nDuplicateTracks/nAllTracks)": "duplicate_ratio_tracks",
+        "Efficiency with particles (nMatchedParticles/nTrueParticles)": "efficiency_particles",
+        "Fake ratio with particles (nFakeParticles/nTrueParticles)": "fake_ratio_particles",
+        "Duplicate ratio with particles (nDuplicateParticles/nTrueParticles)": "duplicate_ratio_particles",
+    }
+    performance: dict[str, dict[str, float]] = {}
+    pending_performance: dict[str, float] = {}
+    track_finding: dict[str, int | float] = {}
+    timing: dict[str, dict[str, float]] = {}
+    stat_names = {
+        "total seeds": "total_seeds",
+        "deduplicated seeds": "deduplicated_seeds",
+        "failed seeds": "failed_seeds",
+        "failed smoothing": "failed_smoothing",
+        "failed extrapolation": "failed_extrapolation",
+        "failure ratio seeds": "failure_ratio_seeds",
+        "found tracks": "found_tracks",
+        "selected tracks": "selected_tracks",
+        "stopped branches": "stopped_branches",
+        "skipped second pass": "skipped_second_pass",
+    }
+    timing_names = {
+        "GridTripletSeedingAlgorithm": "seeding",
+        "TrackFindingAlgorithm": "ckf",
+        "GreedyAmbiguityResolutionAlgorithm": "ambiguity_resolution",
+    }
+
+    for raw_line in output.splitlines():
+        line = raw_line.strip()
+        metric_match = metric_pattern.search(line)
+        if metric_match and metric_match.group(1) in metric_names:
+            pending_performance[metric_names[metric_match.group(1)]] = float(metric_match.group(2))
+
+        performance_match = re.search(r"performance_(seeding|finding_ckf|finding_ambi)\.root", line)
+        if performance_match and pending_performance:
+            tag_to_name = {
+                "seeding": "seeding",
+                "finding_ckf": "ckf",
+                "finding_ambi": "ambiguity_resolution",
+            }
+            performance[tag_to_name[performance_match.group(1)]] = pending_performance
+            pending_performance = {}
+
+        for raw_name, name in stat_names.items():
+            stat_match = re.search(rf"- {re.escape(raw_name)}: ([0-9]+(?:\.[0-9]+)?)", line)
+            if stat_match:
+                value = float(stat_match.group(1))
+                track_finding[name] = int(value) if value.is_integer() else value
+
+        timing_match = re.search(
+            r"\| Algorithm:(GridTripletSeedingAlgorithm|TrackFindingAlgorithm|"
+            r"GreedyAmbiguityResolutionAlgorithm)\s*\|\s*"
+            r"([0-9]+(?:\.[0-9]+)?)\s*\|\s*"
+            r"([0-9]+(?:\.[0-9]+)?)\s*\|\s*"
+            r"([0-9]+(?:\.[0-9]+)?)%\s*\|",
+            line,
+        )
+        if timing_match:
+            name = timing_names[timing_match.group(1)]
+            timing[name] = {
+                "total_time_ms": float(timing_match.group(2)),
+                "time_per_event_ms": float(timing_match.group(3)),
+            }
+
+    metrics: dict[str, Any] = {}
+    if performance:
+        metrics["performance"] = performance
+    if track_finding:
+        metrics["ckf_statistics"] = track_finding
+    if timing:
+        metrics["timing"] = timing
+        required_timing = ("seeding", "ckf", "ambiguity_resolution")
+        if all(name in timing for name in required_timing):
+            total_time_ms = sum(timing[name]["total_time_ms"] for name in required_timing)
+            total_time_per_event_ms = sum(
+                timing[name]["time_per_event_ms"] for name in required_timing
+            )
+            for name in required_timing:
+                timing[name]["fraction_percent"] = round(
+                    100.0 * timing[name]["total_time_ms"] / total_time_ms,
+                    6,
+                )
+            metrics["timing_total"] = {
+                "total_time_ms": total_time_ms,
+                "time_per_event_ms": total_time_per_event_ms,
+                "fraction_percent": 100.0,
+            }
+    return metrics
+
+
 def stage_completion_code(output: str) -> int | None:
     matches = re.findall(r"ACTS_FULL_CHAIN_ITK_DONE\[[^]]+\] rc=(\d+)", output)
     return int(matches[-1]) if matches else None
@@ -230,6 +328,7 @@ def run_stage(
     record_command_output(outputs, name, result)
     completion_code = stage_completion_code(result.output)
     parsed_metrics = parse_metrics(result.output)
+    parsed_run_metrics = parse_run_metrics(result.output) if events >= 50 else {}
     expected_fpes = expected_fpe_completion(result.output, events)
     accepted_expected_fpes = result.returncode != 0 and expected_fpes is not None
     raw_exit_code = completion_code if completion_code is not None else result.returncode
@@ -246,8 +345,10 @@ def run_stage(
         stage_result["raw_exit_code"] = raw_exit_code
     if expected_fpes is not None:
         stage_result["expected_nonfatal"] = expected_fpes
+    if parsed_run_metrics:
+        stage_result["run_metrics"] = parsed_run_metrics
     if parsed_metrics:
-        stage_result["metrics"] = parsed_metrics
+        stage_result["resource_metrics"] = parsed_metrics
     stage_results.append(stage_result)
 
     if not stage_passed:

@@ -21,7 +21,7 @@ HEPP_APPTAINER ?= /cvmfs/atlas.cern.ch/repo/containers/sw/apptainer/x86_64-el9/c
 HEPP_CONTAINER_IMAGE ?= /cvmfs/atlas.cern.ch/repo/containers/images/singularity/x86_64-almalinux9.img
 HEPP_CONTAINER_BINDS ?= -B /cvmfs -B /storage -B /home/aksth
 
-.PHONY: help setupActs setup build export-hepp-files hepp02-tmux-create hepp02-tmux-attach hepp02-tmux hepp02-tmux-status hepp02-setupActs hepp02-build hepp02-setup hepp02-setup-and-build hepp02-full-chain-itk evaluate
+.PHONY: help setupActs setup build export-hepp-files hepp02-tmux-create hepp02-tmux-attach hepp02-tmux hepp02-tmux-status hepp02-setupActs hepp02-build hepp02-setup hepp02-setup-and-build hepp02-full-chain-itk evaluate report
 
 help:
 	@printf '%s\n' \
@@ -41,6 +41,7 @@ help:
 	  '  ITK_STAGE=seeding stops after seeding; full runs reconstruction.' \
 	  '  ITK_METRICS=time adds GNU time RSS and CPU metrics; none runs clean.' \
 	  'make evaluate CANDIDATE=name  Run development stages for a committed candidate.' \
+	  'make report                 Build the interactive local comparison report.' \
 	  '' \
 	  'After local setup, use: source orchestration-files/HEPP-files/setup.sh' \
 	  'Override HEPP_HOST, HEPP_STORAGE, or HEPP_TMUX_TARGET for another remote.'
@@ -89,6 +90,9 @@ hepp02-setup-and-build: export-hepp-files hepp02-tmux-create
 evaluate:
 	@if [ -z "$(CANDIDATE)" ]; then echo 'usage: make evaluate CANDIDATE=name [EVALUATION=1]' >&2; exit 2; fi
 	python3 orchestration-files/evaluate.py "$(CANDIDATE)" $(if $(filter 1 true yes,$(EVALUATION)),--evaluation,)
+
+report:
+	python3 orchestration-files/report.py --dataset development --output reports/site
 
 hepp02-full-chain-itk: export-hepp-files hepp02-tmux-create
 	@run_id=$$(date +%s); \
