@@ -31,7 +31,7 @@ def parse_args() -> argparse.Namespace:
         help="record category to include",
     )
     parser.add_argument("--baseline", default="Genesis")
-    parser.add_argument("--x-metric", default="timed_total_time_ms")
+    parser.add_argument("--x-metric", default="timed_total_time_per_event_ms")
     parser.add_argument(
         "--y-metric",
         default="timed_ambiguity_particle_efficiency",
@@ -61,11 +61,19 @@ def add_metrics(metrics: dict[str, float], prefix: str, run_metrics: dict[str, A
     timing_total = run_metrics.get("timing_total", {})
     for source, suffix in (
         ("total_time_ms", "total_time_ms"),
-        ("time_per_event_ms", "time_per_event_ms"),
+        ("time_per_event_ms", "total_time_per_event_ms"),
     ):
         value = timing_total.get(source)
         if finite_number(value):
             metrics[f"{prefix}_{suffix}"] = float(value)
+
+    timing = run_metrics.get("timing", {})
+    for algorithm in ("seeding", "ckf", "ambiguity_resolution"):
+        values = timing.get(algorithm, {})
+        value = values.get("time_per_event_ms")
+        if finite_number(value):
+            metric_algorithm = "ambiguity" if algorithm == "ambiguity_resolution" else algorithm
+            metrics[f"{prefix}_{metric_algorithm}_time_per_event_ms"] = float(value)
 
     performance = run_metrics.get("performance", {})
     algorithm_keys = {
@@ -152,7 +160,10 @@ def metric_label(key: str) -> str:
         "clean_total_time_ms": "Clean total selected time (ms)",
         "timed_total_time_ms": "Timed total selected time (ms)",
         "clean_time_per_event_ms": "Clean selected time/event (ms)",
-        "timed_time_per_event_ms": "Timed selected time/event (ms)",
+        "timed_total_time_per_event_ms": "Timed total time/event (ms)",
+        "timed_seeding_time_per_event_ms": "Timed seeding time/event (ms)",
+        "timed_ckf_time_per_event_ms": "Timed CKF time/event (ms)",
+        "timed_ambiguity_time_per_event_ms": "Timed ambiguity time/event (ms)",
         "clean_ambiguity_particle_efficiency": "Clean ambiguity particle efficiency",
         "timed_ambiguity_particle_efficiency": "Timed ambiguity particle efficiency",
         "timed_peak_rss_kb": "Timed peak RSS (kB)",

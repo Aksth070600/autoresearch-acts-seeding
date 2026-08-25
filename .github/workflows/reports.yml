@@ -18,13 +18,13 @@ on:
       x_metric:
         description: Default X-axis metric
         required: true
-        default: timed_total_time_ms
+        default: timed_total_time_per_event_ms
         type: choice
         options:
-          - timed_total_time_ms
-          - clean_total_time_ms
-          - timed_time_per_event_ms
-          - clean_time_per_event_ms
+          - timed_total_time_per_event_ms
+          - timed_seeding_time_per_event_ms
+          - timed_ckf_time_per_event_ms
+          - timed_ambiguity_time_per_event_ms
       y_metric:
         description: Default Y-axis metric
         required: true
@@ -32,9 +32,11 @@ on:
         type: choice
         options:
           - timed_ambiguity_particle_efficiency
-          - clean_ambiguity_particle_efficiency
           - timed_ambiguity_track_efficiency
-          - clean_ambiguity_track_efficiency
+          - timed_seeding_particle_efficiency
+          - timed_seeding_track_efficiency
+          - timed_ckf_particle_efficiency
+          - timed_ckf_track_efficiency
       baseline:
         description: Candidate name used for the reference lines
         required: true
@@ -52,7 +54,7 @@ concurrency:
 
 env:
   DATASET: ${{ inputs.dataset || 'all' }}
-  X_METRIC: ${{ inputs.x_metric || 'timed_total_time_ms' }}
+  X_METRIC: ${{ inputs.x_metric || 'timed_total_time_per_event_ms' }}
   Y_METRIC: ${{ inputs.y_metric || 'timed_ambiguity_particle_efficiency' }}
   BASELINE: ${{ inputs.baseline || 'Genesis' }}
 
