@@ -94,7 +94,6 @@ class DoubletsForMiddleSp {
   void sortByCotTheta(const IndexRange& range,
                       std::vector<IndexAndCotTheta>& indexAndCotTheta) const {
     indexAndCotTheta.clear();
-    indexAndCotTheta.reserve(range.second - range.first);
     for (Index i = range.first; i < range.second; ++i) {
       indexAndCotTheta.emplace_back(i, m_cotTheta[i]);
     }
