@@ -164,7 +164,19 @@ void SpacePointContainer2::clear() noexcept {
 MutableSpacePointProxy2 SpacePointContainer2::createSpacePoint() noexcept {
   ++m_size;
 
-  for (const auto &[name, column] : m_allColumns) {
+  // Known columns are fixed at compile time. Avoid the unordered-map lookup
+  // for every copied space point and reserve that traversal for dynamic data.
+  auto appendKnownColumn = []<typename T>(
+                               std::optional<ColumnHolder<T>> &column) {
+    if (column.has_value()) {
+      column->emplace_back();
+    }
+  };
+  [&]<std::size_t... Is>(std::index_sequence<Is...>) {
+    (appendKnownColumn(std::get<Is>(knownColumns())), ...);
+  }(tuple_indices<decltype(knownColumns())>{});
+
+  for (const auto &[name, column] : m_dynamicColumns) {
     column->emplace_back();
   }
 
