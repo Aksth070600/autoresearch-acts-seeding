@@ -149,12 +149,10 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   }
 
   for (std::size_t i = 0; i < grid.numberOfBins(); ++i) {
-    if (grid.at(i).size() > 1) {
-      std::ranges::sort(grid.at(i), [&](const Acts::SpacePointIndex2& a,
-                                        const Acts::SpacePointIndex2& b) {
-        return spacePoints[a].r() < spacePoints[b].r();
-      });
-    }
+    std::ranges::sort(grid.at(i), [&](const Acts::SpacePointIndex2& a,
+                                      const Acts::SpacePointIndex2& b) {
+      return spacePoints[a].r() < spacePoints[b].r();
+    });
   }
 
   Acts::SpacePointContainer2 coreSpacePoints(
