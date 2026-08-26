@@ -237,6 +237,14 @@ class Impl final : public TripletSeedFinder {
         continue;
       }
 
+      // A and B allow calculation of impact params in U/V plane with linear
+      // function. Rejecting it before the refined scattering calculation
+      // avoids work for out-of-range candidates.
+      const float im = std::abs((A - B * rM) * rM);
+      if (im > m_cfg.impactMax) {
+        continue;
+      }
+
       // refinement of the cut on the compatibility between the r-z slope of
       // the two seed segments using a scattering term scaled by the actual
       // measured pT (p2scatterSigma)
@@ -252,14 +260,6 @@ class Impl final : public TripletSeedFinder {
           }
           topDoubletOffset = topDoubletIndex;
         }
-        continue;
-      }
-
-      // A and B allow calculation of impact params in U/V plane with linear
-      // function
-      // (in contrast to having to solve a quadratic function in x/y plane)
-      const float im = std::abs((A - B * rM) * rM);
-      if (im > m_cfg.impactMax) {
         continue;
       }
 
