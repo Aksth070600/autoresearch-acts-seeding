@@ -162,11 +162,11 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   coreSpacePoints.reserve(grid.numberOfSpacePoints());
   std::vector<Acts::SpacePointIndexRange2> gridSpacePointRanges;
   gridSpacePointRanges.reserve(grid.numberOfBins());
-  auto coreXY = coreSpacePoints.xyColumn();
-  auto coreZR = coreSpacePoints.zrColumn();
-  auto coreVarianceZ = coreSpacePoints.varianceZColumn();
-  auto coreVarianceR = coreSpacePoints.varianceRColumn();
-  auto coreCopyFromIndex = coreSpacePoints.copyFromIndexColumn();
+  const auto coreXY = coreSpacePoints.xyColumn();
+  const auto coreZR = coreSpacePoints.zrColumn();
+  const auto coreVarianceZ = coreSpacePoints.varianceZColumn();
+  const auto coreVarianceR = coreSpacePoints.varianceRColumn();
+  const auto coreCopyFromIndex = coreSpacePoints.copyFromIndexColumn();
   for (std::size_t i = 0; i < grid.numberOfBins(); ++i) {
     std::uint32_t begin = coreSpacePoints.size();
     for (Acts::SpacePointIndex2 spIndex : grid.at(i)) {
