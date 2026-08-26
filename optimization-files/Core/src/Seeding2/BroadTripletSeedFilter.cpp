@@ -101,7 +101,6 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
   auto spB = spacePoints[bottomLink.spacePointIndex()];
   auto bottomSp = spB.index();
   auto middleSp = spM.index();
-  const auto nTopCandidates = tripletTopCandidates.size();
 
   // minimum number of compatible top SPs to trigger the filter for a certain
   // middle bottom pair if seedConfirmation is false we always ask for at
@@ -115,7 +114,7 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
     minCompatibleTopSPs++;
   }
   // continue if number of top SPs is smaller than minimum required for filter
-  if (nTopCandidates < minCompatibleTopSPs) {
+  if (tripletTopCandidates.size() < minCompatibleTopSPs) {
     return;
   }
   float zOrigin = spM.zr()[0] - spM.zr()[1] * bottomLink.cotTheta();
@@ -142,7 +141,7 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
   float weightMax = std::numeric_limits<float>::lowest();
 
   // initialize original index locations
-  cache().topSpIndexVec.resize(nTopCandidates);
+  cache().topSpIndexVec.resize(tripletTopCandidates.size());
   std::iota(cache().topSpIndexVec.begin(), cache().topSpIndexVec.end(), 0);
   std::ranges::sort(cache().topSpIndexVec, {},
                     [&tripletTopCandidates](const std::size_t t) {
