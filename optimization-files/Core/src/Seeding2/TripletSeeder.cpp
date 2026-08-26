@@ -27,10 +27,6 @@ void createAndFilterTriplets(TripletSeeder::Cache& cache,
                              const ConstSpacePointProxy2& spM,
                              DoubletCollections topDoublets) {
   for (auto bottomDoublet : bottomDoublets) {
-    if (topDoublets.empty()) {
-      break;
-    }
-
     cache.tripletTopCandidates.clear();
     tripletFinder.createTripletTopCandidates(spacePoints, spM, bottomDoublet,
                                              topDoublets,
