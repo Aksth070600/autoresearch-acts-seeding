@@ -151,7 +151,6 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
   // vector containing the radius of all compatible seeds
   cache().compatibleSeedR.reserve(config().compatSeedLimit);
 
-  const auto& experimentCuts = config().experimentCuts;
   const auto getTopR = [&](ConstSpacePointProxy2 spT) {
     if (config().useDeltaRinsteadOfTopRadius) {
       return fastHypot(spT.zr()[1] - spM.zr()[1], spT.zr()[0] - spM.zr()[0]);
@@ -226,11 +225,11 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
       }
     }
 
-    if (experimentCuts != nullptr) {
+    if (config().experimentCuts != nullptr) {
       // add detector specific considerations on the seed weight
-      weight += experimentCuts->seedWeight(spB, spM, spT);
+      weight += config().experimentCuts->seedWeight(spB, spM, spT);
       // discard seeds according to detector specific cuts (e.g.: weight)
-      if (!experimentCuts->singleSeedCut(weight, spB, spM, spT)) {
+      if (!config().experimentCuts->singleSeedCut(weight, spB, spM, spT)) {
         continue;
       }
     }
