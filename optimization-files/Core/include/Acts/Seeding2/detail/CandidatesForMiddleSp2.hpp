@@ -106,9 +106,10 @@ class CandidatesForMiddleSp2 {
   Container m_indicesLow;
   Container m_indicesHigh;
 
+  template <bool isQuality>
   bool push(Container& container, Size nMax, SpacePointIndex2 spB,
             SpacePointIndex2 spM, SpacePointIndex2 spT, float weight,
-            float zOrigin, bool isQuality);
+            float zOrigin);
 };
 
 }  // namespace Acts

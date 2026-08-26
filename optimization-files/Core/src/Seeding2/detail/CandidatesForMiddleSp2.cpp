@@ -34,17 +34,18 @@ bool CandidatesForMiddleSp2::push(SpacePointIndex2 spB, SpacePointIndex2 spM,
   // Decide in which collection this candidate may be added to according to the
   // isQuality boolean
   if (isQuality) {
-    return push(m_indicesHigh, m_maxSizeHigh, spB, spM, spT, weight, zOrigin,
-                isQuality);
+    return push<true>(m_indicesHigh, m_maxSizeHigh, spB, spM, spT, weight,
+                      zOrigin);
   }
-  return push(m_indicesLow, m_maxSizeLow, spB, spM, spT, weight, zOrigin,
-              isQuality);
+  return push<false>(m_indicesLow, m_maxSizeLow, spB, spM, spT, weight,
+                      zOrigin);
 }
 
+template <bool isQuality>
 bool CandidatesForMiddleSp2::push(Container& container, Size nMax,
                                   SpacePointIndex2 spB, SpacePointIndex2 spM,
                                   SpacePointIndex2 spT, float weight,
-                                  float zOrigin, bool isQuality) {
+                                  float zOrigin) {
   if (nMax == 0) {
     return false;
   }
