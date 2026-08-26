@@ -32,9 +32,10 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_RECORDS = PROJECT_ROOT / "records"
 DEFAULT_STATE = DEFAULT_RECORDS / "evolution" / "population.json"
 
-PRIMARY_TIME_METRIC = "total_time_per_event_ms"
+PRIMARY_TIME_METRIC = "seeding_time_per_event_ms"
 PRIMARY_EFFICIENCY_METRIC = "ambiguity_particle_efficiency"
 PRIMARY_METRICS = (PRIMARY_TIME_METRIC, PRIMARY_EFFICIENCY_METRIC)
+FULL_CHAIN_TIME_METRIC = "total_time_per_event_ms"
 
 
 class EvolutionError(RuntimeError):
@@ -94,12 +95,17 @@ def stage_prefix(stage: dict[str, Any]) -> str | None:
 
 
 def add_run_metrics(metrics: dict[str, float], prefix: str, run_metrics: dict[str, Any]) -> None:
-    """Flatten only the two primary metrics from one parsed full-chain run."""
+    """Flatten the primary metrics and full-chain timing diagnostic."""
 
     timing_total = run_metrics.get("timing_total", {})
     total_time = timing_total.get("time_per_event_ms")
     if finite(total_time):
-        metrics[f"{prefix}_{PRIMARY_TIME_METRIC}"] = float(total_time)
+        metrics[f"{prefix}_{FULL_CHAIN_TIME_METRIC}"] = float(total_time)
+
+    seeding = run_metrics.get("timing", {}).get("seeding", {})
+    seeding_time = seeding.get("time_per_event_ms")
+    if finite(seeding_time):
+        metrics[f"{prefix}_{PRIMARY_TIME_METRIC}"] = float(seeding_time)
 
     ambiguity = run_metrics.get("performance", {}).get("ambiguity_resolution", {})
     ambiguity_efficiency = ambiguity.get("efficiency_particles")

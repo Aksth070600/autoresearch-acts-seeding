@@ -17,7 +17,7 @@ on:
       x_metric:
         description: Default X-axis metric
         required: true
-        default: timed_total_time_per_event_ms
+        default: timed_seeding_time_per_event_ms
         type: choice
         options:
           - timed_total_time_per_event_ms
@@ -53,7 +53,7 @@ concurrency:
 
 env:
   DATASET: ${{ inputs.dataset || 'development' }}
-  X_METRIC: ${{ inputs.x_metric || 'timed_total_time_per_event_ms' }}
+  X_METRIC: ${{ inputs.x_metric || 'timed_seeding_time_per_event_ms' }}
   Y_METRIC: ${{ inputs.y_metric || 'timed_ambiguity_particle_efficiency' }}
   BASELINE: ${{ inputs.baseline || 'Genesis' }}
 

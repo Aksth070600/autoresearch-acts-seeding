@@ -35,15 +35,17 @@ The experiment agent must use protocol `acts-seeding-v2` without overrides:
 
 - ACTS v46.5.0 on the fixed `ttbar_pu200` ITk dataset through HEPP02.
 - One ACTS thread, seed 42, and pileup 200.
-- Experiment candidates use the 10-event development workload only.
+- Experiment candidates use the 10-event development workload only. Evaluation workloads are captain-controlled and must not be run by experiment agents.
 - Clean full-chain stages may run once. Timed full-chain stages run three repetitions;
   compare their median and retain each repetition for auditability.
 - Accept expected unmasked FPEs only when every requested event completed.
 
-The only primary objectives are median timed total full-chain time per event
-(minimize) and median timed particle ambiguity-resolution efficiency (maximize).
-Keep them as a Pareto tradeoff. All other metrics are diagnostics only and must
-not determine eligibility, Pareto objectives, or recommendation ranking.
+The only primary objectives are median timed seeding time per event (minimize)
+and median timed particle ambiguity-resolution efficiency (maximize). Keep them
+as a Pareto tradeoff. Full-chain and CKF timing are diagnostics unless the
+candidate actually changes those implementation areas. All other metrics are
+diagnostics only and must not determine eligibility, Pareto objectives, or
+recommendation ranking.
 
 ## Experiment surface
 
@@ -91,10 +93,11 @@ If it returns Genesis because no distinct candidate is eligible, inspect the cur
 
 A candidate is eligible to remain the active experiment base only when it passes all requested stages and improves at least one of the two primary metrics against the fresh Genesis baseline:
 
-- Lower median timed total full-chain time per event.
+- Lower median timed seeding time per event.
 - Higher median timed particle ambiguity-resolution efficiency.
 
-Use Pareto dominance and the non-dominated front for candidate comparison. Do not
+Full-chain and CKF timing are diagnostics unless the candidate actually changes
+those implementation areas. Use Pareto dominance and the non-dominated front for candidate comparison. Do not
 collapse the two objectives into a weighted score. A candidate that improves one
 primary metric while worsening the other may remain a Pareto tradeoff for a
 follow-up experiment, but report it as a mixed result and do not call it an
@@ -146,7 +149,7 @@ For each attempt:
 10. Add a concise lesson to `agent-learnings.md` when the attempt teaches something reusable.
 11. Keep a candidate that meets the active-base criteria. Otherwise restore the previous candidate with a safe, non-force operation on the campaign branch.
     Classify each attempt by a stable mechanism key, not only by its candidate name.
-    Keep a mixed ambiguity-improvement candidate when a follow-up experiment is explicitly targeting recovery of its total time, but do not present it as an overall improvement.
+    Keep a mixed ambiguity-improvement candidate when a follow-up experiment is explicitly targeting recovery of its seeding time, but do not present it as an overall improvement.
 12. Use the simplification skill to curate `agent-learnings.md` when it reaches 250 lines.
 13. Never allow `agent-learnings.md` to exceed 500 lines.
 

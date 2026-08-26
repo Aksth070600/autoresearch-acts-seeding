@@ -10,7 +10,9 @@ class ExperimentPolicyTests(unittest.TestCase):
         text = POLICY.read_text(encoding="utf-8")
         lowered = " ".join(text.lower().split())
 
-        self.assertNotIn("evaluation", lowered)
+        self.assertIn("captain-controlled", lowered)
+        self.assertIn("evaluation workloads are captain-controlled", lowered)
+        self.assertIn("experiment candidates use the 10-event development workload only", lowered)
         self.assertIn("at least 20 completed candidate attempts", lowered)
         self.assertIn("at least 10 structurally distinct", lowered)
         self.assertIn("no more than 5 micro-optimization", lowered)

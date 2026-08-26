@@ -8,7 +8,14 @@ import json
 from pathlib import Path
 from typing import Any
 
-from evolution import EvolutionError, choose_baseline, improved_over_baseline, load_records
+from evolution import (
+    EvolutionError,
+    PRIMARY_EFFICIENCY_METRIC,
+    PRIMARY_TIME_METRIC,
+    choose_baseline,
+    improved_over_baseline,
+    load_records,
+)
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_RECORDS = PROJECT_ROOT / "records"
@@ -46,10 +53,10 @@ def rank_ambiguity(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     )
 
 
-def rank_total_time(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def rank_seeding_time(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return sorted(
         rows,
-        key=lambda row: (row["metrics"]["timed_total_time_per_event_ms"], row["candidate"]),
+        key=lambda row: (row["metrics"][f"timed_{PRIMARY_TIME_METRIC}"], row["candidate"]),
     )
 
 
@@ -61,7 +68,9 @@ def choose(rows: list[dict[str, Any]], baseline_name: str, count: int) -> list[d
     except EvolutionError as error:
         raise ValueError(str(error)) from error
     candidates = deduplicate(rows, baseline)
-    required = ("timed_ambiguity_particle_efficiency", "timed_total_time_per_event_ms")
+    required = tuple(
+        f"timed_{metric}" for metric in (PRIMARY_EFFICIENCY_METRIC, PRIMARY_TIME_METRIC)
+    )
     candidates = [
         row
         for row in candidates
@@ -69,7 +78,7 @@ def choose(rows: list[dict[str, Any]], baseline_name: str, count: int) -> list[d
         and improved_over_baseline(row, baseline, "timed")
     ]
     ambiguity = rank_ambiguity(candidates)
-    total_time = rank_total_time(candidates)
+    seeding_time = rank_seeding_time(candidates)
 
     selected: list[dict[str, Any]] = [dict(baseline, selection_reason="baseline")]
     used = {identity(baseline)}
@@ -86,13 +95,13 @@ def choose(rows: list[dict[str, Any]], baseline_name: str, count: int) -> list[d
                 return
 
     add_from(ambiguity, "highest timed particle ambiguity efficiency", 2)
-    add_from(total_time, "lowest timed total time per event", 2)
+    add_from(seeding_time, "lowest timed seeding time per event", 2)
 
     if len(selected) < count + 1:
-        for row in total_time:
+        for row in seeding_time:
             if identity(row) in used:
                 continue
-            selected.append(dict(row, selection_reason="next lowest timed total time per event"))
+            selected.append(dict(row, selection_reason="next lowest timed seeding time per event"))
             used.add(identity(row))
             if len(selected) == count + 1:
                 break
@@ -129,6 +138,7 @@ def main() -> int:
                 "implementation_commit": row["commit"],
                 "selection_reason": row["selection_reason"],
                 "timed_ambiguity_particle_efficiency": row["metrics"].get("timed_ambiguity_particle_efficiency"),
+                "timed_seeding_time_per_event_ms": row["metrics"].get("timed_seeding_time_per_event_ms"),
                 "timed_total_time_per_event_ms": row["metrics"].get("timed_total_time_per_event_ms"),
             }
             for row in selected

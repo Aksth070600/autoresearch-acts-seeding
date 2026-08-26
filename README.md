@@ -3,7 +3,7 @@
 An experiment platform for making ACTS Seeding2 faster without sacrificing reconstruction quality.
 It runs controlled candidates on the fixed ITk workload through ACTS on HEPP02, keeps the results, and helps the next experiment build on what worked.
 The active protocol uses ACTS v46.5.0, one ACTS thread, 10-event development runs, and 50-event evaluation runs.
-Each timed comparison has three repetitions, with the median timing and particle ambiguity efficiency used for candidate comparison.
+Each timed comparison has three repetitions, with the median seeding timing and particle ambiguity efficiency used for candidate comparison. Full-chain and CKF timing remain diagnostic.
 
 [Open the interactive report](https://aksth070600.github.io/autoresearch-acts-seeding/)
 
@@ -23,11 +23,11 @@ flowchart LR
 
 - `optimization-files/` contains the ACTS implementation files an experiment may change.
 - `make evolve` selects a promising implementation from successful history under the active protocol.
-  Eligibility and Pareto selection use only total full-chain time per event and particle ambiguity-resolution efficiency.
-  Other metrics remain diagnostics.
+  Eligibility and Pareto selection use only timed seeding time per event and particle ambiguity-resolution efficiency.
+  Full-chain and CKF timing remain diagnostics unless the candidate changes those implementation areas.
 - `make evaluate CANDIDATE=name` runs the controlled development workload.
 - `make record CANDIDATE=name` returns the latest summary and failure details without editing the archive.
-- `make evaluate-selected` evaluates Genesis, the two strongest particle ambiguity-efficiency candidates, and two lowest-time candidates, filling overlaps with the next unique candidates.
+- `make evaluate-selected` evaluates Genesis, the two strongest particle ambiguity-efficiency candidates, and two lowest-seeding-time candidates, filling overlaps with the next unique candidates.
 - `records/` stores reproducible summaries used by evolution and reports.
 - `agent-learnings.md` stores short lessons so agents do not repeat failed ideas.
 - `Genesis` is the starting point for every campaign. Successful development baselines use timestamped `records/Development/*-Genesis/` directories; the legacy canonical Genesis summary remains readable for compatibility. Evolution selects the latest complete protocol-compatible Development Genesis record.

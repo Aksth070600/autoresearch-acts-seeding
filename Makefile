@@ -13,6 +13,8 @@ ITK_STAGE ?= full
 ITK_METRICS ?= none
 EVOLUTION_PYTHON ?= /usr/bin/python3
 REPORT_DATASET ?= development
+REPORT_X_METRIC ?= timed_seeding_time_per_event_ms
+REPORT_Y_METRIC ?= timed_ambiguity_particle_efficiency
 HEPP_RUN_TIMEOUT ?= 1800
 HEPP_HOST ?= thomaaks@hepp02.hpc.uio.no
 HEPP_STORAGE ?= /storage/thomaaks
@@ -103,7 +105,11 @@ evaluate:
 	python3 orchestration-files/evaluate.py "$(CANDIDATE)" $(if $(filter 1 true yes,$(EVALUATION)),--evaluation,)
 
 report:
-	python3 orchestration-files/report.py --dataset '$(REPORT_DATASET)' --output reports/site
+	python3 orchestration-files/report.py \
+		--dataset '$(REPORT_DATASET)' \
+		--x-metric '$(REPORT_X_METRIC)' \
+		--y-metric '$(REPORT_Y_METRIC)' \
+		--output reports/site
 
 evolve:
 	$(EVOLUTION_PYTHON) orchestration-files/evolution.py --dataset development

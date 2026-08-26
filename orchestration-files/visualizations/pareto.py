@@ -77,7 +77,6 @@ HTML_TEMPLATE = r"""<!doctype html>
   </section>
   <section id="summary" aria-live="polite">
     <div class="summary-card"><span class="summary-label">Records</span><strong id="summary-count" class="summary-value"></strong></div>
-    <div class="summary-card"><span class="summary-label">Genesis samples</span><strong id="summary-genesis-samples" class="summary-value"></strong></div>
     <div class="summary-card"><span class="summary-label">Baseline</span><strong id="summary-baseline" class="summary-value"></strong></div>
     <div class="summary-card"><div class="summary-heading"><span class="summary-label">X axis baseline</span><span id="summary-x-label" class="summary-chip"></span></div><strong id="summary-x-value" class="summary-value"></strong></div>
     <div class="summary-card"><div class="summary-heading"><span class="summary-label">Y axis baseline</span><span id="summary-y-label" class="summary-chip"></span></div><strong id="summary-y-value" class="summary-value"></strong></div>
@@ -102,7 +101,6 @@ const datasetSelect = document.getElementById('dataset');
 const baselineSelect = document.getElementById('baseline');
 const summaryCount = document.getElementById('summary-count');
 const summaryBaseline = document.getElementById('summary-baseline');
-const summaryGenesisSamples = document.getElementById('summary-genesis-samples');
 const datasetNote = document.getElementById('dataset-note');
 const summaryXValue = document.getElementById('summary-x-value');
 const summaryXLabel = document.getElementById('summary-x-label');
@@ -339,6 +337,9 @@ function axisTickFormat(axis) {
     ? { tickformat: '.0f', ticksuffix: ' ms' }
     : { tickformat: '.3%' };
 }
+function baselineLabel(name, row) {
+  return row && Number.isFinite(row.sample_count) ? `${name} (${row.sample_count})` : (name || 'Unavailable');
+}
 function render() {
   const xKey = axisKey('x');
   const yKey = axisKey('y');
@@ -348,8 +349,7 @@ function render() {
   const xLabel = axisLabel('x');
   const yLabel = axisLabel('y');
   summaryCount.textContent = String(points.length);
-  summaryGenesisSamples.textContent = String(REPORT.genesis_aggregation?.sample_count || 0);
-  summaryBaseline.textContent = baselineName || 'Unavailable';
+  summaryBaseline.textContent = baselineLabel(baselineName, baseline);
   datasetNote.textContent = REPORT.dataset_description || '';
   summaryXValue.textContent = baseline ? formatAxisValue('x', baseline.metrics[xKey]) : 'Unavailable';
   summaryXLabel.textContent = xLabel;
