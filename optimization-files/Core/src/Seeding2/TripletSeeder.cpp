@@ -41,7 +41,7 @@ void createAndFilterTriplets(TripletSeeder::Cache& cache,
 
 template <typename SpacePointCollections>
 void createSeedsFromGroupsImpl(
-    const Logger& logger, TripletSeeder::Cache& cache,
+    TripletSeeder::Cache& cache,
     const DoubletSeedFinder& bottomFinder, const DoubletSeedFinder& topFinder,
     const TripletSeedFinder& tripletFinder, const ITripletSeedFilter& filter,
     const SpacePointContainer2& spacePoints,
@@ -124,9 +124,9 @@ void TripletSeeder::createSeedsFromGroup(
   std::array<SpacePointContainer2::ConstSubset, 1> bottomSpGroups{bottomSps};
   std::array<SpacePointContainer2::ConstSubset, 1> topSpGroups{topSps};
 
-  createSeedsFromGroupsImpl(*m_logger, cache, bottomFinder, topFinder,
-                            tripletFinder, filter, spacePoints, bottomSpGroups,
-                            middleSp, topSpGroups, outputSeeds);
+  createSeedsFromGroupsImpl(cache, bottomFinder, topFinder, tripletFinder,
+                            filter, spacePoints, bottomSpGroups, middleSp,
+                            topSpGroups, outputSeeds);
 }
 
 void TripletSeeder::createSeedsFromGroups(
@@ -188,9 +188,9 @@ void TripletSeeder::createSeedsFromGroups(
       }
     }
 
-    createSeedsFromGroupsImpl(*m_logger, cache, bottomFinder, topFinder,
-                              tripletFinder, filter, spacePoints,
-                              bottomSpGroups, spM, topSpGroups, outputSeeds);
+    createSeedsFromGroupsImpl(cache, bottomFinder, topFinder, tripletFinder,
+                              filter, spacePoints, bottomSpGroups, spM,
+                              topSpGroups, outputSeeds);
   }
 }
 
