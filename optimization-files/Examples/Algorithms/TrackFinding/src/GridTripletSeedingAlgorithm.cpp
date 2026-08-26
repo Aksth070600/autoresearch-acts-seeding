@@ -136,8 +136,10 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   Acts::CylindricalSpacePointGrid2 grid(m_gridConfig,
                                         logger().cloneWithSuffix("Grid"));
 
+  std::vector<float> radiusKeys(spacePoints.size());
   for (std::size_t i = 0; i < spacePoints.size(); ++i) {
     const auto& sp = spacePoints[i];
+    radiusKeys[i] = sp.r();
 
     // check if the space point passes the selection
     if (m_spacePointSelector.connected() && !m_spacePointSelector(sp)) {
@@ -145,13 +147,13 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
     }
 
     float phi = std::atan2(sp.y(), sp.x());
-    grid.insert(i, phi, sp.z(), sp.r());
+    grid.insert(i, phi, sp.z(), radiusKeys[i]);
   }
 
   for (std::size_t i = 0; i < grid.numberOfBins(); ++i) {
     std::ranges::sort(grid.at(i), [&](const Acts::SpacePointIndex2& a,
                                       const Acts::SpacePointIndex2& b) {
-      return spacePoints[a].r() < spacePoints[b].r();
+      return radiusKeys[a] < radiusKeys[b];
     });
   }
 
