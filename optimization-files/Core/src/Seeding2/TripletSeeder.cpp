@@ -55,6 +55,9 @@ void createSeedsFromGroupsImpl(
   // create middle-top doublets
   cache.topDoublets.clear();
   for (auto& topSpGroup : topSpGroups) {
+    if (topSpGroup.empty()) {
+      continue;
+    }
     topFinder.createDoublets(middleSp, middleSpInfo, topSpGroup,
                              cache.topDoublets);
   }
@@ -72,6 +75,9 @@ void createSeedsFromGroupsImpl(
   // create middle-bottom doublets
   cache.bottomDoublets.clear();
   for (auto& bottomSpGroup : bottomSpGroups) {
+    if (bottomSpGroup.empty()) {
+      continue;
+    }
     bottomFinder.createDoublets(middleSp, middleSpInfo, bottomSpGroup,
                                 cache.bottomDoublets);
   }
