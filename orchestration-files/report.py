@@ -226,10 +226,19 @@ def main() -> int:
             print(f"{key}\t{report['metric_labels'][key]}")
         return 0
 
-    if args.x_metric not in report["metric_keys"]:
-        raise SystemExit(f"x metric not found: {args.x_metric}")
-    if args.y_metric not in report["metric_keys"]:
-        raise SystemExit(f"y metric not found: {args.y_metric}")
+    # A freshly reset campaign has no summaries and should still produce a
+    # reviewable placeholder. If summaries exist, retain strict metric checks
+    # so malformed or incomplete Genesis records do not pass unnoticed.
+    summary_paths = (
+        list(records_root.glob("**/summary.json"))
+        if args.dataset == "all"
+        else list(records_root.glob(f"{args.dataset.title()}/**/summary.json"))
+    )
+    if rows or summary_paths:
+        if args.x_metric not in report["metric_keys"]:
+            raise SystemExit(f"x metric not found: {args.x_metric}")
+        if args.y_metric not in report["metric_keys"]:
+            raise SystemExit(f"y metric not found: {args.y_metric}")
 
     output_root.mkdir(parents=True, exist_ok=True)
     (output_root / ".nojekyll").write_text("", encoding="utf-8")

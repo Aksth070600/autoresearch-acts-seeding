@@ -48,6 +48,8 @@ HTML_TEMPLATE = r"""<!doctype html>
     .corner-badge.worse { background: rgba(239,68,68,0.85); border-color: #f87171; color: #450a0a; }
     @media (max-width: 700px) { #corner-overlays { inset: 16px; } .corner-badge { font-size: 0.64rem; } }
     .note { color: #94a3b8; font-size: 0.88rem; }
+    #empty-state { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; }
+    #empty-state[hidden] { display: none; }
     code { background: #334155; padding: 2px 5px; border-radius: 4px; }
   </style>
 </head>
@@ -78,6 +80,7 @@ HTML_TEMPLATE = r"""<!doctype html>
     <div class="summary-card"><div class="summary-heading"><span class="summary-label">Y axis baseline</span><span id="summary-y-label" class="summary-chip"></span></div><strong id="summary-y-value" class="summary-value"></strong></div>
   </section>
   <div id="chart-frame">
+    <div id="empty-state" class="note" hidden>No protocol-compatible summaries yet. Run a fresh Genesis baseline to populate this report.</div>
     <div id="chart" role="img" aria-label="Interactive Pareto comparison chart"></div>
     <div id="corner-overlays" aria-hidden="true">
       <div id="corner-top-left" class="corner-stack top-left"></div>
@@ -100,6 +103,7 @@ const summaryXValue = document.getElementById('summary-x-value');
 const summaryXLabel = document.getElementById('summary-x-label');
 const summaryYValue = document.getElementById('summary-y-value');
 const summaryYLabel = document.getElementById('summary-y-label');
+const emptyState = document.getElementById('empty-state');
 const cornerOverlays = {
   topLeft: document.getElementById('corner-top-left'),
   topRight: document.getElementById('corner-top-right'),
@@ -294,6 +298,7 @@ function render() {
   summaryYValue.textContent = baseline ? formatAxisValue('y', baseline.metrics[yKey]) : 'Unavailable';
   summaryYLabel.textContent = yLabel;
   renderCornerOverlays(baseline);
+  emptyState.hidden = points.length !== 0;
   if (!points.length) {
     Plotly.purge('chart');
     return;
