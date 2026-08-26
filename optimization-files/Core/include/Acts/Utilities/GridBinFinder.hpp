@@ -12,6 +12,8 @@
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"
 
+#include <array>
+#include <optional>
 #include <variant>
 #include <vector>
 
@@ -52,13 +54,16 @@ class GridBinFinder {
          ...))
   {
     storeValue(std::forward<args>(vals)...);
+    initializeFixedSizePerAxis();
   }
 
   /// @brief Constructor that takes an array of axes values
   ///
   /// @param [in] values The array of stored values that define how many neighbours we need to find
   explicit GridBinFinder(std::array<stored_values_t, DIM> values)
-      : m_values(std::move(values)) {}
+      : m_values(std::move(values)) {
+    initializeFixedSizePerAxis();
+  }
 
   /// Get the stored bin edge values for all dimensions
   /// @return Array of bin edge values for each dimension
@@ -107,6 +112,9 @@ class GridBinFinder {
   std::array<std::pair<int, int>, DIM> getSizePerAxis(
       const std::array<std::size_t, DIM>& locPosition) const;
 
+  /// Cache the axis extents when no axis uses position-dependent vectors.
+  void initializeFixedSizePerAxis();
+
   /// @brief Check the GridBinFinder configuration is compatible with the grid
   /// by checking the values of m_values against the axes of the grid
   /// This function is called only in debug mode
@@ -131,6 +139,7 @@ class GridBinFinder {
   /// replaced with a 1 (integer), thus instructing the code to look for
   /// neighbours in the range {-1 ,1}
   std::array<stored_values_t, DIM> m_values{};
+  std::optional<std::array<std::pair<int, int>, DIM>> m_fixedSizePerAxis;
 };
 
 }  // namespace Acts
