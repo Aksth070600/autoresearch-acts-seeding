@@ -135,7 +135,8 @@ class Impl final : public DoubletSeedFinder {
         deltaZ = zO - zM;
       }
 
-      if (outsideRangeCheck(deltaZ, m_cfg.deltaZMin, m_cfg.deltaZMax)) {
+      if (outsideRangeCheck(deltaZ, m_cfg.deltaZMin, m_cfg.deltaZMax))
+          [[unlikely]] {
         continue;
       }
 
