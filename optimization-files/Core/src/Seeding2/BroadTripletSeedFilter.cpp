@@ -149,7 +149,8 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
                     });
 
   // vector containing the radius of all compatible seeds
-  cache().compatibleSeedR.reserve(config().compatSeedLimit);
+  const auto compatSeedLimit = config().compatSeedLimit;
+  cache().compatibleSeedR.reserve(compatSeedLimit);
 
   const auto getTopR = [&](ConstSpacePointProxy2 spT) {
     if (config().useDeltaRinsteadOfTopRadius) {
@@ -220,7 +221,7 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
         cache().compatibleSeedR.push_back(otherTopR);
         weight += config().compatSeedWeight;
       }
-      if (cache().compatibleSeedR.size() >= config().compatSeedLimit) {
+      if (cache().compatibleSeedR.size() >= compatSeedLimit) {
         break;
       }
     }
