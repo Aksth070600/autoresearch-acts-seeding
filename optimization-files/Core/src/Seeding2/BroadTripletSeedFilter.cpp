@@ -141,10 +141,12 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
   // initialize original index locations
   cache().topSpIndexVec.resize(tripletTopCandidates.size());
   std::iota(cache().topSpIndexVec.begin(), cache().topSpIndexVec.end(), 0);
-  std::ranges::sort(cache().topSpIndexVec, {},
-                    [&tripletTopCandidates](const std::size_t t) {
-                      return tripletTopCandidates.curvatures()[t];
-                    });
+  std::sort(cache().topSpIndexVec.begin(), cache().topSpIndexVec.end(),
+            [&tripletTopCandidates](const std::size_t lhs,
+                                    const std::size_t rhs) {
+              return tripletTopCandidates.curvatures()[lhs] <
+                     tripletTopCandidates.curvatures()[rhs];
+            });
 
   // vector containing the radius of all compatible seeds
   cache().compatibleSeedR.reserve(config().compatSeedLimit);
