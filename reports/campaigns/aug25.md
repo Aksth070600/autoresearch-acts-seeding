@@ -25,10 +25,10 @@ All four development stages passed for both implementations. The two 50-event st
 
 | Stage | Metric | Genesis | Candidate | Difference |
 | --- | --- | ---: | ---: | ---: |
-| Clean | Total time/event | 2625.47 ms | 2691.28 ms | +65.81 ms (+2.51%) |
+| Clean | Full-chain time/event (diagnostic) | 2625.47 ms | 2691.28 ms | +65.81 ms (+2.51%) |
 | Clean | Seeding time/event | 303.25 ms | 296.16 ms | -7.09 ms (-2.34%) |
-| Timed | Total time/event | 2728.79 ms | 2711.36 ms | -17.43 ms (-0.64%) |
-| Timed | Seeding time/event | 312.68 ms | 297.33 ms | -15.35 ms (-4.91%) |
+| Timed | Full-chain time/event (diagnostic) | 2728.79 ms | 2711.36 ms | -17.43 ms (-0.64%) |
+| Timed | Seeding time/event (primary) | 312.68 ms | 297.33 ms | -15.35 ms (-4.91%) |
 
 ### Timing breakdown
 
@@ -83,9 +83,9 @@ Values are percentages. Differences are candidate minus Genesis in percentage po
 
 ## Assessment
 
-The candidate reduced seeding time in both modes. It was slower in the clean run but faster in the timed run. Fake and duplicate ratios moved only slightly and inconsistently, so they do not explain the clean total-time regression by themselves; the clean CKF timing increase does. The timed run shows that the candidate can reduce measured chain time, but this is one 50-event measurement per implementation and needs repetition before promotion.
+The candidate reduced seeding time in both modes. It was slower in the clean run but faster in the timed run. Fake and duplicate ratios moved only slightly and inconsistently, so they do not explain the clean total-time regression by themselves; the clean CKF timing increase does. The timed seeding result shows that the candidate can reduce the primary measured stage time, but this is one 50-event measurement per implementation and needs repetition before promotion. Full-chain time remains diagnostic.
 
-The candidate remains a useful exploratory parent under the campaign policy because it improves timed total time. It is not yet a demonstrated overall improvement.
+Under the corrected campaign objective, timed seeding time is primary and full-chain time is diagnostic. The candidate improved timed seeding time, but ambiguity efficiency must be considered with it before calling the result an overall improvement.
 
 ## Reproduction note
 

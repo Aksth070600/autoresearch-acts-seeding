@@ -36,7 +36,7 @@ def parse_args() -> argparse.Namespace:
         help="record category to include",
     )
     parser.add_argument("--baseline", default="Genesis")
-    parser.add_argument("--x-metric", default="timed_total_time_per_event_ms")
+    parser.add_argument("--x-metric", default="timed_seeding_time_per_event_ms")
     parser.add_argument(
         "--y-metric",
         default="timed_ambiguity_particle_efficiency",
@@ -211,8 +211,8 @@ def metric_label(key: str) -> str:
         "clean_total_time_ms": "Clean total selected time (ms)",
         "timed_total_time_ms": "Timed total selected time (ms)",
         "clean_time_per_event_ms": "Clean selected time/event (ms)",
-        "timed_total_time_per_event_ms": "Timed total time/event (ms)",
-        "timed_seeding_time_per_event_ms": "Timed seeding time/event (ms)",
+        "timed_total_time_per_event_ms": "Diagnostic: timed full-chain time/event (ms)",
+        "timed_seeding_time_per_event_ms": "PRIMARY: timed seeding time/event (ms)",
         "timed_ckf_time_per_event_ms": "Timed CKF time/event (ms)",
         "timed_ambiguity_time_per_event_ms": "Timed ambiguity time/event (ms)",
         "clean_ambiguity_particle_efficiency": "Clean ambiguity particle efficiency",
@@ -313,7 +313,7 @@ def build_report(
         "repository_url": REPOSITORY_URL,
         "protocol": PROTOCOL_METADATA,
         "primary_objectives": {
-            "minimize": "timed_total_time_per_event_ms",
+            "minimize": "timed_seeding_time_per_event_ms",
             "maximize": "timed_ambiguity_particle_efficiency",
         },
     }

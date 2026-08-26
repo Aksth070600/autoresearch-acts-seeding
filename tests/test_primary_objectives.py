@@ -25,19 +25,21 @@ class PrimaryObjectiveTests(unittest.TestCase):
             "candidate": "Genesis",
             "record": "Development/Genesis",
             "metrics": {
-                "timed_total_time_per_event_ms": 100.0,
+                "timed_seeding_time_per_event_ms": 100.0,
+                "timed_total_time_per_event_ms": 300.0,
                 "timed_ambiguity_particle_efficiency": 0.95,
                 "timed_seeding_particle_efficiency": 0.80,
                 "timed_ckf_particle_efficiency": 0.80,
             },
         }
 
-    def test_diagnostic_winner_with_worse_primary_metrics_is_not_recommended(self) -> None:
+    def test_total_time_winner_with_slower_seeding_is_not_recommended(self) -> None:
         diagnostic_winner = {
             "candidate": "DiagnosticWinner",
             "record": "Development/DiagnosticWinner",
             "metrics": {
-                "timed_total_time_per_event_ms": 110.0,
+                "timed_seeding_time_per_event_ms": 110.0,
+                "timed_total_time_per_event_ms": 290.0,
                 "timed_ambiguity_particle_efficiency": 0.94,
                 "timed_seeding_particle_efficiency": 0.99,
                 "timed_ckf_particle_efficiency": 0.99,
@@ -59,16 +61,17 @@ class PrimaryObjectiveTests(unittest.TestCase):
         self.assertEqual(len(vector), 2)
         self.assertEqual(
             {PRIMARY_TIME_METRIC, PRIMARY_EFFICIENCY_METRIC},
-            {"total_time_per_event_ms", "ambiguity_particle_efficiency"},
+            {"seeding_time_per_event_ms", "ambiguity_particle_efficiency"},
         )
 
-    def test_evolution_keeps_only_primary_metrics(self) -> None:
+    def test_evolution_keeps_full_chain_as_diagnostic(self) -> None:
         metrics = {}
         add_run_metrics(
             metrics,
             "timed",
             {
-                "timing_total": {"time_per_event_ms": 100.0},
+                "timing_total": {"time_per_event_ms": 300.0},
+                "timing": {"seeding": {"time_per_event_ms": 100.0}},
                 "performance": {
                     "seeding": {"efficiency_particles": 0.99},
                     "ckf": {"efficiency_particles": 0.99},
@@ -83,7 +86,8 @@ class PrimaryObjectiveTests(unittest.TestCase):
         self.assertEqual(
             metrics,
             {
-                "timed_total_time_per_event_ms": 100.0,
+                "timed_total_time_per_event_ms": 300.0,
+                "timed_seeding_time_per_event_ms": 100.0,
                 "timed_ambiguity_particle_efficiency": 0.95,
             },
         )
@@ -132,7 +136,11 @@ class PrimaryObjectiveTests(unittest.TestCase):
             **older,
             "record": "Development/20260826T130000000000Z-Genesis/summary.json",
             "started_at": "2026-08-26T13:00:00+00:00",
-            "metrics": {**self.baseline["metrics"], "timed_total_time_per_event_ms": 90.0},
+            "metrics": {
+                **self.baseline["metrics"],
+                "timed_seeding_time_per_event_ms": 90.0,
+                "timed_total_time_per_event_ms": 290.0,
+            },
         }
         incomplete = {
             **newer,
@@ -151,7 +159,8 @@ class PrimaryObjectiveTests(unittest.TestCase):
             "candidate": "Faster",
             "record": "Development/Faster/summary.json",
             "metrics": {
-                "timed_total_time_per_event_ms": 90.0,
+                "timed_seeding_time_per_event_ms": 90.0,
+                "timed_total_time_per_event_ms": 290.0,
                 "timed_ambiguity_particle_efficiency": 0.95,
             },
         }
@@ -165,7 +174,8 @@ class PrimaryObjectiveTests(unittest.TestCase):
             "candidate": "Faster",
             "record": "Development/Faster",
             "metrics": {
-                "timed_total_time_per_event_ms": 90.0,
+                "timed_seeding_time_per_event_ms": 90.0,
+                "timed_total_time_per_event_ms": 290.0,
                 "timed_ambiguity_particle_efficiency": 0.94,
             },
         }
@@ -173,7 +183,8 @@ class PrimaryObjectiveTests(unittest.TestCase):
             "candidate": "MoreEfficient",
             "record": "Development/MoreEfficient",
             "metrics": {
-                "timed_total_time_per_event_ms": 110.0,
+                "timed_seeding_time_per_event_ms": 110.0,
+                "timed_total_time_per_event_ms": 310.0,
                 "timed_ambiguity_particle_efficiency": 0.96,
             },
         }

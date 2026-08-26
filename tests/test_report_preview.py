@@ -50,11 +50,17 @@ class ReportPreviewTests(unittest.TestCase):
             index = (output / "index.html").read_text(encoding="utf-8")
             self.assertIn("No protocol-compatible summaries yet", index)
             self.assertIn('"rows":[]', index)
+            self.assertIn('"x_metric": "timed_seeding_time_per_event_ms"', index)
 
     @staticmethod
     def summary(candidate: str, category: str, time: float, efficiency: float) -> dict:
         run_metrics = {
             "timing_total": {"time_per_event_ms": time},
+            "timing": {
+                "seeding": {"time_per_event_ms": time / 3},
+                "ckf": {"time_per_event_ms": time * 2 / 3},
+                "ambiguity_resolution": {"time_per_event_ms": 0.0},
+            },
             "performance": {"ambiguity_resolution": {"efficiency_particles": efficiency}},
         }
         repetitions = [
@@ -114,6 +120,9 @@ class ReportPreviewTests(unittest.TestCase):
             self.assertEqual(genesis[0]["sample_count"], 2)
             self.assertEqual(genesis[0]["metrics"]["timed_total_time_per_event_ms"], 110.0)
             self.assertAlmostEqual(
+                genesis[0]["metrics"]["timed_seeding_time_per_event_ms"], 110.0 / 3
+            )
+            self.assertAlmostEqual(
                 genesis[0]["metrics"]["timed_ambiguity_particle_efficiency"], 0.92
             )
             self.assertEqual(
@@ -125,7 +134,19 @@ class ReportPreviewTests(unittest.TestCase):
             )
             self.assertEqual(len(candidates), 1)
             self.assertEqual(candidates[0]["metrics"]["timed_total_time_per_event_ms"], 80.0)
+            self.assertAlmostEqual(candidates[0]["metrics"]["timed_seeding_time_per_event_ms"], 80.0 / 3)
             self.assertEqual(report["genesis_aggregation"]["sample_count"], 2)
+            self.assertEqual(
+                report["primary_objectives"]["minimize"], "timed_seeding_time_per_event_ms"
+            )
+            self.assertEqual(
+                report["metric_labels"]["timed_seeding_time_per_event_ms"],
+                "PRIMARY: timed seeding time/event (ms)",
+            )
+            self.assertEqual(
+                report["metric_labels"]["timed_total_time_per_event_ms"],
+                "Diagnostic: timed full-chain time/event (ms)",
+            )
 
     def test_dataset_views_do_not_mix_categories(self) -> None:
         rows = [
@@ -174,6 +195,8 @@ class ReportPreviewTests(unittest.TestCase):
         self.assertNotIn("option(datasetSelect, 'all'", html)
         self.assertNotIn("All datasets", html)
         self.assertIn("const TOOLTIP_STAGES = ['seeding', 'ckf', 'ambiguity'];", html)
+        self.assertNotIn("Genesis samples", html)
+        self.assertIn("function baselineLabel(name, row)", html)
 
         tooltip_rows = html[html.index("const TOOLTIP_ROWS"): html.index("const TOOLTIP_STAGES")]
         for label in ("label: 'T'", "label: 'E'", "label: 'F'", "label: 'D'"):
@@ -192,6 +215,7 @@ class ReportPreviewTests(unittest.TestCase):
             self.assertNotIn(field, hover)
 
         self.assertIn("customdata: points.map((row) => row.commit_url || '')", html)
+        self.assertIn("${name} (${row.sample_count})", html)
         self.assertIn("chart.on('plotly_click'", html)
         self.assertIn("window.open(url, '_blank', 'noopener,noreferrer')", html)
         self.assertIn("cursor = validCommitUrl", html)
