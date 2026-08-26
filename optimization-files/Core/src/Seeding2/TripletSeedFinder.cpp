@@ -323,8 +323,6 @@ class Impl final : public TripletSeedFinder {
         spacePoints[bottomDoublet.spacePointIndex()];
     const StripData stripB = calculateStripData(spB);
 
-    const float cotThetaDiffMax2 =
-        m_cfg.cotThetaDiffMax * m_cfg.cotThetaDiffMax;
     std::size_t topDoubletOffset = 0;
     for (auto [topDoublet, topDoubletIndex] :
          zip(topDoublets, std::ranges::iota_view<std::size_t, std::size_t>(
@@ -343,6 +341,8 @@ class Impl final : public TripletSeedFinder {
       if constexpr (sortedByCotTheta) {
         const float cotThetaT = topDoublet.cotTheta();
         const float deltaCotTheta = cotThetaB - cotThetaT;
+        const float cotThetaDiffMax2 =
+            m_cfg.cotThetaDiffMax * m_cfg.cotThetaDiffMax;
         if (deltaCotTheta * deltaCotTheta > cotThetaDiffMax2) {
           if (cotThetaB < cotThetaT) {
             break;
