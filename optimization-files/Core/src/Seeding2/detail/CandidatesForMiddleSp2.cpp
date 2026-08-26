@@ -77,14 +77,21 @@ bool CandidatesForMiddleSp2::push(Container& container, Size nMax,
 void CandidatesForMiddleSp2::toSortedCandidates(
     std::vector<TripletCandidate2>& output) {
   output.clear();
-  output.reserve(size());
 
-  std::ranges::sort_heap(m_indicesHigh, comparator);
-  std::ranges::sort_heap(m_indicesLow, comparator);
-
-  for (const auto& [weight, index] : m_indicesHigh) {
-    output.emplace_back(m_storage[index]);
+  // With quality confirmation, any low-quality candidate is ignored once a
+  // high-quality candidate exists. Do not sort or copy that dead heap.
+  if (!m_indicesHigh.empty()) {
+    output.reserve(m_indicesHigh.size());
+    std::ranges::sort_heap(m_indicesHigh, comparator);
+    for (const auto& [weight, index] : m_indicesHigh) {
+      output.emplace_back(m_storage[index]);
+    }
+    clear();
+    return;
   }
+
+  output.reserve(m_indicesLow.size());
+  std::ranges::sort_heap(m_indicesLow, comparator);
   for (const auto& [weight, index] : m_indicesLow) {
     output.emplace_back(m_storage[index]);
   }
