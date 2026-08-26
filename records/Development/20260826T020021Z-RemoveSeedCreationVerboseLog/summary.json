@@ -1,0 +1,219 @@
+{
+  "acts_backup": "/storage/thomaaks/acts-v46.5.0-autoresearch-backup",
+  "acts_source": "/storage/thomaaks/acts-v46.5.0",
+  "candidate_name": "RemoveSeedCreationVerboseLog",
+  "category": "Development",
+  "finished_at": "2026-08-26T02:07:50.381672+00:00",
+  "implementation_commit": "2031c8e1ba244337e384de1f6cf3a680a15c1989",
+  "mode": "development",
+  "optimization_files": [
+    "Core/include/Acts/EventData/SpacePointColumnProxy2.hpp",
+    "Core/include/Acts/EventData/SpacePointColumns.hpp",
+    "Core/include/Acts/EventData/SpacePointContainer2.hpp",
+    "Core/include/Acts/EventData/SpacePointContainer2.ipp",
+    "Core/include/Acts/EventData/SpacePointProxy2.hpp",
+    "Core/include/Acts/Seeding/BinnedGroup.hpp",
+    "Core/include/Acts/Seeding/BinnedGroup.ipp",
+    "Core/include/Acts/Seeding/BinnedGroupIterator.hpp",
+    "Core/include/Acts/Seeding/BinnedGroupIterator.ipp",
+    "Core/include/Acts/Seeding2/BroadTripletSeedFilter.hpp",
+    "Core/include/Acts/Seeding2/CylindricalSpacePointGrid2.hpp",
+    "Core/include/Acts/Seeding2/DoubletSeedFinder.hpp",
+    "Core/include/Acts/Seeding2/ITripletSeedFilter.hpp",
+    "Core/include/Acts/Seeding2/TripletSeedFinder.hpp",
+    "Core/include/Acts/Seeding2/TripletSeeder.hpp",
+    "Core/include/Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp",
+    "Core/include/Acts/Utilities/GridBinFinder.hpp",
+    "Core/include/Acts/Utilities/GridBinFinder.ipp",
+    "Core/src/EventData/SpacePointContainer2.cpp",
+    "Core/src/Seeding2/BroadTripletSeedFilter.cpp",
+    "Core/src/Seeding2/CylindricalSpacePointGrid2.cpp",
+    "Core/src/Seeding2/DoubletSeedFinder.cpp",
+    "Core/src/Seeding2/TripletSeedFinder.cpp",
+    "Core/src/Seeding2/TripletSeeder.cpp",
+    "Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp",
+    "Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/GridTripletSeedingAlgorithm.hpp",
+    "Examples/Algorithms/TrackFinding/src/GridTripletSeedingAlgorithm.cpp"
+  ],
+  "pileup": 200,
+  "raw_logs_retained": false,
+  "seed": 42,
+  "stages": [
+    {
+      "events": 1,
+      "exit_code": 0,
+      "metrics_mode": "none",
+      "name": "one_event_seeding",
+      "stage": "seeding",
+      "status": "passed"
+    },
+    {
+      "events": 1,
+      "exit_code": 0,
+      "metrics_mode": "none",
+      "name": "one_event_full",
+      "stage": "full",
+      "status": "passed"
+    },
+    {
+      "events": 50,
+      "exit_code": 0,
+      "expected_nonfatal": {
+        "processed_events": 50,
+        "unmasked_fpes": 2
+      },
+      "metrics_mode": "none",
+      "name": "fifty_event_full_clean",
+      "raw_exit_code": 1,
+      "run_metrics": {
+        "ckf_statistics": {
+          "deduplicated_seeds": 865033,
+          "failed_extrapolation": 0,
+          "failed_seeds": 0,
+          "failed_smoothing": 0,
+          "failure_ratio_seeds": 0,
+          "found_tracks": 193120,
+          "selected_tracks": 173553,
+          "skipped_second_pass": 172,
+          "stopped_branches": 297053,
+          "total_seeds": 1078119
+        },
+        "performance": {
+          "ambiguity_resolution": {
+            "duplicate_ratio_particles": 0.0010874,
+            "duplicate_ratio_tracks": 0.00137545,
+            "efficiency_particles": 0.973257,
+            "efficiency_tracks": 0.57574,
+            "fake_ratio_particles": 0.00462145,
+            "fake_ratio_tracks": 0.0167062
+          },
+          "ckf": {
+            "duplicate_ratio_particles": 0.302144,
+            "duplicate_ratio_tracks": 0.213508,
+            "efficiency_particles": 0.973868,
+            "efficiency_tracks": 0.54377,
+            "fake_ratio_particles": 0.0388406,
+            "fake_ratio_tracks": 0.0217225
+          },
+          "seeding": {
+            "duplicate_ratio_particles": 0.972764,
+            "duplicate_ratio_tracks": 0.548877,
+            "efficiency_particles": 0.983145,
+            "efficiency_tracks": 0.602549,
+            "fake_ratio_particles": 0.204023,
+            "fake_ratio_tracks": 0.0252365
+          }
+        },
+        "timing": {
+          "ambiguity_resolution": {
+            "fraction_percent": 1.334336,
+            "time_per_event_ms": 34.34,
+            "total_time_ms": 1716.93
+          },
+          "ckf": {
+            "fraction_percent": 86.91988,
+            "time_per_event_ms": 2236.85,
+            "total_time_ms": 111842.4
+          },
+          "seeding": {
+            "fraction_percent": 11.745784,
+            "time_per_event_ms": 302.27,
+            "total_time_ms": 15113.65
+          }
+        },
+        "timing_total": {
+          "fraction_percent": 100.0,
+          "time_per_event_ms": 2573.46,
+          "total_time_ms": 128672.98
+        }
+      },
+      "stage": "full",
+      "status": "passed"
+    },
+    {
+      "events": 50,
+      "exit_code": 0,
+      "expected_nonfatal": {
+        "processed_events": 50,
+        "unmasked_fpes": 2
+      },
+      "metrics_mode": "time",
+      "name": "fifty_event_full_timed",
+      "raw_exit_code": 1,
+      "resource_metrics": {
+        "elapsed": "2:31.26",
+        "peak_rss_kb": 12744520,
+        "system_seconds": "13.93",
+        "user_seconds": "653.85"
+      },
+      "run_metrics": {
+        "ckf_statistics": {
+          "deduplicated_seeds": 862870,
+          "failed_extrapolation": 0,
+          "failed_seeds": 0,
+          "failed_smoothing": 0,
+          "failure_ratio_seeds": 0,
+          "found_tracks": 193008,
+          "selected_tracks": 173310,
+          "skipped_second_pass": 181,
+          "stopped_branches": 296209,
+          "total_seeds": 1075571
+        },
+        "performance": {
+          "ambiguity_resolution": {
+            "duplicate_ratio_particles": 0.00107225,
+            "duplicate_ratio_tracks": 0.00140679,
+            "efficiency_particles": 0.973789,
+            "efficiency_tracks": 0.57556,
+            "fake_ratio_particles": 0.00474853,
+            "fake_ratio_tracks": 0.0169016
+          },
+          "ckf": {
+            "duplicate_ratio_particles": 0.300689,
+            "duplicate_ratio_tracks": 0.212007,
+            "efficiency_particles": 0.974385,
+            "efficiency_tracks": 0.54234,
+            "fake_ratio_particles": 0.038635,
+            "fake_ratio_tracks": 0.0220934
+          },
+          "seeding": {
+            "duplicate_ratio_particles": 0.973041,
+            "duplicate_ratio_tracks": 0.548388,
+            "efficiency_particles": 0.983542,
+            "efficiency_tracks": 0.602116,
+            "fake_ratio_particles": 0.203455,
+            "fake_ratio_tracks": 0.0251745
+          }
+        },
+        "timing": {
+          "ambiguity_resolution": {
+            "fraction_percent": 1.385442,
+            "time_per_event_ms": 35.68,
+            "total_time_ms": 1784.23
+          },
+          "ckf": {
+            "fraction_percent": 86.947246,
+            "time_per_event_ms": 2239.49,
+            "total_time_ms": 111974.28
+          },
+          "seeding": {
+            "fraction_percent": 11.667312,
+            "time_per_event_ms": 300.51,
+            "total_time_ms": 15025.65
+          }
+        },
+        "timing_total": {
+          "fraction_percent": 100.0,
+          "time_per_event_ms": 2575.68,
+          "total_time_ms": 128784.16
+        }
+      },
+      "stage": "full",
+      "status": "passed"
+    }
+  ],
+  "started_at": "2026-08-26T02:00:21.850481+00:00",
+  "status": "passed",
+  "threads": -1,
+  "workload": "ttbar_pu200"
+}
