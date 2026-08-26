@@ -101,16 +101,15 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
   auto spB = spacePoints[bottomLink.spacePointIndex()];
   auto bottomSp = spB.index();
   auto middleSp = spM.index();
-  const bool seedConfirmation = config().seedConfirmation;
 
   // minimum number of compatible top SPs to trigger the filter for a certain
   // middle bottom pair if seedConfirmation is false we always ask for at
   // least one compatible top to trigger the filter
   std::size_t minCompatibleTopSPs = 2;
-  if (!seedConfirmation || spB.zr()[1] > state().rMaxSeedConf) {
+  if (!config().seedConfirmation || spB.zr()[1] > state().rMaxSeedConf) {
     minCompatibleTopSPs = 1;
   }
-  if (seedConfirmation &&
+  if (config().seedConfirmation &&
       state().candidatesCollector.nHighQualityCandidates() > 0) {
     minCompatibleTopSPs++;
   }
@@ -123,7 +122,7 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
   // seed confirmation
   SeedConfirmationRangeConfig seedConfRange;
   std::size_t nTopSeedConf = 0;
-  if (seedConfirmation) {
+  if (config().seedConfirmation) {
     // check if bottom SP is in the central or forward region
     const bool isForwardRegion =
         spB.zr()[0] > config().centralSeedConfirmationRange.zMaxSeedConf ||
@@ -313,7 +312,7 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
 
   // if no high quality seed was found for a certain middle+bottom SP pair,
   // lower quality seeds can be accepted
-  if (seedConfirmation && maxWeightSeed &&
+  if (config().seedConfirmation && maxWeightSeed &&
       state().candidatesCollector.nHighQualityCandidates() == 0) {
     // if we have not yet reached our max number of seeds we add the new seed to
     // outCont
