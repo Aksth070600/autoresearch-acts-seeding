@@ -390,6 +390,7 @@ void BroadTripletSeedFilter::filterTripletsMiddleFixed(
     ++numTotalSeeds;
   }
 
+  ACTS_VERBOSE("Identified " << numTotalSeeds << " seeds");
 }
 
 }  // namespace Acts
