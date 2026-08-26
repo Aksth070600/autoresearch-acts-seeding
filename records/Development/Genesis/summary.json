@@ -4,7 +4,7 @@
   "candidate_name": "Genesis",
   "category": "Development",
   "finished_at": "2026-08-25T23:52:10.584504+00:00",
-  "implementation_commit": "8cc33f8e195d86399e9c99203c81f0da6b82730a",
+  "implementation_commit": "4326d90",
   "mode": "development",
   "optimization_files": [
     "Core/include/Acts/EventData/SpacePointColumnProxy2.hpp",

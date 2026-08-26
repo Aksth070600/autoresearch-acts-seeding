@@ -142,6 +142,11 @@ Create or update the draft PR with `gh-axi` and keep its body current with the c
 Use PR comments for additional candidate results when rewriting the body would hide history.
 Never merge the campaign PR autonomously; leave that decision to the captain.
 
+The `main` branch must always contain the Genesis implementation.
+Before a campaign archive PR is merged, revert candidate implementation changes in a final commit while keeping the candidate commits, summaries, lessons, and report in the PR history.
+Merge archive PRs with a regular merge commit, never squash, so each candidate implementation commit remains reachable to future `make evolve` runs.
+Do not delete a campaign branch until its archive PR has merged and its records are present on `main`.
+
 ## Agent learnings
 
 `agent-learnings.md` is a concise memory of reusable experiment lessons.

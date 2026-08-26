@@ -9,11 +9,11 @@ This campaign is now reproduced on the campaign branch with committed machine-ge
 - Experiments: one mutation candidate
 - Candidate: `SkipEmptyTripletFilter`
 - Candidate implementation: `optimization-files/Core/src/Seeding2/TripletSeeder.cpp`
-- Candidate history: `1d923ab` and `56fdc8e`
+- Candidate history: original commits `1d923ab` and `56fdc8e`; archived implementation commit `aaee783`
 - Genesis summary: `records/Development/Genesis/summary.json`
 - Candidate summary: `records/Development/20260825T235218Z-SkipEmptyTripletFilter/summary.json`
 
-The original autonomous trial ran in a disposable worktree. The campaign was rerun to preserve the machine-generated summaries and include the fake and duplicate ratios in this review.
+The original autonomous trial ran in a disposable worktree. The campaign was rerun to preserve the machine-generated summaries and include the fake and duplicate ratios in this review. The archive commit points the summaries at the reachable commits in this archive branch.
 
 ## Hypothesis
 

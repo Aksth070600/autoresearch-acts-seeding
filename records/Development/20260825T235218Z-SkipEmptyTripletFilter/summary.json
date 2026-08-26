@@ -4,7 +4,7 @@
   "candidate_name": "SkipEmptyTripletFilter",
   "category": "Development",
   "finished_at": "2026-08-25T23:59:47.644200+00:00",
-  "implementation_commit": "59073cd5ada78aeb8c9c37d9d5a532258164d958",
+  "implementation_commit": "aaee783",
   "mode": "development",
   "optimization_files": [
     "Core/include/Acts/EventData/SpacePointColumnProxy2.hpp",
