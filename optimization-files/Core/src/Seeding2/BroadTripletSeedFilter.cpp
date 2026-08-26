@@ -85,9 +85,6 @@ bool BroadTripletSeedFilter::sufficientTopDoublets(
   state().rMaxSeedConf = seedConfRange.rMaxSeedConf;
   // continue if number of top SPs is smaller than minimum
   if (topDoublets.size() < nTopSeedConf) {
-    ACTS_VERBOSE("Number of top SPs is "
-                 << topDoublets.size()
-                 << " and is smaller than minimum, returning");
     return false;
   }
 
