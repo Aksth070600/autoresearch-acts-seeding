@@ -166,6 +166,8 @@ class Impl final : public TripletSeedFinder {
     // 1+(cot^2(theta)) = 1/sin^2(theta)
     const float iSinTheta2 = 1 + cotThetaB * cotThetaB;
     const float sigmaSquaredPtDependent = iSinTheta2 * m_cfg.sigmapT2perRadius;
+    const float minHelixDiameter2 = m_cfg.minHelixDiameter2;
+    const float impactMax = m_cfg.impactMax;
     // calculate max scattering for min momentum at the seed's theta angle
     // scaling scatteringAngle^2 by sin^2(theta) to convert pT^2 to p^2
     // accurate would be taking 1/atan(thetaBottom)-1/atan(thetaTop) <
@@ -233,7 +235,7 @@ class Impl final : public TripletSeedFinder {
 
       // sqrt(S2)/B = 2 * helixradius
       // calculated radius must not be smaller than minimum radius
-      if (S2 < B2 * m_cfg.minHelixDiameter2) {
+      if (S2 < B2 * minHelixDiameter2) {
         continue;
       }
 
@@ -259,7 +261,7 @@ class Impl final : public TripletSeedFinder {
       // function
       // (in contrast to having to solve a quadratic function in x/y plane)
       const float im = std::abs((A - B * rM) * rM);
-      if (im > m_cfg.impactMax) {
+      if (im > impactMax) {
         continue;
       }
 
