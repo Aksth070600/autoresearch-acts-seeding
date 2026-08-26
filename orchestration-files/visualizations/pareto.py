@@ -58,7 +58,6 @@ HTML_TEMPLATE = r"""<!doctype html>
 <main>
   <h1>ACTS Seeding Autoresearch</h1>
   <p class="lede">Lower X is better. Higher Y is better. The reference lines show the selected baseline.</p>
-  <p id="dataset-note" class="note"></p>
   <section class="controls" aria-label="Chart controls">
     <label>Dataset<select id="dataset"></select></label>
     <label>Baseline<select id="baseline"></select></label>
@@ -101,7 +100,6 @@ const datasetSelect = document.getElementById('dataset');
 const baselineSelect = document.getElementById('baseline');
 const summaryCount = document.getElementById('summary-count');
 const summaryBaseline = document.getElementById('summary-baseline');
-const datasetNote = document.getElementById('dataset-note');
 const summaryXValue = document.getElementById('summary-x-value');
 const summaryXLabel = document.getElementById('summary-x-label');
 const summaryYValue = document.getElementById('summary-y-value');
@@ -350,7 +348,6 @@ function render() {
   const yLabel = axisLabel('y');
   summaryCount.textContent = String(points.length);
   summaryBaseline.textContent = baselineLabel(baselineName, baseline);
-  datasetNote.textContent = REPORT.dataset_description || '';
   summaryXValue.textContent = baseline ? formatAxisValue('x', baseline.metrics[xKey]) : 'Unavailable';
   summaryXLabel.textContent = xLabel;
   summaryYValue.textContent = baseline ? formatAxisValue('y', baseline.metrics[yKey]) : 'Unavailable';

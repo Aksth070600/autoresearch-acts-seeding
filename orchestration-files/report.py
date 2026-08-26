@@ -296,18 +296,12 @@ def build_report(
 ) -> dict[str, Any]:
     report_rows, genesis_aggregation = aggregate_genesis(rows, baseline, dataset)
     metric_keys = sorted({key for row in report_rows for key in row["metrics"]})
-    dataset_description = (
-        f"{dataset.title()} includes only protocol-compatible {dataset.title()} records. "
-        "Genesis is the arithmetic mean of its records; candidate records remain "
-        "individual points."
-    )
     return {
         "rows": report_rows,
         "metric_keys": metric_keys,
         "metric_labels": {key: metric_label(key) for key in metric_keys},
         "baseline": baseline,
         "dataset": dataset,
-        "dataset_description": dataset_description,
         "genesis_aggregation": genesis_aggregation,
         "protocol_id": PROTOCOL_ID,
         "repository_url": REPOSITORY_URL,
