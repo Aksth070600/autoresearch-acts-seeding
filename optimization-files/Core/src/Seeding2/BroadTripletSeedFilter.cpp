@@ -145,7 +145,7 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
   std::iota(cache().topSpIndexVec.begin(), cache().topSpIndexVec.end(), 0);
   std::ranges::sort(cache().topSpIndexVec, {},
                     [&tripletTopCandidates](const std::size_t t) {
-                      return tripletTopCandidates.curvatures()[t];
+                      return tripletTopCandidates[t].curvature();
                     });
 
   // vector containing the radius of all compatible seeds
@@ -161,16 +161,16 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
   std::size_t beginCompTopIndex = 0;
   // loop over top SPs and other compatible top SP candidates
   for (const std::size_t topSpIndex : cache().topSpIndexVec) {
-    auto topSp = tripletTopCandidates.topSpacePoints()[topSpIndex];
+    auto topSp = tripletTopCandidates[topSpIndex].spacePoint();
     auto spT = spacePoints[topSp];
 
     cache().compatibleSeedR.clear();
 
-    float invHelixDiameter = tripletTopCandidates.curvatures()[topSpIndex];
+    float invHelixDiameter = tripletTopCandidates[topSpIndex].curvature();
     float lowerLimitCurv = invHelixDiameter - config().deltaInvHelixDiameter;
     float upperLimitCurv = invHelixDiameter + config().deltaInvHelixDiameter;
     float currentTopR = getTopR(spT);
-    float impact = tripletTopCandidates.impactParameters()[topSpIndex];
+    float impact = tripletTopCandidates[topSpIndex].impactParameter();
 
     float weight = -impact * config().impactWeightFactor;
 
@@ -179,8 +179,8 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
     const auto firstCompatible = std::ranges::lower_bound(
         cache().topSpIndexVec.begin() + beginCompTopIndex,
         cache().topSpIndexVec.end(), lowerLimitCurv, {},
-        [&curvatures = tripletTopCandidates.curvatures()](std::size_t index) {
-          return curvatures[index];
+        [&tripletTopCandidates](std::size_t index) {
+          return tripletTopCandidates[index].curvature();
         });
     beginCompTopIndex =
         static_cast<std::size_t>(firstCompatible - cache().topSpIndexVec.begin());
@@ -194,13 +194,13 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
       if (compatibleTopSpIndex == topSpIndex) {
         continue;
       }
-      auto otherSpT = spacePoints[tripletTopCandidates
-                                      .topSpacePoints()[compatibleTopSpIndex]];
+      auto otherSpT =
+          spacePoints[tripletTopCandidates[compatibleTopSpIndex].spacePoint()];
 
       float otherTopR = getTopR(otherSpT);
 
       // curvature difference within limits?
-      if (tripletTopCandidates.curvatures()[compatibleTopSpIndex] >
+      if (tripletTopCandidates[compatibleTopSpIndex].curvature() >
           upperLimitCurv) {
         // the SPs are sorted in curvature so we skip unnecessary iterations
         break;
