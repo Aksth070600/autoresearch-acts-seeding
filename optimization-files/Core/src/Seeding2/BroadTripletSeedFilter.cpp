@@ -149,7 +149,6 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
   // vector containing the radius of all compatible seeds
   cache().compatibleSeedR.reserve(config().compatSeedLimit);
 
-  const auto deltaRMin = config().deltaRMin;
   const auto getTopR = [&](ConstSpacePointProxy2 spT) {
     if (config().useDeltaRinsteadOfTopRadius) {
       return fastHypot(spT.zr()[1] - spM.zr()[1], spT.zr()[0] - spM.zr()[0]);
@@ -201,7 +200,7 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
       }
       // compared top SP should have at least deltaRMin distance
       float deltaR = currentTopR - otherTopR;
-      if (std::abs(deltaR) < deltaRMin) {
+      if (std::abs(deltaR) < config().deltaRMin) {
         continue;
       }
       bool newCompSeed = true;
@@ -210,7 +209,7 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
         // seed (20mm instead of 5mm)
         // add new compatible seed only if distance larger than rmin to all
         // other compatible seeds
-        if (std::abs(previousDiameter - otherTopR) < deltaRMin) {
+        if (std::abs(previousDiameter - otherTopR) < config().deltaRMin) {
           newCompSeed = false;
           break;
         }
