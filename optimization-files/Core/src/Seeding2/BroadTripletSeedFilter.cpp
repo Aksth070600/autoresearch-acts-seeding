@@ -183,11 +183,6 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
       if (compatibleTopSpIndex == topSpIndex) {
         continue;
       }
-      auto otherSpT = spacePoints[tripletTopCandidates
-                                      .topSpacePoints()[compatibleTopSpIndex]];
-
-      float otherTopR = getTopR(otherSpT);
-
       // curvature difference within limits?
       if (tripletTopCandidates.curvatures()[compatibleTopSpIndex] <
           lowerLimitCurv) {
@@ -200,6 +195,11 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
         // the SPs are sorted in curvature so we skip unnecessary iterations
         break;
       }
+
+      auto otherSpT = spacePoints[tripletTopCandidates
+                                      .topSpacePoints()[compatibleTopSpIndex]];
+      float otherTopR = getTopR(otherSpT);
+
       // compared top SP should have at least deltaRMin distance
       float deltaR = currentTopR - otherTopR;
       if (std::abs(deltaR) < config().deltaRMin) {
