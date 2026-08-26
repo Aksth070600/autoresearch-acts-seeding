@@ -400,7 +400,7 @@ class SpacePointProxy2 {
   Index m_index{0};
 
   template <typename OptColumn>
-  auto &accessImpl(OptColumn &&column) const {
+  [[gnu::always_inline]] auto &accessImpl(OptColumn &&column) const {
     assert(column.has_value() && "Column does not exist");
     assert(m_index < column->size() && "Index out of bounds");
     return column->proxy(*m_container)[m_index];
