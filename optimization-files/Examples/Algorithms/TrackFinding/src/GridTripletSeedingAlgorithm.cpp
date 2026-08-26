@@ -162,19 +162,25 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   coreSpacePoints.reserve(grid.numberOfSpacePoints());
   std::vector<Acts::SpacePointIndexRange2> gridSpacePointRanges;
   gridSpacePointRanges.reserve(grid.numberOfBins());
+  const auto coreXY = coreSpacePoints.xyColumn();
+  const auto coreZR = coreSpacePoints.zrColumn();
+  const auto coreVarianceZ = coreSpacePoints.varianceZColumn();
+  const auto coreVarianceR = coreSpacePoints.varianceRColumn();
+  const auto coreCopyFromIndex = coreSpacePoints.copyFromIndexColumn();
   for (std::size_t i = 0; i < grid.numberOfBins(); ++i) {
     std::uint32_t begin = coreSpacePoints.size();
     for (Acts::SpacePointIndex2 spIndex : grid.at(i)) {
       const ConstSpacePointProxy& sp = spacePoints[spIndex];
 
       auto newSp = coreSpacePoints.createSpacePoint();
-      newSp.xy() = std::array<float, 2>{static_cast<float>(sp.x()),
-                                        static_cast<float>(sp.y())};
-      newSp.zr() = std::array<float, 2>{static_cast<float>(sp.z()),
-                                        static_cast<float>(sp.r())};
-      newSp.varianceZ() = static_cast<float>(sp.varianceZ());
-      newSp.varianceR() = static_cast<float>(sp.varianceR());
-      newSp.copyFromIndex() = sp.index();
+      const auto coreIndex = newSp.index();
+      coreXY[coreIndex] = std::array<float, 2>{static_cast<float>(sp.x()),
+                                               static_cast<float>(sp.y())};
+      coreZR[coreIndex] = std::array<float, 2>{static_cast<float>(sp.z()),
+                                               static_cast<float>(sp.r())};
+      coreVarianceZ[coreIndex] = static_cast<float>(sp.varianceZ());
+      coreVarianceR[coreIndex] = static_cast<float>(sp.varianceR());
+      coreCopyFromIndex[coreIndex] = sp.index();
     }
     std::uint32_t end = coreSpacePoints.size();
     gridSpacePointRanges.emplace_back(begin, end);
