@@ -376,12 +376,6 @@ void BroadTripletSeedFilter::filterTripletsMiddleFixed(
     setBestSeedQuality(state().bestSeedQualityMap, triplet[0], triplet[1],
                        triplet[2], bestSeedQuality);
 
-    ACTS_VERBOSE("Adding seed: original indices=["
-                 << triplet[0] << ", " << triplet[1] << ", " << triplet[2]
-                 << "], internal indices=[" << bottom << ", " << middle << ", "
-                 << top << "], quality=" << bestSeedQuality
-                 << ", vertexZ=" << zOrigin);
-
     auto seed = outputCollection.createSeed();
     seed.assignSpacePointIndices(triplet);
     seed.vertexZ() = zOrigin;
