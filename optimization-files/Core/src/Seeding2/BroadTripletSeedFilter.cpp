@@ -174,6 +174,17 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
 
     float weight = -impact * config().impactWeightFactor;
 
+    // The top candidates are sorted by curvature. Jump to the lower edge of
+    // the compatibility window instead of scanning its discarded prefix.
+    const auto firstCompatible = std::ranges::lower_bound(
+        cache().topSpIndexVec.begin() + beginCompTopIndex,
+        cache().topSpIndexVec.end(), lowerLimit, {},
+        [&curvatures = tripletTopCandidates.curvatures()](std::size_t index) {
+          return curvatures[index];
+        });
+    beginCompTopIndex =
+        static_cast<std::size_t>(firstCompatible - cache().topSpIndexVec.begin());
+
     // loop over compatible top SP candidates
     for (std::size_t variableCompTopIndex = beginCompTopIndex;
          variableCompTopIndex < cache().topSpIndexVec.size();
@@ -189,12 +200,6 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
       float otherTopR = getTopR(otherSpT);
 
       // curvature difference within limits?
-      if (tripletTopCandidates.curvatures()[compatibleTopSpIndex] <
-          lowerLimitCurv) {
-        // the SPs are sorted in curvature so we skip unnecessary iterations
-        beginCompTopIndex = variableCompTopIndex + 1;
-        continue;
-      }
       if (tripletTopCandidates.curvatures()[compatibleTopSpIndex] >
           upperLimitCurv) {
         // the SPs are sorted in curvature so we skip unnecessary iterations
