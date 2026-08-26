@@ -35,3 +35,5 @@ Do not record raw logs or scientific metrics that were not produced by a
 completed controlled run. Keep this file below 500 lines. At 250 lines, invoke
 the simplification skill to merge duplicate lessons, remove stale details, and
 keep it below the hard limit.
+
+- 2026-08-26 | candidate: MapEmplaceSingleLookup | implementation_commit: 0155cb01d2f69992290d8870acc7ab23c7af6866 | mechanism_key: best-quality-map-insertion | files_changed: optimization-files/Core/src/Seeding2/BroadTripletSeedFilter.cpp#L38-L43 | outcome: keep | lesson: Replacing find-then-emplace with one emplace passed all stages, kept particle ambiguity efficiency at 0.972769, and lowered median timed total to 2564.52 ms/event from the Genesis 2575.60 ms/event.
