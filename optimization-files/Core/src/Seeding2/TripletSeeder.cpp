@@ -80,11 +80,6 @@ void createSeedsFromGroupsImpl(
     return;
   }
 
-  ACTS_VERBOSE("Candidates: " << cache.bottomDoublets.size() << " bottoms and "
-                              << cache.topDoublets.size()
-                              << " tops for middle candidate indexed "
-                              << middleSp.index());
-
   // combine doublets to triplets
   if (tripletFinder.config().sortedByCotTheta) {
     cache.bottomDoublets.sortByCotTheta({0, cache.bottomDoublets.size()},
