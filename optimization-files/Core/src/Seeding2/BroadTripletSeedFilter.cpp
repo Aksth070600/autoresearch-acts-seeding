@@ -202,7 +202,7 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
       }
       // compared top SP should have at least deltaRMin distance
       float deltaR = currentTopR - otherTopR;
-      if (std::abs(deltaR) < config().deltaRMin) {
+      if (deltaR > -config().deltaRMin && deltaR < config().deltaRMin) {
         continue;
       }
       bool newCompSeed = true;
@@ -211,7 +211,9 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
         // seed (20mm instead of 5mm)
         // add new compatible seed only if distance larger than rmin to all
         // other compatible seeds
-        if (std::abs(previousDiameter - otherTopR) < config().deltaRMin) {
+        const float diameterDifference = previousDiameter - otherTopR;
+        if (diameterDifference > -config().deltaRMin &&
+            diameterDifference < config().deltaRMin) {
           newCompSeed = false;
           break;
         }
