@@ -47,8 +47,7 @@ class DoubletsForMiddleSp {
     m_cotTheta.clear();
     m_er.clear();
     m_iDeltaR.clear();
-    m_u.clear();
-    m_v.clear();
+    m_uv.clear();
     m_xy.clear();
   }
 
@@ -67,8 +66,7 @@ class DoubletsForMiddleSp {
     m_cotTheta.push_back(cotTheta);
     m_er.push_back(er);
     m_iDeltaR.push_back(iDeltaR);
-    m_u.push_back(u);
-    m_v.push_back(v);
+    m_uv.push_back({u, v});
     m_xy.push_back({x, y});
   }
 
@@ -140,10 +138,10 @@ class DoubletsForMiddleSp {
     float iDeltaR() const { return m_container->m_iDeltaR[m_index]; }
     /// Get u coordinate
     /// @return The u value
-    float u() const { return m_container->m_u[m_index]; }
+    float u() const { return m_container->m_uv[m_index][0]; }
     /// Get v coordinate
     /// @return The v value
-    float v() const { return m_container->m_v[m_index]; }
+    float v() const { return m_container->m_uv[m_index][1]; }
     /// Get x coordinate
     /// @return The x value
     float x() const { return m_container->m_xy[m_index][0]; }
@@ -262,8 +260,7 @@ class DoubletsForMiddleSp {
   std::vector<float> m_cotTheta;
   std::vector<float> m_er;
   std::vector<float> m_iDeltaR;
-  std::vector<float> m_u;
-  std::vector<float> m_v;
+  std::vector<std::array<float, 2>> m_uv;
   std::vector<std::array<float, 2>> m_xy;
 };
 
