@@ -65,8 +65,13 @@ bool CandidatesForMiddleSp2::push(Container& container, Size nMax,
   }
 
   // Remove element with lower weight and add this one
-  m_storage[smallestIndex] =
-      TripletCandidate2(spB, spM, spT, weight, zOrigin, isQuality);
+  auto& candidate = m_storage[smallestIndex];
+  candidate.bottom = spB;
+  candidate.middle = spM;
+  candidate.top = spT;
+  candidate.weight = weight;
+  candidate.zOrigin = zOrigin;
+  candidate.isQuality = isQuality;
   std::ranges::pop_heap(container, comparator);
   container.back() = {weight, smallestIndex};
   std::ranges::push_heap(container, comparator);
