@@ -93,10 +93,10 @@ class DoubletsForMiddleSp {
   /// @param indexAndCotTheta Output vector containing sorted index and cotTheta pairs
   void sortByCotTheta(const IndexRange& range,
                       std::vector<IndexAndCotTheta>& indexAndCotTheta) const {
-    indexAndCotTheta.clear();
-    indexAndCotTheta.reserve(range.second - range.first);
-    for (Index i = range.first; i < range.second; ++i) {
-      indexAndCotTheta.emplace_back(i, m_cotTheta[i]);
+    const Index size = range.second - range.first;
+    indexAndCotTheta.resize(size);
+    for (Index i = 0; i < size; ++i) {
+      indexAndCotTheta[i] = {range.first + i, m_cotTheta[range.first + i]};
     }
     std::ranges::sort(indexAndCotTheta, {}, [](const IndexAndCotTheta& item) {
       return item.cotTheta;
