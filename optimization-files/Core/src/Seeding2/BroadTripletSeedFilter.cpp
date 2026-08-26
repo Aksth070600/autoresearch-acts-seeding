@@ -24,10 +24,11 @@ namespace {
 float getBestSeedQuality(
     const std::unordered_map<SpacePointIndex2, float>& bestSeedQualityMap,
     SpacePointIndex2 sp) {
-  const auto it = bestSeedQualityMap.find(sp);
-  return it != bestSeedQualityMap.end()
-             ? it->second
-             : std::numeric_limits<float>::lowest();
+  auto it = bestSeedQualityMap.find(sp);
+  if (it != bestSeedQualityMap.end()) {
+    return it->second;
+  }
+  return std::numeric_limits<float>::lowest();
 }
 
 void setBestSeedQuality(
