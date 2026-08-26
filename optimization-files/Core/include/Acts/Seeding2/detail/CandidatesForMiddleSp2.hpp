@@ -53,9 +53,7 @@ class CandidatesForMiddleSp2 {
   /// @param nHigh Maximum number of candidates in the high-quality collection
   CandidatesForMiddleSp2(Size nLow, Size nHigh);
 
-  Size size() const {
-    return static_cast<Size>(m_storageLow.size() + m_storageHigh.size());
-  }
+  Size size() const { return m_storage.size(); }
 
   /// @brief Clear the internal storage
   void clear();
@@ -91,7 +89,6 @@ class CandidatesForMiddleSp2 {
  private:
   using WeightIndex = std::pair<float, Index>;
   using Container = std::vector<WeightIndex>;
-  using Storage = std::vector<TripletCandidate2>;
 
   static constexpr bool comparator(const WeightIndex& a, const WeightIndex& b) {
     return a.first > b.first;
@@ -103,16 +100,15 @@ class CandidatesForMiddleSp2 {
   Size m_maxSizeLow{kNoSize};
   Size m_maxSizeHigh{kNoSize};
 
-  // Each heap uses a local index space to keep quality classes independent.
-  Storage m_storageLow;
-  Storage m_storageHigh;
+  // storage contains the collection of the candidates
+  std::vector<TripletCandidate2> m_storage;
 
   Container m_indicesLow;
   Container m_indicesHigh;
 
-  bool push(Container& container, Storage& storage, Size nMax,
-            SpacePointIndex2 spB, SpacePointIndex2 spM, SpacePointIndex2 spT,
-            float weight, float zOrigin, bool isQuality);
+  bool push(Container& container, Size nMax, SpacePointIndex2 spB,
+            SpacePointIndex2 spM, SpacePointIndex2 spT, float weight,
+            float zOrigin, bool isQuality);
 };
 
 }  // namespace Acts
