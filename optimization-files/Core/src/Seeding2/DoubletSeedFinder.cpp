@@ -85,12 +85,9 @@ class Impl final : public DoubletSeedFinder {
     }
 
     const SpacePointContainer2& container = candidateSps.container();
-    const auto xyColumn = container.xyColumn();
-    const auto zrColumn = container.zrColumn();
-    const auto varianceZColumn = container.varianceZColumn();
-    const auto varianceRColumn = container.varianceRColumn();
     for (auto [indexO, xyO, zrO, varianceZO, varianceRO] : candidateSps.zip(
-             xyColumn, zrColumn, varianceZColumn, varianceRColumn)) {
+             container.xyColumn(), container.zrColumn(),
+             container.varianceZColumn(), container.varianceRColumn())) {
       const float xO = xyO[0];
       const float yO = xyO[1];
       const float zO = zrO[0];
