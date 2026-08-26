@@ -98,12 +98,9 @@ class DoubletsForMiddleSp {
     for (Index i = range.first; i < range.second; ++i) {
       indexAndCotTheta.emplace_back(i, m_cotTheta[i]);
     }
-    if (indexAndCotTheta.size() > 1) {
-      std::ranges::sort(indexAndCotTheta, {},
-                        [](const IndexAndCotTheta& item) {
-                          return item.cotTheta;
-                        });
-    }
+    std::ranges::sort(indexAndCotTheta, {}, [](const IndexAndCotTheta& item) {
+      return item.cotTheta;
+    });
   }
 
   /// Proxy accessor for a single doublet entry.
