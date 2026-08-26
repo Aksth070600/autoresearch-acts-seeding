@@ -77,7 +77,7 @@ bool CandidatesForMiddleSp2::push(Container& container, Size nMax,
 void CandidatesForMiddleSp2::toSortedCandidates(
     std::vector<TripletCandidate2>& output) {
   output.clear();
-  output.reserve(size());
+  output.reserve(m_storage.size());
 
   std::ranges::sort_heap(m_indicesHigh, comparator);
   std::ranges::sort_heap(m_indicesLow, comparator);
