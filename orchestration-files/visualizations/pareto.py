@@ -57,6 +57,7 @@ HTML_TEMPLATE = r"""<!doctype html>
 <main>
   <h1>ACTS Seeding Autoresearch</h1>
   <p class="lede">Lower X is better. Higher Y is better. The reference lines show the selected baseline.</p>
+  <p id="dataset-note" class="note"></p>
   <section class="controls" aria-label="Chart controls">
     <label>Dataset<select id="dataset"></select></label>
     <label>Baseline<select id="baseline"></select></label>
@@ -75,6 +76,7 @@ HTML_TEMPLATE = r"""<!doctype html>
   </section>
   <section id="summary" aria-live="polite">
     <div class="summary-card"><span class="summary-label">Records</span><strong id="summary-count" class="summary-value"></strong></div>
+    <div class="summary-card"><span class="summary-label">Genesis samples</span><strong id="summary-genesis-samples" class="summary-value"></strong></div>
     <div class="summary-card"><span class="summary-label">Baseline</span><strong id="summary-baseline" class="summary-value"></strong></div>
     <div class="summary-card"><div class="summary-heading"><span class="summary-label">X axis baseline</span><span id="summary-x-label" class="summary-chip"></span></div><strong id="summary-x-value" class="summary-value"></strong></div>
     <div class="summary-card"><div class="summary-heading"><span class="summary-label">Y axis baseline</span><span id="summary-y-label" class="summary-chip"></span></div><strong id="summary-y-value" class="summary-value"></strong></div>
@@ -99,6 +101,8 @@ const datasetSelect = document.getElementById('dataset');
 const baselineSelect = document.getElementById('baseline');
 const summaryCount = document.getElementById('summary-count');
 const summaryBaseline = document.getElementById('summary-baseline');
+const summaryGenesisSamples = document.getElementById('summary-genesis-samples');
+const datasetNote = document.getElementById('dataset-note');
 const summaryXValue = document.getElementById('summary-x-value');
 const summaryXLabel = document.getElementById('summary-x-label');
 const summaryYValue = document.getElementById('summary-y-value');
@@ -135,7 +139,9 @@ function option(select, value, label) {
 }
 
 option(datasetSelect, 'all', 'All datasets');
-[...new Set(rows.map((row) => row.category))].sort().forEach((category) => option(datasetSelect, category, category));
+if (REPORT.dataset !== 'all') {
+  [...new Set(rows.map((row) => row.category))].sort().forEach((category) => option(datasetSelect, category, category));
+}
 
 function scopedRows() {
   return datasetSelect.value === 'all' ? rows : rows.filter((row) => row.category === datasetSelect.value);
@@ -292,7 +298,9 @@ function render() {
   const xLabel = axisLabel('x');
   const yLabel = axisLabel('y');
   summaryCount.textContent = String(points.length);
+  summaryGenesisSamples.textContent = String(REPORT.genesis_aggregation?.sample_count || 0);
   summaryBaseline.textContent = baselineName || 'Unavailable';
+  datasetNote.textContent = REPORT.dataset_description || '';
   summaryXValue.textContent = baseline ? formatAxisValue('x', baseline.metrics[xKey]) : 'Unavailable';
   summaryXLabel.textContent = xLabel;
   summaryYValue.textContent = baseline ? formatAxisValue('y', baseline.metrics[yKey]) : 'Unavailable';
@@ -307,10 +315,10 @@ function render() {
     x: points.map((row) => row.metrics[xKey]),
     y: points.map((row) => row.metrics[yKey]),
     text: points.map((row) => `${row.candidate} (${row.category})`),
-    customdata: points.map((row) => [row.category, row.record, row.commit]),
+    customdata: points.map((row) => [row.category, row.record, row.commit, row.candidate === REPORT.baseline ? (row.sample_count || 1) : '']),
     mode: 'markers', type: 'scatter', name: 'Candidates',
     marker: { size: points.map((row) => row.candidate === baselineName ? 16 : 12), symbol: points.map((row) => row.candidate === baselineName ? 'star' : 'circle'), color: points.map((row) => candidateColor(row, baseline, xKey, yKey)), line: { width: 1, color: '#e2e8f0' } },
-    hovertemplate: '<b>%{text}</b><br>X: %{x}<br>Y: %{y}<br>Category: %{customdata[0]}<br>Record: %{customdata[1]}<br>Commit: %{customdata[2]}<extra></extra>'
+    hovertemplate: '<b>%{text}</b><br>X: %{x}<br>Y: %{y}<br>Category: %{customdata[0]}<br>Record: %{customdata[1]}<br>Commit: %{customdata[2]}<br>Genesis samples: %{customdata[3]}<extra></extra>'
   }];
   const xRange = paddedRange(points, xKey);
   const yRange = paddedRange(points, yKey);

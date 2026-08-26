@@ -8,7 +8,6 @@ import hashlib
 import json
 import os
 import re
-import shutil
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -384,16 +383,6 @@ def write_failure_logs(folder: Path, outputs: dict[str, str]) -> None:
         (logs / f"{name}.log").write_text(output, encoding="utf-8")
 
 
-def prune_previous_genesis_records(category: str, current_folder: Path) -> None:
-    category_root = RECORDS_ROOT / category
-    if not category_root.is_dir():
-        return
-    for path in category_root.glob("*-Genesis"):
-        if path.resolve() == current_folder.resolve() or path.is_symlink():
-            continue
-        shutil.rmtree(path)
-
-
 def median_numeric_tree(values: list[Any]) -> Any:
     """Take a per-leaf median while preserving the parsed metric structure."""
 
@@ -665,23 +654,21 @@ def main() -> int:
     if error:
         summary["error"] = error
 
-    record_name = (
-        "Genesis"
-        if args.candidate_name == "Genesis" and category in {"Development", "Evaluation"}
-        else run_id
-    )
+    if args.candidate_name == "Genesis" and category in {"Development", "Evaluation"}:
+        # Keep every successful Genesis run. The timestamp is part of the
+        # directory name so each campaign has a durable baseline record.
+        timestamp = started.strftime("%Y%m%dT%H%M%S%fZ")
+        record_name = f"{timestamp}-Genesis"
+        suffix = 2
+        while (RECORDS_ROOT / category / record_name).exists():
+            record_name = f"{timestamp}-{suffix}-Genesis"
+            suffix += 1
+    else:
+        record_name = run_id
     folder = RECORDS_ROOT / category / record_name
     write_summary(folder, summary)
     if category in {"Failed", "Errors"}:
         write_failure_logs(folder, outputs)
-    if args.candidate_name == "Genesis" and category in {"Development", "Evaluation"}:
-        try:
-            prune_previous_genesis_records(category, folder)
-        except OSError as exc:
-            print(
-                f"warning: could not prune previous {category} Genesis records: {exc}",
-                file=sys.stderr,
-            )
 
     print(json.dumps(summary, indent=2, sort_keys=True))
     return 0 if category in {"Development", "Evaluation"} else 1

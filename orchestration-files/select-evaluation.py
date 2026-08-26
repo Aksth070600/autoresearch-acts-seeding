@@ -56,10 +56,10 @@ def rank_total_time(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
 def choose(rows: list[dict[str, Any]], baseline_name: str, count: int) -> list[dict[str, Any]]:
     if count < 1:
         raise ValueError("count must be positive")
-    baseline_matches = [row for row in rows if row["candidate"] == baseline_name]
-    if not baseline_matches:
-        raise ValueError(f"baseline candidate not found: {baseline_name}")
-    baseline = baseline_matches[0]
+    try:
+        baseline = choose_baseline(rows, baseline_name)
+    except EvolutionError as error:
+        raise ValueError(str(error)) from error
     candidates = deduplicate(rows, baseline)
     required = ("timed_ambiguity_particle_efficiency", "timed_total_time_per_event_ms")
     candidates = [
