@@ -1,10 +1,10 @@
 {
   "acts_backup": "/storage/thomaaks/acts-v46.5.0-autoresearch-backup",
   "acts_source": "/storage/thomaaks/acts-v46.5.0",
-  "candidate_name": "Genesis",
+  "candidate_name": "BranchBestQualityUpdate",
   "category": "Development",
-  "finished_at": "2026-08-26T00:58:52.677684+00:00",
-  "implementation_commit": "748eba0388efec44a0f204a0ecf5f54e129903ac",
+  "finished_at": "2026-08-26T07:41:38.601479+00:00",
+  "implementation_commit": "aaec45f067fa5d6ed2a77188f76f253975abaffc",
   "mode": "development",
   "optimization_files": [
     "Core/include/Acts/EventData/SpacePointColumnProxy2.hpp",
@@ -67,64 +67,64 @@
       "raw_exit_code": 1,
       "run_metrics": {
         "ckf_statistics": {
-          "deduplicated_seeds": 862869,
+          "deduplicated_seeds": 861272,
           "failed_extrapolation": 0,
           "failed_seeds": 0,
           "failed_smoothing": 0,
           "failure_ratio_seeds": 0,
-          "found_tracks": 193008,
-          "selected_tracks": 173310,
-          "skipped_second_pass": 181,
-          "stopped_branches": 296215,
-          "total_seeds": 1075572
+          "found_tracks": 192295,
+          "selected_tracks": 172782,
+          "skipped_second_pass": 245,
+          "stopped_branches": 294126,
+          "total_seeds": 1073146
         },
         "performance": {
           "ambiguity_resolution": {
-            "duplicate_ratio_particles": 0.00107225,
-            "duplicate_ratio_tracks": 0.00140679,
-            "efficiency_particles": 0.973789,
-            "efficiency_tracks": 0.57556,
-            "fake_ratio_particles": 0.00474853,
-            "fake_ratio_tracks": 0.0169016
+            "duplicate_ratio_particles": 0.00108949,
+            "duplicate_ratio_tracks": 0.00141898,
+            "efficiency_particles": 0.973767,
+            "efficiency_tracks": 0.576308,
+            "fake_ratio_particles": 0.00485164,
+            "fake_ratio_tracks": 0.0169775
           },
           "ckf": {
-            "duplicate_ratio_particles": 0.300689,
-            "duplicate_ratio_tracks": 0.212007,
-            "efficiency_particles": 0.974385,
-            "efficiency_tracks": 0.54234,
-            "fake_ratio_particles": 0.038635,
-            "fake_ratio_tracks": 0.0220934
+            "duplicate_ratio_particles": 0.300223,
+            "duplicate_ratio_tracks": 0.211521,
+            "efficiency_particles": 0.974431,
+            "efficiency_tracks": 0.542811,
+            "fake_ratio_particles": 0.038728,
+            "fake_ratio_tracks": 0.0218657
           },
           "seeding": {
-            "duplicate_ratio_particles": 0.973041,
-            "duplicate_ratio_tracks": 0.548387,
-            "efficiency_particles": 0.983542,
-            "efficiency_tracks": 0.602115,
-            "fake_ratio_particles": 0.203455,
-            "fake_ratio_tracks": 0.0251745
+            "duplicate_ratio_particles": 0.973478,
+            "duplicate_ratio_tracks": 0.549087,
+            "efficiency_particles": 0.983726,
+            "efficiency_tracks": 0.602935,
+            "fake_ratio_particles": 0.202901,
+            "fake_ratio_tracks": 0.0250255
           }
         },
         "timing": {
           "ambiguity_resolution": {
-            "fraction_percent": 1.282632,
-            "time_per_event_ms": 34.97,
-            "total_time_ms": 1748.6
+            "fraction_percent": 1.382133,
+            "time_per_event_ms": 35.18,
+            "total_time_ms": 1759.21
           },
           "ckf": {
-            "fraction_percent": 87.811471,
-            "time_per_event_ms": 2394.25,
-            "total_time_ms": 119712.5
+            "fraction_percent": 86.543009,
+            "time_per_event_ms": 2203.08,
+            "total_time_ms": 110153.88
           },
           "seeding": {
-            "fraction_percent": 10.905897,
-            "time_per_event_ms": 297.36,
-            "total_time_ms": 14867.9
+            "fraction_percent": 12.074858,
+            "time_per_event_ms": 307.38,
+            "total_time_ms": 15369.15
           }
         },
         "timing_total": {
           "fraction_percent": 100.0,
-          "time_per_event_ms": 2726.58,
-          "total_time_ms": 136329.0
+          "time_per_event_ms": 2545.64,
+          "total_time_ms": 127282.24
         }
       },
       "stage": "full",
@@ -141,78 +141,78 @@
       "name": "fifty_event_full_timed",
       "raw_exit_code": 1,
       "resource_metrics": {
-        "elapsed": "2:31.08",
-        "peak_rss_kb": 12782644,
-        "system_seconds": "21.37",
-        "user_seconds": "653.58"
+        "elapsed": "2:30.74",
+        "peak_rss_kb": 12623400,
+        "system_seconds": "14.50",
+        "user_seconds": "634.14"
       },
       "run_metrics": {
         "ckf_statistics": {
-          "deduplicated_seeds": 862359,
+          "deduplicated_seeds": 865500,
           "failed_extrapolation": 0,
           "failed_seeds": 0,
           "failed_smoothing": 0,
           "failure_ratio_seeds": 0,
-          "found_tracks": 193031,
-          "selected_tracks": 173317,
-          "skipped_second_pass": 183,
-          "stopped_branches": 296509,
-          "total_seeds": 1075173
+          "found_tracks": 193447,
+          "selected_tracks": 173641,
+          "skipped_second_pass": 203,
+          "stopped_branches": 297208,
+          "total_seeds": 1078806
         },
         "performance": {
           "ambiguity_resolution": {
-            "duplicate_ratio_particles": 0.00108957,
-            "duplicate_ratio_tracks": 0.00140705,
-            "efficiency_particles": 0.973612,
-            "efficiency_tracks": 0.575413,
-            "fake_ratio_particles": 0.0047328,
-            "fake_ratio_tracks": 0.0169147
+            "duplicate_ratio_particles": 0.00100141,
+            "duplicate_ratio_tracks": 0.00137409,
+            "efficiency_particles": 0.973777,
+            "efficiency_tracks": 0.576027,
+            "fake_ratio_particles": 0.00470153,
+            "fake_ratio_tracks": 0.0168101
           },
           "ckf": {
-            "duplicate_ratio_particles": 0.300958,
-            "duplicate_ratio_tracks": 0.212778,
-            "efficiency_particles": 0.974259,
-            "efficiency_tracks": 0.542965,
-            "fake_ratio_particles": 0.0385093,
-            "fake_ratio_tracks": 0.0220002
+            "duplicate_ratio_particles": 0.300779,
+            "duplicate_ratio_tracks": 0.211459,
+            "efficiency_particles": 0.974371,
+            "efficiency_tracks": 0.542067,
+            "fake_ratio_particles": 0.0385288,
+            "fake_ratio_tracks": 0.0220512
           },
           "seeding": {
-            "duplicate_ratio_particles": 0.972829,
-            "duplicate_ratio_tracks": 0.548209,
-            "efficiency_particles": 0.983452,
-            "efficiency_tracks": 0.601937,
-            "fake_ratio_particles": 0.203715,
-            "fake_ratio_tracks": 0.0251904
+            "duplicate_ratio_particles": 0.972979,
+            "duplicate_ratio_tracks": 0.548557,
+            "efficiency_particles": 0.98357,
+            "efficiency_tracks": 0.602273,
+            "fake_ratio_particles": 0.203693,
+            "fake_ratio_tracks": 0.0252436
           }
         },
         "timing": {
           "ambiguity_resolution": {
-            "fraction_percent": 1.302525,
-            "time_per_event_ms": 35.88,
-            "total_time_ms": 1794.06
+            "fraction_percent": 1.320639,
+            "time_per_event_ms": 34.42,
+            "total_time_ms": 1720.81
           },
           "ckf": {
-            "fraction_percent": 87.796298,
-            "time_per_event_ms": 2418.56,
-            "total_time_ms": 120928.11
+            "fraction_percent": 86.987766,
+            "time_per_event_ms": 2266.92,
+            "total_time_ms": 113346.19
           },
           "seeding": {
-            "fraction_percent": 10.901177,
-            "time_per_event_ms": 300.3,
-            "total_time_ms": 15014.97
+            "fraction_percent": 11.691595,
+            "time_per_event_ms": 304.69,
+            "total_time_ms": 15234.3
           }
         },
         "timing_total": {
           "fraction_percent": 100.0,
-          "time_per_event_ms": 2754.74,
-          "total_time_ms": 137737.14
+          "time_per_event_ms": 2606.03,
+          "total_time_ms": 130301.3
         }
       },
       "stage": "full",
       "status": "passed"
     }
   ],
-  "started_at": "2026-08-26T00:51:39.100070+00:00",
+  "started_at": "2026-08-26T07:34:07.486030+00:00",
   "status": "passed",
   "threads": -1,
   "workload": "ttbar_pu200"
