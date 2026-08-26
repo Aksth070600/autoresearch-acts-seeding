@@ -30,6 +30,19 @@ All four development stages passed for both implementations. The two 50-event st
 | Timed | Total time/event | 2728.79 ms | 2711.36 ms | -17.43 ms (-0.64%) |
 | Timed | Seeding time/event | 312.68 ms | 297.33 ms | -15.35 ms (-4.91%) |
 
+### Timing breakdown
+
+| Stage | Algorithm | Genesis | Candidate | Difference |
+| --- | --- | ---: | ---: | ---: |
+| Clean | Seeding | 303.25 ms | 296.16 ms | -7.09 ms |
+| Clean | CKF | 2288.21 ms | 2361.24 ms | +73.03 ms |
+| Clean | Ambiguity | 34.01 ms | 33.88 ms | -0.13 ms |
+| Timed | Seeding | 312.68 ms | 297.33 ms | -15.35 ms |
+| Timed | CKF | 2381.35 ms | 2379.31 ms | -2.04 ms |
+| Timed | Ambiguity | 34.76 ms | 34.72 ms | -0.04 ms |
+
+The clean total-time regression is explained by the CKF stage: its 73.03 ms increase outweighs the 7.09 ms seeding and 0.13 ms ambiguity savings. The timed run does not show that CKF increase, so its total time improves.
+
 ## Fake and duplicate ratios
 
 Values are percentages. Differences are candidate minus Genesis in percentage points. Lower fake and duplicate ratios are better.
@@ -70,7 +83,7 @@ Values are percentages. Differences are candidate minus Genesis in percentage po
 
 ## Assessment
 
-The candidate reduced seeding time in both modes. It was slower in the clean run but faster in the timed run. Fake and duplicate ratios moved only slightly and inconsistently, so they do not explain the clean total-time regression by themselves. The timed run shows that the candidate can reduce measured chain time, but this is one 50-event measurement per implementation and needs repetition before promotion.
+The candidate reduced seeding time in both modes. It was slower in the clean run but faster in the timed run. Fake and duplicate ratios moved only slightly and inconsistently, so they do not explain the clean total-time regression by themselves; the clean CKF timing increase does. The timed run shows that the candidate can reduce measured chain time, but this is one 50-event measurement per implementation and needs repetition before promotion.
 
 The candidate remains a useful exploratory parent under the campaign policy because it improves timed total time. It is not yet a demonstrated overall improvement.
 
