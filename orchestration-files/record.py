@@ -9,6 +9,8 @@ import re
 import sys
 from pathlib import Path
 
+from protocol import is_compatible_summary
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 RECORDS_ROOT = PROJECT_ROOT / "records"
 CATEGORIES = ("Development", "Evaluation", "Failed", "Errors")
@@ -27,6 +29,14 @@ def validate_candidate(candidate: str) -> None:
         raise SystemExit("candidate name may contain only letters, numbers, '.', '_' and '-'")
 
 
+def compatible_summary(path: Path) -> bool:
+    try:
+        summary = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    return is_compatible_summary(summary)
+
+
 def candidate_directories(candidate: str, evaluation: bool) -> list[Path]:
     preferred = ("Evaluation", "Errors") if evaluation else ("Development", "Failed")
     fallback = tuple(category for category in CATEGORIES if category not in preferred)
@@ -34,11 +44,13 @@ def candidate_directories(candidate: str, evaluation: bool) -> list[Path]:
         category_root = RECORDS_ROOT / category
         if not category_root.is_dir():
             continue
-        canonical = category_root / candidate
-        if (canonical / "summary.json").is_file():
-            return [canonical]
+        canonical = category_root / candidate / "summary.json"
+        if canonical.is_file() and compatible_summary(canonical):
+            return [canonical.parent]
         directories = [
-            path for path in category_root.glob(f"*-{candidate}") if (path / "summary.json").is_file()
+            path
+            for path in category_root.glob(f"*-{candidate}")
+            if (path / "summary.json").is_file() and compatible_summary(path / "summary.json")
         ]
         if directories:
             return sorted(directories, key=lambda path: path.name, reverse=True)
@@ -64,7 +76,9 @@ def main() -> int:
         raise SystemExit("--tail-lines must be positive")
     directories = candidate_directories(args.candidate, args.evaluation)
     if not directories:
-        raise SystemExit(f"no result found for candidate: {args.candidate}")
+        raise SystemExit(
+            f"no protocol-compatible result found for candidate: {args.candidate}"
+        )
     directory = directories[0]
     summary_path = directory / "summary.json"
     summary = json.loads(summary_path.read_text(encoding="utf-8"))

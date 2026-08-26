@@ -10,6 +10,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from protocol import PROTOCOL_ID, PROTOCOL_METADATA, is_compatible_summary
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_RECORDS = PROJECT_ROOT / "records"
 DEFAULT_OUTPUT = PROJECT_ROOT / "reports" / "site"
@@ -113,16 +115,33 @@ def add_metrics(metrics: dict[str, float], prefix: str, run_metrics: dict[str, A
 
 
 def flatten_summary(summary: dict[str, Any], path: Path, records_root: Path) -> dict[str, Any] | None:
-    if summary.get("status") != "passed":
+    if summary.get("status") != "passed" or not is_compatible_summary(summary):
         return None
     metrics: dict[str, float] = {}
     for stage in summary.get("stages", []):
-        if not isinstance(stage, dict):
+        if not isinstance(stage, dict) or stage.get("comparison") != "clean":
             continue
-        prefix = stage_prefix(stage)
-        run_metrics = stage.get("run_metrics")
-        if prefix is not None and isinstance(run_metrics, dict):
-            add_metrics(metrics, prefix, run_metrics, stage)
+        if stage_prefix(stage) == "clean" and isinstance(stage.get("run_metrics"), dict):
+            add_metrics(metrics, "clean", stage["run_metrics"], stage)
+
+    timed_comparison = summary.get("timed_comparison", {})
+    if not isinstance(timed_comparison, dict):
+        timed_comparison = {}
+    median_metrics = timed_comparison.get("median_run_metrics")
+    if (
+        timed_comparison.get("complete") is True
+        and timed_comparison.get("aggregation") == PROTOCOL_METADATA["timed_aggregation"]
+        and timed_comparison.get("repetition_count") == PROTOCOL_METADATA["timed_repetitions"]
+        and isinstance(timed_comparison.get("repetitions"), list)
+        and len(timed_comparison["repetitions"]) == PROTOCOL_METADATA["timed_repetitions"]
+        and isinstance(median_metrics, dict)
+    ):
+        timed_stage = {
+            "events": timed_comparison.get("events", PROTOCOL_METADATA["development_events"]),
+        }
+        timed_median = dict(median_metrics)
+        timed_median["resource_metrics"] = timed_comparison.get("median_resource_metrics", {})
+        add_metrics(metrics, "timed", timed_median, timed_stage)
 
     if not metrics:
         return None
@@ -132,6 +151,7 @@ def flatten_summary(summary: dict[str, Any], path: Path, records_root: Path) -> 
         "category": category,
         "commit": str(summary.get("implementation_commit", "")),
         "record": path.relative_to(records_root).as_posix(),
+        "protocol_id": PROTOCOL_ID,
         "metrics": metrics,
     }
 
@@ -145,6 +165,9 @@ def load_records(records_root: Path, dataset: str) -> list[dict[str, Any]]:
             summary = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as error:
             print(f"warning: skipping {path}: {error}", file=sys.stderr)
+            continue
+        if not is_compatible_summary(summary):
+            # Do not silently compare historical evidence under a new protocol.
             continue
         category = str(summary.get("category", path.parent.parent.name)).lower()
         if dataset != "all" and category != dataset:
@@ -165,7 +188,7 @@ def metric_label(key: str) -> str:
         "timed_ckf_time_per_event_ms": "Timed CKF time/event (ms)",
         "timed_ambiguity_time_per_event_ms": "Timed ambiguity time/event (ms)",
         "clean_ambiguity_particle_efficiency": "Clean ambiguity particle efficiency",
-        "timed_ambiguity_particle_efficiency": "Timed ambiguity particle efficiency",
+        "timed_ambiguity_particle_efficiency": "PRIMARY: timed ambiguity particle efficiency",
         "timed_peak_rss_kb": "Timed peak RSS (kB)",
         "timed_user_seconds": "Timed user CPU (s)",
         "timed_system_seconds": "Timed system CPU (s)",
@@ -182,6 +205,12 @@ def build_report(rows: list[dict[str, Any]], baseline: str) -> dict[str, Any]:
         "metric_keys": metric_keys,
         "metric_labels": {key: metric_label(key) for key in metric_keys},
         "baseline": baseline,
+        "protocol_id": PROTOCOL_ID,
+        "protocol": PROTOCOL_METADATA,
+        "primary_objectives": {
+            "minimize": "timed_total_time_per_event_ms",
+            "maximize": "timed_ambiguity_particle_efficiency",
+        },
     }
 
 

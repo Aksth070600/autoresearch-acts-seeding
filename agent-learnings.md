@@ -7,13 +7,31 @@ Do not copy raw logs or full metric dumps.
 ## Entry format
 
 ```text
-- YYYY-MM-DD | candidate: <name> | outcome: <keep/discard/crash> | lesson: <one actionable lesson>
+- YYYY-MM-DD | candidate: <name> | implementation_commit: <full-sha> | mechanism_key: <stable-family-key> | files_changed: <path>#L<start>-L<end>[, <path>#L<start>-L<end>] | outcome: <keep/discard/crash> | lesson: <one actionable lesson>
 ```
 
 ## Maintenance limit
 
 Keep this file below 500 lines.
 When it reaches 250 lines, invoke the simplification skill to merge duplicate lessons, remove stale details, and keep it below the hard limit.
+
+## Candidate provenance policy
+
+Every new candidate lesson must record the candidate name, full implementation
+commit, exact files changed, and line ranges as they existed in that candidate
+commit. Include a stable `mechanism_key` so renamed duplicates are detectable.
+Use this format:
+
+```text
+- YYYY-MM-DD | candidate: <name> | implementation_commit: <full-sha> | mechanism_key: <stable-family-key> | files_changed: <path>#L<start>-L<end>[, <path>#L<start>-L<end>] | outcome: <keep/discard/crash> | lesson: <one actionable lesson>
+```
+
+Derive the file list with `git diff-tree --no-commit-id --name-only -r <commit>`
+and inspect candidate-commit line numbers with `git show <commit>:<file>` and
+`nl -ba`. Before editing an overlapping file and line range, a future agent
+must run `git show <commit> -- <file>` and read the relevant commit. Do not use
+current-tree line numbers as a substitute. Existing entries below are
+historical and must not be silently reinterpreted.
 
 - 2026-08-25 | candidate: SkipEmptyTripletFilter | outcome: keep | lesson: Skipping the filter call for empty triplet candidate sets preserved all stages and reduced measured seeding time, but one 50-event run did not improve total full-chain time.
 - 2026-08-26 | candidate: RemoveRedundantTopEmptyCheck | outcome: keep | lesson: The helper's repeated top-doublet emptiness branch was redundant after its caller's non-empty guard; removing it passed all stages and improved the timed full-chain result.

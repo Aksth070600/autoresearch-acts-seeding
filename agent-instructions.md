@@ -26,6 +26,33 @@ It anchors the campaign against current infrastructure drift.
 The fresh Genesis record is the campaign baseline; use its record path when judging candidates, not an older Genesis result selected by `make evolve`.
 Do not start mutation experiments until the baseline completes or its failure is understood.
 
+## Controlled campaign protocol
+
+Every controlled campaign uses protocol `acts-seeding-v2`:
+
+- ACTS v46.5.0 on the fixed `ttbar_pu200` ITk dataset through HEPP02.
+- One ACTS thread, seed 42, and pileup 200.
+- Development candidates run 10 events. Evaluation candidates run 50 events.
+- Clean full-chain stages may run once. Timed full-chain stages run three repetitions.
+  Candidate comparison uses the median timed metrics, while summaries retain every
+  repetition and its metadata for auditability.
+- Expected unmasked FPEs are accepted only when every requested event completed.
+  Other errors remain failures.
+
+Every summary carries the protocol identity. `make evolve`, reports, and record
+consumers must ignore summaries from another protocol. Run a fresh Genesis
+baseline with `make evaluate CANDIDATE=Genesis` before any mutation experiment.
+
+The two primary objectives are exactly:
+
+1. Minimize timed total full-chain time per event.
+2. Maximize timed particle ambiguity-resolution efficiency.
+
+These objectives remain a Pareto tradeoff. Seeding time, seeding efficiency,
+CKF efficiency, track efficiency, fake ratios, duplicate ratios, resource use,
+and other metrics are diagnostics only. They must never determine eligibility,
+Pareto objectives, or recommendation ranking.
+
 ## Experiment surface
 
 An experiment may change only:
@@ -33,7 +60,7 @@ An experiment may change only:
 - Files under `optimization-files/` that satisfy the evaluator's ACTS-relative allowlist.
 - Concise entries in `agent-learnings.md`.
 
-Do not modify the evaluator, HEPP helpers, report tooling, workload constants, event counts, seeds, pileup, thread settings, timing collection, metric parsing, or acceptance logic.
+Do not modify the evaluator, HEPP helpers, report tooling, workload constants, event counts, seeds, pileup, thread settings, timing collection, metric parsing, or acceptance logic during ordinary candidate experiments.
 Do not change variables outside the ACTS processing implementation to improve a result.
 Do not modify the static ITk dataset, the ACTS source tree, or `~/Projects/ACTS-Seeding/Thesis-Documents/Makefile`.
 Do not install new experiment dependencies.
@@ -43,10 +70,11 @@ Do not reproduce those lifecycle operations manually.
 
 ## Run commands
 
-Development evaluates one candidate through one-event seeding, one-event full chain, and fifty-event clean and timed full-chain runs:
+Development evaluates one candidate through 10-event seeding and clean full-chain runs plus three 10-event timed full-chain repetitions. Evaluation uses a 50-event clean run plus three 50-event timed repetitions:
 
 ```text
 make evaluate CANDIDATE=<candidate-name>
+make evaluate CANDIDATE=<candidate-name> EVALUATION=1
 ```
 
 After the run, retrieve the result for the agent without browsing the archive:
@@ -69,20 +97,27 @@ If it returns Genesis because no distinct candidate is eligible, inspect the cur
 
 ## Candidate objective
 
-A candidate is eligible to remain the active experiment base when it passes all requested stages and improves at least one of these against the selected Genesis baseline:
+A candidate is eligible to remain the active experiment base only when it passes all requested stages and improves at least one of the two primary metrics against the fresh Genesis baseline:
 
-- Lower total full-chain time per event.
-- Higher ambiguity-resolution efficiency.
+- Lower median timed total full-chain time per event.
+- Higher median timed particle ambiguity-resolution efficiency.
 
-A candidate that improves ambiguity efficiency while worsening total time may remain active for a follow-up recovery experiment, but report it as a mixed result and do not call it an overall improvement.
-Seeding time, seeding efficiency, and CKF efficiency remain useful diagnostics and historical inspiration, but do not by themselves keep a candidate as the active base.
+Use Pareto dominance and the non-dominated front for candidate comparison. Do not
+collapse the two objectives into a weighted score. A candidate that improves one
+primary metric while worsening the other may remain a Pareto tradeoff for a
+follow-up experiment, but report it as a mixed result and do not call it an
+overall improvement. Diagnostics never make a candidate eligible or preferred.
 Prefer a meaningful improvement without unnecessary complexity.
-If performance is equal, prefer the simpler implementation.
+If primary performance is equal, prefer the simpler implementation.
 
 ## Experiment loop
 
 Once setup is confirmed, continue until the captain stops the campaign or a real blocker needs a decision.
-Do not pause after every candidate to ask whether to continue.
+Do not pause after every candidate to ask whether to continue. A campaign must
+complete at least 20 candidate attempts, including at least 5 structurally
+different experiments. Do not stop after one attempt or a routine progress
+update. After three rejected candidates in the same mechanism family, change
+families before attempting another candidate.
 
 For each attempt:
 
@@ -97,6 +132,7 @@ For each attempt:
 9. Run `make record CANDIDATE=<candidate-name>` and judge success, failure, and improvement from its output.
 10. Add a concise lesson to `agent-learnings.md` when the attempt teaches something reusable.
 11. Keep a candidate that meets the active-base criteria. Otherwise restore the previous candidate with a safe, non-force operation on the campaign branch.
+    Classify each attempt by a stable mechanism key, not only by its candidate name.
     Keep a mixed ambiguity-improvement candidate when a follow-up experiment is explicitly targeting recovery of its total time, but do not present it as an overall improvement.
 12. Use the simplification skill to curate `agent-learnings.md` when it reaches 250 lines.
 13. Never allow `agent-learnings.md` to exceed 500 lines.
@@ -121,10 +157,12 @@ Do not inspect or edit generated summaries and logs directly during the ordinary
 Use `make record` for run output and `make evolve` for historical selection.
 Use `make report` for interactive comparison when the captain requests a broader visual review.
 
-The current successful Genesis summaries live at `records/Development/Genesis/summary.json` and `records/Evaluation/Genesis/summary.json`.
-Each successful Genesis run overwrites only its same-category summary and removes older timestamped Genesis directories after the new summary is valid.
-A failed Genesis run leaves the previous successful summary intact.
-Successful non-Genesis candidates are retained by the evaluator.
+A successful fresh Genesis run writes `records/Development/Genesis/summary.json` or
+`records/Evaluation/Genesis/summary.json`. Each summary records protocol identity,
+the timed repetition metadata, every timed repetition, and the median timed
+metrics. A failed Genesis run must not be used as a baseline. Successful
+non-Genesis candidates are retained by the evaluator. Consumers must reject
+summaries whose protocol identity does not match `acts-seeding-v2`.
 Do not commit failure logs, temporary output, or runtime state.
 
 ## GitHub campaign review
@@ -150,9 +188,27 @@ Do not delete a campaign branch until its archive PR has merged and its records 
 ## Agent learnings
 
 `agent-learnings.md` is a concise memory of reusable experiment lessons.
-Record the candidate, outcome, and one actionable lesson, not raw logs or full metric dumps.
 Record both useful improvements and failed ideas that should not be repeated.
-Keep the file below 500 lines.
-At 250 lines, invoke the simplification skill to merge duplicate lessons, remove stale details, and keep the file below the hard limit.
-
 Do not claim a scientific improvement from a run that did not complete all required stages.
+
+### Candidate provenance policy
+
+Every new candidate lesson must record the candidate name, its full implementation
+commit, the exact files changed, and line ranges as they existed in that candidate
+commit. It must also include a stable `mechanism_key` so renamed duplicates can
+be detected. Use this format:
+
+```text
+- YYYY-MM-DD | candidate: <name> | implementation_commit: <full-sha> | mechanism_key: <stable-family-key> | files_changed: <path>#L<start>-L<end>[, <path>#L<start>-L<end>] | outcome: <keep/discard/crash> | lesson: <one actionable lesson>
+```
+
+Get the file list from the candidate commit with `git diff-tree --no-commit-id
+--name-only -r <commit>`, then inspect line numbers in that commit with
+`git show <commit>:<file>` and `nl -ba`. Before editing a file and line range that overlaps an earlier lesson,
+the future agent must run `git show <commit> -- <file>` and read the relevant
+commit before editing. Do not infer provenance from the current tree after later
+commits moved the lines. Existing entries without this metadata are historical
+and must not be silently reinterpreted.
+
+Keep the file below 500 lines. At 250 lines, invoke the simplification skill to
+merge duplicate lessons, remove stale details, and keep it below the hard limit.

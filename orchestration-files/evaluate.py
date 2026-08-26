@@ -14,7 +14,10 @@ import sys
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+from statistics import median
 from typing import Any
+
+from protocol import PROTOCOL_ID, PROTOCOL_METADATA, current_protocol, protocol_events
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 OPTIMIZATION_ROOT = PROJECT_ROOT / "optimization-files"
@@ -313,15 +316,17 @@ def run_stage(
     stage: str,
     metrics: str,
     run_id: str,
+    comparison: str | None = None,
+    repetition: int | None = None,
 ) -> None:
     result = run_hepp_helper(
         "run-full-chain-itk.sh",
         run_id,
         str(events),
-        "ttbar_pu200",
-        "-1",
-        "42",
-        "200",
+        str(PROTOCOL_METADATA["dataset"]),
+        str(PROTOCOL_METADATA["threads"]),
+        str(PROTOCOL_METADATA["seed"]),
+        str(PROTOCOL_METADATA["pileup"]),
         stage,
         metrics,
         run_id,
@@ -329,7 +334,7 @@ def run_stage(
     record_command_output(outputs, name, result)
     completion_code = stage_completion_code(result.output)
     parsed_metrics = parse_metrics(result.output)
-    parsed_run_metrics = parse_run_metrics(result.output) if events >= 50 else {}
+    parsed_run_metrics = parse_run_metrics(result.output) if stage == "full" else {}
     expected_fpes = expected_fpe_completion(result.output, events)
     accepted_expected_fpes = result.returncode != 0 and expected_fpes is not None
     raw_exit_code = completion_code if completion_code is not None else result.returncode
@@ -339,9 +344,14 @@ def run_stage(
         "events": events,
         "stage": stage,
         "metrics_mode": metrics,
+        "protocol_id": PROTOCOL_ID,
         "exit_code": 0 if stage_passed else raw_exit_code,
         "status": "passed" if stage_passed else "failed",
     }
+    if comparison is not None:
+        stage_result["comparison"] = comparison
+    if repetition is not None:
+        stage_result["repetition"] = repetition
     if raw_exit_code != 0:
         stage_result["raw_exit_code"] = raw_exit_code
     if expected_fpes is not None:
@@ -384,13 +394,95 @@ def prune_previous_genesis_records(category: str, current_folder: Path) -> None:
         shutil.rmtree(path)
 
 
+def median_numeric_tree(values: list[Any]) -> Any:
+    """Take a per-leaf median while preserving the parsed metric structure."""
+
+    if not values:
+        return {}
+    if all(isinstance(value, dict) for value in values):
+        common_keys = set(values[0])
+        for value in values[1:]:
+            common_keys.intersection_update(value)
+        result: dict[str, Any] = {}
+        for key in sorted(common_keys):
+            median_value = median_numeric_tree([value[key] for value in values])
+            if median_value is not None and median_value != {}:
+                result[key] = median_value
+        return result
+    if all(isinstance(value, (int, float)) and not isinstance(value, bool) for value in values):
+        return median(values)
+    return None
+
+
+def median_resource_metrics(timed: list[dict[str, Any]]) -> dict[str, float]:
+    """Aggregate numeric GNU-time values without inventing an elapsed format."""
+
+    result: dict[str, float] = {}
+    resource_values = [stage.get("resource_metrics", {}) for stage in timed]
+    common_keys = set(resource_values[0]) if resource_values else set()
+    for resource in resource_values[1:]:
+        common_keys.intersection_update(resource)
+    for key in sorted(common_keys):
+        values: list[float] = []
+        for resource in resource_values:
+            value = resource[key]
+            try:
+                values.append(float(value))
+            except (TypeError, ValueError):
+                break
+        if len(values) == len(resource_values):
+            result[key] = float(median(values))
+    return result
+
+
+def build_timed_comparison(stage_results: list[dict[str, Any]]) -> dict[str, Any] | None:
+    """Summarize timed repetitions without discarding their individual evidence."""
+
+    timed = [stage for stage in stage_results if stage.get("comparison") == "timed"]
+    if not timed:
+        return None
+    repetitions = [
+        {
+            "repetition": stage.get("repetition"),
+            "name": stage.get("name"),
+            "events": stage.get("events"),
+            "status": stage.get("status"),
+            "exit_code": stage.get("exit_code"),
+            "expected_nonfatal": stage.get("expected_nonfatal"),
+            "run_metrics": stage.get("run_metrics", {}),
+            "resource_metrics": stage.get("resource_metrics", {}),
+        }
+        for stage in timed
+    ]
+    complete = len(timed) == int(PROTOCOL_METADATA["timed_repetitions"]) and all(
+        stage.get("status") == "passed"
+        and isinstance(stage.get("run_metrics"), dict)
+        and bool(stage.get("run_metrics"))
+        for stage in timed
+    )
+    comparison: dict[str, Any] = {
+        "aggregation": PROTOCOL_METADATA["timed_aggregation"],
+        "repetition_count": len(repetitions),
+        "required_repetitions": PROTOCOL_METADATA["timed_repetitions"],
+        "events": timed[0].get("events"),
+        "complete": complete,
+        "repetitions": repetitions,
+    }
+    if complete:
+        comparison["median_run_metrics"] = median_numeric_tree(
+            [stage["run_metrics"] for stage in timed]
+        )
+        comparison["median_resource_metrics"] = median_resource_metrics(timed)
+    return comparison
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("candidate_name")
     parser.add_argument(
         "--evaluation",
         action="store_true",
-        help="run only the 200-event clean and timed full-chain evaluation",
+        help="run the 50-event clean and three timed full-chain repetitions",
     )
     return parser.parse_args()
 
@@ -448,63 +540,63 @@ def main() -> int:
         if build.returncode != 0:
             raise EvaluationError("candidate build failed")
 
+        events = protocol_events("evaluation" if args.evaluation else "development")
         if args.evaluation:
             run_stage(
                 stage_results,
                 outputs,
-                name="two_hundred_event_full_clean",
-                events=200,
+                name="fifty_event_full_clean",
+                events=events,
                 stage="full",
                 metrics="none",
-                run_id=f"{run_id}-200-clean",
+                run_id=f"{run_id}-{events}-clean",
+                comparison="clean",
             )
-            run_stage(
-                stage_results,
-                outputs,
-                name="two_hundred_event_full_timed",
-                events=200,
-                stage="full",
-                metrics="time",
-                run_id=f"{run_id}-200-time",
-            )
+            for repetition in range(1, int(PROTOCOL_METADATA["timed_repetitions"]) + 1):
+                run_stage(
+                    stage_results,
+                    outputs,
+                    name=f"fifty_event_full_timed_repetition_{repetition}",
+                    events=events,
+                    stage="full",
+                    metrics="time",
+                    run_id=f"{run_id}-{events}-time-r{repetition}",
+                    comparison="timed",
+                    repetition=repetition,
+                )
             category = "Evaluation"
         else:
             run_stage(
                 stage_results,
                 outputs,
-                name="one_event_seeding",
-                events=1,
+                name="ten_event_seeding",
+                events=events,
                 stage="seeding",
                 metrics="none",
-                run_id=f"{run_id}-1-seeding",
+                run_id=f"{run_id}-{events}-seeding",
             )
             run_stage(
                 stage_results,
                 outputs,
-                name="one_event_full",
-                events=1,
+                name="ten_event_full_clean",
+                events=events,
                 stage="full",
                 metrics="none",
-                run_id=f"{run_id}-1-full",
+                run_id=f"{run_id}-{events}-clean",
+                comparison="clean",
             )
-            run_stage(
-                stage_results,
-                outputs,
-                name="fifty_event_full_clean",
-                events=50,
-                stage="full",
-                metrics="none",
-                run_id=f"{run_id}-50-clean",
-            )
-            run_stage(
-                stage_results,
-                outputs,
-                name="fifty_event_full_timed",
-                events=50,
-                stage="full",
-                metrics="time",
-                run_id=f"{run_id}-50-time",
-            )
+            for repetition in range(1, int(PROTOCOL_METADATA["timed_repetitions"]) + 1):
+                run_stage(
+                    stage_results,
+                    outputs,
+                    name=f"ten_event_full_timed_repetition_{repetition}",
+                    events=events,
+                    stage="full",
+                    metrics="time",
+                    run_id=f"{run_id}-{events}-time-r{repetition}",
+                    comparison="timed",
+                    repetition=repetition,
+                )
             category = "Development"
     except CandidateFailure as exc:
         category = "Errors" if args.evaluation else "Failed"
@@ -537,9 +629,22 @@ def main() -> int:
                 category = "Errors"
                 error = "remote evaluation cleanup failed"
 
+    timed_comparison = build_timed_comparison(stage_results)
+    if category in {"Development", "Evaluation"} and (
+        timed_comparison is None or not timed_comparison.get("complete")
+    ):
+        category = "Errors"
+        error = error or "timed repetitions did not produce a complete median"
+
     finished = datetime.now(timezone.utc)
     summary: dict[str, Any] = {
         "candidate_name": args.candidate_name,
+        "protocol_id": PROTOCOL_ID,
+        "protocol": current_protocol(),
+        "execution_target": PROTOCOL_METADATA["execution_target"],
+        "timed_repetitions": PROTOCOL_METADATA["timed_repetitions"],
+        "timed_aggregation": PROTOCOL_METADATA["timed_aggregation"],
+        "baseline": args.candidate_name == "Genesis" and category in {"Development", "Evaluation"},
         "implementation_commit": commit,
         "mode": "evaluation" if args.evaluation else "development",
         "category": category,
@@ -549,11 +654,12 @@ def main() -> int:
         "acts_source": "/storage/thomaaks/acts-v46.5.0",
         "acts_backup": backup_root,
         "workload": "ttbar_pu200",
-        "threads": -1,
-        "seed": 42,
-        "pileup": 200,
+        "threads": PROTOCOL_METADATA["threads"],
+        "seed": PROTOCOL_METADATA["seed"],
+        "pileup": PROTOCOL_METADATA["pileup"],
         "optimization_files": relative_files,
         "stages": stage_results,
+        "timed_comparison": timed_comparison,
         "raw_logs_retained": category in {"Failed", "Errors"},
     }
     if error:

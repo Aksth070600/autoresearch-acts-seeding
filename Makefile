@@ -4,9 +4,9 @@ ACTS_SOURCE ?= /storage/thomaaks/acts-v46.5.0
 ACTS_BUILD_DIR ?= $(ACTS_SOURCE)/build
 ACTS_VERSION ?= v46.5.0
 ACTS_BUILD_JOBS ?= $(shell nproc 2>/dev/null || printf '1')
-ITK_EVENTS ?= 1
+ITK_EVENTS ?= 10
 ITK_WORKLOAD ?= ttbar_pu200
-ITK_THREADS ?= -1
+ITK_THREADS ?= 1
 ITK_SEED ?= 42
 ITK_PILEUP ?= 200
 ITK_STAGE ?= full
@@ -23,10 +23,11 @@ HEPP_APPTAINER ?= /cvmfs/atlas.cern.ch/repo/containers/sw/apptainer/x86_64-el9/c
 HEPP_CONTAINER_IMAGE ?= /cvmfs/atlas.cern.ch/repo/containers/images/singularity/x86_64-almalinux9.img
 HEPP_CONTAINER_BINDS ?= -B /cvmfs -B /storage -B /home/aksth
 
-.PHONY: help setupActs setup build export-hepp-files hepp02-tmux-create hepp02-tmux-attach hepp02-tmux hepp02-tmux-status hepp02-setupActs hepp02-build hepp02-setup hepp02-setup-and-build hepp02-full-chain-itk evaluate report evolve record select-evaluation evaluate-selected
+.PHONY: help test setupActs setup build export-hepp-files hepp02-tmux-create hepp02-tmux-attach hepp02-tmux hepp02-tmux-status hepp02-setupActs hepp02-build hepp02-setup hepp02-setup-and-build hepp02-full-chain-itk evaluate report evolve record select-evaluation evaluate-selected
 
 help:
 	@printf '%s\n' \
+	  'make test      Run focused protocol and primary-objective tests.' \
 	  'make setupActs  Configure ACTS v46.5.0 and its Python/example bindings.' \
 	  'make build      Build the configured ACTS tree.' \
 	  'make setup                    Verify the ACTS Python environment in this shell.' \
@@ -40,17 +41,21 @@ help:
 	  'make hepp02-setup            Copy files and verify ACTS Python on HEPP02.' \
 	  'make hepp02-setup-and-build  Copy files, configure, and build ACTS on HEPP02.' \
 	  'make hepp02-full-chain-itk   Run the configurable ttbar ITk chain and return output.' \
+	  '  Defaults use the v2 protocol: 10 events and one ACTS thread.' \
 	  '  ITK_STAGE=seeding stops after seeding; full runs reconstruction.' \
 	  '  ITK_METRICS=time adds GNU time RSS and CPU metrics; none runs clean.' \
-	  'make evaluate CANDIDATE=name  Run development stages for a committed candidate.' \
+	  'make evaluate CANDIDATE=name  Run 10-event development stages for a committed candidate.' \
 	  'make report                 Build the interactive local comparison report.' \
-	  'make evolve                 Select a candidate with historical NSGA-II.' \
+	  'make evolve                 Select a protocol-compatible Pareto candidate.' \
 	  'make record CANDIDATE=name  Print the latest candidate result and failure logs.' \
 	  'make select-evaluation      Show Genesis plus four unique evaluation candidates.' \
 	  'make evaluate-selected      Evaluate the selected candidates and rebuild the report.' \
 	  '' \
 	  'After local setup, use: source orchestration-files/HEPP-files/setup.sh' \
 	  'Override HEPP_HOST, HEPP_STORAGE, or HEPP_TMUX_TARGET for another remote.'
+
+test:
+	/usr/bin/python3 -m unittest discover -s tests -v
 
 setupActs:
 	ACTS_SOURCE='$(ACTS_SOURCE)' ACTS_BUILD_DIR='$(ACTS_BUILD_DIR)' ACTS_VERSION='$(ACTS_VERSION)' ./orchestration-files/HEPP-files/setupActs.sh

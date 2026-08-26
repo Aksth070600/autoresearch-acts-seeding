@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Select the Genesis baseline and four unique development candidates for evaluation."""
+"""Select Genesis and four unique candidates using the two primary metrics."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from evolution import load_records
+from evolution import EvolutionError, choose_baseline, improved_over_baseline, load_records
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_RECORDS = PROJECT_ROOT / "records"
@@ -42,7 +42,7 @@ def deduplicate(rows: list[dict[str, Any]], baseline: dict[str, Any]) -> list[di
 def rank_ambiguity(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return sorted(
         rows,
-        key=lambda row: (-row["metrics"]["timed_ambiguity_efficiency"], row["candidate"]),
+        key=lambda row: (-row["metrics"]["timed_ambiguity_particle_efficiency"], row["candidate"]),
     )
 
 
@@ -61,8 +61,13 @@ def choose(rows: list[dict[str, Any]], baseline_name: str, count: int) -> list[d
         raise ValueError(f"baseline candidate not found: {baseline_name}")
     baseline = baseline_matches[0]
     candidates = deduplicate(rows, baseline)
-    required = ("timed_ambiguity_efficiency", "timed_total_time_per_event_ms")
-    candidates = [row for row in candidates if all(key in row["metrics"] for key in required)]
+    required = ("timed_ambiguity_particle_efficiency", "timed_total_time_per_event_ms")
+    candidates = [
+        row
+        for row in candidates
+        if all(key in row["metrics"] for key in required)
+        and improved_over_baseline(row, baseline, "timed")
+    ]
     ambiguity = rank_ambiguity(candidates)
     total_time = rank_total_time(candidates)
 
@@ -80,7 +85,7 @@ def choose(rows: list[dict[str, Any]], baseline_name: str, count: int) -> list[d
             if added == limit:
                 return
 
-    add_from(ambiguity, "highest timed ambiguity efficiency", 2)
+    add_from(ambiguity, "highest timed particle ambiguity efficiency", 2)
     add_from(total_time, "lowest timed total time per event", 2)
 
     if len(selected) < count + 1:
@@ -104,8 +109,9 @@ def main() -> int:
     args = parse_args()
     rows = load_records(args.records.resolve(), "development", "particles")
     try:
+        choose_baseline(rows, args.baseline)
         selected = choose(rows, args.baseline, args.count)
-    except ValueError as error:
+    except (EvolutionError, ValueError) as error:
         raise SystemExit(f"evaluation selection failed: {error}") from error
 
     if args.names:
@@ -122,7 +128,7 @@ def main() -> int:
                 "record": row["record"],
                 "implementation_commit": row["commit"],
                 "selection_reason": row["selection_reason"],
-                "timed_ambiguity_efficiency": row["metrics"].get("timed_ambiguity_efficiency"),
+                "timed_ambiguity_particle_efficiency": row["metrics"].get("timed_ambiguity_particle_efficiency"),
                 "timed_total_time_per_event_ms": row["metrics"].get("timed_total_time_per_event_ms"),
             }
             for row in selected

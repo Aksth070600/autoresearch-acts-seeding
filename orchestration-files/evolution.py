@@ -11,6 +11,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from protocol import PROTOCOL_ID, PROTOCOL_METADATA, is_compatible_summary
+
 try:
     import numpy as np
     from pymoo.algorithms.moo.nsga2 import NSGA2
@@ -29,7 +31,15 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_RECORDS = PROJECT_ROOT / "records"
 DEFAULT_STATE = DEFAULT_RECORDS / "evolution" / "population.json"
 
-TIME_METRICS = ("total_time_per_event_ms", "seeding_time_per_event_ms")
+PRIMARY_TIME_METRIC = "total_time_per_event_ms"
+PRIMARY_EFFICIENCY_METRIC = "ambiguity_particle_efficiency"
+PRIMARY_METRICS = (PRIMARY_TIME_METRIC, PRIMARY_EFFICIENCY_METRIC)
+DIAGNOSTIC_METRICS = (
+    "seeding_time_per_event_ms",
+    "seeding_particle_efficiency",
+    "ckf_particle_efficiency",
+    "ambiguity_track_efficiency",
+)
 ALGORITHMS = ("seeding", "ckf", "ambiguity")
 
 
@@ -44,7 +54,7 @@ class HistoricalCandidateProblem(ElementwiseProblem):
         self.candidates = candidates
         super().__init__(
             n_var=1,
-            n_obj=5,
+            n_obj=2,
             n_ieq_constr=0,
             xl=0,
             xu=max(0, len(candidates) - 1),
@@ -63,7 +73,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--dataset", choices=("development", "evaluation", "all"), default="development")
     parser.add_argument("--baseline", default="Genesis")
     parser.add_argument("--stage", choices=("clean", "timed"), default="timed")
-    parser.add_argument("--efficiency-kind", choices=("particles", "tracks"), default="particles")
+    parser.add_argument(
+        "--efficiency-kind",
+        choices=("particles",),
+        default="particles",
+        help="compatibility option; the objective is always particle ambiguity efficiency",
+    )
     parser.add_argument("--population-size", type=int, default=10)
     parser.add_argument("--generations", type=int, default=50)
     parser.add_argument("--seed", type=int, default=42)
@@ -84,45 +99,75 @@ def stage_prefix(stage: dict[str, Any]) -> str | None:
     return None
 
 
+def add_run_metrics(metrics: dict[str, float], prefix: str, run_metrics: dict[str, Any]) -> None:
+    """Flatten primary and diagnostic values from one parsed full-chain run."""
+
+    timing = run_metrics.get("timing", {})
+    timing_total = run_metrics.get("timing_total", {})
+    for source, name in (
+        (timing_total.get("time_per_event_ms"), "total_time_per_event_ms"),
+        (timing.get("seeding", {}).get("time_per_event_ms"), "seeding_time_per_event_ms"),
+    ):
+        if finite(source):
+            metrics[f"{prefix}_{name}"] = float(source)
+
+    performance = run_metrics.get("performance", {})
+    for algorithm in ALGORITHMS:
+        source_name = "ambiguity_resolution" if algorithm == "ambiguity" else algorithm
+        values = performance.get(source_name, {})
+        for metric_name, value in values.items():
+            if finite(value):
+                normalized = {
+                    "efficiency_particles": "particle_efficiency",
+                    "efficiency_tracks": "track_efficiency",
+                    "fake_ratio_particles": "particle_fake_ratio",
+                    "fake_ratio_tracks": "track_fake_ratio",
+                    "duplicate_ratio_particles": "particle_duplicate_ratio",
+                    "duplicate_ratio_tracks": "track_duplicate_ratio",
+                }.get(metric_name, metric_name)
+                metrics[f"{prefix}_{algorithm}_{normalized}"] = float(value)
+
+
 def flatten_summary(
     summary: dict[str, Any],
     path: Path,
     records_root: Path,
     efficiency_kind: str,
 ) -> dict[str, Any] | None:
-    if summary.get("status") != "passed":
+    del efficiency_kind  # The campaign objective is always particle ambiguity efficiency.
+    if summary.get("status") != "passed" or not is_compatible_summary(summary):
         return None
     metrics: dict[str, float] = {}
     for stage in summary.get("stages", []):
-        if not isinstance(stage, dict):
+        if not isinstance(stage, dict) or stage.get("comparison") != "clean":
             continue
-        prefix = stage_prefix(stage)
-        run_metrics = stage.get("run_metrics")
-        if prefix is None or not isinstance(run_metrics, dict):
-            continue
-        timing = run_metrics.get("timing", {})
-        timing_total = run_metrics.get("timing_total", {})
-        for source, name in (
-            (timing_total.get("time_per_event_ms"), "total_time_per_event_ms"),
-            (timing.get("seeding", {}).get("time_per_event_ms"), "seeding_time_per_event_ms"),
-        ):
-            if finite(source):
-                metrics[f"{prefix}_{name}"] = float(source)
-        performance = run_metrics.get("performance", {})
-        for algorithm in ALGORITHMS:
-            source_name = "ambiguity_resolution" if algorithm == "ambiguity" else algorithm
-            values = performance.get(source_name, {})
-            value = values.get(f"efficiency_{efficiency_kind}")
-            if finite(value):
-                metrics[f"{prefix}_{algorithm}_efficiency"] = float(value)
+        if stage_prefix(stage) == "clean" and isinstance(stage.get("run_metrics"), dict):
+            add_run_metrics(metrics, "clean", stage["run_metrics"])
 
-    if not metrics:
+    timed_comparison = summary.get("timed_comparison", {})
+    if not isinstance(timed_comparison, dict):
+        timed_comparison = {}
+    median_metrics = timed_comparison.get("median_run_metrics")
+    if (
+        timed_comparison.get("complete") is True
+        and timed_comparison.get("aggregation") == PROTOCOL_METADATA["timed_aggregation"]
+        and timed_comparison.get("repetition_count") == PROTOCOL_METADATA["timed_repetitions"]
+        and isinstance(timed_comparison.get("repetitions"), list)
+        and len(timed_comparison["repetitions"]) == PROTOCOL_METADATA["timed_repetitions"]
+        and isinstance(median_metrics, dict)
+    ):
+        add_run_metrics(metrics, "timed", median_metrics)
+
+    required = {f"timed_{name}" for name in PRIMARY_METRICS}
+    if not required.issubset(metrics):
         return None
     return {
         "candidate": str(summary.get("candidate_name", path.parent.name)),
         "category": str(summary.get("category", path.parent.parent.name)),
         "commit": str(summary.get("implementation_commit", "")),
         "record": path.relative_to(records_root).as_posix(),
+        "protocol_id": PROTOCOL_ID,
+        "is_baseline": bool(summary.get("baseline")),
         "metrics": metrics,
     }
 
@@ -134,6 +179,9 @@ def load_records(records_root: Path, dataset: str, efficiency_kind: str) -> list
             summary = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             continue
+        if not is_compatible_summary(summary):
+            # Old evidence is deliberately not compared under this protocol.
+            continue
         category = str(summary.get("category", path.parent.parent.name)).lower()
         if dataset != "all" and category != dataset:
             continue
@@ -144,17 +192,25 @@ def load_records(records_root: Path, dataset: str, efficiency_kind: str) -> list
 
 
 def choose_baseline(rows: list[dict[str, Any]], candidate_name: str) -> dict[str, Any]:
+    """Require the canonical fresh Genesis record for the active protocol."""
+
     matches = [row for row in rows if row["candidate"] == candidate_name]
-    if not matches:
-        raise EvolutionError(f"baseline candidate not found: {candidate_name}")
-    development = [row for row in matches if row["category"].lower() == "development"]
-    return max(development or matches, key=lambda row: row["record"])
+    fresh = [
+        row
+        for row in matches
+        if row["category"].lower() == "development"
+        and row["record"] == "Development/Genesis/summary.json"
+    ]
+    if not fresh:
+        raise EvolutionError(
+            "fresh protocol-compatible Development/Genesis baseline required; "
+            "run `make evaluate CANDIDATE=Genesis` first"
+        )
+    return fresh[0]
 
 
 def required_metrics(stage: str) -> tuple[str, ...]:
-    return tuple(f"{stage}_{name}" for name in TIME_METRICS) + tuple(
-        f"{stage}_{algorithm}_efficiency" for algorithm in ALGORITHMS
-    )
+    return tuple(f"{stage}_{name}" for name in PRIMARY_METRICS)
 
 
 def improved_over_baseline(row: dict[str, Any], baseline: dict[str, Any], stage: str) -> bool:
@@ -162,25 +218,47 @@ def improved_over_baseline(row: dict[str, Any], baseline: dict[str, Any], stage:
     base = baseline["metrics"]
     if any(name not in metrics or name not in base for name in required_metrics(stage)):
         return False
-    total_time_gain = (
-        metrics[f"{stage}_total_time_per_event_ms"]
-        < base[f"{stage}_total_time_per_event_ms"]
+    time_improved = metrics[f"{stage}_{PRIMARY_TIME_METRIC}"] < base[f"{stage}_{PRIMARY_TIME_METRIC}"]
+    ambiguity_improved = (
+        metrics[f"{stage}_{PRIMARY_EFFICIENCY_METRIC}"]
+        > base[f"{stage}_{PRIMARY_EFFICIENCY_METRIC}"]
     )
-    ambiguity_gain = (
-        metrics[f"{stage}_ambiguity_efficiency"]
-        > base[f"{stage}_ambiguity_efficiency"]
-    )
-    return total_time_gain or ambiguity_gain
+    return time_improved or ambiguity_improved
 
 
 def objective_vector(row: dict[str, Any], stage: str) -> list[float]:
+    """Return the two primary objectives: time down, ambiguity efficiency up."""
+
     metrics = row["metrics"]
     return [
-        metrics[f"{stage}_total_time_per_event_ms"],
-        metrics[f"{stage}_seeding_time_per_event_ms"],
-        -metrics[f"{stage}_seeding_efficiency"],
-        -metrics[f"{stage}_ckf_efficiency"],
-        -metrics[f"{stage}_ambiguity_efficiency"],
+        metrics[f"{stage}_{PRIMARY_TIME_METRIC}"],
+        -metrics[f"{stage}_{PRIMARY_EFFICIENCY_METRIC}"],
+    ]
+
+
+def dominates(left: dict[str, Any], right: dict[str, Any], stage: str) -> bool:
+    """Return whether left is at least as good on both primary objectives."""
+
+    left_metrics = left["metrics"]
+    right_metrics = right["metrics"]
+    left_time = left_metrics[f"{stage}_{PRIMARY_TIME_METRIC}"]
+    right_time = right_metrics[f"{stage}_{PRIMARY_TIME_METRIC}"]
+    left_efficiency = left_metrics[f"{stage}_{PRIMARY_EFFICIENCY_METRIC}"]
+    right_efficiency = right_metrics[f"{stage}_{PRIMARY_EFFICIENCY_METRIC}"]
+    return (
+        left_time <= right_time
+        and left_efficiency >= right_efficiency
+        and (left_time < right_time or left_efficiency > right_efficiency)
+    )
+
+
+def pareto_front(rows: list[dict[str, Any]], stage: str) -> list[dict[str, Any]]:
+    """Keep candidates not dominated on either primary metric."""
+
+    return [
+        row
+        for row in rows
+        if not any(other is not row and dominates(other, row, stage) for other in rows)
     ]
 
 
@@ -229,33 +307,56 @@ def select_population(pool: list[dict[str, Any]], size: int, generations: int, s
 
 
 def recommendation(population: list[dict[str, Any]], baseline: dict[str, Any], stage: str) -> dict[str, Any]:
-    alternatives = [row for row in population if row["record"] != baseline["record"]]
+    """Recommend only a non-dominated primary-objective candidate.
+
+    The deterministic time-first tie break is applied only after Pareto
+    filtering. It is not a weighted combination of the two objectives.
+    """
+
+    alternatives = [
+        row
+        for row in population
+        if row["record"] != baseline["record"]
+        and improved_over_baseline(row, baseline, stage)
+    ]
+    front = pareto_front([baseline, *alternatives], stage)
+    alternatives = [row for row in front if row["record"] != baseline["record"]]
     if not alternatives:
         return baseline
-    base = baseline["metrics"]
-    def score(row: dict[str, Any]) -> float:
-        metrics = row["metrics"]
-        score_value = 0.0
-        for name in TIME_METRICS:
-            denominator = max(abs(base[f"{stage}_{name}"]), 1e-12)
-            score_value += (base[f"{stage}_{name}"] - metrics[f"{stage}_{name}"]) / denominator
-        for algorithm in ALGORITHMS:
-            denominator = max(abs(base[f"{stage}_{algorithm}_efficiency"]), 1e-12)
-            score_value += (metrics[f"{stage}_{algorithm}_efficiency"] - base[f"{stage}_{algorithm}_efficiency"]) / denominator
-        return score_value
-    return max(alternatives, key=score)
+    return min(
+        alternatives,
+        key=lambda row: (
+            row["metrics"][f"{stage}_{PRIMARY_TIME_METRIC}"],
+            -row["metrics"][f"{stage}_{PRIMARY_EFFICIENCY_METRIC}"],
+            row["record"],
+        ),
+    )
 
 
-def write_state(path: Path, population: list[dict[str, Any]], baseline: dict[str, Any], selected: dict[str, Any], args: argparse.Namespace) -> None:
+def write_state(
+    path: Path,
+    population: list[dict[str, Any]],
+    baseline: dict[str, Any],
+    selected: dict[str, Any],
+    pareto: list[dict[str, Any]],
+    args: argparse.Namespace,
+) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     state = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "generation": 1,
+        "protocol_id": PROTOCOL_ID,
+        "protocol": PROTOCOL_METADATA,
+        "objective_metrics": {
+            "minimize": PRIMARY_TIME_METRIC,
+            "maximize": PRIMARY_EFFICIENCY_METRIC,
+        },
         "dataset": args.dataset,
         "stage": args.stage,
         "efficiency_kind": args.efficiency_kind,
         "baseline": baseline,
         "active_population": population,
+        "pareto_front": pareto,
         "recommendation": selected,
     }
     if path.exists():
@@ -273,11 +374,15 @@ def main() -> int:
         raise SystemExit("population size and generations must be positive")
     records_root = args.records.resolve()
     rows = load_records(records_root, args.dataset, args.efficiency_kind)
-    baseline = choose_baseline(rows, args.baseline)
+    try:
+        baseline = choose_baseline(rows, args.baseline)
+    except EvolutionError as error:
+        raise SystemExit(f"evolution unavailable: {error}") from error
     pool = candidate_pool(rows, baseline, args.stage)
     population = select_population(pool, args.population_size, args.generations, args.seed)
     selected = recommendation(population, baseline, args.stage)
-    write_state(args.state.resolve(), population, baseline, selected, args)
+    pareto = pareto_front(population, args.stage)
+    write_state(args.state.resolve(), population, baseline, selected, pareto, args)
 
     result = {
         "recommended_candidate": selected["candidate"],
@@ -285,10 +390,16 @@ def main() -> int:
         "record": selected["record"],
         "baseline_commit": baseline["commit"],
         "active_population": [row["candidate"] for row in population],
+        "pareto_front": [row["candidate"] for row in pareto],
         "eligible_candidates": len(pool) - 1,
         "dataset": args.dataset,
         "stage": args.stage,
-        "efficiency_kind": args.efficiency_kind,
+        "efficiency_kind": "particles",
+        "objective_metrics": {
+            "minimize": PRIMARY_TIME_METRIC,
+            "maximize": PRIMARY_EFFICIENCY_METRIC,
+        },
+        "protocol_id": PROTOCOL_ID,
         "state": str(args.state.resolve()),
     }
     if args.json:
