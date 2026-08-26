@@ -59,7 +59,6 @@ void createSeedsFromGroupsImpl(
 
   // no top SP found -> cannot form any triplet
   if (cache.topDoublets.empty()) {
-    ACTS_VERBOSE("No compatible Tops, returning");
     return;
   }
 
