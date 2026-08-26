@@ -148,8 +148,13 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
                       return tripletTopCandidates[t].curvature();
                     });
 
-  // vector containing the radius of all compatible seeds
-  cache().compatibleSeedR.reserve(config().compatSeedLimit);
+  // The common compatibility limit fits in the inline cache. Keep an
+  // overflow vector for configurations that request more entries.
+  cache().compatibleSeedROverflow.reserve(config().compatSeedLimit >
+                                                  cache().compatibleSeedRInline.size()
+                                              ? config().compatSeedLimit -
+                                                    cache().compatibleSeedRInline.size()
+                                              : 0);
 
   const auto getTopR = [&](ConstSpacePointProxy2 spT) {
     if (config().useDeltaRinsteadOfTopRadius) {
@@ -164,7 +169,8 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
     auto topSp = tripletTopCandidates[topSpIndex].spacePoint();
     auto spT = spacePoints[topSp];
 
-    cache().compatibleSeedR.clear();
+    cache().compatibleSeedRSize = 0;
+    cache().compatibleSeedROverflow.clear();
 
     float invHelixDiameter = tripletTopCandidates[topSpIndex].curvature();
     float lowerLimitCurv = invHelixDiameter - config().deltaInvHelixDiameter;
@@ -211,21 +217,32 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
         continue;
       }
       bool newCompSeed = true;
-      for (const float previousDiameter : cache().compatibleSeedR) {
+      for (std::size_t previousIndex = 0;
+           previousIndex < cache().compatibleSeedRSize; ++previousIndex) {
         // original ATLAS code uses higher min distance for 2nd found compatible
         // seed (20mm instead of 5mm)
         // add new compatible seed only if distance larger than rmin to all
         // other compatible seeds
+        const float previousDiameter =
+            previousIndex < cache().compatibleSeedRInline.size()
+                ? cache().compatibleSeedRInline[previousIndex]
+                : cache().compatibleSeedROverflow[
+                      previousIndex - cache().compatibleSeedRInline.size()];
         if (std::abs(previousDiameter - otherTopR) < config().deltaRMin) {
           newCompSeed = false;
           break;
         }
       }
       if (newCompSeed) {
-        cache().compatibleSeedR.push_back(otherTopR);
+        if (cache().compatibleSeedRSize < cache().compatibleSeedRInline.size()) {
+          cache().compatibleSeedRInline[cache().compatibleSeedRSize] = otherTopR;
+        } else {
+          cache().compatibleSeedROverflow.push_back(otherTopR);
+        }
+        ++cache().compatibleSeedRSize;
         weight += config().compatSeedWeight;
       }
-      if (cache().compatibleSeedR.size() >= config().compatSeedLimit) {
+      if (cache().compatibleSeedRSize >= config().compatSeedLimit) {
         break;
       }
     }
