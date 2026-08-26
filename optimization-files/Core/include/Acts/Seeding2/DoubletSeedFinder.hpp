@@ -45,7 +45,8 @@ class DoubletsForMiddleSp {
   void clear() {
     m_spacePoints.clear();
     m_cotTheta.clear();
-    m_er_iDeltaR.clear();
+    m_er.clear();
+    m_iDeltaR.clear();
     m_uv.clear();
     m_xy.clear();
   }
@@ -63,7 +64,8 @@ class DoubletsForMiddleSp {
                     float er, float u, float v, float x, float y) {
     m_spacePoints.push_back(sp);
     m_cotTheta.push_back(cotTheta);
-    m_er_iDeltaR.push_back({er, iDeltaR});
+    m_er.push_back(er);
+    m_iDeltaR.push_back(iDeltaR);
     m_uv.push_back({u, v});
     m_xy.push_back({x, y});
   }
@@ -130,10 +132,10 @@ class DoubletsForMiddleSp {
     float cotTheta() const { return m_container->m_cotTheta[m_index]; }
     /// Get er value
     /// @return The er value
-    float er() const { return m_container->m_er_iDeltaR[m_index][0]; }
+    float er() const { return m_container->m_er[m_index]; }
     /// Get inverse delta r
     /// @return The inverse delta r value
-    float iDeltaR() const { return m_container->m_er_iDeltaR[m_index][1]; }
+    float iDeltaR() const { return m_container->m_iDeltaR[m_index]; }
     /// Get u coordinate
     /// @return The u value
     float u() const { return m_container->m_uv[m_index][0]; }
@@ -256,7 +258,8 @@ class DoubletsForMiddleSp {
 
   // parameters required to calculate a circle with linear equation
   std::vector<float> m_cotTheta;
-  std::vector<std::array<float, 2>> m_er_iDeltaR;
+  std::vector<float> m_er;
+  std::vector<float> m_iDeltaR;
   std::vector<std::array<float, 2>> m_uv;
   std::vector<std::array<float, 2>> m_xy;
 };
