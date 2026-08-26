@@ -162,8 +162,6 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   coreSpacePoints.reserve(grid.numberOfSpacePoints());
   std::vector<Acts::SpacePointIndexRange2> gridSpacePointRanges;
   gridSpacePointRanges.reserve(grid.numberOfBins());
-  float minRange = std::numeric_limits<float>::max();
-  float maxRange = std::numeric_limits<float>::lowest();
   for (std::size_t i = 0; i < grid.numberOfBins(); ++i) {
     std::uint32_t begin = coreSpacePoints.size();
     for (Acts::SpacePointIndex2 spIndex : grid.at(i)) {
@@ -177,16 +175,27 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
       newSp.varianceZ() = static_cast<float>(sp.varianceZ());
       newSp.varianceR() = static_cast<float>(sp.varianceR());
       newSp.copyFromIndex() = sp.index();
-      minRange = std::min(newSp.zr()[1], minRange);
-      maxRange = std::max(newSp.zr()[1], maxRange);
     }
     std::uint32_t end = coreSpacePoints.size();
     gridSpacePointRanges.emplace_back(begin, end);
   }
 
-  // The radius range was accumulated during the grid-to-core copy, so no
-  // second pass over all bins is needed.
-  const Acts::Range1D<float> rRange{minRange, maxRange};
+  // Compute radius range. We rely on the fact the grid is storing the proxies
+  // with a sorting in the radius
+  const Acts::Range1D<float> rRange = [&]() -> Acts::Range1D<float> {
+    float minRange = std::numeric_limits<float>::max();
+    float maxRange = std::numeric_limits<float>::lowest();
+    for (const Acts::SpacePointIndexRange2& range : gridSpacePointRanges) {
+      if (range.first == range.second) {
+        continue;
+      }
+      auto first = coreSpacePoints[range.first];
+      auto last = coreSpacePoints[range.second - 1];
+      minRange = std::min(first.zr()[1], minRange);
+      maxRange = std::max(last.zr()[1], maxRange);
+    }
+    return {minRange, maxRange};
+  }();
 
   Acts::DoubletSeedFinder::Config bottomDoubletFinderConfig;
   bottomDoubletFinderConfig.spacePointsSortedByRadius = true;
