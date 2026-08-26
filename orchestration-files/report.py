@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -15,6 +16,8 @@ from protocol import PROTOCOL_ID, PROTOCOL_METADATA, is_compatible_summary
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_RECORDS = PROJECT_ROOT / "records"
 DEFAULT_OUTPUT = PROJECT_ROOT / "reports" / "site"
+REPOSITORY_URL = "https://github.com/Aksth070600/autoresearch-acts-seeding"
+FULL_COMMIT_SHA = re.compile(r"[0-9a-fA-F]{40}")
 
 from visualizations.pareto import render as render_pareto
 
@@ -28,9 +31,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--visualization", choices=sorted(VISUALIZATIONS), default="pareto")
     parser.add_argument(
         "--dataset",
-        choices=("development", "evaluation", "all"),
-        default="all",
-        help="record category to include; all combines Development and Evaluation Genesis runs",
+        choices=("development", "evaluation"),
+        default="development",
+        help="record category to include",
     )
     parser.add_argument("--baseline", default="Genesis")
     parser.add_argument("--x-metric", default="timed_total_time_per_event_ms")
@@ -48,6 +51,12 @@ def parse_args() -> argparse.Namespace:
 
 def finite_number(value: Any) -> bool:
     return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
+
+
+def commit_url(commit: str) -> str:
+    if not FULL_COMMIT_SHA.fullmatch(commit):
+        return ""
+    return f"{REPOSITORY_URL}/commit/{commit}"
 
 
 def stage_prefix(stage: dict[str, Any]) -> str | None:
@@ -160,10 +169,15 @@ def flatten_summary(summary: dict[str, Any], path: Path, records_root: Path) -> 
     if not metrics:
         return None
     category = str(summary.get("category", path.parent.parent.name))
+    category = {"development": "Development", "evaluation": "Evaluation"}.get(
+        category.lower(), category
+    )
+    commit = str(summary.get("implementation_commit", ""))
     return {
         "candidate": str(summary.get("candidate_name", path.parent.name)),
         "category": category,
-        "commit": str(summary.get("implementation_commit", "")),
+        "commit": commit,
+        "commit_url": commit_url(commit),
         "record": path.relative_to(records_root).as_posix(),
         "protocol_id": PROTOCOL_ID,
         "metrics": metrics,
@@ -184,7 +198,7 @@ def load_records(records_root: Path, dataset: str) -> list[dict[str, Any]]:
             # Do not silently compare historical evidence under a new protocol.
             continue
         category = str(summary.get("category", path.parent.parent.name)).lower()
-        if dataset != "all" and category != dataset:
+        if category != dataset:
             continue
         row = flatten_summary(summary, path, records_root)
         if row is not None:
@@ -234,7 +248,8 @@ def aggregate_genesis(
     protocol-compatible summaries by the time they reach this function.
     """
 
-    genesis = [row for row in rows if row["candidate"] == baseline]
+    scoped_rows = [row for row in rows if str(row["category"]).lower() == dataset]
+    genesis = [row for row in scoped_rows if row["candidate"] == baseline]
     provenance = _genesis_provenance(genesis)
     aggregation: dict[str, Any] = {
         "dataset": dataset,
@@ -243,7 +258,7 @@ def aggregate_genesis(
         "records": provenance,
     }
     if not genesis:
-        return list(rows), aggregation
+        return scoped_rows, aggregation
 
     common_metrics = set(genesis[0]["metrics"])
     for row in genesis[1:]:
@@ -256,12 +271,14 @@ def aggregate_genesis(
         for key in sorted(common_metrics)
     }
     categories = sorted({str(row["category"]) for row in genesis})
-    aggregate_category = dataset.title() if dataset != "all" else "All"
+    aggregate_category = dataset.title()
     commits = {str(row.get("commit", "")) for row in genesis}
+    aggregate_commit = next(iter(commits)) if len(commits) == 1 else ""
     aggregate = {
         "candidate": baseline,
         "category": aggregate_category,
-        "commit": next(iter(commits)) if len(commits) == 1 else "",
+        "commit": aggregate_commit,
+        "commit_url": REPOSITORY_URL,
         "record": f"{aggregate_category}/Genesis (arithmetic mean)",
         "protocol_id": PROTOCOL_ID,
         "metrics": metrics,
@@ -269,28 +286,21 @@ def aggregate_genesis(
         "provenance": provenance,
         "source_categories": categories,
     }
-    return [aggregate, *[row for row in rows if row["candidate"] != baseline]], aggregation
+    return [aggregate, *[row for row in scoped_rows if row["candidate"] != baseline]], aggregation
 
 
 def build_report(
     rows: list[dict[str, Any]],
     baseline: str,
-    dataset: str = "all",
+    dataset: str = "development",
 ) -> dict[str, Any]:
     report_rows, genesis_aggregation = aggregate_genesis(rows, baseline, dataset)
     metric_keys = sorted({key for row in report_rows for key in row["metrics"]})
-    if dataset == "all":
-        dataset_description = (
-            "All combines protocol-compatible Development and Evaluation records. "
-            "Genesis is one arithmetic mean across both categories; candidate records "
-            "remain individual points."
-        )
-    else:
-        dataset_description = (
-            f"{dataset.title()} includes only protocol-compatible {dataset.title()} records. "
-            "Genesis is the arithmetic mean of its records; candidate records remain "
-            "individual points."
-        )
+    dataset_description = (
+        f"{dataset.title()} includes only protocol-compatible {dataset.title()} records. "
+        "Genesis is the arithmetic mean of its records; candidate records remain "
+        "individual points."
+    )
     return {
         "rows": report_rows,
         "metric_keys": metric_keys,
@@ -300,6 +310,7 @@ def build_report(
         "dataset_description": dataset_description,
         "genesis_aggregation": genesis_aggregation,
         "protocol_id": PROTOCOL_ID,
+        "repository_url": REPOSITORY_URL,
         "protocol": PROTOCOL_METADATA,
         "primary_objectives": {
             "minimize": "timed_total_time_per_event_ms",
@@ -323,11 +334,7 @@ def main() -> int:
     # A freshly reset campaign has no summaries and should still produce a
     # reviewable placeholder. If summaries exist, retain strict metric checks
     # so malformed or incomplete Genesis records do not pass unnoticed.
-    summary_paths = (
-        list(records_root.glob("**/summary.json"))
-        if args.dataset == "all"
-        else list(records_root.glob(f"{args.dataset.title()}/**/summary.json"))
-    )
+    summary_paths = list(records_root.glob(f"{args.dataset.title()}/**/summary.json"))
     if rows or summary_paths:
         if args.x_metric not in report["metric_keys"]:
             raise SystemExit(f"x metric not found: {args.x_metric}")

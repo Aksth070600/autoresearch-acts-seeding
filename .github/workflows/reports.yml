@@ -9,10 +9,9 @@ on:
       dataset:
         description: Record category to plot
         required: true
-        default: all
+        default: development
         type: choice
         options:
-          - all
           - development
           - evaluation
       x_metric:
@@ -53,7 +52,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  DATASET: ${{ inputs.dataset || 'all' }}
+  DATASET: ${{ inputs.dataset || 'development' }}
   X_METRIC: ${{ inputs.x_metric || 'timed_total_time_per_event_ms' }}
   Y_METRIC: ${{ inputs.y_metric || 'timed_ambiguity_particle_efficiency' }}
   BASELINE: ${{ inputs.baseline || 'Genesis' }}
