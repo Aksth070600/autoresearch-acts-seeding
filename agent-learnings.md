@@ -76,3 +76,4 @@ When it reaches 250 lines, invoke the simplification skill to merge duplicate le
 - 2026-08-26 | candidate: CachePixelHelixCutValues | outcome: discard | lesson: Caching pixel helix-diameter and impact cut values passed all stages but slowed timed total to 2575.04 ms/event; retain direct configuration access.
 - 2026-08-26 | candidate: AvoidAbsRadiusCompatibilityOnMapParent | outcome: discard | lesson: Replacing two radius std::abs checks with bounded comparisons passed all stages but slowed timed total to 2518.87 ms/event; retain absolute-value checks.
 - 2026-08-26 | candidate: CacheDeltaRMinOnMapParent | outcome: discard | lesson: Caching the repeated delta-r minimum passed all stages but slowed timed total to 2509.93 ms/event; retain direct configuration access.
+- 2026-08-26 | candidate: CacheExperimentCutsOnMapParent | outcome: aborted | lesson: The bounded evaluation was aborted before producing a result; do not treat delegate caching as validated.
