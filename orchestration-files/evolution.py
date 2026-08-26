@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -115,8 +116,15 @@ def flatten_summary(
     del efficiency_kind  # The campaign objective is always particle ambiguity efficiency.
     if summary.get("status") != "passed" or not is_compatible_summary(summary):
         return None
+    stages = summary.get("stages")
+    if (
+        not isinstance(stages, list)
+        or not stages
+        or any(not isinstance(stage, dict) or stage.get("status") != "passed" for stage in stages)
+    ):
+        return None
     metrics: dict[str, float] = {}
-    for stage in summary.get("stages", []):
+    for stage in stages:
         if not isinstance(stage, dict) or stage.get("comparison") != "clean":
             continue
         if stage_prefix(stage) == "clean" and isinstance(stage.get("run_metrics"), dict):
@@ -132,6 +140,13 @@ def flatten_summary(
         and timed_comparison.get("repetition_count") == PROTOCOL_METADATA["timed_repetitions"]
         and isinstance(timed_comparison.get("repetitions"), list)
         and len(timed_comparison["repetitions"]) == PROTOCOL_METADATA["timed_repetitions"]
+        and all(
+            isinstance(repetition, dict)
+            and repetition.get("status") == "passed"
+            and isinstance(repetition.get("run_metrics"), dict)
+            and bool(repetition.get("run_metrics"))
+            for repetition in timed_comparison["repetitions"]
+        )
         and isinstance(median_metrics, dict)
     ):
         add_run_metrics(metrics, "timed", median_metrics)
@@ -139,13 +154,17 @@ def flatten_summary(
     required = {f"timed_{name}" for name in PRIMARY_METRICS}
     if not required.issubset(metrics):
         return None
+    candidate = str(summary.get("candidate_name", path.parent.name))
     return {
-        "candidate": str(summary.get("candidate_name", path.parent.name)),
+        "candidate": candidate,
         "category": str(summary.get("category", path.parent.parent.name)),
         "commit": str(summary.get("implementation_commit", "")),
         "record": path.relative_to(records_root).as_posix(),
         "protocol_id": PROTOCOL_ID,
-        "is_baseline": bool(summary.get("baseline")),
+        "status": str(summary.get("status", "")),
+        "is_baseline": bool(summary.get("baseline", candidate == "Genesis")),
+        "started_at": str(summary.get("started_at", "")),
+        "finished_at": str(summary.get("finished_at", "")),
         "metrics": metrics,
     }
 
@@ -169,22 +188,51 @@ def load_records(records_root: Path, dataset: str, efficiency_kind: str) -> list
     return rows
 
 
-def choose_baseline(rows: list[dict[str, Any]], candidate_name: str) -> dict[str, Any]:
-    """Require the canonical fresh Genesis record for the active protocol."""
+def _record_timestamp(row: dict[str, Any]) -> datetime:
+    """Read a run timestamp, falling back to a timestamped record path."""
 
-    matches = [row for row in rows if row["candidate"] == candidate_name]
-    fresh = [
+    for field in ("started_at", "finished_at"):
+        value = row.get(field)
+        if isinstance(value, str) and value:
+            try:
+                timestamp = datetime.fromisoformat(value.replace("Z", "+00:00"))
+                if timestamp.tzinfo is None:
+                    return timestamp.replace(tzinfo=timezone.utc)
+                return timestamp.astimezone(timezone.utc)
+            except ValueError:
+                pass
+
+    match = re.search(
+        r"/(\d{8}T\d{6}(?:\d{6})?Z)(?:-\d+)?-Genesis/summary\.json$",
+        "/" + str(row.get("record", "")),
+    )
+    if match:
+        timestamp = match.group(1)
+        for date_format in ("%Y%m%dT%H%M%S%fZ", "%Y%m%dT%H%M%SZ"):
+            try:
+                return datetime.strptime(timestamp, date_format).replace(tzinfo=timezone.utc)
+            except ValueError:
+                pass
+    return datetime.min.replace(tzinfo=timezone.utc)
+
+
+def choose_baseline(rows: list[dict[str, Any]], candidate_name: str) -> dict[str, Any]:
+    """Choose the newest complete Development Genesis record."""
+
+    matches = [
         row
-        for row in matches
-        if row["category"].lower() == "development"
-        and row["record"] == "Development/Genesis/summary.json"
+        for row in rows
+        if row["candidate"] == candidate_name
+        and row["category"].lower() == "development"
+        and row.get("is_baseline", True)
+        and row.get("status", "passed") == "passed"
     ]
-    if not fresh:
+    if not matches:
         raise EvolutionError(
-            "fresh protocol-compatible Development/Genesis baseline required; "
+            "protocol-compatible Development Genesis baseline required; "
             "run `make evaluate CANDIDATE=Genesis` first"
         )
-    return fresh[0]
+    return max(matches, key=lambda row: (_record_timestamp(row), str(row.get("record", ""))))
 
 
 def required_metrics(stage: str) -> tuple[str, ...]:
@@ -241,8 +289,12 @@ def pareto_front(rows: list[dict[str, Any]], stage: str) -> list[dict[str, Any]]
 
 
 def candidate_pool(rows: list[dict[str, Any]], baseline: dict[str, Any], stage: str) -> list[dict[str, Any]]:
-    pool = [row for row in rows if improved_over_baseline(row, baseline, stage)]
-    pool = [row for row in pool if row["record"] != baseline["record"]]
+    pool = [
+        row
+        for row in rows
+        if row["candidate"] != baseline["candidate"]
+        and improved_over_baseline(row, baseline, stage)
+    ]
     baseline_copy = dict(baseline)
     baseline_copy["is_baseline"] = True
     pool.insert(0, baseline_copy)

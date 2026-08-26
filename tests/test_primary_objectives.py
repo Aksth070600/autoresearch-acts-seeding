@@ -11,6 +11,7 @@ from evolution import (  # noqa: E402
     PRIMARY_TIME_METRIC,
     add_run_metrics,
     candidate_pool,
+    choose_baseline,
     improved_over_baseline,
     objective_vector,
     pareto_front,
@@ -116,6 +117,48 @@ class PrimaryObjectiveTests(unittest.TestCase):
             comparison["median_run_metrics"]["performance"]["ambiguity_resolution"]["efficiency_particles"],
             1.1,
         )
+
+    def test_latest_complete_genesis_is_the_baseline(self) -> None:
+        older = {
+            "candidate": "Genesis",
+            "category": "Development",
+            "record": "Development/20260826T120000000000Z-Genesis/summary.json",
+            "is_baseline": True,
+            "status": "passed",
+            "started_at": "2026-08-26T12:00:00+00:00",
+            "metrics": self.baseline["metrics"],
+        }
+        newer = {
+            **older,
+            "record": "Development/20260826T130000000000Z-Genesis/summary.json",
+            "started_at": "2026-08-26T13:00:00+00:00",
+            "metrics": {**self.baseline["metrics"], "timed_total_time_per_event_ms": 90.0},
+        }
+        incomplete = {
+            **newer,
+            "record": "Development/20260826T140000000000Z-Genesis/summary.json",
+            "status": "failed",
+            "started_at": "2026-08-26T14:00:00+00:00",
+        }
+
+        selected = choose_baseline([older, newer, incomplete], "Genesis")
+
+        self.assertIs(selected, newer)
+
+    def test_candidate_pool_does_not_reintroduce_older_genesis_records(self) -> None:
+        older = {**self.baseline, "record": "Development/older-Genesis/summary.json"}
+        candidate = {
+            "candidate": "Faster",
+            "record": "Development/Faster/summary.json",
+            "metrics": {
+                "timed_total_time_per_event_ms": 90.0,
+                "timed_ambiguity_particle_efficiency": 0.95,
+            },
+        }
+
+        pool = candidate_pool([older, candidate], self.baseline, "timed")
+
+        self.assertEqual([row["candidate"] for row in pool], ["Genesis", "Faster"])
 
     def test_primary_tradeoffs_remain_on_the_pareto_front(self) -> None:
         faster = {

@@ -23,8 +23,10 @@ The goal is to find faster or more efficient ACTS Seeding2 implementations while
 
 The Genesis run is required even when an older Genesis record exists.
 It anchors the campaign against current infrastructure drift.
-The fresh Genesis record is the campaign baseline; use its record path when judging candidates, not an older Genesis result selected by `make evolve`.
-Do not start mutation experiments until the baseline completes or its failure is understood.
+Successful Genesis runs are preserved as timestamped records. `make evolve`
+selects the latest complete protocol-compatible Development Genesis record.
+Failed or incomplete Genesis runs are never baselines. Do not start mutation
+experiments until the baseline completes or its failure is understood.
 
 ## Controlled campaign protocol
 
@@ -33,7 +35,7 @@ The experiment agent must use protocol `acts-seeding-v2` without overrides:
 
 - ACTS v46.5.0 on the fixed `ttbar_pu200` ITk dataset through HEPP02.
 - One ACTS thread, seed 42, and pileup 200.
-- Development candidates run 10 events. Evaluation candidates run 50 events.
+- Experiment candidates use the 10-event development workload only.
 - Clean full-chain stages may run once. Timed full-chain stages run three repetitions;
   compare their median and retain each repetition for auditability.
 - Accept expected unmasked FPEs only when every requested event completed.
@@ -60,11 +62,11 @@ Do not reproduce those lifecycle operations manually.
 
 ## Run commands
 
-Development evaluates one candidate through 10-event seeding and clean full-chain runs plus three 10-event timed full-chain repetitions. Evaluation uses a 50-event clean run plus three 50-event timed repetitions:
+The development evaluator runs one candidate through 10-event seeding and
+clean full-chain stages plus three 10-event timed full-chain repetitions:
 
 ```text
 make evaluate CANDIDATE=<candidate-name>
-make evaluate CANDIDATE=<candidate-name> EVALUATION=1
 ```
 
 After the run, retrieve the result for the agent without browsing the archive:
@@ -104,10 +106,31 @@ If primary performance is equal, prefer the simpler implementation.
 
 Once setup is confirmed, continue until the captain stops the campaign or a real blocker needs a decision.
 Do not pause after every candidate to ask whether to continue. A campaign must
-complete at least 20 candidate attempts, including at least 5 structurally
-different experiments. Do not stop after one attempt or a routine progress
-update. After three rejected candidates in the same mechanism family, change
-families before attempting another candidate.
+have at least 20 completed candidate attempts, counting only attempts whose
+development run completes all requested stages, and at least 10 structurally
+distinct attempts. It may contain no more than 5 micro-optimization attempts in
+total, and no more than 3 consecutive attempts may come from one mechanism
+family. Do not stop after one attempt or a routine progress update. Change
+mechanism families before exceeding any of those limits.
+
+Structural work changes algorithm or data flow, traversal or control flow, data
+layout or allocation behavior, pruning or search bounds, or an equivalent
+non-trivial implementation mechanism. A renamed or mechanically equivalent
+cache, logging change, STL spelling, `reserve`, or branch variant is not
+structurally distinct. A micro-optimization is a change limited to that kind of
+local spelling, hint, reserve, cache, logging, or similarly small rewrite.
+
+Before each candidate run, state all four fields below in the candidate
+proposal and evidence:
+
+- `mechanism_key`: a stable key for the mechanism family and idea.
+- `changed_symbols`: the functions, classes, data members, or other symbols changed.
+- `expected_hot_path`: the hot path expected to change and the direction of change.
+- `novelty_reason`: why the mechanism is not a semantic duplicate of earlier work.
+
+Use the mechanism key to count families and structural attempts. Do not claim a
+candidate is structurally distinct when only names, logging, STL spelling,
+`reserve`, cache placement, or branch hints changed.
 
 For each attempt:
 
@@ -147,12 +170,14 @@ Do not inspect or edit generated summaries and logs directly during the ordinary
 Use `make record` for run output and `make evolve` for historical selection.
 Use `make report` for interactive comparison when the captain requests a broader visual review.
 
-A successful fresh Genesis run writes `records/Development/Genesis/summary.json` or
-`records/Evaluation/Genesis/summary.json`. Each summary records protocol identity,
-the timed repetition metadata, every timed repetition, and the median timed
-metrics. A failed Genesis run must not be used as a baseline. Successful
-non-Genesis candidates are retained by the evaluator. Consumers must reject
-summaries whose protocol identity does not match `acts-seeding-v2`.
+A successful Genesis development run writes a unique timestamped record under
+`records/Development/` and retains any older records. The legacy canonical
+`records/Development/Genesis/summary.json` location remains readable for
+compatibility. Each summary records protocol identity, the timed repetition
+metadata, every timed repetition, and the median timed metrics. A failed or
+incomplete Genesis run must not be used as a baseline. Successful non-Genesis
+candidates are retained by the evaluator. Consumers must reject summaries whose
+protocol identity does not match `acts-seeding-v2`.
 Do not commit failure logs, temporary output, or runtime state.
 
 ## GitHub campaign review

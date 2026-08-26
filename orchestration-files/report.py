@@ -30,7 +30,7 @@ def parse_args() -> argparse.Namespace:
         "--dataset",
         choices=("development", "evaluation", "all"),
         default="all",
-        help="record category to include",
+        help="record category to include; all combines Development and Evaluation Genesis runs",
     )
     parser.add_argument("--baseline", default="Genesis")
     parser.add_argument("--x-metric", default="timed_total_time_per_event_ms")
@@ -117,8 +117,15 @@ def add_metrics(metrics: dict[str, float], prefix: str, run_metrics: dict[str, A
 def flatten_summary(summary: dict[str, Any], path: Path, records_root: Path) -> dict[str, Any] | None:
     if summary.get("status") != "passed" or not is_compatible_summary(summary):
         return None
+    stages = summary.get("stages")
+    if (
+        not isinstance(stages, list)
+        or not stages
+        or any(not isinstance(stage, dict) or stage.get("status") != "passed" for stage in stages)
+    ):
+        return None
     metrics: dict[str, float] = {}
-    for stage in summary.get("stages", []):
+    for stage in stages:
         if not isinstance(stage, dict) or stage.get("comparison") != "clean":
             continue
         if stage_prefix(stage) == "clean" and isinstance(stage.get("run_metrics"), dict):
@@ -134,6 +141,13 @@ def flatten_summary(summary: dict[str, Any], path: Path, records_root: Path) -> 
         and timed_comparison.get("repetition_count") == PROTOCOL_METADATA["timed_repetitions"]
         and isinstance(timed_comparison.get("repetitions"), list)
         and len(timed_comparison["repetitions"]) == PROTOCOL_METADATA["timed_repetitions"]
+        and all(
+            isinstance(repetition, dict)
+            and repetition.get("status") == "passed"
+            and isinstance(repetition.get("run_metrics"), dict)
+            and bool(repetition.get("run_metrics"))
+            for repetition in timed_comparison["repetitions"]
+        )
         and isinstance(median_metrics, dict)
     ):
         timed_stage = {
@@ -198,13 +212,93 @@ def metric_label(key: str) -> str:
     return key.replace("_", " ").replace("-", " ").title()
 
 
-def build_report(rows: list[dict[str, Any]], baseline: str) -> dict[str, Any]:
-    metric_keys = sorted({key for row in rows for key in row["metrics"]})
+def _genesis_provenance(rows: list[dict[str, Any]]) -> list[dict[str, str]]:
+    return [
+        {
+            "record": str(row["record"]),
+            "category": str(row["category"]),
+            "commit": str(row.get("commit", "")),
+        }
+        for row in sorted(rows, key=lambda item: str(item["record"]))
+    ]
+
+
+def aggregate_genesis(
+    rows: list[dict[str, Any]],
+    baseline: str,
+    dataset: str,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Replace only Genesis rows with one arithmetic-mean point.
+
+    Candidate rows stay independent. Genesis records are complete, passed,
+    protocol-compatible summaries by the time they reach this function.
+    """
+
+    genesis = [row for row in rows if row["candidate"] == baseline]
+    provenance = _genesis_provenance(genesis)
+    aggregation: dict[str, Any] = {
+        "dataset": dataset,
+        "method": "arithmetic_mean",
+        "sample_count": len(genesis),
+        "records": provenance,
+    }
+    if not genesis:
+        return list(rows), aggregation
+
+    common_metrics = set(genesis[0]["metrics"])
+    for row in genesis[1:]:
+        common_metrics.intersection_update(row["metrics"])
+    if not common_metrics:
+        raise ValueError("Genesis records have no common metrics to average")
+
+    metrics = {
+        key: math.fsum(float(row["metrics"][key]) for row in genesis) / len(genesis)
+        for key in sorted(common_metrics)
+    }
+    categories = sorted({str(row["category"]) for row in genesis})
+    aggregate_category = dataset.title() if dataset != "all" else "All"
+    commits = {str(row.get("commit", "")) for row in genesis}
+    aggregate = {
+        "candidate": baseline,
+        "category": aggregate_category,
+        "commit": next(iter(commits)) if len(commits) == 1 else "",
+        "record": f"{aggregate_category}/Genesis (arithmetic mean)",
+        "protocol_id": PROTOCOL_ID,
+        "metrics": metrics,
+        "sample_count": len(genesis),
+        "provenance": provenance,
+        "source_categories": categories,
+    }
+    return [aggregate, *[row for row in rows if row["candidate"] != baseline]], aggregation
+
+
+def build_report(
+    rows: list[dict[str, Any]],
+    baseline: str,
+    dataset: str = "all",
+) -> dict[str, Any]:
+    report_rows, genesis_aggregation = aggregate_genesis(rows, baseline, dataset)
+    metric_keys = sorted({key for row in report_rows for key in row["metrics"]})
+    if dataset == "all":
+        dataset_description = (
+            "All combines protocol-compatible Development and Evaluation records. "
+            "Genesis is one arithmetic mean across both categories; candidate records "
+            "remain individual points."
+        )
+    else:
+        dataset_description = (
+            f"{dataset.title()} includes only protocol-compatible {dataset.title()} records. "
+            "Genesis is the arithmetic mean of its records; candidate records remain "
+            "individual points."
+        )
     return {
-        "rows": rows,
+        "rows": report_rows,
         "metric_keys": metric_keys,
         "metric_labels": {key: metric_label(key) for key in metric_keys},
         "baseline": baseline,
+        "dataset": dataset,
+        "dataset_description": dataset_description,
+        "genesis_aggregation": genesis_aggregation,
         "protocol_id": PROTOCOL_ID,
         "protocol": PROTOCOL_METADATA,
         "primary_objectives": {
@@ -219,7 +313,7 @@ def main() -> int:
     records_root = args.records.resolve()
     output_root = args.output.resolve()
     rows = load_records(records_root, args.dataset)
-    report = build_report(rows, args.baseline)
+    report = build_report(rows, args.baseline, args.dataset)
 
     if args.list_metrics:
         for key in report["metric_keys"]:
@@ -239,6 +333,23 @@ def main() -> int:
             raise SystemExit(f"x metric not found: {args.x_metric}")
         if args.y_metric not in report["metric_keys"]:
             raise SystemExit(f"y metric not found: {args.y_metric}")
+        for row in rows:
+            if args.x_metric not in row["metrics"] or args.y_metric not in row["metrics"]:
+                raise SystemExit(
+                    "malformed populated record: missing selected report metrics in "
+                    + str(row["record"])
+                )
+        for path in summary_paths:
+            try:
+                summary = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            if (
+                is_compatible_summary(summary)
+                and summary.get("status") == "passed"
+                and flatten_summary(summary, path, records_root) is None
+            ):
+                raise SystemExit(f"malformed populated record: {path}")
 
     output_root.mkdir(parents=True, exist_ok=True)
     (output_root / ".nojekyll").write_text("", encoding="utf-8")

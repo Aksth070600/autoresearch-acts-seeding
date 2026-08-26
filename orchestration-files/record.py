@@ -7,6 +7,7 @@ import argparse
 import json
 import re
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 from protocol import is_compatible_summary
@@ -37,23 +38,66 @@ def compatible_summary(path: Path) -> bool:
     return is_compatible_summary(summary)
 
 
-def candidate_directories(candidate: str, evaluation: bool) -> list[Path]:
+def record_recency(path: Path) -> tuple[datetime, str]:
+    """Return a stable newest-first key for canonical and timestamped records."""
+
+    try:
+        summary = json.loads((path / "summary.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        summary = {}
+    for field in ("started_at", "finished_at"):
+        value = summary.get(field)
+        if isinstance(value, str):
+            try:
+                timestamp = datetime.fromisoformat(value.replace("Z", "+00:00"))
+                if timestamp.tzinfo is None:
+                    timestamp = timestamp.replace(tzinfo=timezone.utc)
+                else:
+                    timestamp = timestamp.astimezone(timezone.utc)
+                return (timestamp, path.name)
+            except ValueError:
+                pass
+
+    match = re.match(r"(\d{8}T\d{6}(?:\d{6})?Z)(?:-\d+)?-", path.name)
+    if match:
+        timestamp = match.group(1)
+        formats = ("%Y%m%dT%H%M%S%fZ", "%Y%m%dT%H%M%SZ")
+        for date_format in formats:
+            try:
+                return (
+                    datetime.strptime(timestamp, date_format).replace(tzinfo=timezone.utc),
+                    path.name,
+                )
+            except ValueError:
+                pass
+    return (datetime.min.replace(tzinfo=timezone.utc), path.name)
+
+
+def candidate_directories(
+    candidate: str,
+    evaluation: bool,
+    records_root: Path | None = None,
+) -> list[Path]:
     preferred = ("Evaluation", "Errors") if evaluation else ("Development", "Failed")
     fallback = tuple(category for category in CATEGORIES if category not in preferred)
+    root = RECORDS_ROOT if records_root is None else records_root
     for category in preferred + fallback:
-        category_root = RECORDS_ROOT / category
+        category_root = root / category
         if not category_root.is_dir():
             continue
-        canonical = category_root / candidate / "summary.json"
-        if canonical.is_file() and compatible_summary(canonical):
-            return [canonical.parent]
-        directories = [
+        directories = []
+        canonical = category_root / candidate
+        if (canonical / "summary.json").is_file() and compatible_summary(canonical / "summary.json"):
+            directories.append(canonical)
+        directories.extend(
             path
             for path in category_root.glob(f"*-{candidate}")
-            if (path / "summary.json").is_file() and compatible_summary(path / "summary.json")
-        ]
+            if path != canonical
+            and (path / "summary.json").is_file()
+            and compatible_summary(path / "summary.json")
+        )
         if directories:
-            return sorted(directories, key=lambda path: path.name, reverse=True)
+            return sorted(directories, key=record_recency, reverse=True)
     return []
 
 
