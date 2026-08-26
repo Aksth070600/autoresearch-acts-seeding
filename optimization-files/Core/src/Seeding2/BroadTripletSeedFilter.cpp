@@ -151,10 +151,8 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
   // vector containing the radius of all compatible seeds
   cache().compatibleSeedR.reserve(config().compatSeedLimit);
 
-  const bool useDeltaRinsteadOfTopRadius =
-      config().useDeltaRinsteadOfTopRadius;
   const auto getTopR = [&](ConstSpacePointProxy2 spT) {
-    if (useDeltaRinsteadOfTopRadius) {
+    if (config().useDeltaRinsteadOfTopRadius) {
       return fastHypot(spT.zr()[1] - spM.zr()[1], spT.zr()[0] - spM.zr()[0]);
     }
     return spT.zr()[1];
