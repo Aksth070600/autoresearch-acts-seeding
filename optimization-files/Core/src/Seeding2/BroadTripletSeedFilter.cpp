@@ -336,7 +336,6 @@ void BroadTripletSeedFilter::filterTripletsMiddleFixed(
     config().experimentCuts->cutPerMiddleSp(sortedCandidates);
   }
 
-  const auto& bestSeedQualityMap = state().bestSeedQualityMap;
   std::size_t maxSeeds = sortedCandidates.size();
 
   if (maxSeeds > config().maxSeedsPerSpM) {
@@ -364,9 +363,11 @@ void BroadTripletSeedFilter::filterTripletsMiddleFixed(
         continue;
       }
       if (bestSeedQuality <
-              getBestSeedQuality(bestSeedQualityMap, triplet[0]) &&
-          bestSeedQuality < getBestSeedQuality(bestSeedQualityMap, triplet[1]) &&
-          bestSeedQuality < getBestSeedQuality(bestSeedQualityMap, triplet[2])) {
+              getBestSeedQuality(state().bestSeedQualityMap, triplet[0]) &&
+          bestSeedQuality <
+              getBestSeedQuality(state().bestSeedQualityMap, triplet[1]) &&
+          bestSeedQuality <
+              getBestSeedQuality(state().bestSeedQualityMap, triplet[2])) {
         continue;
       }
     }
