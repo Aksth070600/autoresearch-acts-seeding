@@ -28,30 +28,20 @@ Do not start mutation experiments until the baseline completes or its failure is
 
 ## Controlled campaign protocol
 
-Every controlled campaign uses protocol `acts-seeding-v2`:
+The machine-readable evaluator contract is `orchestration-files/protocol.py`.
+The experiment agent must use protocol `acts-seeding-v2` without overrides:
 
 - ACTS v46.5.0 on the fixed `ttbar_pu200` ITk dataset through HEPP02.
 - One ACTS thread, seed 42, and pileup 200.
 - Development candidates run 10 events. Evaluation candidates run 50 events.
-- Clean full-chain stages may run once. Timed full-chain stages run three repetitions.
-  Candidate comparison uses the median timed metrics, while summaries retain every
-  repetition and its metadata for auditability.
-- Expected unmasked FPEs are accepted only when every requested event completed.
-  Other errors remain failures.
+- Clean full-chain stages may run once. Timed full-chain stages run three repetitions;
+  compare their median and retain each repetition for auditability.
+- Accept expected unmasked FPEs only when every requested event completed.
 
-Every summary carries the protocol identity. `make evolve`, reports, and record
-consumers must ignore summaries from another protocol. Run a fresh Genesis
-baseline with `make evaluate CANDIDATE=Genesis` before any mutation experiment.
-
-The two primary objectives are exactly:
-
-1. Minimize timed total full-chain time per event.
-2. Maximize timed particle ambiguity-resolution efficiency.
-
-These objectives remain a Pareto tradeoff. Seeding time, seeding efficiency,
-CKF efficiency, track efficiency, fake ratios, duplicate ratios, resource use,
-and other metrics are diagnostics only. They must never determine eligibility,
-Pareto objectives, or recommendation ranking.
+The only primary objectives are median timed total full-chain time per event
+(minimize) and median timed particle ambiguity-resolution efficiency (maximize).
+Keep them as a Pareto tradeoff. All other metrics are diagnostics only and must
+not determine eligibility, Pareto objectives, or recommendation ranking.
 
 ## Experiment surface
 

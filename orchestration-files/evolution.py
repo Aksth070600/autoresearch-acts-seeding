@@ -34,13 +34,6 @@ DEFAULT_STATE = DEFAULT_RECORDS / "evolution" / "population.json"
 PRIMARY_TIME_METRIC = "total_time_per_event_ms"
 PRIMARY_EFFICIENCY_METRIC = "ambiguity_particle_efficiency"
 PRIMARY_METRICS = (PRIMARY_TIME_METRIC, PRIMARY_EFFICIENCY_METRIC)
-DIAGNOSTIC_METRICS = (
-    "seeding_time_per_event_ms",
-    "seeding_particle_efficiency",
-    "ckf_particle_efficiency",
-    "ambiguity_track_efficiency",
-)
-ALGORITHMS = ("seeding", "ckf", "ambiguity")
 
 
 class EvolutionError(RuntimeError):
@@ -100,32 +93,17 @@ def stage_prefix(stage: dict[str, Any]) -> str | None:
 
 
 def add_run_metrics(metrics: dict[str, float], prefix: str, run_metrics: dict[str, Any]) -> None:
-    """Flatten primary and diagnostic values from one parsed full-chain run."""
+    """Flatten only the two primary metrics from one parsed full-chain run."""
 
-    timing = run_metrics.get("timing", {})
     timing_total = run_metrics.get("timing_total", {})
-    for source, name in (
-        (timing_total.get("time_per_event_ms"), "total_time_per_event_ms"),
-        (timing.get("seeding", {}).get("time_per_event_ms"), "seeding_time_per_event_ms"),
-    ):
-        if finite(source):
-            metrics[f"{prefix}_{name}"] = float(source)
+    total_time = timing_total.get("time_per_event_ms")
+    if finite(total_time):
+        metrics[f"{prefix}_{PRIMARY_TIME_METRIC}"] = float(total_time)
 
-    performance = run_metrics.get("performance", {})
-    for algorithm in ALGORITHMS:
-        source_name = "ambiguity_resolution" if algorithm == "ambiguity" else algorithm
-        values = performance.get(source_name, {})
-        for metric_name, value in values.items():
-            if finite(value):
-                normalized = {
-                    "efficiency_particles": "particle_efficiency",
-                    "efficiency_tracks": "track_efficiency",
-                    "fake_ratio_particles": "particle_fake_ratio",
-                    "fake_ratio_tracks": "track_fake_ratio",
-                    "duplicate_ratio_particles": "particle_duplicate_ratio",
-                    "duplicate_ratio_tracks": "track_duplicate_ratio",
-                }.get(metric_name, metric_name)
-                metrics[f"{prefix}_{algorithm}_{normalized}"] = float(value)
+    ambiguity = run_metrics.get("performance", {}).get("ambiguity_resolution", {})
+    ambiguity_efficiency = ambiguity.get("efficiency_particles")
+    if finite(ambiguity_efficiency):
+        metrics[f"{prefix}_{PRIMARY_EFFICIENCY_METRIC}"] = float(ambiguity_efficiency)
 
 
 def flatten_summary(

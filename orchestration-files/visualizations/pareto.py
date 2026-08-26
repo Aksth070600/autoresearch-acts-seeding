@@ -56,7 +56,7 @@ HTML_TEMPLATE = r"""<!doctype html>
 <body>
 <main>
   <h1>ACTS Seeding Autoresearch</h1>
-  <p class="lede">Primary objectives: minimize full-chain time/event on X and maximize ambiguity particle efficiency on Y. Reference lines show the selected baseline; other metrics are diagnostics.</p>
+  <p class="lede">Lower X is better. Higher Y is better. The reference lines show the selected baseline.</p>
   <section class="controls" aria-label="Chart controls">
     <label>Dataset<select id="dataset"></select></label>
     <label>Baseline<select id="baseline"></select></label>

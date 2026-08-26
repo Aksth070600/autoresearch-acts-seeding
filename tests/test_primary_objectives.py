@@ -9,6 +9,7 @@ from evaluate import build_timed_comparison  # noqa: E402
 from evolution import (  # noqa: E402
     PRIMARY_EFFICIENCY_METRIC,
     PRIMARY_TIME_METRIC,
+    add_run_metrics,
     candidate_pool,
     improved_over_baseline,
     objective_vector,
@@ -58,6 +59,32 @@ class PrimaryObjectiveTests(unittest.TestCase):
         self.assertEqual(
             {PRIMARY_TIME_METRIC, PRIMARY_EFFICIENCY_METRIC},
             {"total_time_per_event_ms", "ambiguity_particle_efficiency"},
+        )
+
+    def test_evolution_keeps_only_primary_metrics(self) -> None:
+        metrics = {}
+        add_run_metrics(
+            metrics,
+            "timed",
+            {
+                "timing_total": {"time_per_event_ms": 100.0},
+                "performance": {
+                    "seeding": {"efficiency_particles": 0.99},
+                    "ckf": {"efficiency_particles": 0.99},
+                    "ambiguity_resolution": {
+                        "efficiency_particles": 0.95,
+                        "efficiency_tracks": 0.60,
+                    },
+                },
+            },
+        )
+
+        self.assertEqual(
+            metrics,
+            {
+                "timed_total_time_per_event_ms": 100.0,
+                "timed_ambiguity_particle_efficiency": 0.95,
+            },
         )
 
     def test_timed_comparison_reports_the_median_and_keeps_repetitions(self) -> None:
