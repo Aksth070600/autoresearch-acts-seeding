@@ -59,7 +59,6 @@ void createSeedsFromGroupsImpl(
 
   // no top SP found -> cannot form any triplet
   if (cache.topDoublets.empty()) {
-    ACTS_VERBOSE("No compatible Tops, returning");
     return;
   }
 
@@ -76,7 +75,6 @@ void createSeedsFromGroupsImpl(
 
   // no bottom SP found -> cannot form any triplet
   if (cache.bottomDoublets.empty()) {
-    ACTS_VERBOSE("No compatible Bottoms, returning");
     return;
   }
 
