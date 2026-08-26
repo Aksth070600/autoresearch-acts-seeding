@@ -56,3 +56,4 @@ When it reaches 250 lines, invoke the simplification skill to merge duplicate le
 - 2026-08-26 | candidate: CacheDoubletCotThetaLimit | outcome: discard | lesson: Caching the doublet cot-theta limit passed all stages but slowed timed total to 2759.76 ms/event; retain direct configuration access.
 - 2026-08-26 | candidate: InPlaceCandidateReplacement | outcome: discard | lesson: Updating retained candidate fields in place passed all stages but slowed timed total to 2604.16 ms/event; retain temporary TripletCandidate2 assignment.
 - 2026-08-26 | candidate: CacheTopCandidateCount | outcome: discard | lesson: Caching the top-candidate count passed all stages but slowed timed total to 2557.08 ms/event; retain direct size access.
+- 2026-08-26 | candidate: CacheBestSeedQualityMap | outcome: discard | lesson: Caching the best-seed-quality map reference passed all stages but slowed timed total to 2659.73 ms/event; retain direct state access.
