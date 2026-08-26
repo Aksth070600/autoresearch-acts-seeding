@@ -32,8 +32,10 @@ void createAndFilterTriplets(TripletSeeder::Cache& cache,
                                              topDoublets,
                                              cache.tripletTopCandidates);
 
-    filter.filterTripletTopCandidates(spacePoints, spM, bottomDoublet,
-                                      cache.tripletTopCandidates);
+    if (!cache.tripletTopCandidates.empty()) {
+      filter.filterTripletTopCandidates(spacePoints, spM, bottomDoublet,
+                                        cache.tripletTopCandidates);
+    }
   }
 }
 
