@@ -61,8 +61,8 @@ class DoubletsForMiddleSp {
   /// @param y Y coordinate
   void emplace_back(SpacePointIndex2 sp, float cotTheta, float iDeltaR,
                     float er, float u, float v, float x, float y) {
-    m_spacePoints.emplace_back(sp);
-    m_cotTheta.emplace_back(cotTheta);
+    m_spacePoints.push_back(sp);
+    m_cotTheta.push_back(cotTheta);
     m_er_iDeltaR.push_back({er, iDeltaR});
     m_uv.push_back({u, v});
     m_xy.push_back({x, y});
