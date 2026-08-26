@@ -27,15 +27,17 @@ void createAndFilterTriplets(TripletSeeder::Cache& cache,
                              const ConstSpacePointProxy2& spM,
                              DoubletCollections topDoublets) {
   for (auto bottomDoublet : bottomDoublets) {
+    if (topDoublets.empty()) {
+      break;
+    }
+
     cache.tripletTopCandidates.clear();
     tripletFinder.createTripletTopCandidates(spacePoints, spM, bottomDoublet,
                                              topDoublets,
                                              cache.tripletTopCandidates);
 
-    if (cache.tripletTopCandidates.size() > 0) {
-      filter.filterTripletTopCandidates(spacePoints, spM, bottomDoublet,
-                                        cache.tripletTopCandidates);
-    }
+    filter.filterTripletTopCandidates(spacePoints, spM, bottomDoublet,
+                                      cache.tripletTopCandidates);
   }
 }
 
@@ -79,6 +81,11 @@ void createSeedsFromGroupsImpl(
     ACTS_VERBOSE("No compatible Bottoms, returning");
     return;
   }
+
+  ACTS_VERBOSE("Candidates: " << cache.bottomDoublets.size() << " bottoms and "
+                              << cache.topDoublets.size()
+                              << " tops for middle candidate indexed "
+                              << middleSp.index());
 
   // combine doublets to triplets
   if (tripletFinder.config().sortedByCotTheta) {
