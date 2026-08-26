@@ -101,6 +101,9 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
   auto spB = spacePoints[bottomLink.spacePointIndex()];
   auto bottomSp = spB.index();
   auto middleSp = spM.index();
+  const auto deltaInvHelixDiameter = config().deltaInvHelixDiameter;
+  const auto impactWeightFactor = config().impactWeightFactor;
+  const auto compatSeedWeight = config().compatSeedWeight;
 
   // minimum number of compatible top SPs to trigger the filter for a certain
   // middle bottom pair if seedConfirmation is false we always ask for at
@@ -167,12 +170,12 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
     cache().compatibleSeedR.clear();
 
     float invHelixDiameter = tripletTopCandidates.curvatures()[topSpIndex];
-    float lowerLimitCurv = invHelixDiameter - config().deltaInvHelixDiameter;
-    float upperLimitCurv = invHelixDiameter + config().deltaInvHelixDiameter;
+    float lowerLimitCurv = invHelixDiameter - deltaInvHelixDiameter;
+    float upperLimitCurv = invHelixDiameter + deltaInvHelixDiameter;
     float currentTopR = getTopR(spT);
     float impact = tripletTopCandidates.impactParameters()[topSpIndex];
 
-    float weight = -impact * config().impactWeightFactor;
+    float weight = -impact * impactWeightFactor;
 
     // loop over compatible top SP candidates
     for (std::size_t variableCompTopIndex = beginCompTopIndex;
@@ -218,7 +221,7 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
       }
       if (newCompSeed) {
         cache().compatibleSeedR.push_back(otherTopR);
-        weight += config().compatSeedWeight;
+        weight += compatSeedWeight;
       }
       if (cache().compatibleSeedR.size() >= config().compatSeedLimit) {
         break;
@@ -272,7 +275,7 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
 
       // term on the weight that depends on the value of zOrigin
       weight += -(std::abs(zOrigin) * config().zOriginWeightFactor) +
-                config().compatSeedWeight;
+                compatSeedWeight;
 
       // skip a bad quality seed if any of its constituents has a weight larger
       // than the seed weight
