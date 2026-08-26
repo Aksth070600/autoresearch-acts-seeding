@@ -153,10 +153,6 @@ class Impl final : public TripletSeedFinder {
     const float varianceZM = spM.varianceZ();
     const float varianceRM = spM.varianceR();
 
-    // Reserve enough space, in case current capacity is too little
-    tripletTopCandidates.reserve(tripletTopCandidates.size() +
-                                 topDoublets.size());
-
     const float cotThetaB = bottomDoublet.cotTheta();
     const float erB = bottomDoublet.er();
     const float iDeltaRB = bottomDoublet.iDeltaR();
@@ -284,10 +280,6 @@ class Impl final : public TripletSeedFinder {
     const float sinPhiM = spM.xy()[1] / rM;
     const float varianceZM = spM.varianceZ();
     const float varianceRM = spM.varianceR();
-
-    // Reserve enough space, in case current capacity is too little
-    tripletTopCandidates.reserve(tripletTopCandidates.size() +
-                                 topDoublets.size());
 
     float cotThetaB = bottomDoublet.cotTheta();
     const float erB = bottomDoublet.er();
