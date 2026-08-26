@@ -178,7 +178,7 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
     // the compatibility window instead of scanning its discarded prefix.
     const auto firstCompatible = std::ranges::lower_bound(
         cache().topSpIndexVec.begin() + beginCompTopIndex,
-        cache().topSpIndexVec.end(), lowerLimit, {},
+        cache().topSpIndexVec.end(), lowerLimitCurv, {},
         [&curvatures = tripletTopCandidates.curvatures()](std::size_t index) {
           return curvatures[index];
         });
