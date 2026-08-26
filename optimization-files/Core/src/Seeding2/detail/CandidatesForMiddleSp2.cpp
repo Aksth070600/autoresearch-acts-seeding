@@ -79,8 +79,12 @@ void CandidatesForMiddleSp2::toSortedCandidates(
   output.clear();
   output.reserve(size());
 
-  std::ranges::sort_heap(m_indicesHigh, comparator);
-  std::ranges::sort_heap(m_indicesLow, comparator);
+  if (!m_indicesHigh.empty()) {
+    std::ranges::sort_heap(m_indicesHigh, comparator);
+  }
+  if (!m_indicesLow.empty()) {
+    std::ranges::sort_heap(m_indicesLow, comparator);
+  }
 
   for (const auto& [weight, index] : m_indicesHigh) {
     output.emplace_back(m_storage[index]);
