@@ -48,8 +48,7 @@ class DoubletsForMiddleSp {
     m_er.clear();
     m_iDeltaR.clear();
     m_uv.clear();
-    m_x.clear();
-    m_y.clear();
+    m_xy.clear();
   }
 
   /// Add a new doublet with associated parameters
@@ -68,8 +67,7 @@ class DoubletsForMiddleSp {
     m_er.push_back(er);
     m_iDeltaR.push_back(iDeltaR);
     m_uv.push_back({u, v});
-    m_x.push_back(x);
-    m_y.push_back(y);
+    m_xy.push_back({x, y});
   }
 
   /// Get reference to space point indices container
@@ -146,10 +144,10 @@ class DoubletsForMiddleSp {
     float v() const { return m_container->m_uv[m_index][1]; }
     /// Get x coordinate
     /// @return The x value
-    float x() const { return m_container->m_x[m_index]; }
+    float x() const { return m_container->m_xy[m_index][0]; }
     /// Get y coordinate
     /// @return The y value
-    float y() const { return m_container->m_y[m_index]; }
+    float y() const { return m_container->m_xy[m_index][1]; }
 
    private:
     const DoubletsForMiddleSp* m_container{};
@@ -263,8 +261,7 @@ class DoubletsForMiddleSp {
   std::vector<float> m_er;
   std::vector<float> m_iDeltaR;
   std::vector<std::array<float, 2>> m_uv;
-  std::vector<float> m_x;
-  std::vector<float> m_y;
+  std::vector<std::array<float, 2>> m_xy;
 };
 
 /// Derived quantities for the middle space point in a doublet.
