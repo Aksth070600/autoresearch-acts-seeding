@@ -37,6 +37,7 @@ HTML_TEMPLATE = r"""<!doctype html>
     @media (max-width: 700px) { #summary { grid-template-columns: 1fr; } }
     #chart-frame { position: relative; height: 680px; margin-top: 8px; background: #111827; border: 1px solid #334155; border-radius: 10px; overflow: hidden; }
     #chart { height: 100%; }
+    #chart .point { cursor: pointer; }
     #corner-overlays { position: absolute; inset: 28px 30px; z-index: 10; pointer-events: none; }
     .corner-stack { position: absolute; display: grid; gap: 5px; }
     .corner-stack.top-left { top: 18px; left: 49px; }
@@ -116,10 +117,10 @@ const cornerOverlays = {
 };
 
 const STAGES = {
-  seeding: { label: 'Seeding', time: 'timed_seeding_time_per_event_ms' },
-  ckf: { label: 'CKF', time: 'timed_ckf_time_per_event_ms' },
-  ambiguity: { label: 'Ambiguity', time: 'timed_ambiguity_time_per_event_ms' },
-  full_chain: { label: 'Full chain', time: 'timed_total_time_per_event_ms' }
+  seeding: { label: 'Seeding', time: 'timed_seeding_time_per_event_ms', quality: 'timed_seeding' },
+  ckf: { label: 'CKF', time: 'timed_ckf_time_per_event_ms', quality: 'timed_ckf' },
+  ambiguity: { label: 'Ambiguity', time: 'timed_ambiguity_time_per_event_ms', quality: 'timed_ambiguity' },
+  full_chain: { label: 'Full chain', time: 'timed_total_time_per_event_ms', quality: null }
 };
 const QUALITY_METRICS = [
   ['particle_efficiency', 'Particle efficiency'],
@@ -129,6 +130,13 @@ const QUALITY_METRICS = [
   ['particle_duplicate_ratio', 'Particle duplicate ratio'],
   ['track_duplicate_ratio', 'Track duplicate ratio']
 ];
+const TOOLTIP_ROWS = [
+  { label: 'T', type: 'time' },
+  { label: 'E', type: 'quality', suffix: 'particle_efficiency' },
+  { label: 'F', type: 'quality', suffix: 'particle_fake_ratio' },
+  { label: 'D', type: 'quality', suffix: 'particle_duplicate_ratio' }
+];
+const TOOLTIP_STAGES = ['seeding', 'ckf', 'ambiguity'];
 const AXES = ['x', 'y'];
 
 function option(select, value, label) {
@@ -138,13 +146,12 @@ function option(select, value, label) {
   select.appendChild(element);
 }
 
-option(datasetSelect, 'all', 'All datasets');
-if (REPORT.dataset !== 'all') {
-  [...new Set(rows.map((row) => row.category))].sort().forEach((category) => option(datasetSelect, category, category));
-}
+option(datasetSelect, 'Development', 'Development');
+option(datasetSelect, 'Evaluation', 'Evaluation');
+datasetSelect.value = REPORT.dataset === 'evaluation' ? 'Evaluation' : 'Development';
 
 function scopedRows() {
-  return datasetSelect.value === 'all' ? rows : rows.filter((row) => row.category === datasetSelect.value);
+  return rows.filter((row) => row.category === datasetSelect.value);
 }
 function updateBaselineOptions() {
   const names = [...new Set(scopedRows().map((row) => row.candidate))].sort();
@@ -226,6 +233,49 @@ function formatAxisValue(axis, value) {
   if (!Number.isFinite(value)) return 'Unavailable';
   const elements = axisElements(axis);
   return elements.kind.value === 'time' ? `${value.toFixed(2)} ms` : `${(value * 100).toFixed(2)}%`;
+}
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (character) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[character]);
+}
+function formatTooltipValue(value, type) {
+  if (!Number.isFinite(value)) return 'n/a';
+  return type === 'time' ? `${value.toFixed(2)} ms` : `${(value * 100).toFixed(2)}%`;
+}
+function tooltipValue(row, stageKey, metric) {
+  const stage = STAGES[stageKey];
+  if (metric.type === 'quality' && !stage.quality) return 'n/a';
+  const key = metric.type === 'time' ? stage.time : `${stage.quality}_${metric.suffix}`;
+  return formatTooltipValue(row.metrics[key], metric.type);
+}
+function candidateTooltip(row) {
+  const stageKeys = TOOLTIP_STAGES;
+  const stageHeading = stageKeys.map((stageKey) => STAGES[stageKey].label).join('&nbsp;&nbsp;→&nbsp;&nbsp;');
+  const metricLines = TOOLTIP_ROWS.map((metric) => {
+    const values = stageKeys.map((stageKey) => tooltipValue(row, stageKey, metric));
+    return `${metric.label}&nbsp;&nbsp;&nbsp;${values.join('&nbsp;→&nbsp;')}`;
+  }).join('<br>');
+  return `<b>${escapeHtml(row.candidate)}</b><br><span style="font-family:monospace">Stage&nbsp;&nbsp;${stageHeading}<br>${metricLines}</span>`;
+}
+function validCommitUrl(value) {
+  return typeof value === 'string'
+    && (value === 'https://github.com/Aksth070600/autoresearch-acts-seeding'
+      || /^https:\/\/github\.com\/Aksth070600\/autoresearch-acts-seeding\/commit\/[0-9a-f]{40}$/i.test(value));
+}
+function registerCommitClickHandler() {
+  const chart = document.getElementById('chart');
+  if (chart.commitClickHandler) chart.removeListener?.('plotly_click', chart.commitClickHandler);
+  chart.commitClickHandler = (event) => {
+    const url = event.points?.[0]?.customdata;
+    if (validCommitUrl(url)) window.open(url, '_blank', 'noopener,noreferrer');
+  };
+  chart.on('plotly_click', chart.commitClickHandler);
+}
+function updatePointCursors(points) {
+  document.querySelectorAll('#chart .point').forEach((point, index) => {
+    point.style.cursor = validCommitUrl(points[index]?.commit_url) ? 'pointer' : 'default';
+  });
 }
 function axisDirection(axis) {
   const elements = axisElements(axis);
@@ -314,11 +364,11 @@ function render() {
   const traces = [{
     x: points.map((row) => row.metrics[xKey]),
     y: points.map((row) => row.metrics[yKey]),
-    text: points.map((row) => `${row.candidate} (${row.category})`),
-    customdata: points.map((row) => [row.category, row.record, row.commit, row.candidate === REPORT.baseline ? (row.sample_count || 1) : '']),
+    text: points.map((row) => candidateTooltip(row)),
+    customdata: points.map((row) => row.commit_url || ''),
     mode: 'markers', type: 'scatter', name: 'Candidates',
     marker: { size: points.map((row) => row.candidate === baselineName ? 16 : 12), symbol: points.map((row) => row.candidate === baselineName ? 'star' : 'circle'), color: points.map((row) => candidateColor(row, baseline, xKey, yKey)), line: { width: 1, color: '#e2e8f0' } },
-    hovertemplate: '<b>%{text}</b><br>X: %{x}<br>Y: %{y}<br>Category: %{customdata[0]}<br>Record: %{customdata[1]}<br>Commit: %{customdata[2]}<br>Genesis samples: %{customdata[3]}<extra></extra>'
+    hovertemplate: '%{text}<extra></extra>'
   }];
   const xRange = paddedRange(points, xKey);
   const yRange = paddedRange(points, yKey);
@@ -343,7 +393,10 @@ function render() {
     hovermode: 'closest', shapes, margin: { l: 80, r: 30, t: 45, b: 55 },
     legend: { orientation: 'h', x: 0, y: 1.12, xanchor: 'left', yanchor: 'bottom', font: { color: '#cbd5e1' } },
     paper_bgcolor: '#111827', plot_bgcolor: '#0b1120', font: { color: '#cbd5e1' }
-  }, { responsive: true, displaylogo: false });
+  }, { responsive: true, displaylogo: false }).then(() => {
+    updatePointCursors(points);
+    registerCommitClickHandler();
+  });
 }
 AXES.forEach((axis) => {
   const elements = axisElements(axis);

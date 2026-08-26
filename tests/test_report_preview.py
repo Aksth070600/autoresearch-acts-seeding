@@ -11,11 +11,14 @@ REPORT = PROJECT_ROOT / "orchestration-files" / "report.py"
 sys.path.insert(0, str(PROJECT_ROOT / "orchestration-files"))
 
 from protocol import current_protocol  # noqa: E402
-from report import build_report, load_records  # noqa: E402
+from report import REPOSITORY_URL, build_report, commit_url, load_records  # noqa: E402
+from visualizations.pareto import render  # noqa: E402
 
 
 class ReportPreviewTests(unittest.TestCase):
-    def run_report(self, records: Path, output: Path) -> subprocess.CompletedProcess[str]:
+    def run_report(
+        self, records: Path, output: Path, dataset: str = "development"
+    ) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
             [
                 sys.executable,
@@ -25,7 +28,7 @@ class ReportPreviewTests(unittest.TestCase):
                 "--output",
                 str(output),
                 "--dataset",
-                "all",
+                dataset,
             ],
             cwd=PROJECT_ROOT,
             text=True,
@@ -124,7 +127,7 @@ class ReportPreviewTests(unittest.TestCase):
             self.assertEqual(candidates[0]["metrics"]["timed_total_time_per_event_ms"], 80.0)
             self.assertEqual(report["genesis_aggregation"]["sample_count"], 2)
 
-    def test_all_dataset_documents_cross_category_genesis_aggregation(self) -> None:
+    def test_dataset_views_do_not_mix_categories(self) -> None:
         rows = [
             {
                 "candidate": "Genesis",
@@ -142,13 +145,87 @@ class ReportPreviewTests(unittest.TestCase):
             },
         ]
 
-        report = build_report(rows, "Genesis", "all")
+        development = build_report(rows, "Genesis", "development")
+        evaluation = build_report(rows, "Genesis", "evaluation")
 
-        self.assertIn("Development and Evaluation", report["dataset_description"])
-        self.assertEqual(report["genesis_aggregation"]["sample_count"], 2)
+        self.assertEqual({row["category"] for row in development["rows"]}, {"Development"})
+        self.assertEqual(development["genesis_aggregation"]["sample_count"], 1)
         self.assertEqual(
-            report["rows"][0]["metrics"]["timed_total_time_per_event_ms"], 110.0
+            development["rows"][0]["metrics"]["timed_total_time_per_event_ms"], 100.0
         )
+        self.assertEqual({row["category"] for row in evaluation["rows"]}, {"Evaluation"})
+        self.assertEqual(evaluation["genesis_aggregation"]["sample_count"], 1)
+        self.assertEqual(
+            evaluation["rows"][0]["metrics"]["timed_total_time_per_event_ms"], 120.0
+        )
+
+    def test_interactive_selector_and_candidate_tooltip(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary) / "index.html"
+            render(
+                {"rows": [], "dataset": "development"},
+                output,
+                defaults={"x_metric": "x", "y_metric": "y", "baseline": "Genesis"},
+            )
+            html = output.read_text(encoding="utf-8")
+
+        self.assertIn("option(datasetSelect, 'Development', 'Development');", html)
+        self.assertIn("option(datasetSelect, 'Evaluation', 'Evaluation');", html)
+        self.assertNotIn("option(datasetSelect, 'all'", html)
+        self.assertNotIn("All datasets", html)
+        self.assertIn("const TOOLTIP_STAGES = ['seeding', 'ckf', 'ambiguity'];", html)
+
+        tooltip_rows = html[html.index("const TOOLTIP_ROWS"): html.index("const TOOLTIP_STAGES")]
+        for label in ("label: 'T'", "label: 'E'", "label: 'F'", "label: 'D'"):
+            self.assertIn(label, tooltip_rows)
+        tooltip = html[html.index("function candidateTooltip"): html.index("function axisDirection")]
+        stages = html[html.index("const STAGES"): html.index("const QUALITY_METRICS")]
+        self.assertLess(stages.index("Seeding"), stages.index("CKF"))
+        self.assertLess(stages.index("CKF"), stages.index("Ambiguity"))
+        self.assertNotIn("Full chain", tooltip)
+        self.assertIn("→", tooltip)
+        self.assertIn("return 'n/a'", html)
+        self.assertIn("escapeHtml(row.candidate)", tooltip)
+
+        hover = html[html.index("hovertemplate"): html.index("hovertemplate") + 100]
+        for field in ("X:", "Y:", "Category:", "Record:", "Commit:"):
+            self.assertNotIn(field, hover)
+
+        self.assertIn("customdata: points.map((row) => row.commit_url || '')", html)
+        self.assertIn("chart.on('plotly_click'", html)
+        self.assertIn("window.open(url, '_blank', 'noopener,noreferrer')", html)
+        self.assertIn("cursor = validCommitUrl", html)
+
+    def test_commit_url_requires_a_full_sha(self) -> None:
+        sha = "a" * 40
+        self.assertEqual(commit_url(sha), f"{REPOSITORY_URL}/commit/{sha}")
+        self.assertEqual(commit_url("a" * 39), "")
+        self.assertEqual(commit_url("not-a-sha"), "")
+
+        with tempfile.TemporaryDirectory() as temporary:
+            records = Path(temporary) / "records" / "Development" / "Candidate"
+            records.mkdir(parents=True)
+            summary = self.summary("Candidate", "Development", 12.0, 0.9)
+            summary["implementation_commit"] = sha
+            (records / "summary.json").write_text(json.dumps(summary), encoding="utf-8")
+            row = load_records(records.parents[1], "development")[0]
+            self.assertEqual(row["commit_url"], f"{REPOSITORY_URL}/commit/{sha}")
+
+    def test_aggregated_genesis_links_to_repository_root(self) -> None:
+        sha = "b" * 40
+        row = {
+            "candidate": "Genesis",
+            "category": "Development",
+            "record": "Development/Genesis/summary.json",
+            "commit": sha,
+            "metrics": {"timed_total_time_per_event_ms": 100.0},
+        }
+        report = build_report([row], "Genesis", "development")
+        self.assertEqual(report["rows"][0]["commit_url"], REPOSITORY_URL)
+
+        second = {**row, "record": "Development/Genesis-2/summary.json", "commit": "c" * 40}
+        report = build_report([row, second], "Genesis", "development")
+        self.assertEqual(report["rows"][0]["commit_url"], REPOSITORY_URL)
 
     def test_existing_summary_keeps_strict_metric_validation(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

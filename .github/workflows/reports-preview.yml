@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build interactive report
-        run: python3 orchestration-files/report.py --dataset all --output reports/site
+        run: python3 orchestration-files/report.py --dataset development --output reports/site
 
       - name: Upload interactive report artifact
         uses: actions/upload-artifact@v4

@@ -31,7 +31,7 @@ flowchart LR
 - `records/` stores reproducible summaries used by evolution and reports.
 - `agent-learnings.md` stores short lessons so agents do not repeat failed ideas.
 - `Genesis` is the starting point for every campaign. Successful development baselines use timestamped `records/Development/*-Genesis/` directories; the legacy canonical Genesis summary remains readable for compatibility. Evolution selects the latest complete protocol-compatible Development Genesis record.
-- Reports show one Genesis point as the arithmetic mean of all protocol-compatible Genesis runs in the selected dataset, with sample count and source records. Candidate records remain individual points. With `dataset=all`, Genesis combines Development and Evaluation runs and candidates from both categories.
+- Reports show one Genesis point as the arithmetic mean of all protocol-compatible Genesis runs in the selected dataset, with sample count and source records. Candidate records remain individual points. The interactive report lets you switch between Development and Evaluation; each view stays within its selected category.
 
 ## Start an experiment agent
 
