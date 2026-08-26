@@ -221,7 +221,7 @@ class Impl final : public TripletSeedFinder {
 
       const float dU = topDoublet.u() - Ub;
       // protects against division by 0
-      if (dU == 0) {
+      if (dU == 0) [[unlikely]] {
         continue;
       }
       // A and B are evaluated as a function of the circumference parameters
