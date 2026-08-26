@@ -37,8 +37,8 @@ void setBestSeedQuality(
     float quality) {
   const auto set = [&](SpacePointIndex2 sp) {
     auto [it, inserted] = bestSeedQualityMap.emplace(sp, quality);
-    if (!inserted && quality > it->second) {
-      it->second = quality;
+    if (!inserted) {
+      it->second = std::max(quality, it->second);
     }
   };
 
