@@ -258,7 +258,7 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
 
     // increment in seed weight if number of compatible seeds is larger than
     // numSeedIncrement
-    if (cache().compatibleSeedR.size() > config().numSeedIncrement) {
+    if (cache().compatibleSeedRSize > config().numSeedIncrement) {
       weight += config().seedWeightIncrement;
     }
 
@@ -278,7 +278,7 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
       // impact parameter, z-origin and number of compatible seeds inside a
       // pre-defined range that also depends on the region of the detector (i.e.
       // forward or central region) defined by SeedConfirmationRange
-      int deltaSeedConf = cache().compatibleSeedR.size() + 1 - nTopSeedConf;
+      int deltaSeedConf = cache().compatibleSeedRSize + 1 - nTopSeedConf;
       if (deltaSeedConf < 0 ||
           (state().candidatesCollector.nHighQualityCandidates() != 0 &&
            deltaSeedConf == 0)) {
