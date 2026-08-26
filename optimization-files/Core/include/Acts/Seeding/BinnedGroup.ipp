@@ -20,7 +20,7 @@ BinnedGroup<grid_t>::BinnedGroup(
     const GridBinFinder<BinnedGroup<grid_t>::DIM>& topFinder,
     std::array<std::vector<std::size_t>, BinnedGroup<grid_t>::DIM> navigation)
     : m_grid(std::move(grid)),
-      m_mask{},
+      m_mask(m_grid.size(true), true),
       m_bottomBinFinder(&bottomFinder),
       m_topBinFinder(&topFinder),
       m_bins(std::move(navigation)) {
