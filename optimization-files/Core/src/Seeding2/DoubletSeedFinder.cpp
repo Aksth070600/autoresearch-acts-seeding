@@ -45,6 +45,7 @@ class Impl final : public DoubletSeedFinder {
                           DoubletsForMiddleSp& compatibleDoublets) const {
     const float impactMax =
         isBottomCandidate ? -m_cfg.impactMax : m_cfg.impactMax;
+    const float cotThetaMax = m_cfg.cotThetaMax;
 
     const float xM = middleSp.xy()[0];
     const float yM = middleSp.xy()[1];
@@ -159,8 +160,8 @@ class Impl final : public DoubletSeedFinder {
         // check if duplet cotTheta is within the region of interest
         // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
         // cotThetaMax by deltaR to avoid division
-        if (outsideRangeCheck(deltaZ, -m_cfg.cotThetaMax * deltaR,
-                              m_cfg.cotThetaMax * deltaR)) {
+        if (outsideRangeCheck(deltaZ, -cotThetaMax * deltaR,
+                              cotThetaMax * deltaR)) {
           continue;
         }
 
@@ -236,8 +237,8 @@ class Impl final : public DoubletSeedFinder {
       // check if duplet cotTheta is within the region of interest
       // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
       // cotThetaMax by deltaR to avoid division
-      if (outsideRangeCheck(deltaZ, -m_cfg.cotThetaMax * deltaR,
-                            m_cfg.cotThetaMax * deltaR)) {
+      if (outsideRangeCheck(deltaZ, -cotThetaMax * deltaR,
+                            cotThetaMax * deltaR)) {
         continue;
       }
 
