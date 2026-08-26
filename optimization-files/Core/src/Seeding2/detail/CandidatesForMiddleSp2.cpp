@@ -49,7 +49,7 @@ bool CandidatesForMiddleSp2::push(Container& container, Size nMax,
     return false;
   }
 
-  if (container.size() < nMax) [[likely]] {
+  if (container.size() < nMax) {
     // If there is still space, add anything
     m_storage.emplace_back(spB, spM, spT, weight, zOrigin, isQuality);
     container.emplace_back(weight, m_storage.size() - 1);
