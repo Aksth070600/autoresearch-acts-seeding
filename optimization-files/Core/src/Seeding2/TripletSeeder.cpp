@@ -181,18 +181,23 @@ void TripletSeeder::createSeedsFromGroups(
     }
   }
 
-  for (ConstSpacePointProxy2 spM : middleSpGroup) {
+  auto middleBegin = middleSpGroup.begin();
+  if (spacePointsSortedByRadius) {
+    // The middle group is sorted by radius. Skip the prefix outside the
+    // configured region with one binary search.
+    middleBegin = std::ranges::lower_bound(
+        middleSpGroup, radiusRangeForMiddle.first, {},
+        [](const ConstSpacePointProxy2& sp) { return sp.zr()[1]; });
+  }
+
+  for (auto middleIt = middleBegin; middleIt != middleSpGroup.end();
+       ++middleIt) {
+    const ConstSpacePointProxy2 spM = *middleIt;
     const float rM = spM.zr()[1];
 
-    if (spacePointsSortedByRadius) {
-      // check if spM is outside our radial region of interest
-      if (rM < radiusRangeForMiddle.first) {
-        continue;
-      }
-      if (rM > radiusRangeForMiddle.second) {
-        // break because SPs are sorted in r
-        break;
-      }
+    if (spacePointsSortedByRadius && rM > radiusRangeForMiddle.second) {
+      // break because SPs are sorted in r
+      break;
     }
 
     createSeedsFromGroupsImpl(*m_logger, cache, bottomFinder, topFinder,
