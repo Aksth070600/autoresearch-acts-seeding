@@ -42,8 +42,8 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Run the configurable ACTS ITk full-chain development workload."
     )
-    parser.add_argument("--events", type=positive_int, default=1)
-    parser.add_argument("--threads", type=int, default=-1)
+    parser.add_argument("--events", type=positive_int, default=10)
+    parser.add_argument("--threads", type=int, default=1)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--output-dir", type=pathlib.Path, default=pathlib.Path.cwd() / "itk_output")
     parser.add_argument("--workload", choices=("ttbar_pu200",), default="ttbar_pu200")

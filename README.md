@@ -2,6 +2,8 @@
 
 An experiment platform for making ACTS Seeding2 faster without sacrificing reconstruction quality.
 It runs controlled candidates on the fixed ITk workload through ACTS on HEPP02, keeps the results, and helps the next experiment build on what worked.
+The active protocol uses ACTS v46.5.0, one ACTS thread, 10-event development runs, and 50-event evaluation runs.
+Each timed comparison has three repetitions, with the median timing and particle ambiguity efficiency used for candidate comparison.
 
 [Open the interactive report](https://aksth070600.github.io/autoresearch-acts-seeding/)
 
@@ -20,13 +22,15 @@ flowchart LR
 ```
 
 - `optimization-files/` contains the ACTS implementation files an experiment may change.
-- `make evolve` selects a promising implementation from successful history.
+- `make evolve` selects a promising implementation from successful history under the active protocol.
+  Eligibility and Pareto selection use only total full-chain time per event and particle ambiguity-resolution efficiency.
+  Other metrics remain diagnostics.
 - `make evaluate CANDIDATE=name` runs the controlled development workload.
 - `make record CANDIDATE=name` returns the latest summary and failure details without editing the archive.
-- `make evaluate-selected` evaluates Genesis, the two strongest ambiguity-efficiency candidates, and two lowest-time candidates, filling overlaps with the next unique candidates.
+- `make evaluate-selected` evaluates Genesis, the two strongest particle ambiguity-efficiency candidates, and two lowest-time candidates, filling overlaps with the next unique candidates.
 - `records/` stores reproducible summaries used by evolution and reports.
 - `agent-learnings.md` stores short lessons so agents do not repeat failed ideas.
-- `Genesis` is the canonical starting point for every campaign.
+- `Genesis` is the canonical starting point for every campaign. A fresh protocol-compatible Genesis baseline is required before evolution.
 
 ## Start an experiment agent
 
@@ -44,10 +48,19 @@ The full operating contract is in [`agent-instructions.md`](agent-instructions.m
 ```text
 make evolve
 make evaluate CANDIDATE=<candidate-name>
+make evaluate CANDIDATE=<candidate-name> EVALUATION=1
 make record CANDIDATE=<candidate-name>
 make select-evaluation
 make evaluate-selected
 make report
+```
+
+`make evaluate` runs 10-event development stages. `EVALUATION=1` runs the 50-event evaluation stages. Timed stages run three repetitions and store every repetition plus their median in each summary.
+
+Focused protocol and objective tests run with:
+
+```text
+/usr/bin/python3 -m unittest discover -s tests -v
 ```
 
 The pinned Python dependency is installed with:

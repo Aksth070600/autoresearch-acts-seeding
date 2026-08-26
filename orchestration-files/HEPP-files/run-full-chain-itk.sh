@@ -3,9 +3,9 @@ set -euo pipefail
 
 ACTS_SOURCE="${ACTS_SOURCE:-/storage/thomaaks/acts-v46.5.0}"
 ACTS_BUILD_DIR="${ACTS_BUILD_DIR:-$ACTS_SOURCE/build}"
-EVENTS="${1:-1}"
+EVENTS="${1:-10}"
 WORKLOAD="${2:-ttbar_pu200}"
-THREADS="${3:--1}"
+THREADS="${3:-1}"
 SEED="${4:-42}"
 PILEUP="${5:-200}"
 STAGE="${6:-full}"
