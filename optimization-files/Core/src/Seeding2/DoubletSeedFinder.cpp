@@ -140,14 +140,6 @@ class Impl final : public DoubletSeedFinder {
         continue;
       }
 
-      // Check the cot-theta range before computing the collision-region cut.
-      if constexpr (!interactionPointCut) {
-        if (outsideRangeCheck(deltaZ, -m_cfg.cotThetaMax * deltaR,
-                              m_cfg.cotThetaMax * deltaR)) {
-          continue;
-        }
-      }
-
       // the longitudinal impact parameter zOrigin is defined as (zM - rM *
       // cotTheta) where cotTheta is the ratio Z/R (forward angle) of space
       // point duplet but instead we calculate (zOrigin * deltaR) and multiply
@@ -165,6 +157,14 @@ class Impl final : public DoubletSeedFinder {
       // interactionPointCut is true we apply the curvature cut first because it
       // is more frequent but requires the coordinate transformation
       if constexpr (!interactionPointCut) {
+        // check if duplet cotTheta is within the region of interest
+        // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
+        // cotThetaMax by deltaR to avoid division
+        if (outsideRangeCheck(deltaZ, -m_cfg.cotThetaMax * deltaR,
+                              m_cfg.cotThetaMax * deltaR)) {
+          continue;
+        }
+
         // transform SP coordinates to the u-v reference frame
         const float deltaX = xO - xM;
         const float deltaY = yO - yM;
