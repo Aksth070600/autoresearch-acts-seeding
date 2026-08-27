@@ -107,59 +107,6 @@ void createSeedsFromGroupsImpl(
   filter.filterTripletsMiddleFixed(spacePoints, outputSeeds);
 }
 
-template <typename SpacePointGroups, typename MiddleSpacePointGroup>
-void createSeedsFromGroupsLoop(
-    const Logger& logger, TripletSeeder::Cache& cache,
-    const DoubletSeedFinder& bottomFinder, const DoubletSeedFinder& topFinder,
-    const TripletSeedFinder& tripletFinder, const ITripletSeedFilter& filter,
-    const SpacePointContainer2& spacePoints,
-    SpacePointGroups& bottomSpGroups,
-    const MiddleSpacePointGroup& middleSpGroup, SpacePointGroups& topSpGroups,
-    const std::pair<float, float>& radiusRangeForMiddle,
-    SeedContainer2& outputSeeds) {
-  const bool spacePointsSortedByRadius =
-      bottomFinder.config().spacePointsSortedByRadius;
-
-  if (middleSpGroup.empty()) {
-    return;
-  }
-
-  if (spacePointsSortedByRadius) {
-    const float firstMiddleSpR = middleSpGroup.front().zr()[1];
-
-    for (auto& bottomSpGroup : bottomSpGroups) {
-      const auto low = std::ranges::lower_bound(
-          bottomSpGroup, firstMiddleSpR - bottomFinder.config().deltaRMax, {},
-          [](const ConstSpacePointProxy2& sp) { return sp.zr()[1]; });
-      bottomSpGroup = bottomSpGroup.subrange(low - bottomSpGroup.begin());
-    }
-
-    for (auto& topSpGroup : topSpGroups) {
-      const auto low = std::ranges::lower_bound(
-          topSpGroup, firstMiddleSpR + topFinder.config().deltaRMin, {},
-          [](const ConstSpacePointProxy2& sp) { return sp.zr()[1]; });
-      topSpGroup = topSpGroup.subrange(low - topSpGroup.begin());
-    }
-  }
-
-  for (ConstSpacePointProxy2 spM : middleSpGroup) {
-    const float rM = spM.zr()[1];
-
-    if (spacePointsSortedByRadius) {
-      if (rM < radiusRangeForMiddle.first) {
-        continue;
-      }
-      if (rM > radiusRangeForMiddle.second) {
-        break;
-      }
-    }
-
-    createSeedsFromGroupsImpl(logger, cache, bottomFinder, topFinder,
-                              tripletFinder, filter, spacePoints,
-                              bottomSpGroups, spM, topSpGroups, outputSeeds);
-  }
-}
-
 }  // namespace
 
 TripletSeeder::TripletSeeder(std::unique_ptr<const Logger> logger_)
@@ -201,28 +148,57 @@ void TripletSeeder::createSeedsFromGroups(
   assert((bottomFinder.config().spacePointsSortedByRadius ==
           topFinder.config().spacePointsSortedByRadius) &&
          "Inconsistent space point sorting");
-  createSeedsFromGroupsLoop(*m_logger, cache, bottomFinder, topFinder,
-                            tripletFinder, filter, spacePoints, bottomSpGroups,
-                            middleSpGroup, topSpGroups, radiusRangeForMiddle,
-                            outputSeeds);
-}
+  const bool spacePointsSortedByRadius =
+      bottomFinder.config().spacePointsSortedByRadius;
 
-void TripletSeeder::createSeedsFromGroups(
-    Cache& cache, const DoubletSeedFinder& bottomFinder,
-    const DoubletSeedFinder& topFinder, const TripletSeedFinder& tripletFinder,
-    const ITripletSeedFilter& filter, const SpacePointContainer2& spacePoints,
-    const std::span<SpacePointContainer2::ConstSubset>& bottomSpGroups,
-    const SpacePointContainer2::ConstSubset& middleSpGroup,
-    const std::span<SpacePointContainer2::ConstSubset>& topSpGroups,
-    const std::pair<float, float>& radiusRangeForMiddle,
-    SeedContainer2& outputSeeds) const {
-  assert((bottomFinder.config().spacePointsSortedByRadius ==
-          topFinder.config().spacePointsSortedByRadius) &&
-         "Inconsistent space point sorting");
-  createSeedsFromGroupsLoop(*m_logger, cache, bottomFinder, topFinder,
-                            tripletFinder, filter, spacePoints, bottomSpGroups,
-                            middleSpGroup, topSpGroups, radiusRangeForMiddle,
-                            outputSeeds);
+  if (middleSpGroup.empty()) {
+    return;
+  }
+
+  if (spacePointsSortedByRadius) {
+    // Initialize initial offsets for bottom and top space points with binary
+    // search. This requires at least one middle space point to be present which
+    // is already checked above.
+    const ConstSpacePointProxy2 firstMiddleSp = middleSpGroup.front();
+    const float firstMiddleSpR = firstMiddleSp.zr()[1];
+
+    for (auto& bottomSpGroup : bottomSpGroups) {
+      // Find the first bottom space point that is within the deltaRMax of the
+      // first middle space point.
+      const auto low = std::ranges::lower_bound(
+          bottomSpGroup, firstMiddleSpR - bottomFinder.config().deltaRMax, {},
+          [&](const ConstSpacePointProxy2& sp) { return sp.zr()[1]; });
+      bottomSpGroup = bottomSpGroup.subrange(low - bottomSpGroup.begin());
+    }
+
+    for (auto& topSpGroup : topSpGroups) {
+      // Find the first top space point that is within the deltaRMin of the
+      // first middle space point.
+      const auto low = std::ranges::lower_bound(
+          topSpGroup, firstMiddleSpR + topFinder.config().deltaRMin, {},
+          [&](const ConstSpacePointProxy2& sp) { return sp.zr()[1]; });
+      topSpGroup = topSpGroup.subrange(low - topSpGroup.begin());
+    }
+  }
+
+  for (ConstSpacePointProxy2 spM : middleSpGroup) {
+    const float rM = spM.zr()[1];
+
+    if (spacePointsSortedByRadius) {
+      // check if spM is outside our radial region of interest
+      if (rM < radiusRangeForMiddle.first) {
+        continue;
+      }
+      if (rM > radiusRangeForMiddle.second) {
+        // break because SPs are sorted in r
+        break;
+      }
+    }
+
+    createSeedsFromGroupsImpl(*m_logger, cache, bottomFinder, topFinder,
+                              tripletFinder, filter, spacePoints,
+                              bottomSpGroups, spM, topSpGroups, outputSeeds);
+  }
 }
 
 }  // namespace Acts
