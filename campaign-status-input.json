@@ -3,11 +3,24 @@
   "campaign": {
     "name": "ACTS Seeding Development campaign v6",
     "branch": "fm/acts-campaign-v6",
-    "phase": "candidate loop ready",
+    "phase": "candidate loop: 1 of 20",
     "started_at": "2026-08-27T11:03:33Z"
   },
-  "current_attempt": null,
-  "attempt_metadata": [],
+  "current_attempt": {
+    "candidate": "DoubletInsertionSort",
+    "mechanism_family": "doublet-insertion-sort",
+    "classification": "structural",
+    "controlled_stage": "queued Development run",
+    "state": "queued",
+    "started_at": "2026-08-27T11:20:27Z"
+  },
+  "attempt_metadata": [
+    {
+      "candidate": "DoubletInsertionSort",
+      "mechanism_family": "doublet-insertion-sort",
+      "classification": "structural"
+    }
+  ],
   "blockers": [],
   "pull_request_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/24"
 }
