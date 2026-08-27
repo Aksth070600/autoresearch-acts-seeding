@@ -143,10 +143,27 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
   // initialize original index locations
   cache().topSpIndexVec.resize(tripletTopCandidates.size());
   std::iota(cache().topSpIndexVec.begin(), cache().topSpIndexVec.end(), 0);
-  std::ranges::sort(cache().topSpIndexVec, {},
-                    [&tripletTopCandidates](const std::size_t t) {
-                      return tripletTopCandidates.curvatures()[t];
-                    });
+  const auto curvatureLess = [&tripletTopCandidates](const std::uint32_t left,
+                                                     const std::uint32_t right) {
+    return tripletTopCandidates.curvatures()[left] <
+           tripletTopCandidates.curvatures()[right];
+  };
+  std::vector<std::uint32_t> mergeScratch(cache().topSpIndexVec.size());
+  for (std::size_t width = 1; width < cache().topSpIndexVec.size(); width *= 2) {
+    for (std::size_t left = 0; left < cache().topSpIndexVec.size();
+         left += 2 * width) {
+      const std::size_t middle =
+          std::min(left + width, cache().topSpIndexVec.size());
+      const std::size_t right =
+          std::min(left + 2 * width, cache().topSpIndexVec.size());
+      std::merge(cache().topSpIndexVec.begin() + left,
+                 cache().topSpIndexVec.begin() + middle,
+                 cache().topSpIndexVec.begin() + middle,
+                 cache().topSpIndexVec.begin() + right,
+                 mergeScratch.begin() + left, curvatureLess);
+    }
+    cache().topSpIndexVec.swap(mergeScratch);
+  }
 
   // vector containing the radius of all compatible seeds
   cache().compatibleSeedR.reserve(config().compatSeedLimit);
