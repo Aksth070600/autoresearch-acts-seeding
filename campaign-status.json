@@ -198,13 +198,31 @@
       "state": "completed",
       "timed_ambiguity_particle_efficiency": 0.972769,
       "timed_seeding_time_per_event_ms": 281.42
+    },
+    {
+      "candidate": "GridCoreRangeViewCache",
+      "classification": "micro",
+      "duration_seconds": 773.03,
+      "finished_at": "2026-08-27T14:10:40.581858Z",
+      "implementation_commit": "a44b3b89ea2373bc03549d272c43bf4505daa530",
+      "links": {
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/a44b3b89ea2373bc03549d272c43bf4505daa530",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug27-v6/records/Development/20260827T135747Z-GridCoreRangeViewCache/summary.json"
+      },
+      "mechanism_family": "grid-core-range-view-cache",
+      "outcome": "Passed all controlled Development stages.",
+      "record": "records/Development/20260827T135747Z-GridCoreRangeViewCache/summary.json",
+      "started_at": "2026-08-27T13:57:47.552000Z",
+      "state": "completed",
+      "timed_ambiguity_particle_efficiency": 0.972769,
+      "timed_seeding_time_per_event_ms": 281.05
     }
   ],
   "blockers": [],
   "campaign": {
     "branch": "autoresearch-acts-seeding/aug27-v6",
     "name": "ACTS Seeding Development campaign v6",
-    "phase": "candidate loop: 11 of 20",
+    "phase": "candidate loop: 11 of 20 complete",
     "started_at": "2026-08-27T11:03:33Z",
     "targets": {
       "completed_attempts": 20,
@@ -212,29 +230,22 @@
       "structural_attempts": 10
     }
   },
-  "current_attempt": {
-    "candidate": "GridCoreRangeViewCache",
-    "classification": "micro",
-    "controlled_stage": "queued Development run",
-    "mechanism_family": "grid-core-range-view-cache",
-    "started_at": "2026-08-27T13:57:44Z",
-    "state": "queued"
-  },
+  "current_attempt": null,
   "failures": [],
-  "generated_at": "2026-08-27T13:57:44.633802Z",
+  "generated_at": "2026-08-27T14:11:02.009334Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/a44b3b89ea2373bc03549d272c43bf4505daa530",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/60cfaeab5bb37cf947b90338e7530ca800eb91c6",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/aug27-v6",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/25"
   },
   "progress": {
-    "completed_attempts": 10,
-    "elapsed_seconds": 10451.633802,
-    "estimated_remaining_seconds": 8059.351198,
-    "eta_basis": "Median of 10 completed attempts; current attempt elapsed time deducted.",
-    "eta_sample_count": 10,
-    "expected_finish_at": "2026-08-27T16:12:03.985000Z",
-    "median_completed_attempt_duration_seconds": 805.9985,
+    "completed_attempts": 11,
+    "elapsed_seconds": 11249.009334,
+    "estimated_remaining_seconds": 7241.616,
+    "eta_basis": "Median of 11 completed attempts.",
+    "eta_sample_count": 11,
+    "expected_finish_at": "2026-08-27T16:11:43.625334Z",
+    "median_completed_attempt_duration_seconds": 804.624,
     "micro_optimizations": 1,
     "structural_attempts": 10
   },
@@ -250,16 +261,16 @@
       "timed_seeding_time_per_event_ms": 281.42
     },
     "best_seeding": {
-      "candidate": "SeederUnifiedDoubletStorage",
-      "delta_vs_genesis_ms": -14.609999999999957,
+      "candidate": "GridCoreRangeViewCache",
+      "delta_vs_genesis_ms": -14.979999999999961,
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/5d231ed0dfeb23bc8954290146ea3fdd38ddda88",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug27-v6/records/Development/20260827T134250Z-SeederUnifiedDoubletStorage/summary.json"
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/a44b3b89ea2373bc03549d272c43bf4505daa530",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug27-v6/records/Development/20260827T135747Z-GridCoreRangeViewCache/summary.json"
       },
-      "percentage_vs_genesis": -4.935310610411093,
-      "started_at": "2026-08-27T13:42:50.037905Z",
+      "percentage_vs_genesis": -5.0602979427760575,
+      "started_at": "2026-08-27T13:57:47.552000Z",
       "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 281.42
+      "timed_seeding_time_per_event_ms": 281.05
     },
     "latest_genesis": {
       "candidate": "Genesis",
@@ -273,14 +284,14 @@
     },
     "pareto_front": [
       {
-        "candidate": "SeederUnifiedDoubletStorage",
+        "candidate": "GridCoreRangeViewCache",
         "links": {
-          "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/5d231ed0dfeb23bc8954290146ea3fdd38ddda88",
-          "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug27-v6/records/Development/20260827T134250Z-SeederUnifiedDoubletStorage/summary.json"
+          "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/a44b3b89ea2373bc03549d272c43bf4505daa530",
+          "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug27-v6/records/Development/20260827T135747Z-GridCoreRangeViewCache/summary.json"
         },
-        "started_at": "2026-08-27T13:42:50.037905Z",
+        "started_at": "2026-08-27T13:57:47.552000Z",
         "timed_ambiguity_particle_efficiency": 0.972769,
-        "timed_seeding_time_per_event_ms": 281.42
+        "timed_seeding_time_per_event_ms": 281.05
       }
     ]
   },
