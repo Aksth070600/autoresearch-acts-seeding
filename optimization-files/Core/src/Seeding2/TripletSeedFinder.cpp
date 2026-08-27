@@ -233,7 +233,7 @@ class Impl final : public TripletSeedFinder {
 
       // sqrt(S2)/B = 2 * helixradius
       // calculated radius must not be smaller than minimum radius
-      if (S2 < B2 * m_cfg.minHelixDiameter2) [[likely]] {
+      if (S2 < B2 * m_cfg.minHelixDiameter2) {
         continue;
       }
 
