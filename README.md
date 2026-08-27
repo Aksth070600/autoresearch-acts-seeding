@@ -7,7 +7,7 @@ Each timed comparison has three repetitions, with the median seeding timing and 
 
 [Open the interactive results report](https://aksth070600.github.io/autoresearch-acts-seeding/)
 
-[Open the live campaign dashboard](https://aksth070600.github.io/autoresearch-acts-seeding/campaign/), then enter a public campaign branch. A shareable view uses `?ref=<branch>`, for example `campaign/?ref=autoresearch-acts-seeding%2Faug25`. It fetches the generated snapshot from that branch without credentials and keeps the last good snapshot visible if a refresh fails.
+[Open the live campaign dashboard](https://aksth070600.github.io/autoresearch-acts-seeding/campaign/). It discovers public campaign pull requests once, sorts them newest first, and selects the newest campaign. A shareable view uses `?ref=<branch>`, for example `campaign/?ref=autoresearch-acts-seeding%2Faug25`. The ref remains a safe direct fallback if discovery fails. Running campaigns read the branch snapshot. Completed campaigns use the pull request's immutable final head commit. Older campaigns without snapshots show an unavailable state.
 
 ## How the repository works
 
@@ -62,7 +62,7 @@ make campaign-status
 
 `make evaluate` runs 10-event development stages. `EVALUATION=1` runs the 50-event evaluation stages for captain/operator-controlled review. Timed stages run three repetitions and store every repetition plus their median in each summary.
 
-`make report` keeps the results report at `reports/site/index.html` and adds the separate live view at `reports/site/campaign/index.html`. The published live view polls public branch snapshots no more than once per minute. To inspect it locally, run `make report`, serve `reports/site/` over HTTP, and open `/campaign/?ref=<public-branch>`.
+`make report` keeps the results report at `reports/site/index.html` and adds the separate live view at `reports/site/campaign/index.html`. The published live view requests the public campaign PR list once at page load. It polls only the selected running campaign snapshot, no more than once per minute. To inspect it locally, run `make report`, serve `reports/site/` over HTTP, and open `/campaign/` or `/campaign/?ref=<public-branch>`.
 
 Focused protocol and objective tests run with:
 

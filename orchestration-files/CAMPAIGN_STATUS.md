@@ -65,12 +65,21 @@ The ETA uses the median duration of complete, passed candidate attempts. It stay
 
 ## Dashboard fetch contract
 
-The dashboard reads this URL without credentials:
+At page load, the dashboard makes one unauthenticated request for public pull requests:
+
+```text
+https://api.github.com/repos/Aksth070600/autoresearch-acts-seeding/pulls?state=all&per_page=100&sort=created&direction=desc
+```
+
+Campaign PRs use the `autoresearch-acts-seeding/` branch prefix. The dropdown sorts them newest to oldest by PR creation time and selects the newest by default. A safe `?ref=<branch>` deep link takes precedence and remains available if discovery fails.
+
+A selected open PR reads the live branch snapshot. A selected closed PR reads the immutable final head SHA returned by the PR list:
 
 ```text
 https://raw.githubusercontent.com/Aksth070600/autoresearch-acts-seeding/refs/heads/<branch>/campaign-status.json
+https://raw.githubusercontent.com/Aksth070600/autoresearch-acts-seeding/<final-head-sha>/campaign-status.json
 ```
 
-It refreshes at most once per minute with cache busting. A refresh error is visible and does not replace the last good snapshot. A snapshot becomes stale after 15 minutes unless a future schema version changes `stale_after_seconds`.
+Only a selected open campaign refreshes, at most once per minute with cache busting. The pull-request list is not polled. A refresh error is visible and does not replace that campaign's last good snapshot. Older campaigns without snapshots show an explicit unavailable state. An open snapshot becomes stale after 15 minutes unless a future schema version changes `stale_after_seconds`; a closed snapshot is labeled final.
 
 Schema changes must be backward compatible within version 1 or use a new `schema_version`. Keep the old schema available so published campaign branches remain readable.

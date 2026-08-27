@@ -32,10 +32,10 @@ HTML_TEMPLATE = r"""<!doctype html>
     .topline { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
     .lede { color: #a5b4fc; margin: 0 0 20px; }
     .report-link { white-space: nowrap; font-size: 0.9rem; font-weight: 650; }
-    .controls { display: grid; grid-template-columns: minmax(230px, 1fr) auto; gap: 14px; align-items: end;
+    .controls { display: grid; grid-template-columns: minmax(230px, 1.15fr) minmax(220px, 1fr) auto; gap: 14px; align-items: end;
       background: #111827; border: 1px solid #334155; border-radius: 10px; padding: 16px; }
     label { display: grid; gap: 5px; font-size: 0.9rem; font-weight: 650; }
-    input, button { min-width: 0; padding: 8px 10px; border: 1px solid #475569; border-radius: 6px;
+    input, select, button { min-width: 0; padding: 8px 10px; border: 1px solid #475569; border-radius: 6px;
       background: #1e293b; color: #e5e7eb; font: inherit; }
     button { cursor: pointer; font-weight: 700; }
     button:hover, button:focus-visible { border-color: #818cf8; background: #273449; }
@@ -132,22 +132,28 @@ HTML_TEMPLATE = r"""<!doctype html>
   </div>
 
   <form id="campaign-form" class="controls">
-    <label>Campaign branch or ref
+    <label>Campaign
+      <select id="campaign-select" disabled>
+        <option>Discovering public campaigns…</option>
+      </select>
+    </label>
+    <label>Branch or ref
       <input id="campaign-ref" name="ref" type="text" maxlength="200" autocomplete="off"
         spellcheck="false" placeholder="autoresearch-acts-seeding/aug25">
     </label>
     <button id="load-button" type="submit">Load campaign</button>
-    <p class="control-note">Use a public branch that commits <code>campaign-status.json</code>. Add <code>?ref=&lt;branch&gt;</code> to share this view.</p>
+    <p id="discovery-note" class="control-note">Loading campaign pull requests once. Add <code>?ref=&lt;branch&gt;</code> to share or recover a direct view.</p>
   </form>
   <div id="fetch-error" class="notice error" role="alert" hidden></div>
   <div id="empty-state">
-    <div><strong>Choose a public campaign branch</strong>The last good snapshot stays visible if a later refresh fails.</div>
+    <div><strong>Discovering public campaigns</strong>Loading the campaign list once, without credentials.</div>
   </div>
 
   <div id="dashboard" hidden>
     <div class="campaign-heading">
       <h2><span id="campaign-name"></span></h2>
       <div class="chips">
+        <span id="campaign-lifecycle" class="chip"></span>
         <span id="freshness" class="chip"></span>
         <span id="campaign-branch" class="chip"></span>
       </div>
@@ -217,19 +223,10 @@ HTML_TEMPLATE = r"""<!doctype html>
   </div>
 </main>
 <script>
+/* CAMPAIGN_DISCOVERY_LOGIC_START */
 const REPOSITORY = '__REPOSITORY__';
 const STATUS_PATH = 'campaign-status.json';
-const POLL_INTERVAL_MS = __POLL_INTERVAL_MS__;
-const form = document.getElementById('campaign-form');
-const refInput = document.getElementById('campaign-ref');
-const loadButton = document.getElementById('load-button');
-const fetchError = document.getElementById('fetch-error');
-const emptyState = document.getElementById('empty-state');
-const dashboard = document.getElementById('dashboard');
-let lastGoodSnapshot = null;
-let lastGoodRef = '';
-let lastFetchStarted = 0;
-let activeRef = '';
+const CAMPAIGN_BRANCH_PREFIX = 'autoresearch-acts-seeding/';
 
 function safeRef(raw) {
   if (typeof raw !== 'string') return null;
@@ -242,15 +239,111 @@ function safeRef(raw) {
   if (ref.split('/').some((part) => !part || part === '.' || part === '..' || part.startsWith('.') || part.endsWith('.lock'))) return null;
   return ref;
 }
-function snapshotUrl(ref) {
-  const encodedRef = ref.split('/').map(encodeURIComponent).join('/');
-  return `https://raw.githubusercontent.com/${REPOSITORY}/refs/heads/${encodedRef}/${STATUS_PATH}?_=${Date.now()}`;
+function safeSha(raw) {
+  return typeof raw === 'string' && /^[0-9a-f]{40}$/i.test(raw) ? raw.toLowerCase() : null;
 }
+function campaignFromPull(pull) {
+  if (!pull || !Number.isInteger(pull.number) || !['open', 'closed'].includes(pull.state)
+      || !Number.isFinite(Date.parse(pull.created_at)) || pull.head?.repo?.full_name !== REPOSITORY) return null;
+  const ref = safeRef(pull.head?.ref);
+  if (!ref || !ref.startsWith(CAMPAIGN_BRANCH_PREFIX)) return null;
+  let pullUrl = null;
+  try {
+    const candidateUrl = new URL(pull.html_url);
+    if (candidateUrl.protocol === 'https:' && candidateUrl.hostname === 'github.com'
+        && candidateUrl.pathname === `/${REPOSITORY}/pull/${pull.number}`) pullUrl = candidateUrl.href;
+  } catch (_) { return null; }
+  if (!pullUrl) return null;
+  return {
+    id: `pr-${pull.number}`,
+    number: pull.number,
+    title: typeof pull.title === 'string' && pull.title.trim() ? pull.title.trim().slice(0, 160) : ref,
+    ref,
+    sha: safeSha(pull.head?.sha),
+    createdAt: new Date(pull.created_at).toISOString(),
+    state: pull.state,
+    pullUrl
+  };
+}
+function sortCampaigns(pulls) {
+  if (!Array.isArray(pulls)) return [];
+  return pulls.map(campaignFromPull).filter(Boolean).sort((left, right) =>
+    Date.parse(right.createdAt) - Date.parse(left.createdAt) || right.number - left.number
+  );
+}
+function directCampaign(rawRef) {
+  const ref = safeRef(rawRef);
+  if (!ref) return null;
+  return {
+    id: `direct-${ref}`,
+    number: null,
+    title: 'Direct campaign ref',
+    ref,
+    sha: safeSha(ref),
+    createdAt: null,
+    state: 'direct',
+    pullUrl: null
+  };
+}
+function selectInitialCampaign(campaigns, deepLinkRef) {
+  const ref = safeRef(deepLinkRef);
+  if (ref) {
+    return campaigns.find((campaign) => campaign.ref === ref || campaign.sha === ref)
+      || directCampaign(ref);
+  }
+  return campaigns[0] || null;
+}
+function campaignFetchSource(campaign) {
+  if (!campaign) return null;
+  const branch = safeRef(campaign.ref);
+  const immutableSha = campaign.state === 'closed' ? safeSha(campaign.sha) : null;
+  const directSha = campaign.state === 'direct' ? safeSha(campaign.ref) : null;
+  if (immutableSha || directSha) {
+    return {
+      fetchRef: immutableSha || directSha,
+      expectedBranch: directSha ? null : branch,
+      immutable: true,
+      poll: false
+    };
+  }
+  if (!branch) return null;
+  return {
+    fetchRef: `refs/heads/${branch}`,
+    expectedBranch: branch,
+    immutable: false,
+    poll: campaign.state !== 'closed'
+  };
+}
+function snapshotUrl(source, cacheBuster = Date.now()) {
+  if (!source || !safeRef(source.fetchRef)) return null;
+  const encodedRef = source.fetchRef.split('/').map(encodeURIComponent).join('/');
+  return `https://raw.githubusercontent.com/${REPOSITORY}/${encodedRef}/${STATUS_PATH}?_=${cacheBuster}`;
+}
+/* CAMPAIGN_DISCOVERY_LOGIC_END */
+
+const POLL_INTERVAL_MS = __POLL_INTERVAL_MS__;
+const PULLS_API_URL = `https://api.github.com/repos/${REPOSITORY}/pulls?state=all&per_page=100&sort=created&direction=desc`;
+const form = document.getElementById('campaign-form');
+const campaignSelect = document.getElementById('campaign-select');
+const refInput = document.getElementById('campaign-ref');
+const discoveryNote = document.getElementById('discovery-note');
+const loadButton = document.getElementById('load-button');
+const fetchError = document.getElementById('fetch-error');
+const emptyState = document.getElementById('empty-state');
+const dashboard = document.getElementById('dashboard');
+const lastGoodSnapshots = new Map();
+const lastFetchStarted = new Map();
+let discoveredCampaigns = [];
+let activeCampaign = null;
+let loadSequence = 0;
+
 function finite(value) { return typeof value === 'number' && Number.isFinite(value); }
 function validObjective(value) { return value === null || finite(value); }
-function validateSnapshot(value, requestedRef) {
+function validateSnapshot(value, expectedBranch) {
+  const snapshotBranch = safeRef(value?.campaign?.branch);
   if (!value || typeof value !== 'object' || value.schema_version !== '1.0.0'
-      || value.protocol_id !== 'acts-seeding-v2' || !value.campaign || value.campaign.branch !== requestedRef
+      || value.protocol_id !== 'acts-seeding-v2' || !snapshotBranch
+      || (expectedBranch && snapshotBranch !== expectedBranch)
       || !value.progress || !value.promising_results || !Array.isArray(value.attempts)
       || !Array.isArray(value.blockers) || !Array.isArray(value.failures)
       || !Number.isFinite(Date.parse(value.generated_at))) {
@@ -312,11 +405,16 @@ function freshnessState(snapshot) {
   if (age >= staleAfter / 2) return { label: `Aging · ${formatRelative(snapshot.generated_at)}`, className: 'warn' };
   return { label: `Fresh · ${formatRelative(snapshot.generated_at)}`, className: 'good' };
 }
-function renderFreshness(snapshot) {
-  const freshness = freshnessState(snapshot);
+function renderFreshness(snapshot, campaign = activeCampaign) {
   const element = document.getElementById('freshness');
-  element.textContent = freshness.label;
-  element.className = `chip ${freshness.className}`;
+  if (campaign?.state === 'closed') {
+    element.textContent = `Final · ${formatRelative(snapshot.generated_at)}`;
+    element.className = 'chip good';
+  } else {
+    const freshness = freshnessState(snapshot);
+    element.textContent = freshness.label;
+    element.className = `chip ${freshness.className}`;
+  }
   setText('last-update', `Updated ${formatInstant(snapshot.generated_at)} · ${formatRelative(snapshot.generated_at)}`);
 }
 function safeLink(value) {
@@ -389,10 +487,10 @@ function renderIssues(snapshot) {
   });
   section.hidden = list.childElementCount === 0;
 }
-function renderLinks(snapshot) {
+function renderLinks(snapshot, campaign = activeCampaign) {
   const container = document.getElementById('campaign-links');
   container.replaceChildren();
-  [['Campaign branch', snapshot.links?.campaign_branch], ['Active pull request', snapshot.links?.pull_request], ['Active commit', snapshot.links?.active_commit]].forEach(([label, href]) => {
+  [['Campaign branch', snapshot.links?.campaign_branch], ['Campaign pull request', snapshot.links?.pull_request || campaign?.pullUrl], ['Active commit', snapshot.links?.active_commit]].forEach(([label, href]) => {
     const anchor = link(label, href);
     if (anchor) container.appendChild(anchor);
   });
@@ -520,10 +618,13 @@ function renderPareto(snapshot) {
 function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
 }
-function renderSnapshot(snapshot, ref) {
+function renderSnapshot(snapshot, campaign) {
   const current = snapshot.current_attempt;
   setText('campaign-name', snapshot.campaign.name);
   setText('campaign-branch', snapshot.campaign.branch);
+  const lifecycle = document.getElementById('campaign-lifecycle');
+  lifecycle.textContent = campaign?.state === 'closed' ? 'Completed' : campaign?.state === 'open' ? 'Running' : 'Direct ref';
+  lifecycle.className = `chip ${campaign?.state === 'open' ? 'good' : ''}`.trim();
   setText('phase', snapshot.campaign.phase);
   setText('current-candidate', current?.candidate || 'No active attempt');
   setText('mechanism', current?.mechanism_family || 'Unavailable');
@@ -539,72 +640,170 @@ function renderSnapshot(snapshot, ref) {
   setText('remaining', formatDuration(progress.estimated_remaining_seconds));
   setText('eta-basis', progress.eta_basis);
   setText('expected-finish', formatInstant(progress.expected_finish_at));
-  renderFreshness(snapshot);
+  renderFreshness(snapshot, campaign);
   setResult('genesis', snapshot.promising_results.latest_genesis, 'genesis');
   setResult('seeding', snapshot.promising_results.best_seeding, 'seeding');
   setResult('efficiency', snapshot.promising_results.best_ambiguity_efficiency, 'efficiency');
-  renderLinks(snapshot);
+  renderLinks(snapshot, campaign);
   renderIssues(snapshot);
   renderPareto(snapshot);
   renderHistory(snapshot);
   emptyState.hidden = true;
   dashboard.hidden = false;
   document.title = `${snapshot.campaign.name} · ACTS Seeding Live Campaign`;
-  activeRef = ref;
 }
 function setFetchError(message) {
   fetchError.textContent = message;
   fetchError.hidden = false;
 }
-async function loadCampaign(ref, { automatic = false } = {}) {
-  const validated = safeRef(ref);
-  if (!validated) {
+function campaignLabel(campaign) {
+  const state = campaign.state === 'open' ? 'Running' : campaign.state === 'closed' ? 'Completed' : 'Direct';
+  const created = campaign.createdAt ? new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(campaign.createdAt)) : '';
+  return `${state} · ${campaign.title}${created ? ` · ${created}` : ''}`;
+}
+function populateCampaignSelect(selected = activeCampaign) {
+  campaignSelect.replaceChildren();
+  const choices = [...discoveredCampaigns];
+  if (selected && !choices.some((campaign) => campaign.id === selected.id)) choices.unshift(selected);
+  if (!choices.length) {
+    const option = document.createElement('option');
+    option.textContent = 'No discovered campaigns';
+    option.value = '';
+    campaignSelect.appendChild(option);
+    campaignSelect.disabled = true;
+    return;
+  }
+  choices.forEach((campaign) => {
+    const option = document.createElement('option');
+    option.value = campaign.id;
+    option.textContent = campaignLabel(campaign);
+    campaignSelect.appendChild(option);
+  });
+  campaignSelect.disabled = discoveredCampaigns.length === 0;
+  campaignSelect.value = selected?.id || choices[0].id;
+}
+function campaignForId(id) {
+  if (activeCampaign?.id === id) return activeCampaign;
+  return discoveredCampaigns.find((campaign) => campaign.id === id) || null;
+}
+function updateDeepLink(campaign) {
+  const url = new URL(window.location.href);
+  url.searchParams.set('ref', campaign.ref);
+  window.history.replaceState(null, '', url);
+}
+function showEmptyState(heading, detail) {
+  const wrapper = document.createElement('div');
+  const strong = document.createElement('strong');
+  strong.textContent = heading;
+  wrapper.append(strong, document.createTextNode(detail));
+  emptyState.replaceChildren(wrapper);
+  emptyState.hidden = false;
+  dashboard.hidden = true;
+}
+async function loadCampaign(campaign, { automatic = false } = {}) {
+  const source = campaignFetchSource(campaign);
+  if (!source) {
     setFetchError('Enter a safe public Git branch or ref. Spaces, ref operators, hidden segments, and traversal are not allowed.');
     return;
   }
+  const key = campaign.ref;
   const now = Date.now();
-  if (validated === activeRef && now - lastFetchStarted < POLL_INTERVAL_MS) return;
-  lastFetchStarted = now;
+  if (now - (lastFetchStarted.get(key) || 0) < POLL_INTERVAL_MS) {
+    const retained = lastGoodSnapshots.get(key);
+    if (retained && activeCampaign?.id === campaign.id) renderSnapshot(retained, campaign);
+    else if (activeCampaign?.id === campaign.id) {
+      showEmptyState('Campaign status unavailable', 'A recent fetch failed. Automatic retry waits at least one minute.');
+    }
+    return;
+  }
+  lastFetchStarted.set(key, now);
+  const sequence = ++loadSequence;
   fetchError.hidden = true;
   loadButton.disabled = true;
   loadButton.textContent = automatic ? 'Refreshing…' : 'Loading…';
   try {
-    const response = await fetch(snapshotUrl(validated), { cache: 'no-store', credentials: 'omit', mode: 'cors' });
-    if (!response.ok) throw new Error(response.status === 404 ? 'No campaign-status.json exists on that public branch.' : `GitHub returned HTTP ${response.status}.`);
-    const snapshot = validateSnapshot(await response.json(), validated);
-    lastGoodSnapshot = snapshot;
-    lastGoodRef = validated;
-    renderSnapshot(snapshot, validated);
-    const url = new URL(window.location.href);
-    url.searchParams.set('ref', validated);
-    window.history.replaceState(null, '', url);
+    const response = await fetch(snapshotUrl(source), { cache: 'no-store', credentials: 'omit', mode: 'cors' });
+    if (!response.ok) {
+      const message = response.status === 404
+        ? 'Status unavailable. This campaign may predate campaign-status v1.'
+        : `GitHub returned HTTP ${response.status}.`;
+      throw new Error(message);
+    }
+    const snapshot = validateSnapshot(await response.json(), source.expectedBranch);
+    lastGoodSnapshots.set(key, snapshot);
+    if (activeCampaign?.id === campaign.id) renderSnapshot(snapshot, campaign);
   } catch (error) {
-    const retained = lastGoodSnapshot ? ` Showing the last good snapshot for ${lastGoodRef}.` : '';
-    setFetchError(`Refresh failed: ${error.message}${retained}`);
-    if (lastGoodSnapshot) renderFreshness(lastGoodSnapshot);
-    if (!lastGoodSnapshot) {
-      dashboard.hidden = true;
-      emptyState.hidden = false;
-      emptyState.innerHTML = '<div><strong>Campaign snapshot unavailable</strong>Check that the branch is public and has a generated campaign-status.json.</div>';
+    if (activeCampaign?.id !== campaign.id) return;
+    const retained = lastGoodSnapshots.get(key);
+    if (retained) {
+      renderSnapshot(retained, campaign);
+      setFetchError(`Refresh failed: ${error.message} Showing the last good snapshot for ${campaign.ref}.`);
+    } else {
+      setFetchError(`Refresh failed: ${error.message}`);
+      showEmptyState(
+        'Campaign status unavailable',
+        'This public campaign has no compatible snapshot. Older campaigns may predate live status publishing.'
+      );
     }
   } finally {
-    loadButton.disabled = false;
-    loadButton.textContent = 'Load campaign';
+    if (sequence === loadSequence) {
+      loadButton.disabled = false;
+      loadButton.textContent = 'Load campaign';
+    }
   }
 }
+function selectCampaign(campaign, { automatic = false } = {}) {
+  if (!campaign) return;
+  fetchError.hidden = true;
+  activeCampaign = campaign;
+  refInput.value = campaign.ref;
+  populateCampaignSelect(campaign);
+  updateDeepLink(campaign);
+  const cached = lastGoodSnapshots.get(campaign.ref);
+  if (cached) renderSnapshot(cached, campaign);
+  else if (!automatic) showEmptyState('Loading campaign status', `Fetching ${campaign.ref} from the public repository.`);
+  loadCampaign(campaign, { automatic });
+}
+async function discoverCampaigns(initialRef) {
+  try {
+    const response = await fetch(PULLS_API_URL, { cache: 'no-store', credentials: 'omit', mode: 'cors' });
+    if (!response.ok) throw new Error(`GitHub returned HTTP ${response.status}.`);
+    discoveredCampaigns = sortCampaigns(await response.json());
+    discoveryNote.textContent = discoveredCampaigns.length
+      ? 'Campaigns are sorted newest to oldest. Completed campaigns use their immutable final head commit.'
+      : 'No campaign pull requests matched the public campaign branch contract. Use a direct branch or ref.';
+  } catch (error) {
+    discoveredCampaigns = [];
+    discoveryNote.textContent = `Campaign discovery unavailable: ${error.message} Use a direct branch or ?ref= deep link.`;
+  }
+  const selected = selectInitialCampaign(discoveredCampaigns, initialRef);
+  populateCampaignSelect(selected);
+  if (selected) selectCampaign(selected);
+  else showEmptyState('Choose a public campaign branch', 'Campaign discovery found no default. Enter a safe branch or ref to load its status.');
+}
+campaignSelect.addEventListener('change', () => {
+  const selected = campaignForId(campaignSelect.value);
+  if (selected) selectCampaign(selected);
+});
 form.addEventListener('submit', (event) => {
   event.preventDefault();
-  const ref = refInput.value.trim();
-  if (ref !== activeRef) lastFetchStarted = 0;
-  loadCampaign(ref);
+  const selected = selectInitialCampaign(discoveredCampaigns, refInput.value.trim());
+  if (!selected) {
+    setFetchError('Enter a safe public Git branch or ref. Spaces, ref operators, hidden segments, and traversal are not allowed.');
+    return;
+  }
+  selectCampaign(selected);
 });
-const initialRef = new URLSearchParams(window.location.search).get('ref');
-if (initialRef) {
-  refInput.value = initialRef;
-  loadCampaign(initialRef);
-}
+const requestedRef = new URLSearchParams(window.location.search).get('ref');
+const invalidRequestedRef = Boolean(requestedRef && !safeRef(requestedRef));
+discoverCampaigns(requestedRef).then(() => {
+  if (invalidRequestedRef) {
+    setFetchError('The ?ref= deep link is not a safe Git ref. Loaded the newest discovered campaign instead.');
+  }
+});
 setInterval(() => {
-  if (activeRef && document.visibilityState === 'visible') loadCampaign(activeRef, { automatic: true });
+  const source = campaignFetchSource(activeCampaign);
+  if (source?.poll && document.visibilityState === 'visible') loadCampaign(activeCampaign, { automatic: true });
 }, POLL_INTERVAL_MS);
 </script>
 </body>

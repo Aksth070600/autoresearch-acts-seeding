@@ -1,5 +1,7 @@
 import copy
 import json
+import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -266,16 +268,129 @@ class CampaignStatusTests(unittest.TestCase):
             with self.assertRaisesRegex(StatusError, "add non-scientific metadata"):
                 load_attempts(records, state)
 
+    @staticmethod
+    def dashboard_html() -> str:
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary) / "campaign" / "index.html"
+            render(output)
+            return output.read_text(encoding="utf-8")
+
+    def run_discovery_javascript(self, body: str) -> dict:
+        if shutil.which("node") is None:
+            self.skipTest("node is required for dashboard JavaScript tests")
+        html = self.dashboard_html()
+        logic = html.split("/* CAMPAIGN_DISCOVERY_LOGIC_START */", 1)[1].split(
+            "/* CAMPAIGN_DISCOVERY_LOGIC_END */", 1
+        )[0]
+        result = subprocess.run(
+            ["node", "-e", logic + "\n" + body],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return json.loads(result.stdout)
+
+    @staticmethod
+    def pull(number: int, branch: str, created_at: str, state: str = "open") -> dict:
+        return {
+            "number": number,
+            "title": f"Campaign {number}",
+            "state": state,
+            "created_at": created_at,
+            "html_url": (
+                f"https://github.com/Aksth070600/autoresearch-acts-seeding/pull/{number}"
+            ),
+            "head": {
+                "ref": branch,
+                "sha": f"{number:040x}",
+                "repo": {"full_name": "Aksth070600/autoresearch-acts-seeding"},
+            },
+        }
+
+    def test_campaign_discovery_orders_newest_first_and_defaults_to_newest(self) -> None:
+        unsafe_url = self.pull(
+            6, "autoresearch-acts-seeding/unsafe-url", "2026-08-29T12:00:00Z"
+        )
+        unsafe_url["html_url"] = "https://example.com/pull/6"
+        pulls = [
+            self.pull(3, "autoresearch-acts-seeding/older", "2026-08-25T12:00:00Z"),
+            self.pull(5, "autoresearch-acts-seeding/newest", "2026-08-27T12:00:00Z"),
+            self.pull(4, "unrelated/branch", "2026-08-28T12:00:00Z"),
+            unsafe_url,
+        ]
+        result = self.run_discovery_javascript(
+            f"const campaigns = sortCampaigns({json.dumps(pulls)});"
+            "console.log(JSON.stringify({"
+            "refs: campaigns.map((campaign) => campaign.ref),"
+            "selected: selectInitialCampaign(campaigns, null).ref"
+            "}));"
+        )
+        self.assertEqual(
+            result["refs"],
+            [
+                "autoresearch-acts-seeding/newest",
+                "autoresearch-acts-seeding/older",
+            ],
+        )
+        self.assertEqual(result["selected"], "autoresearch-acts-seeding/newest")
+
+    def test_campaign_deep_link_and_discovery_failure_fallback(self) -> None:
+        pulls = [
+            self.pull(1, "autoresearch-acts-seeding/first", "2026-08-26T12:00:00Z"),
+            self.pull(2, "autoresearch-acts-seeding/second", "2026-08-27T12:00:00Z"),
+        ]
+        result = self.run_discovery_javascript(
+            f"const campaigns = sortCampaigns({json.dumps(pulls)});"
+            "console.log(JSON.stringify({"
+            "deep: selectInitialCampaign(campaigns, 'autoresearch-acts-seeding/first').ref,"
+            "fallback: selectInitialCampaign([], 'autoresearch-acts-seeding/manual').ref,"
+            "unsafe: selectInitialCampaign([], '../main')"
+            "}));"
+        )
+        self.assertEqual(result["deep"], "autoresearch-acts-seeding/first")
+        self.assertEqual(result["fallback"], "autoresearch-acts-seeding/manual")
+        self.assertIsNone(result["unsafe"])
+
+    def test_open_campaign_uses_branch_and_completed_campaign_uses_final_sha(self) -> None:
+        pulls = [
+            self.pull(8, "autoresearch-acts-seeding/running", "2026-08-27T12:00:00Z"),
+            self.pull(
+                7,
+                "autoresearch-acts-seeding/completed",
+                "2026-08-26T12:00:00Z",
+                state="closed",
+            ),
+        ]
+        result = self.run_discovery_javascript(
+            f"const campaigns = sortCampaigns({json.dumps(pulls)});"
+            "const open = campaignFetchSource(campaigns.find((item) => item.state === 'open'));"
+            "const closed = campaignFetchSource(campaigns.find((item) => item.state === 'closed'));"
+            "console.log(JSON.stringify({open, closed, openUrl: snapshotUrl(open, 123), closedUrl: snapshotUrl(closed, 123)}));"
+        )
+        self.assertEqual(
+            result["open"]["fetchRef"],
+            "refs/heads/autoresearch-acts-seeding/running",
+        )
+        self.assertTrue(result["open"]["poll"])
+        self.assertFalse(result["open"]["immutable"])
+        self.assertEqual(result["closed"]["fetchRef"], f"{7:040x}")
+        self.assertFalse(result["closed"]["poll"])
+        self.assertTrue(result["closed"]["immutable"])
+        self.assertIn(
+            "/refs/heads/autoresearch-acts-seeding/running/campaign-status.json",
+            result["openUrl"],
+        )
+        self.assertIn(f"/{7:040x}/campaign-status.json", result["closedUrl"])
+
     def test_dashboard_html_has_empty_stale_error_and_interactive_essentials(self) -> None:
         now = datetime(2026, 8, 27, 12, tzinfo=UTC)
         self.assertEqual(freshness_state("2026-08-27T11:59:00Z", now), "fresh")
         self.assertEqual(freshness_state("2026-08-27T11:50:00Z", now), "aging")
         self.assertEqual(freshness_state("2026-08-27T11:40:00Z", now), "stale")
 
-        with tempfile.TemporaryDirectory() as temporary:
-            output = Path(temporary) / "campaign" / "index.html"
-            render(output)
-            html = output.read_text(encoding="utf-8")
+        html = self.dashboard_html()
 
         for essential in (
             "ACTS Seeding Live Campaign",
@@ -289,11 +404,21 @@ class CampaignStatusTests(unittest.TestCase):
             "const POLL_INTERVAL_MS = 60000;",
             "cache: 'no-store'",
             "credentials: 'omit'",
-            "refs/heads/${encodedRef}",
+            'id="campaign-select"',
+            "api.github.com/repos/${REPOSITORY}/pulls?state=all",
+            "function sortCampaigns(pulls)",
+            "function selectInitialCampaign(campaigns, deepLinkRef)",
+            "function campaignFetchSource(campaign)",
             "function safeRef(raw)",
             "function freshnessState(snapshot)",
+            "Status unavailable. This campaign may predate campaign-status v1.",
+            "if (source?.poll",
         ):
             self.assertIn(essential, html)
+        self.assertEqual(html.count("fetch(PULLS_API_URL"), 1)
+        polling = html[html.index("setInterval(() => {") :]
+        self.assertNotIn("PULLS_API_URL", polling)
+        self.assertNotIn("discoverCampaigns", polling)
         self.assertNotIn("full-chain time", html.lower())
         self.assertNotIn("timed_total_time_per_event_ms", html)
 
