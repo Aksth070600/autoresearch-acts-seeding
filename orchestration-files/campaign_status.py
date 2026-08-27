@@ -36,6 +36,11 @@ STATUS_SCHEMA_URL = (
 COMPLETED_ATTEMPT_TARGET = CAMPAIGN_ATTEMPT_POLICY["completed_attempt_target"]
 STRUCTURAL_ATTEMPT_TARGET = CAMPAIGN_ATTEMPT_POLICY["structural_attempt_target"]
 MICRO_OPTIMIZATION_CAP = CAMPAIGN_ATTEMPT_POLICY["micro_optimization_cap"]
+DEFAULT_CAMPAIGN_TARGETS = {
+    "completed_attempts": COMPLETED_ATTEMPT_TARGET,
+    "structural_attempts": STRUCTURAL_ATTEMPT_TARGET,
+    "micro_optimization_cap": MICRO_OPTIMIZATION_CAP,
+}
 ETA_MINIMUM_SAMPLES = 3
 STALE_AFTER_SECONDS = 15 * 60
 FULL_COMMIT_SHA = re.compile(r"[0-9a-f]{40}")
@@ -124,6 +129,24 @@ def require_keys(value: dict[str, Any], field: str, allowed: set[str], required:
         raise StatusError(f"{field} has unsupported fields: {', '.join(sorted(unknown))}")
 
 
+def validate_campaign_targets(value: Any, field: str) -> dict[str, int]:
+    if not isinstance(value, dict):
+        raise StatusError(f"{field} must be an object")
+    require_keys(value, field, set(DEFAULT_CAMPAIGN_TARGETS), set(DEFAULT_CAMPAIGN_TARGETS))
+    targets: dict[str, int] = {}
+    for name in DEFAULT_CAMPAIGN_TARGETS:
+        target = value[name]
+        minimum = 1 if name == "completed_attempts" else 0
+        if not isinstance(target, int) or isinstance(target, bool) or target < minimum:
+            raise StatusError(f"{field}.{name} must be an integer of at least {minimum}")
+        targets[name] = target
+    if targets["structural_attempts"] > targets["completed_attempts"]:
+        raise StatusError(f"{field}.structural_attempts cannot exceed completed_attempts")
+    if targets["micro_optimization_cap"] > targets["completed_attempts"]:
+        raise StatusError(f"{field}.micro_optimization_cap cannot exceed completed_attempts")
+    return targets
+
+
 def validate_attempt_metadata(value: Any, field: str) -> dict[str, str]:
     if not isinstance(value, dict):
         raise StatusError(f"{field} must be an object")
@@ -163,13 +186,18 @@ def validate_live_state(value: Any) -> dict[str, Any]:
     campaign = value["campaign"]
     if not isinstance(campaign, dict):
         raise StatusError("input.campaign must be an object")
-    campaign_fields = {"name", "branch", "phase", "started_at"}
-    require_keys(campaign, "input.campaign", campaign_fields, campaign_fields)
+    campaign_required = {"name", "branch", "phase", "started_at"}
+    campaign_fields = campaign_required | {"targets"}
+    require_keys(campaign, "input.campaign", campaign_fields, campaign_required)
     normalized_campaign = {
         "name": validate_label(campaign["name"], "input.campaign.name"),
         "branch": validate_ref(campaign["branch"]),
         "phase": validate_label(campaign["phase"], "input.campaign.phase", maximum=60),
         "started_at": isoformat(parse_instant(campaign["started_at"], "input.campaign.started_at")),
+        "targets": validate_campaign_targets(
+            campaign.get("targets", DEFAULT_CAMPAIGN_TARGETS),
+            "input.campaign.targets",
+        ),
     }
 
     metadata_input = value["attempt_metadata"]
@@ -624,8 +652,9 @@ def build_status(
         for candidate in attempted_candidates
         if metadata.get(candidate, {}).get("classification") == "micro"
     )
-    completed_remaining = max(COMPLETED_ATTEMPT_TARGET - len(completed), 0)
-    structural_remaining = max(STRUCTURAL_ATTEMPT_TARGET - structural_attempts, 0)
+    targets = live_state["campaign"]["targets"]
+    completed_remaining = max(targets["completed_attempts"] - len(completed), 0)
+    structural_remaining = max(targets["structural_attempts"] - structural_attempts, 0)
     attempts_remaining = max(completed_remaining, structural_remaining)
 
     current_is_pending = False
@@ -677,14 +706,7 @@ def build_status(
             "url": REPOSITORY_URL,
             "snapshot_path": "campaign-status.json",
         },
-        "campaign": {
-            **live_state["campaign"],
-            "targets": {
-                "completed_attempts": COMPLETED_ATTEMPT_TARGET,
-                "structural_attempts": STRUCTURAL_ATTEMPT_TARGET,
-                "micro_optimization_cap": MICRO_OPTIMIZATION_CAP,
-            },
-        },
+        "campaign": dict(live_state["campaign"]),
         "current_attempt": current,
         "progress": {
             "completed_attempts": len(completed),
@@ -773,13 +795,7 @@ def validate_status(value: Any) -> None:
         raise StatusError("campaign is invalid")
     validate_ref(campaign.get("branch"))
     parse_instant(campaign.get("started_at"), "campaign.started_at")
-    targets = campaign["targets"]
-    if targets != {
-        "completed_attempts": COMPLETED_ATTEMPT_TARGET,
-        "structural_attempts": STRUCTURAL_ATTEMPT_TARGET,
-        "micro_optimization_cap": MICRO_OPTIMIZATION_CAP,
-    }:
-        raise StatusError("campaign targets are not the controlled defaults")
+    validate_campaign_targets(campaign["targets"], "campaign.targets")
     progress = value["progress"]
     if not isinstance(progress, dict):
         raise StatusError("progress must be an object")

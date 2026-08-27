@@ -30,16 +30,21 @@ UTC = timezone.utc
 
 
 class CampaignStatusTests(unittest.TestCase):
-    def live_state(self, metadata=None, current=None, blockers=None) -> dict:
+    def live_state(
+        self, metadata=None, current=None, blockers=None, targets=None
+    ) -> dict:
+        campaign = {
+            "name": "Campaign test",
+            "branch": "autoresearch-acts-seeding/test-v1",
+            "phase": "exploration",
+            "started_at": "2026-08-27T09:00:00Z",
+        }
+        if targets is not None:
+            campaign["targets"] = targets
         return validate_live_state(
             {
                 "schema_version": STATUS_SCHEMA_VERSION,
-                "campaign": {
-                    "name": "Campaign test",
-                    "branch": "autoresearch-acts-seeding/test-v1",
-                    "phase": "exploration",
-                    "started_at": "2026-08-27T09:00:00Z",
-                },
+                "campaign": campaign,
                 "current_attempt": current,
                 "attempt_metadata": metadata or [],
                 "blockers": blockers or [],
@@ -290,6 +295,65 @@ class CampaignStatusTests(unittest.TestCase):
         serialized = json.dumps(status)
         self.assertNotIn("timed_total", serialized)
         self.assertNotIn("full_chain", serialized)
+
+    def test_explicit_campaign_targets_override_defaults_and_drive_progress(self) -> None:
+        special_targets = {
+            "completed_attempts": 1,
+            "structural_attempts": 1,
+            "micro_optimization_cap": 0,
+        }
+        state = self.live_state(
+            metadata=[
+                {
+                    "candidate": "Composite",
+                    "mechanism_family": "composite-positive-v1",
+                    "classification": "structural",
+                }
+            ],
+            targets=special_targets,
+        )
+        with tempfile.TemporaryDirectory() as temporary:
+            records = Path(temporary) / "records"
+            records.mkdir()
+            self.write_summary(
+                records,
+                "composite",
+                self.summary(
+                    "Composite",
+                    "2026-08-27T10:00:00Z",
+                    100,
+                    90,
+                    0.9,
+                ),
+            )
+            status = build_status(
+                state,
+                load_attempts(records, state),
+                datetime(2026, 8, 27, 11, tzinfo=UTC),
+                "d" * 40,
+            )
+
+        self.assertEqual(status["campaign"]["targets"], special_targets)
+        self.assertEqual(status["progress"]["completed_attempts"], 1)
+        self.assertEqual(status["progress"]["structural_attempts"], 1)
+        self.assertEqual(status["progress"]["estimated_remaining_seconds"], 0)
+        self.assertEqual(
+            self.live_state()["campaign"]["targets"],
+            {
+                "completed_attempts": 20,
+                "structural_attempts": 10,
+                "micro_optimization_cap": 5,
+            },
+        )
+
+        for invalid in (
+            {**special_targets, "completed_attempts": 0},
+            {**special_targets, "structural_attempts": 2},
+            {**special_targets, "micro_optimization_cap": 2},
+            {**special_targets, "micro_optimization_cap": True},
+        ):
+            with self.subTest(targets=invalid), self.assertRaises(StatusError):
+                self.live_state(targets=invalid)
 
     def test_eta_requires_samples_uses_median_and_deducts_current_elapsed(self) -> None:
         now = datetime(2026, 8, 27, 12, tzinfo=UTC)

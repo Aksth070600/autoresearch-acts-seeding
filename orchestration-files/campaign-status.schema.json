@@ -50,9 +50,9 @@
           "additionalProperties": false,
           "required": ["completed_attempts", "structural_attempts", "micro_optimization_cap"],
           "properties": {
-            "completed_attempts": {"const": 20},
-            "structural_attempts": {"const": 10},
-            "micro_optimization_cap": {"const": 5}
+            "completed_attempts": {"type": "integer", "minimum": 1},
+            "structural_attempts": {"type": "integer", "minimum": 0},
+            "micro_optimization_cap": {"type": "integer", "minimum": 0}
           }
         }
       }
