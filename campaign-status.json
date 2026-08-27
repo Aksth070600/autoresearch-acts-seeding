@@ -36,13 +36,31 @@
       "state": "completed",
       "timed_ambiguity_particle_efficiency": 0.972769,
       "timed_seeding_time_per_event_ms": 299.82
+    },
+    {
+      "candidate": "DoubletCotThetaHeapSort",
+      "classification": "structural",
+      "duration_seconds": 832.783,
+      "finished_at": "2026-08-27T19:08:53.565322Z",
+      "implementation_commit": "7e8dbb6c65727456713578307d6819b7f1935dd7",
+      "links": {
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/7e8dbb6c65727456713578307d6819b7f1935dd7",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260827T185500Z-DoubletCotThetaHeapSort/summary.json"
+      },
+      "mechanism_family": "doublet-cottheta-heap-sort",
+      "outcome": "Passed all controlled Development stages.",
+      "record": "records/Development/20260827T185500Z-DoubletCotThetaHeapSort/summary.json",
+      "started_at": "2026-08-27T18:55:00.781842Z",
+      "state": "completed",
+      "timed_ambiguity_particle_efficiency": 0.972769,
+      "timed_seeding_time_per_event_ms": 328.02
     }
   ],
   "blockers": [],
   "campaign": {
     "branch": "autoresearch-acts-seeding/campaign-v7",
     "name": "ACTS Seeding Development Campaign V7",
-    "phase": "Development attempt 2 of 61",
+    "phase": "Development attempt 2 of 61 recorded",
     "started_at": "2026-08-27T18:23:05Z",
     "targets": {
       "completed_attempts": 61,
@@ -50,29 +68,22 @@
       "structural_attempts": 30
     }
   },
-  "current_attempt": {
-    "candidate": "DoubletCotThetaHeapSort",
-    "classification": "structural",
-    "controlled_stage": "queued Development run with ACTS_BUILD_JOBS=8",
-    "mechanism_family": "doublet-cottheta-heap-sort",
-    "started_at": "2026-08-27T18:54:54.473953Z",
-    "state": "queued"
-  },
+  "current_attempt": null,
   "failures": [],
-  "generated_at": "2026-08-27T18:54:54.666617Z",
+  "generated_at": "2026-08-27T19:08:54.135040Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/7e8dbb6c65727456713578307d6819b7f1935dd7",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/9fdfc4de28b31d22b64a6fc8aa462f7abd55cbf2",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/campaign-v7",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/28"
   },
   "progress": {
-    "completed_attempts": 1,
-    "elapsed_seconds": 1909.666617,
+    "completed_attempts": 2,
+    "elapsed_seconds": 2749.13504,
     "estimated_remaining_seconds": null,
-    "eta_basis": "Unavailable until 3 completed attempt durations exist (1 available).",
-    "eta_sample_count": 1,
+    "eta_basis": "Unavailable until 3 completed attempt durations exist (2 available).",
+    "eta_sample_count": 2,
     "expected_finish_at": null,
-    "median_completed_attempt_duration_seconds": 790.803,
+    "median_completed_attempt_duration_seconds": 811.793,
     "micro_optimizations": 0,
     "structural_attempts": 2
   },
