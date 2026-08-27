@@ -486,10 +486,10 @@ class CampaignStatusTests(unittest.TestCase):
             'id="empty-state"',
             'id="fetch-error"',
             "Showing the last good snapshot",
-            "Current two-objective Pareto front",
             "Attempt history",
-            "Timed seeding time/event (ms) · lower is better",
-            "Particle ambiguity efficiency · higher is better",
+            'id="corner-overlays"',
+            "function renderComparisonChart(snapshot)",
+            "function comparisonPoints(snapshot)",
             "const POLL_INTERVAL_MS = 60000;",
             "cache: 'no-store'",
             "credentials: 'omit'",
@@ -526,6 +526,13 @@ class CampaignStatusTests(unittest.TestCase):
             'id="issues"',
             'id="genesis-result"',
             'id="efficiency-result"',
+            'class="report-link"',
+            "Open results report",
+            'id="pareto-heading"',
+            "Current two-objective Pareto front",
+            "Lower X and higher Y are better. Select a point to open its record.",
+            "Timed seeding time/event (ms) · lower is better",
+            "Particle ambiguity efficiency · higher is better",
             "Timed seeding is minimized. Particle ambiguity efficiency is maximized.",
             "timeZoneName: 'short'",
             "Public Development progress on the two controlled objectives.",
@@ -559,6 +566,25 @@ class CampaignStatusTests(unittest.TestCase):
         self.assertNotIn("discoverCampaigns", polling)
         self.assertNotIn("full-chain time", html.lower())
         self.assertNotIn("timed_total_time_per_event_ms", html)
+
+    def test_dashboard_chart_matches_interactive_report_visual_contract(self) -> None:
+        dashboard = self.dashboard_html()
+        report_template = (
+            PROJECT_ROOT / "orchestration-files" / "visualizations" / "pareto.py"
+        ).read_text(encoding="utf-8")
+        for shared_contract in (
+            "height: 680px; margin-top: 8px;",
+            ".corner-stack.top-left { top: 18px; left: 49px; }",
+            "rgba(34,197,94,0.14)",
+            "rgba(239,68,68,0.14)",
+            "rgba(234,179,8,0.14)",
+            "mode: 'markers', type: 'scatter', name: 'Candidates'",
+            "margin: { l: 80, r: 30, t: 45, b: 55 }",
+            "legend: { orientation: 'h', x: 0, y: 1.12",
+            "paper_bgcolor: '#111827', plot_bgcolor: '#0b1120'",
+        ):
+            self.assertIn(shared_contract, dashboard)
+            self.assertIn(shared_contract, report_template)
 
 
 if __name__ == "__main__":

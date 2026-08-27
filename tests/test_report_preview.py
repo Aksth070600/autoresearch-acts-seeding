@@ -50,7 +50,7 @@ class ReportPreviewTests(unittest.TestCase):
             self.assertTrue((output / "campaign" / "index.html").is_file())
             campaign = (output / "campaign" / "index.html").read_text(encoding="utf-8")
             self.assertIn("ACTS Seeding Live Campaign", campaign)
-            self.assertIn("Open results report", campaign)
+            self.assertNotIn("Open results report", campaign)
             index = (output / "index.html").read_text(encoding="utf-8")
             self.assertIn("No protocol-compatible summaries yet", index)
             self.assertIn('href="campaign/"', index)
