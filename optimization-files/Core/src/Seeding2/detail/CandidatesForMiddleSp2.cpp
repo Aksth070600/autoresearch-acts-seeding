@@ -58,8 +58,13 @@ bool CandidatesForMiddleSp2::push(Container& container, Size nMax,
 
   // The configured candidate sets are tiny. A linear minimum search avoids
   // maintaining a heap for every accepted candidate.
-  const auto smallest = std::ranges::min_element(
-      container, {}, [](const WeightIndex& item) { return item.first; });
+  auto smallest = container.begin();
+  for (auto candidate = smallest + 1; candidate != container.end();
+       ++candidate) {
+    if (candidate->first < smallest->first) {
+      smallest = candidate;
+    }
+  }
   if (weight <= smallest->first) {
     return false;
   }
