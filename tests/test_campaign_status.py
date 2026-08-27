@@ -489,6 +489,8 @@ class CampaignStatusTests(unittest.TestCase):
             "Attempt history",
             "max-width: 1920px;",
             "height: 615px;",
+            "overflow-x: auto; overflow-y: hidden;",
+            "#chart { width: 150%; height: 100%; }",
             "#chart-frame { height: 510px; }",
             "autosize: true",
             "function renderComparisonChart(snapshot)",

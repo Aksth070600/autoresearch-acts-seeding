@@ -70,8 +70,8 @@ HTML_TEMPLATE = r"""<!doctype html>
     .section-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
     .note { color: #94a3b8; font-size: 0.86rem; }
     #chart-frame { position: relative; height: 615px; margin-top: 8px; background: #111827;
-      border: 1px solid #334155; border-radius: 10px; overflow: hidden; }
-    #chart { width: 100%; height: 100%; }
+      border: 1px solid #334155; border-radius: 10px; overflow-x: auto; overflow-y: hidden; }
+    #chart { width: 150%; height: 100%; }
     #chart .point { cursor: pointer; }
     #plot-empty { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px;
       color: #94a3b8; text-align: center; pointer-events: none; }
