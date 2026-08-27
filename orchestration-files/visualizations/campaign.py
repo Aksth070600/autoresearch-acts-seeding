@@ -55,6 +55,9 @@ HTML_TEMPLATE = r"""<!doctype html>
     .results-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .card { min-width: 0; min-height: 82px; padding: 12px 14px; background: #111827;
       border: 1px solid #334155; border-radius: 12px; }
+    .result-card { display: block; color: inherit; text-decoration: none; }
+    .result-card[href] { cursor: pointer; }
+    .result-card[href]:hover, .result-card[href]:focus-visible { border-color: #818cf8; background: #172033; }
     .card-label { display: block; margin-bottom: 5px; color: #94a3b8; font-size: 0.75rem; font-weight: 750;
       letter-spacing: 0.05em; text-transform: uppercase; }
     .card-name { display: block; margin-bottom: 5px; overflow-wrap: anywhere; color: #f8fafc;
@@ -294,6 +297,13 @@ function seedingComparison(result, genesis) {
     percentage: (resultMs - genesisMs) / genesisMs * 100
   };
 }
+function humanizeCandidateName(value) {
+  return String(value || '')
+    .replace(/[_-]+/g, ' ')
+    .replace(/([a-z0-9])([A-Z][a-z])/g, '$1 $2')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 /* CAMPAIGN_DISCOVERY_LOGIC_END */
 
 const POLL_INTERVAL_MS = __POLL_INTERVAL_MS__;
@@ -433,11 +443,18 @@ function renderSeedingLeaders(snapshot) {
     return;
   }
   leaders.forEach((result) => {
-    const card = document.createElement('div');
-    card.className = 'card';
+    const commitUrl = safeLink(result.links?.commit);
+    const card = document.createElement(commitUrl ? 'a' : 'div');
+    card.className = 'card result-card';
+    if (commitUrl) {
+      card.href = commitUrl;
+      card.target = '_blank';
+      card.rel = 'noopener noreferrer';
+      card.setAttribute('aria-label', `Open ${humanizeCandidateName(result.candidate)} implementation commit`);
+    }
     const name = document.createElement('span');
     name.className = 'card-name';
-    name.textContent = result.candidate;
+    name.textContent = humanizeCandidateName(result.candidate);
     const value = document.createElement('strong');
     value.className = 'card-value';
     value.textContent = formatMs(result.timed_seeding_time_per_event_ms);

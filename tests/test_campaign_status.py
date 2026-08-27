@@ -409,11 +409,13 @@ class CampaignStatusTests(unittest.TestCase):
             "{timed_seeding_time_per_event_ms: 90},"
             "{timed_seeding_time_per_event_ms: 100}"
             ");"
-            "console.log(JSON.stringify({leaders, comparison}));"
+            "const humanized = humanizeCandidateName('DoubletBinaryRadiusWindow');"
+            "console.log(JSON.stringify({leaders, comparison, humanized}));"
         )
         self.assertEqual(result["leaders"], ["First", "Second", "Third"])
         self.assertEqual(result["comparison"]["deltaMs"], -10)
         self.assertEqual(result["comparison"]["percentage"], -10)
+        self.assertEqual(result["humanized"], "Doublet Binary Radius Window")
 
     def test_dashboard_timestamp_formatter_is_browser_compatible(self) -> None:
         if shutil.which("node") is None:
@@ -545,6 +547,9 @@ class CampaignStatusTests(unittest.TestCase):
         self.assertIn("function renderSeedingLeaders(snapshot)", html)
         self.assertIn("name.className = 'card-name'", html)
         self.assertIn(".card-name {", html)
+        self.assertIn("function humanizeCandidateName(value)", html)
+        self.assertIn("const commitUrl = safeLink(result.links?.commit)", html)
+        self.assertIn("document.createElement(commitUrl ? 'a' : 'div')", html)
         self.assertIn("function seedingComparison(result, genesis)", html)
         self.assertIn("formatSigned(comparison.deltaMs)", html)
         self.assertIn(".slice(0, 3)", html)
