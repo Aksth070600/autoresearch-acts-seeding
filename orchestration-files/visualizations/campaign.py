@@ -69,7 +69,7 @@ HTML_TEMPLATE = r"""<!doctype html>
     .section { margin-top: 24px; }
     .section-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
     .note { color: #94a3b8; font-size: 0.86rem; }
-    #chart-frame { position: relative; height: 820px; margin-top: 8px; background: #111827;
+    #chart-frame { position: relative; height: 1230px; margin-top: 8px; background: #111827;
       border: 1px solid #334155; border-radius: 10px; overflow: hidden; }
     #chart { width: 100%; height: 100%; }
     #chart .point { cursor: pointer; }
@@ -103,7 +103,7 @@ HTML_TEMPLATE = r"""<!doctype html>
       main { padding: 18px; }
       .campaign-heading, .section-heading { align-items: flex-start; flex-direction: column; }
       .progress-grid, .results-grid { grid-template-columns: 1fr; }
-      #chart-frame { height: 680px; }
+      #chart-frame { height: 1020px; }
       .attempt-detail { grid-template-columns: 1fr; }
     }
     @media (max-width: 470px) {
