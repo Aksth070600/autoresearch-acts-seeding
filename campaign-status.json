@@ -144,13 +144,31 @@
       "state": "completed",
       "timed_ambiguity_particle_efficiency": 0.972769,
       "timed_seeding_time_per_event_ms": 282.07
+    },
+    {
+      "candidate": "GridGlobalRadiusOrderedFill",
+      "classification": "structural",
+      "duration_seconds": 789.61,
+      "finished_at": "2026-08-27T13:25:32.630030Z",
+      "implementation_commit": "f42faf20bb4906e10f2703ecab065cb576205a57",
+      "links": {
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/f42faf20bb4906e10f2703ecab065cb576205a57",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug27-v6/records/Development/20260827T131223Z-GridGlobalRadiusOrderedFill/summary.json"
+      },
+      "mechanism_family": "grid-global-radius-ordered-fill",
+      "outcome": "Passed all controlled Development stages.",
+      "record": "records/Development/20260827T131223Z-GridGlobalRadiusOrderedFill/summary.json",
+      "started_at": "2026-08-27T13:12:23.019978Z",
+      "state": "completed",
+      "timed_ambiguity_particle_efficiency": 0.972769,
+      "timed_seeding_time_per_event_ms": 289.05
     }
   ],
   "blockers": [],
   "campaign": {
     "branch": "autoresearch-acts-seeding/aug27-v6",
     "name": "ACTS Seeding Development campaign v6",
-    "phase": "candidate loop: 8 of 20",
+    "phase": "candidate loop: 8 of 20 complete",
     "started_at": "2026-08-27T11:03:33Z",
     "targets": {
       "completed_attempts": 20,
@@ -158,42 +176,35 @@
       "structural_attempts": 10
     }
   },
-  "current_attempt": {
-    "candidate": "GridGlobalRadiusOrderedFill",
-    "classification": "structural",
-    "controlled_stage": "queued Development run",
-    "mechanism_family": "grid-global-radius-ordered-fill",
-    "started_at": "2026-08-27T13:12:18Z",
-    "state": "queued"
-  },
+  "current_attempt": null,
   "failures": [],
-  "generated_at": "2026-08-27T13:12:18.726056Z",
+  "generated_at": "2026-08-27T13:25:51.050888Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/f42faf20bb4906e10f2703ecab065cb576205a57",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/0b33c5a0d15045f9553cd505b7ee0ab3494da3bb",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/aug27-v6",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/25"
   },
   "progress": {
-    "completed_attempts": 7,
-    "elapsed_seconds": 7725.726056,
-    "estimated_remaining_seconds": 10495.122944,
-    "eta_basis": "Median of 7 completed attempts; current attempt elapsed time deducted.",
-    "eta_sample_count": 7,
-    "expected_finish_at": "2026-08-27T16:07:13.849000Z",
-    "median_completed_attempt_duration_seconds": 807.373,
+    "completed_attempts": 8,
+    "elapsed_seconds": 8538.050888,
+    "estimated_remaining_seconds": 9671.982,
+    "eta_basis": "Median of 8 completed attempts.",
+    "eta_sample_count": 8,
+    "expected_finish_at": "2026-08-27T16:07:03.032888Z",
+    "median_completed_attempt_duration_seconds": 805.9985,
     "micro_optimizations": 0,
     "structural_attempts": 8
   },
   "promising_results": {
     "best_ambiguity_efficiency": {
-      "candidate": "GridCountedBinAllocation",
+      "candidate": "GridGlobalRadiusOrderedFill",
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/5236ea422f421f8b919e7f73eb04407881201aa5",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug27-v6/records/Development/20260827T121150Z-GridCountedBinAllocation/summary.json"
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/f42faf20bb4906e10f2703ecab065cb576205a57",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug27-v6/records/Development/20260827T131223Z-GridGlobalRadiusOrderedFill/summary.json"
       },
-      "started_at": "2026-08-27T12:11:50.470764Z",
+      "started_at": "2026-08-27T13:12:23.019978Z",
       "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 287.47
+      "timed_seeding_time_per_event_ms": 289.05
     },
     "best_seeding": {
       "candidate": "CoreBatchSpacePointMaterialization",
