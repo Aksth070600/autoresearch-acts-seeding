@@ -3,7 +3,7 @@
   "campaign": {
     "name": "ACTS Seeding Composite Positive V1",
     "branch": "autoresearch-acts-seeding/composite-positive-v1",
-    "phase": "queued one controlled Development candidate",
+    "phase": "running one controlled Development candidate",
     "started_at": "2026-08-27T17:27:12Z",
     "targets": {
       "completed_attempts": 1,
@@ -15,8 +15,8 @@
     "candidate": "CompositePositiveV1",
     "mechanism_family": "composite-positive-v1",
     "classification": "structural",
-    "controlled_stage": "queued Development run",
-    "state": "queued",
+    "controlled_stage": "controlled Development run active",
+    "state": "running",
     "started_at": "2026-08-27T17:32:53Z"
   },
   "attempt_metadata": [
