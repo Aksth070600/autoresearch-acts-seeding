@@ -171,6 +171,30 @@ MutableSpacePointProxy2 SpacePointContainer2::createSpacePoint() noexcept {
   return MutableProxy(*this, size() - 1);
 }
 
+void SpacePointContainer2::createPackedSpacePoint(
+    const std::array<float, 2> &xy, const std::array<float, 2> &zr,
+    float varianceZ, float varianceR,
+    SpacePointIndex2 copyFromIndex) noexcept {
+  assert(m_allColumns.size() == 5 && m_dynamicColumns.empty());
+  assert(m_xyColumn.has_value() && m_zrColumn.has_value() &&
+         m_varianceZColumn.has_value() && m_varianceRColumn.has_value() &&
+         m_copyFromIndexColumn.has_value());
+
+  const Index index = m_size++;
+  m_xyColumn->emplace_back();
+  m_zrColumn->emplace_back();
+  m_varianceZColumn->emplace_back();
+  m_varianceRColumn->emplace_back();
+  m_copyFromIndexColumn->emplace_back();
+
+  MutableProxy sp(*this, index);
+  sp.xy() = xy;
+  sp.zr() = zr;
+  sp.varianceZ() = varianceZ;
+  sp.varianceR() = varianceR;
+  sp.copyFromIndex() = copyFromIndex;
+}
+
 void SpacePointContainer2::copyFrom(Index index,
                                     const SpacePointContainer2 &otherContainer,
                                     Index otherIndex,

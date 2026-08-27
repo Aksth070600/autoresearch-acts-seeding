@@ -110,6 +110,13 @@ class SpacePointContainer2 {
   /// @return A mutable proxy to the newly created space point.
   MutableProxy createSpacePoint() noexcept;
 
+  /// Append one space point to the fixed packed grid-seeding schema without
+  /// traversing the generic column registry.
+  void createPackedSpacePoint(const std::array<float, 2>& xy,
+                              const std::array<float, 2>& zr, float varianceZ,
+                              float varianceR,
+                              SpacePointIndex2 copyFromIndex) noexcept;
+
   /// Copies the specified columns from another space point to this space point
   /// @param index The index of the space point to copy to in this container.
   /// @param otherContainer The space point container to copy from.
