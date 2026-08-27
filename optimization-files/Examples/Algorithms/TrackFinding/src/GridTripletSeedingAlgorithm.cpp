@@ -136,6 +136,21 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   Acts::CylindricalSpacePointGrid2 grid(m_gridConfig,
                                         logger().cloneWithSuffix("Grid"));
 
+  std::vector<std::uint32_t> binSizes(grid.numberOfBins(), 0);
+  for (std::size_t i = 0; i < spacePoints.size(); ++i) {
+    const auto& sp = spacePoints[i];
+    if (m_spacePointSelector.connected() && !m_spacePointSelector(sp)) {
+      continue;
+    }
+    const float phi = std::atan2(sp.y(), sp.x());
+    if (const auto bin = grid.binIndex(phi, sp.z(), sp.r()); bin.has_value()) {
+      ++binSizes[*bin];
+    }
+  }
+  for (std::size_t i = 0; i < grid.numberOfBins(); ++i) {
+    grid.at(i).reserve(binSizes[i]);
+  }
+
   for (std::size_t i = 0; i < spacePoints.size(); ++i) {
     const auto& sp = spacePoints[i];
 
