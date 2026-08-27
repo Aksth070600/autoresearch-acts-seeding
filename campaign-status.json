@@ -96,7 +96,7 @@
   "campaign": {
     "branch": "autoresearch-acts-seeding/campaign-v7",
     "name": "ACTS Seeding Development Campaign V7",
-    "phase": "Development attempt 4 of 61 recorded",
+    "phase": "Development attempt 5 of 61",
     "started_at": "2026-08-27T18:23:05Z",
     "targets": {
       "completed_attempts": 61,
@@ -104,24 +104,31 @@
       "structural_attempts": 30
     }
   },
-  "current_attempt": null,
+  "current_attempt": {
+    "candidate": "TripletUnsortedDoubletTraversal",
+    "classification": "structural",
+    "controlled_stage": "queued Development run with ACTS_BUILD_JOBS=8",
+    "mechanism_family": "triplet-unsorted-doublet-traversal",
+    "started_at": "2026-08-27T19:37:40.169544Z",
+    "state": "queued"
+  },
   "failures": [],
-  "generated_at": "2026-08-27T19:37:06.546040Z",
+  "generated_at": "2026-08-27T19:37:40.356398Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/335751c72a956d988ea63b5cb560cc5b9aa8dbf7",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/46844f5c5303529c0c221c5bfad20e2c88ab0a33",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/campaign-v7",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/28"
   },
   "progress": {
     "completed_attempts": 4,
-    "elapsed_seconds": 4441.54604,
-    "estimated_remaining_seconds": 45672.047999999995,
-    "eta_basis": "Median of 4 completed attempts.",
+    "elapsed_seconds": 4475.356398,
+    "estimated_remaining_seconds": 45671.861145999996,
+    "eta_basis": "Median of 4 completed attempts; current attempt elapsed time deducted.",
     "eta_sample_count": 4,
-    "expected_finish_at": "2026-08-28T08:18:18.594040Z",
+    "expected_finish_at": "2026-08-28T08:18:52.217544Z",
     "median_completed_attempt_duration_seconds": 801.2639999999999,
     "micro_optimizations": 0,
-    "structural_attempts": 4
+    "structural_attempts": 5
   },
   "promising_results": {
     "best_ambiguity_efficiency": {
