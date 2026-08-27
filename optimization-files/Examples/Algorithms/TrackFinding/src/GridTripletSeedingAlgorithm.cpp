@@ -31,8 +31,8 @@ static inline bool itkFastTrackingCuts(
     const Acts::ConstSpacePointProxy2& /*middle*/,
     const Acts::ConstSpacePointProxy2& other, float cotTheta,
     bool isBottomCandidate) {
-  constexpr float rMin = 45;
-  constexpr float cotThetaMax = 1.5;
+  static float rMin = 45;
+  static float cotThetaMax = 1.5;
 
   if (isBottomCandidate && other.zr()[1] < rMin &&
       (cotTheta > cotThetaMax || cotTheta < -cotThetaMax)) {
