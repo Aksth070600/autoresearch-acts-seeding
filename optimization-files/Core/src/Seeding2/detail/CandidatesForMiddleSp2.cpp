@@ -52,22 +52,22 @@ bool CandidatesForMiddleSp2::push(Container& container, Size nMax,
   if (container.size() < nMax) {
     // If there is still space, add anything.
     m_storage.emplace_back(spB, spM, spT, weight, zOrigin, isQuality);
-    container.push_back(m_storage.size() - 1);
+    container.emplace_back(weight, m_storage.size() - 1);
     return true;
   }
 
   // The configured candidate sets are tiny. A linear minimum search avoids
   // maintaining a heap for every accepted candidate.
   const auto smallest = std::ranges::min_element(
-      container, {},
-      [this](Index index) { return m_storage[index].weight; });
-  const Index smallestIndex = *smallest;
-  if (weight <= m_storage[smallestIndex].weight) {
+      container, {}, [](const WeightIndex& item) { return item.first; });
+  if (weight <= smallest->first) {
     return false;
   }
 
+  const Index smallestIndex = smallest->second;
   m_storage[smallestIndex] =
       TripletCandidate2(spB, spM, spT, weight, zOrigin, isQuality);
+  *smallest = {weight, smallestIndex};
 
   return true;
 }
@@ -77,16 +77,13 @@ void CandidatesForMiddleSp2::toSortedCandidates(
   output.clear();
   output.reserve(size());
 
-  const auto heavier = [this](Index left, Index right) {
-    return m_storage[left].weight > m_storage[right].weight;
-  };
-  std::ranges::sort(m_indicesHigh, heavier);
-  std::ranges::sort(m_indicesLow, heavier);
+  std::ranges::sort(m_indicesHigh, comparator);
+  std::ranges::sort(m_indicesLow, comparator);
 
-  for (Index index : m_indicesHigh) {
+  for (const auto& [weight, index] : m_indicesHigh) {
     output.emplace_back(m_storage[index]);
   }
-  for (Index index : m_indicesLow) {
+  for (const auto& [weight, index] : m_indicesLow) {
     output.emplace_back(m_storage[index]);
   }
 
