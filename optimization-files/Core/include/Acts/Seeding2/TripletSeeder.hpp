@@ -92,6 +92,18 @@ class TripletSeeder {
       const std::pair<float, float>& radiusRangeForMiddle,
       SeedContainer2& outputSeeds) const;
 
+  /// Create seeds from radius-sorted, arbitrarily indexed grid-bin subsets.
+  void createSeedsFromGroups(
+      Cache& cache, const DoubletSeedFinder& bottomFinder,
+      const DoubletSeedFinder& topFinder,
+      const TripletSeedFinder& tripletFinder, const ITripletSeedFilter& filter,
+      const SpacePointContainer2& spacePoints,
+      const std::span<SpacePointContainer2::ConstSubset>& bottomSpGroups,
+      const SpacePointContainer2::ConstSubset& middleSpGroup,
+      const std::span<SpacePointContainer2::ConstSubset>& topSpGroups,
+      const std::pair<float, float>& radiusRangeForMiddle,
+      SeedContainer2& outputSeeds) const;
+
  private:
   std::unique_ptr<const Logger> m_logger;
 
