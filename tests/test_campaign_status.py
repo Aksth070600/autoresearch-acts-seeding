@@ -487,7 +487,8 @@ class CampaignStatusTests(unittest.TestCase):
             'id="fetch-error"',
             "Showing the last good snapshot",
             "Attempt history",
-            'id="corner-overlays"',
+            "height: 820px;",
+            "autosize: true",
             "function renderComparisonChart(snapshot)",
             "function comparisonPoints(snapshot)",
             "const POLL_INTERVAL_MS = 60000;",
@@ -529,6 +530,8 @@ class CampaignStatusTests(unittest.TestCase):
             'class="report-link"',
             "Open results report",
             'id="pareto-heading"',
+            'id="corner-overlays"',
+            "corner-badge",
             "Current two-objective Pareto front",
             "Lower X and higher Y are better. Select a point to open its record.",
             "Timed seeding time/event (ms) · lower is better",
@@ -573,8 +576,6 @@ class CampaignStatusTests(unittest.TestCase):
             PROJECT_ROOT / "orchestration-files" / "visualizations" / "pareto.py"
         ).read_text(encoding="utf-8")
         for shared_contract in (
-            "height: 680px; margin-top: 8px;",
-            ".corner-stack.top-left { top: 18px; left: 49px; }",
             "rgba(34,197,94,0.14)",
             "rgba(239,68,68,0.14)",
             "rgba(234,179,8,0.14)",

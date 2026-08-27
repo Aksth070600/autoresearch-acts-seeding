@@ -69,22 +69,12 @@ HTML_TEMPLATE = r"""<!doctype html>
     .section { margin-top: 24px; }
     .section-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
     .note { color: #94a3b8; font-size: 0.86rem; }
-    #chart-frame { position: relative; height: 680px; margin-top: 8px; background: #111827;
+    #chart-frame { position: relative; height: 820px; margin-top: 8px; background: #111827;
       border: 1px solid #334155; border-radius: 10px; overflow: hidden; }
-    #chart { height: 100%; }
+    #chart { width: 100%; height: 100%; }
     #chart .point { cursor: pointer; }
     #plot-empty { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px;
       color: #94a3b8; text-align: center; pointer-events: none; }
-    #corner-overlays { position: absolute; inset: 28px 30px; z-index: 10; pointer-events: none; }
-    .corner-stack { position: absolute; display: grid; gap: 5px; }
-    .corner-stack.top-left { top: 18px; left: 49px; }
-    .corner-stack.top-right { top: 18px; right: 2px; justify-items: end; }
-    .corner-stack.bottom-left { bottom: 30px; left: 49px; justify-items: start; }
-    .corner-stack.bottom-right { right: 2px; bottom: 30px; justify-items: end; }
-    .corner-badge { width: max-content; padding: 4px 8px; border: 1px solid; border-radius: 999px;
-      font-size: 0.72rem; font-weight: 750; letter-spacing: 0.03em; }
-    .corner-badge.better { background: rgba(34,197,94,0.85); border-color: #4ade80; color: #052e16; }
-    .corner-badge.worse { background: rgba(239,68,68,0.85); border-color: #f87171; color: #450a0a; }
     .attempt-head, .attempt summary { display: grid; grid-template-columns: 1.25fr 1.25fr .72fr .72fr .8fr .9fr .9fr .8fr;
       gap: 10px; align-items: center; }
     .attempt-head { padding: 0 34px 7px 14px; color: #94a3b8; font-size: 0.7rem; font-weight: 750;
@@ -113,8 +103,7 @@ HTML_TEMPLATE = r"""<!doctype html>
       main { padding: 18px; }
       .campaign-heading, .section-heading { align-items: flex-start; flex-direction: column; }
       .progress-grid, .results-grid { grid-template-columns: 1fr; }
-      #corner-overlays { inset: 16px; }
-      .corner-badge { font-size: 0.64rem; }
+      #chart-frame { height: 680px; }
       .attempt-detail { grid-template-columns: 1fr; }
     }
     @media (max-width: 470px) {
@@ -171,12 +160,6 @@ HTML_TEMPLATE = r"""<!doctype html>
       <div id="chart-frame">
         <div id="plot-empty" hidden>No complete protocol-compatible Development results yet.</div>
         <div id="chart" role="img" aria-label="Interactive campaign comparison chart"></div>
-        <div id="corner-overlays" aria-hidden="true">
-          <div id="corner-top-left" class="corner-stack top-left"></div>
-          <div id="corner-top-right" class="corner-stack top-right"></div>
-          <div id="corner-bottom-left" class="corner-stack bottom-left"></div>
-          <div id="corner-bottom-right" class="corner-stack bottom-right"></div>
-        </div>
       </div>
     </section>
 
@@ -597,27 +580,6 @@ function quadrantFill(xLower, yHigher) {
   if (good === 0) return 'rgba(239,68,68,0.14)';
   return 'rgba(234,179,8,0.14)';
 }
-function cornerBadge(text, good) {
-  return `<span class="corner-badge ${good ? 'better' : 'worse'}">${text.toUpperCase()}</span>`;
-}
-function renderCornerOverlays(baseline) {
-  const overlays = {
-    topLeft: document.getElementById('corner-top-left'),
-    topRight: document.getElementById('corner-top-right'),
-    bottomLeft: document.getElementById('corner-bottom-left'),
-    bottomRight: document.getElementById('corner-bottom-right')
-  };
-  if (!baseline) {
-    Object.values(overlays).forEach((overlay) => { overlay.replaceChildren(); });
-    return;
-  }
-  const badges = (faster, moreEfficient) =>
-    `${cornerBadge(faster ? 'faster' : 'slower', faster)}${cornerBadge(moreEfficient ? 'higher efficiency' : 'lower efficiency', moreEfficient)}`;
-  overlays.topLeft.innerHTML = badges(true, true);
-  overlays.topRight.innerHTML = badges(false, true);
-  overlays.bottomLeft.innerHTML = badges(true, false);
-  overlays.bottomRight.innerHTML = badges(false, false);
-}
 function updatePointCursors(points) {
   document.querySelectorAll('#chart .point').forEach((point, index) => {
     point.style.cursor = safeLink(points[index]?.links?.commit) ? 'pointer' : 'default';
@@ -637,7 +599,6 @@ function renderComparisonChart(snapshot) {
   const baseline = points.find((point) => point.candidate === 'Genesis');
   const plotEmpty = document.getElementById('plot-empty');
   plotEmpty.hidden = points.length !== 0;
-  renderCornerOverlays(baseline);
   if (!points.length || typeof Plotly === 'undefined') {
     if (typeof Plotly !== 'undefined') Plotly.purge('chart');
     if (typeof Plotly === 'undefined') {
@@ -680,7 +641,7 @@ function renderComparisonChart(snapshot) {
   Plotly.react('chart', [trace], {
     xaxis: { tickformat: '.0f', ticksuffix: ' ms', range: xRange, zeroline: false, showgrid: true, gridcolor: 'rgba(71,85,105,0.35)', tickfont: { color: '#cbd5e1', size: 14 } },
     yaxis: { tickformat: '.3%', range: yRange, zeroline: false, showgrid: true, gridcolor: 'rgba(71,85,105,0.35)', tickfont: { color: '#cbd5e1', size: 14 } },
-    hovermode: 'closest', shapes, margin: { l: 80, r: 30, t: 45, b: 55 },
+    autosize: true, hovermode: 'closest', shapes, margin: { l: 80, r: 30, t: 45, b: 55 },
     legend: { orientation: 'h', x: 0, y: 1.12, xanchor: 'left', yanchor: 'bottom', font: { color: '#cbd5e1' } },
     paper_bgcolor: '#111827', plot_bgcolor: '#0b1120', font: { color: '#cbd5e1' }
   }, { responsive: true, displaylogo: false }).then(() => {
