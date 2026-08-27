@@ -41,6 +41,9 @@ class ExperimentPolicyTests(unittest.TestCase):
         build = (
             PROJECT_ROOT / "orchestration-files/HEPP-files/build.sh"
         ).read_text(encoding="utf-8")
+        evaluator = (
+            PROJECT_ROOT / "orchestration-files/evaluate.py"
+        ).read_text(encoding="utf-8")
 
         self.assertIn("ACTS_BUILD_JOBS ?= 8", makefile)
         self.assertIn("ACTS_BUILD_JOBS='$(ACTS_BUILD_JOBS)' python3", makefile)
@@ -49,6 +52,9 @@ class ExperimentPolicyTests(unittest.TestCase):
         self.assertIn('ACTS_BUILD_JOBS="${ACTS_BUILD_JOBS:-8}"', build)
         self.assertIn('echo "ACTS build parallel jobs: $ACTS_BUILD_JOBS"', build)
         self.assertNotIn("nproc", build)
+        self.assertIn("require_capped_build_log(build)", evaluator)
+        self.assertIn("require_capped_build_log(rebuild)", evaluator)
+        self.assertIn('build_jobs != "8"', evaluator)
 
 
 if __name__ == "__main__":

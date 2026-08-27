@@ -325,6 +325,18 @@ def record_command_output(outputs: dict[str, str], name: str, result: CommandRes
     outputs[name] = result.output
 
 
+def require_capped_build_log(result: CommandResult) -> None:
+    """Reject a build whose log does not confirm the campaign resource cap."""
+
+    build_jobs = os.environ.get("ACTS_BUILD_JOBS")
+    if build_jobs != "8":
+        raise EvaluationError(
+            f"ACTS_BUILD_JOBS must be explicitly set to 8, got {build_jobs!r}"
+        )
+    if "ACTS build parallel jobs: 8" not in result.output:
+        raise EvaluationError("candidate build log did not confirm the eight-job cap")
+
+
 def run_stage(
     stage_results: list[dict[str, Any]],
     outputs: dict[str, str],
@@ -550,6 +562,7 @@ def main() -> int:
         record_command_output(outputs, "build", build)
         if build.returncode != 0:
             raise EvaluationError("candidate build failed")
+        require_capped_build_log(build)
 
         events = protocol_events("evaluation" if args.evaluation else "development")
         if args.evaluation:
@@ -628,6 +641,12 @@ def main() -> int:
                 if rebuild.returncode != 0:
                     category = "Errors"
                     error = "pristine ACTS rebuild failed after restoration"
+                else:
+                    try:
+                        require_capped_build_log(rebuild)
+                    except EvaluationError as exc:
+                        category = "Errors"
+                        error = str(exc)
 
             cleanup = run_hepp_helper(
                 "cleanup-evaluation-files.sh",
@@ -668,6 +687,7 @@ def main() -> int:
         "threads": PROTOCOL_METADATA["threads"],
         "seed": PROTOCOL_METADATA["seed"],
         "pileup": PROTOCOL_METADATA["pileup"],
+        "build_parallel_jobs": int(os.environ.get("ACTS_BUILD_JOBS", "0")),
         "optimization_files": relative_files,
         "stages": stage_results,
         "timed_comparison": timed_comparison,
