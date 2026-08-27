@@ -166,8 +166,14 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
   /// Cache for intermediate results to avoid reallocations. No information is
   /// carried over between different stages.
   struct Cache {
-    /// Cache for top space point indices during compatibility search
-    std::vector<std::uint32_t> topSpIndexVec;
+    /// Curvature key and source index used by compatibility ordering.
+    struct CurvatureIndex {
+      float curvature{};
+      std::uint32_t index{};
+    };
+
+    /// Cache for curvature-ordered top space point candidates.
+    std::vector<CurvatureIndex> topSpIndexVec;
     /// Cache for compatible seed radii during score calculation
     std::vector<float> compatibleSeedR;
     /// Cache for sorted triplet candidates during selection
