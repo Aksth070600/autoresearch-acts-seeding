@@ -90,13 +90,31 @@
       "state": "completed",
       "timed_ambiguity_particle_efficiency": 0.972769,
       "timed_seeding_time_per_event_ms": 300.45
+    },
+    {
+      "candidate": "TripletUnsortedDoubletTraversal",
+      "classification": "structural",
+      "duration_seconds": 814.98,
+      "finished_at": "2026-08-27T19:51:19.469835Z",
+      "implementation_commit": "46844f5c5303529c0c221c5bfad20e2c88ab0a33",
+      "links": {
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/46844f5c5303529c0c221c5bfad20e2c88ab0a33",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260827T193744Z-TripletUnsortedDoubletTraversal/summary.json"
+      },
+      "mechanism_family": "triplet-unsorted-doublet-traversal",
+      "outcome": "Passed all controlled Development stages.",
+      "record": "records/Development/20260827T193744Z-TripletUnsortedDoubletTraversal/summary.json",
+      "started_at": "2026-08-27T19:37:44.489995Z",
+      "state": "completed",
+      "timed_ambiguity_particle_efficiency": 0.972769,
+      "timed_seeding_time_per_event_ms": 296.44
     }
   ],
   "blockers": [],
   "campaign": {
     "branch": "autoresearch-acts-seeding/campaign-v7",
     "name": "ACTS Seeding Development Campaign V7",
-    "phase": "Development attempt 5 of 61",
+    "phase": "Development attempt 5 of 61 recorded",
     "started_at": "2026-08-27T18:23:05Z",
     "targets": {
       "completed_attempts": 61,
@@ -104,54 +122,47 @@
       "structural_attempts": 30
     }
   },
-  "current_attempt": {
-    "candidate": "TripletUnsortedDoubletTraversal",
-    "classification": "structural",
-    "controlled_stage": "queued Development run with ACTS_BUILD_JOBS=8",
-    "mechanism_family": "triplet-unsorted-doublet-traversal",
-    "started_at": "2026-08-27T19:37:40.169544Z",
-    "state": "queued"
-  },
+  "current_attempt": null,
   "failures": [],
-  "generated_at": "2026-08-27T19:37:40.356398Z",
+  "generated_at": "2026-08-27T19:51:19.830590Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/46844f5c5303529c0c221c5bfad20e2c88ab0a33",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/7d63b3e7ee79fdbd24a5df8c7e604f19d2be98ab",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/campaign-v7",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/28"
   },
   "progress": {
-    "completed_attempts": 4,
-    "elapsed_seconds": 4475.356398,
-    "estimated_remaining_seconds": 45671.861145999996,
-    "eta_basis": "Median of 4 completed attempts; current attempt elapsed time deducted.",
-    "eta_sample_count": 4,
-    "expected_finish_at": "2026-08-28T08:18:52.217544Z",
-    "median_completed_attempt_duration_seconds": 801.2639999999999,
+    "completed_attempts": 5,
+    "elapsed_seconds": 5294.83059,
+    "estimated_remaining_seconds": 44935.52,
+    "eta_basis": "Median of 5 completed attempts.",
+    "eta_sample_count": 5,
+    "expected_finish_at": "2026-08-28T08:20:15.350590Z",
+    "median_completed_attempt_duration_seconds": 802.42,
     "micro_optimizations": 0,
     "structural_attempts": 5
   },
   "promising_results": {
     "best_ambiguity_efficiency": {
-      "candidate": "GridBinHeapSort",
+      "candidate": "TripletUnsortedDoubletTraversal",
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/2b8f404def2078b5b54b0af4958fc44a6ace6aa8",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260827T184106Z-GridBinHeapSort/summary.json"
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/46844f5c5303529c0c221c5bfad20e2c88ab0a33",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260827T193744Z-TripletUnsortedDoubletTraversal/summary.json"
       },
-      "started_at": "2026-08-27T18:41:06.587300Z",
+      "started_at": "2026-08-27T19:37:44.489995Z",
       "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 299.82
+      "timed_seeding_time_per_event_ms": 296.44
     },
     "best_seeding": {
-      "candidate": "Genesis",
-      "delta_vs_genesis_ms": 0.0,
+      "candidate": "TripletUnsortedDoubletTraversal",
+      "delta_vs_genesis_ms": -1.5500000000000114,
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/37703e9855ca78019fd09c6412637da847af417a",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260827T182329402303Z-Genesis/summary.json"
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/46844f5c5303529c0c221c5bfad20e2c88ab0a33",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260827T193744Z-TripletUnsortedDoubletTraversal/summary.json"
       },
-      "percentage_vs_genesis": 0.0,
-      "started_at": "2026-08-27T18:23:29.402303Z",
+      "percentage_vs_genesis": -0.5201516829423845,
+      "started_at": "2026-08-27T19:37:44.489995Z",
       "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 297.99
+      "timed_seeding_time_per_event_ms": 296.44
     },
     "latest_genesis": {
       "candidate": "Genesis",
@@ -165,14 +176,14 @@
     },
     "pareto_front": [
       {
-        "candidate": "Genesis",
+        "candidate": "TripletUnsortedDoubletTraversal",
         "links": {
-          "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/37703e9855ca78019fd09c6412637da847af417a",
-          "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260827T182329402303Z-Genesis/summary.json"
+          "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/46844f5c5303529c0c221c5bfad20e2c88ab0a33",
+          "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260827T193744Z-TripletUnsortedDoubletTraversal/summary.json"
         },
-        "started_at": "2026-08-27T18:23:29.402303Z",
+        "started_at": "2026-08-27T19:37:44.489995Z",
         "timed_ambiguity_particle_efficiency": 0.972769,
-        "timed_seeding_time_per_event_ms": 297.99
+        "timed_seeding_time_per_event_ms": 296.44
       }
     ]
   },
