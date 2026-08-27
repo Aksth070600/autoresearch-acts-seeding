@@ -372,20 +372,20 @@ function freshnessState(snapshot) {
   const updated = Date.parse(snapshot.generated_at);
   const age = Math.max(0, (Date.now() - updated) / 1000);
   const staleAfter = finite(snapshot.stale_after_seconds) ? snapshot.stale_after_seconds : 900;
-  if (age >= staleAfter) return { label: `Stale · ${formatRelative(snapshot.generated_at)}`, className: 'bad' };
-  if (age >= staleAfter / 2) return { label: `Aging · ${formatRelative(snapshot.generated_at)}`, className: 'warn' };
-  return { label: `Updated · ${formatRelative(snapshot.generated_at)}`, className: 'good' };
+  if (age >= staleAfter) return { className: 'bad' };
+  if (age >= staleAfter / 2) return { className: 'warn' };
+  return { className: 'good' };
 }
 function renderFreshness(snapshot, campaign = activeCampaign) {
   const element = document.getElementById('freshness');
-  if (campaign?.state === 'closed') {
-    element.textContent = `Final · ${formatRelative(snapshot.generated_at)}`;
-    element.className = 'chip good';
-  } else {
-    const freshness = freshnessState(snapshot);
-    element.textContent = freshness.label;
-    element.className = `chip ${freshness.className}`;
+  if (campaign?.state !== 'open') {
+    element.hidden = true;
+    return;
   }
+  const freshness = freshnessState(snapshot);
+  element.hidden = false;
+  element.textContent = `Update · ${formatRelative(snapshot.generated_at)}`;
+  element.className = `chip ${freshness.className}`;
 }
 function safeLink(value) {
   if (typeof value !== 'string') return null;

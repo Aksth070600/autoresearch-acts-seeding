@@ -438,6 +438,39 @@ class CampaignStatusTests(unittest.TestCase):
         self.assertIn("2026", result.stdout)
         self.assertNotIn("Unavailable", result.stdout)
 
+    def test_dashboard_update_chip_is_only_visible_for_running_campaigns(self) -> None:
+        if shutil.which("node") is None:
+            self.skipTest("node is required for dashboard JavaScript tests")
+        html = self.dashboard_html()
+        renderer = "function renderFreshness" + html.split(
+            "function renderFreshness", 1
+        )[1].split("function safeLink", 1)[0]
+        result = subprocess.run(
+            [
+                "node",
+                "-e",
+                "const element = {};"
+                "const document = {getElementById: () => element};"
+                "const activeCampaign = null;"
+                "const freshnessState = () => ({className: 'warn'});"
+                "const formatRelative = () => '8m ago';"
+                + renderer
+                + "renderFreshness({generated_at: 'x'}, {state: 'open'});"
+                "const running = {...element};"
+                "renderFreshness({generated_at: 'x'}, {state: 'closed'});"
+                "console.log(JSON.stringify({running, completed: {...element}}));",
+            ],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        rendered = json.loads(result.stdout)
+        self.assertEqual(rendered["running"]["textContent"], "Update · 8m ago")
+        self.assertFalse(rendered["running"]["hidden"])
+        self.assertTrue(rendered["completed"]["hidden"])
+
     def test_dashboard_html_has_empty_stale_error_and_interactive_essentials(self) -> None:
         now = datetime(2026, 8, 27, 12, tzinfo=UTC)
         self.assertEqual(freshness_state("2026-08-27T11:59:00Z", now), "fresh")
@@ -500,7 +533,12 @@ class CampaignStatusTests(unittest.TestCase):
         self.assertIn("campaignSelect.addEventListener('change'", html)
         self.assertIn("if (selected) selectCampaign(selected);", html)
         self.assertIn("<h2>ACTS Seeding Campaign</h2>", html)
-        self.assertIn("Updated · ${formatRelative(snapshot.generated_at)}", html)
+        self.assertIn("campaign?.state !== 'open'", html)
+        self.assertIn("element.hidden = true", html)
+        self.assertIn("Update · ${formatRelative(snapshot.generated_at)}", html)
+        self.assertNotIn("Aging ·", html)
+        self.assertNotIn("Stale ·", html)
+        self.assertNotIn("Final ·", html)
         self.assertIn("`${state} · ACTS Seeding Campaign", html)
         self.assertIn("<h2 id=\"results-heading\">Promising Early Results</h2>", html)
         self.assertIn('id="seeding-leaders"', html)
