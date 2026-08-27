@@ -443,12 +443,26 @@ class CampaignStatusTests(unittest.TestCase):
             'id="campaign-ref"',
             'id="load-button"',
             'id="discovery-note"',
+            'id="campaign-name"',
+            'id="campaign-branch"',
+            'id="phase"',
+            'id="current-candidate"',
+            'id="mechanism"',
+            'id="controlled-stage"',
+            'id="median-duration"',
+            'id="median-basis"',
+            'id="eta-basis"',
+            'id="last-update"',
+            "timeZoneName: 'short'",
             "Public Development progress on the two controlled objectives.",
             "Campaigns are sorted newest to oldest.",
         ):
             self.assertNotIn(removed_control, html)
         self.assertIn("campaignSelect.addEventListener('change'", html)
         self.assertIn("if (selected) selectCampaign(selected);", html)
+        self.assertIn("<h2>ACTS Seeding Campaign</h2>", html)
+        self.assertIn("Updated · ${formatRelative(snapshot.generated_at)}", html)
+        self.assertIn("`${state} · ACTS Seeding Campaign", html)
         self.assertEqual(html.count("fetch(PULLS_API_URL"), 1)
         polling = html[html.index("setInterval(() => {") :]
         self.assertNotIn("PULLS_API_URL", polling)

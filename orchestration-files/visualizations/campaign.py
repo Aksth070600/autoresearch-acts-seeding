@@ -51,9 +51,7 @@ HTML_TEMPLATE = r"""<!doctype html>
     .chip.warn { color: #fde68a; border-color: #a16207; background: rgba(113,63,18,0.35); }
     .chip.bad { color: #fecaca; border-color: #b91c1c; background: rgba(127,29,29,0.35); }
     .grid { display: grid; gap: 12px; }
-    .overview-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-    .progress-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 12px; }
-    .timing-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 12px; }
+    .progress-grid, .timing-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 12px; }
     .results-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .card { min-width: 0; min-height: 82px; padding: 12px 14px; background: #111827;
       border: 1px solid #334155; border-radius: 12px; }
@@ -95,7 +93,7 @@ HTML_TEMPLATE = r"""<!doctype html>
     .evidence-links { display: flex; flex-wrap: wrap; gap: 9px; }
     code { background: #334155; padding: 2px 5px; border-radius: 4px; }
     @media (max-width: 950px) {
-      .overview-grid, .timing-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .timing-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .attempt-head { display: none; }
       .attempt summary { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 12px 14px; }
       .attempt-cell .mobile-label { display: block; margin-bottom: 2px; }
@@ -108,7 +106,7 @@ HTML_TEMPLATE = r"""<!doctype html>
       .attempt-detail { grid-template-columns: 1fr; }
     }
     @media (max-width: 470px) {
-      .overview-grid, .timing-grid { grid-template-columns: 1fr; }
+      .timing-grid { grid-template-columns: 1fr; }
       .attempt summary { grid-template-columns: 1fr; }
     }
   </style>
@@ -134,20 +132,12 @@ HTML_TEMPLATE = r"""<!doctype html>
 
   <div id="dashboard" hidden>
     <div class="campaign-heading">
-      <h2><span id="campaign-name"></span></h2>
+      <h2>ACTS Seeding Campaign</h2>
       <div class="chips">
         <span id="campaign-lifecycle" class="chip"></span>
         <span id="freshness" class="chip"></span>
-        <span id="campaign-branch" class="chip"></span>
       </div>
     </div>
-
-    <section class="grid overview-grid" aria-label="Campaign state">
-      <div class="card"><span class="card-label">Phase</span><strong id="phase" class="card-value"></strong></div>
-      <div class="card"><span class="card-label">Current candidate</span><strong id="current-candidate" class="card-value"></strong></div>
-      <div class="card"><span class="card-label">Mechanism family</span><strong id="mechanism" class="card-value"></strong></div>
-      <div class="card"><span class="card-label">Controlled stage</span><strong id="controlled-stage" class="card-value"></strong></div>
-    </section>
 
     <section class="grid progress-grid" aria-label="Campaign progress">
       <div class="card"><span class="card-label">Completed attempts</span><strong id="completed-progress" class="card-value"></strong><div class="progress-track"><span id="completed-bar" class="progress-fill"></span></div></div>
@@ -157,9 +147,8 @@ HTML_TEMPLATE = r"""<!doctype html>
 
     <section class="grid timing-grid" aria-label="Campaign timing">
       <div class="card"><span class="card-label">Elapsed</span><strong id="elapsed" class="card-value"></strong></div>
-      <div class="card"><span class="card-label">Median attempt</span><strong id="median-duration" class="card-value"></strong><span id="median-basis" class="card-note"></span></div>
-      <div class="card"><span class="card-label">Estimated remaining</span><strong id="remaining" class="card-value"></strong><span id="eta-basis" class="card-note"></span></div>
-      <div class="card"><span class="card-label">Expected finish</span><strong id="expected-finish" class="card-value"></strong><span id="last-update" class="card-note"></span></div>
+      <div class="card"><span class="card-label">Estimated remaining</span><strong id="remaining" class="card-value"></strong></div>
+      <div class="card"><span class="card-label">Expected finish</span><strong id="expected-finish" class="card-value"></strong></div>
     </section>
 
     <section class="section" aria-labelledby="links-heading">
@@ -359,7 +348,7 @@ function formatInstant(value) {
   if (!value || !Number.isFinite(Date.parse(value))) return 'Unavailable';
   return new Intl.DateTimeFormat(undefined, {
     year: 'numeric', month: 'short', day: 'numeric',
-    hour: 'numeric', minute: '2-digit', timeZoneName: 'short'
+    hour: 'numeric', minute: '2-digit'
   }).format(new Date(value));
 }
 function formatRelative(value) {
@@ -384,7 +373,7 @@ function freshnessState(snapshot) {
   const staleAfter = finite(snapshot.stale_after_seconds) ? snapshot.stale_after_seconds : 900;
   if (age >= staleAfter) return { label: `Stale · ${formatRelative(snapshot.generated_at)}`, className: 'bad' };
   if (age >= staleAfter / 2) return { label: `Aging · ${formatRelative(snapshot.generated_at)}`, className: 'warn' };
-  return { label: `Fresh · ${formatRelative(snapshot.generated_at)}`, className: 'good' };
+  return { label: `Updated · ${formatRelative(snapshot.generated_at)}`, className: 'good' };
 }
 function renderFreshness(snapshot, campaign = activeCampaign) {
   const element = document.getElementById('freshness');
@@ -396,7 +385,6 @@ function renderFreshness(snapshot, campaign = activeCampaign) {
     element.textContent = freshness.label;
     element.className = `chip ${freshness.className}`;
   }
-  setText('last-update', `Updated ${formatInstant(snapshot.generated_at)} · ${formatRelative(snapshot.generated_at)}`);
 }
 function safeLink(value) {
   if (typeof value !== 'string') return null;
@@ -600,26 +588,16 @@ function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
 }
 function renderSnapshot(snapshot, campaign) {
-  const current = snapshot.current_attempt;
-  setText('campaign-name', snapshot.campaign.name);
-  setText('campaign-branch', snapshot.campaign.branch);
   const lifecycle = document.getElementById('campaign-lifecycle');
   lifecycle.textContent = campaign?.state === 'closed' ? 'Completed' : campaign?.state === 'open' ? 'Running' : 'Direct ref';
   lifecycle.className = `chip ${campaign?.state === 'open' ? 'good' : ''}`.trim();
-  setText('phase', snapshot.campaign.phase);
-  setText('current-candidate', current?.candidate || 'No active attempt');
-  setText('mechanism', current?.mechanism_family || 'Unavailable');
-  setText('controlled-stage', current?.controlled_stage || 'Idle');
   const progress = snapshot.progress;
   const targets = snapshot.campaign.targets;
   setProgress('completed-progress', 'completed-bar', progress.completed_attempts, targets.completed_attempts);
   setProgress('structural-progress', 'structural-bar', progress.structural_attempts, targets.structural_attempts);
   setProgress('micro-progress', 'micro-bar', progress.micro_optimizations, targets.micro_optimization_cap, true);
   setText('elapsed', formatDuration(progress.elapsed_seconds));
-  setText('median-duration', formatDuration(progress.median_completed_attempt_duration_seconds));
-  setText('median-basis', `${progress.eta_sample_count} completed sample${progress.eta_sample_count === 1 ? '' : 's'}`);
   setText('remaining', formatDuration(progress.estimated_remaining_seconds));
-  setText('eta-basis', progress.eta_basis);
   setText('expected-finish', formatInstant(progress.expected_finish_at));
   renderFreshness(snapshot, campaign);
   setResult('genesis', snapshot.promising_results.latest_genesis, 'genesis');
@@ -631,7 +609,7 @@ function renderSnapshot(snapshot, campaign) {
   renderHistory(snapshot);
   emptyState.hidden = true;
   dashboard.hidden = false;
-  document.title = `${snapshot.campaign.name} · ACTS Seeding Live Campaign`;
+  document.title = 'ACTS Seeding Campaign · Live Dashboard';
 }
 function setFetchError(message) {
   fetchError.textContent = message;
@@ -640,7 +618,7 @@ function setFetchError(message) {
 function campaignLabel(campaign) {
   const state = campaign.state === 'open' ? 'Running' : campaign.state === 'closed' ? 'Completed' : 'Direct';
   const created = campaign.createdAt ? new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(campaign.createdAt)) : '';
-  return `${state} · ${campaign.title}${created ? ` · ${created}` : ''}`;
+  return `${state} · ACTS Seeding Campaign${created ? ` · ${created}` : ''}`;
 }
 function populateCampaignSelect(selected = activeCampaign) {
   campaignSelect.replaceChildren();
