@@ -52,31 +52,33 @@ void createSeedsFromGroupsImpl(
     SeedContainer2& outputSeeds) {
   MiddleSpInfo middleSpInfo = DoubletSeedFinder::computeMiddleSpInfo(middleSp);
 
-  // Build bottoms first so middles without an inner connection return before
-  // the top-neighborhood traversal.
-  cache.bottomDoublets.clear();
-  for (auto& bottomSpGroup : bottomSpGroups) {
-    bottomFinder.createDoublets(middleSp, middleSpInfo, bottomSpGroup,
-                                cache.bottomDoublets);
-  }
-
-  if (cache.bottomDoublets.empty()) {
-    ACTS_VERBOSE("No compatible Bottoms, returning");
-    return;
-  }
-
+  // create middle-top doublets
   cache.topDoublets.clear();
   for (auto& topSpGroup : topSpGroups) {
     topFinder.createDoublets(middleSp, middleSpInfo, topSpGroup,
                              cache.topDoublets);
   }
 
+  // no top SP found -> cannot form any triplet
   if (cache.topDoublets.empty()) {
     ACTS_VERBOSE("No compatible Tops, returning");
     return;
   }
 
   if (!filter.sufficientTopDoublets(spacePoints, middleSp, cache.topDoublets)) {
+    return;
+  }
+
+  // create middle-bottom doublets
+  cache.bottomDoublets.clear();
+  for (auto& bottomSpGroup : bottomSpGroups) {
+    bottomFinder.createDoublets(middleSp, middleSpInfo, bottomSpGroup,
+                                cache.bottomDoublets);
+  }
+
+  // no bottom SP found -> cannot form any triplet
+  if (cache.bottomDoublets.empty()) {
+    ACTS_VERBOSE("No compatible Bottoms, returning");
     return;
   }
 
