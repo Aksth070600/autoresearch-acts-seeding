@@ -126,13 +126,31 @@
       "state": "completed",
       "timed_ambiguity_particle_efficiency": 0.972769,
       "timed_seeding_time_per_event_ms": 294.65
+    },
+    {
+      "candidate": "CoreBatchSpacePointMaterialization",
+      "classification": "structural",
+      "duration_seconds": 814.17,
+      "finished_at": "2026-08-27T13:10:06.348941Z",
+      "implementation_commit": "59e7fb575596a7adc2936cd40bf1b06a6303b79a",
+      "links": {
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/59e7fb575596a7adc2936cd40bf1b06a6303b79a",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug27-v6/records/Development/20260827T125632Z-CoreBatchSpacePointMaterialization/summary.json"
+      },
+      "mechanism_family": "core-batch-spacepoint-materialization",
+      "outcome": "Passed all controlled Development stages.",
+      "record": "records/Development/20260827T125632Z-CoreBatchSpacePointMaterialization/summary.json",
+      "started_at": "2026-08-27T12:56:32.179265Z",
+      "state": "completed",
+      "timed_ambiguity_particle_efficiency": 0.972769,
+      "timed_seeding_time_per_event_ms": 282.07
     }
   ],
   "blockers": [],
   "campaign": {
     "branch": "autoresearch-acts-seeding/aug27-v6",
     "name": "ACTS Seeding Development campaign v6",
-    "phase": "candidate loop: 7 of 20",
+    "phase": "candidate loop: 7 of 20 complete",
     "started_at": "2026-08-27T11:03:33Z",
     "targets": {
       "completed_attempts": 20,
@@ -140,29 +158,22 @@
       "structural_attempts": 10
     }
   },
-  "current_attempt": {
-    "candidate": "CoreBatchSpacePointMaterialization",
-    "classification": "structural",
-    "controlled_stage": "queued Development run",
-    "mechanism_family": "core-batch-spacepoint-materialization",
-    "started_at": "2026-08-27T12:56:27Z",
-    "state": "queued"
-  },
+  "current_attempt": null,
   "failures": [],
-  "generated_at": "2026-08-27T12:56:27.433526Z",
+  "generated_at": "2026-08-27T13:10:54.097956Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/59e7fb575596a7adc2936cd40bf1b06a6303b79a",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/c3c7a36f94893d2f639eb1aee76adf6d09306d11",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/aug27-v6",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/25"
   },
   "progress": {
-    "completed_attempts": 6,
-    "elapsed_seconds": 6774.433526,
-    "estimated_remaining_seconds": 11283.545474,
-    "eta_basis": "Median of 6 completed attempts; current attempt elapsed time deducted.",
-    "eta_sample_count": 6,
-    "expected_finish_at": "2026-08-27T16:04:30.979000Z",
-    "median_completed_attempt_duration_seconds": 805.9985,
+    "completed_attempts": 7,
+    "elapsed_seconds": 7641.097956,
+    "estimated_remaining_seconds": 10495.849,
+    "eta_basis": "Median of 7 completed attempts.",
+    "eta_sample_count": 7,
+    "expected_finish_at": "2026-08-27T16:05:49.946956Z",
+    "median_completed_attempt_duration_seconds": 807.373,
     "micro_optimizations": 0,
     "structural_attempts": 7
   },
@@ -178,16 +189,16 @@
       "timed_seeding_time_per_event_ms": 287.47
     },
     "best_seeding": {
-      "candidate": "DoubletInsertionSort",
-      "delta_vs_genesis_ms": -11.529999999999973,
+      "candidate": "CoreBatchSpacePointMaterialization",
+      "delta_vs_genesis_ms": -13.95999999999998,
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/776df4d2d1f54c3e05ead9c8cc3f4b56559a1e50",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug27-v6/records/Development/20260827T112040Z-DoubletInsertionSort/summary.json"
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/59e7fb575596a7adc2936cd40bf1b06a6303b79a",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug27-v6/records/Development/20260827T125632Z-CoreBatchSpacePointMaterialization/summary.json"
       },
-      "percentage_vs_genesis": -3.8948755193730276,
-      "started_at": "2026-08-27T11:20:40.824235Z",
+      "percentage_vs_genesis": -4.7157382697699495,
+      "started_at": "2026-08-27T12:56:32.179265Z",
       "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 284.5
+      "timed_seeding_time_per_event_ms": 282.07
     },
     "latest_genesis": {
       "candidate": "Genesis",
@@ -201,14 +212,14 @@
     },
     "pareto_front": [
       {
-        "candidate": "DoubletInsertionSort",
+        "candidate": "CoreBatchSpacePointMaterialization",
         "links": {
-          "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/776df4d2d1f54c3e05ead9c8cc3f4b56559a1e50",
-          "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug27-v6/records/Development/20260827T112040Z-DoubletInsertionSort/summary.json"
+          "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/59e7fb575596a7adc2936cd40bf1b06a6303b79a",
+          "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug27-v6/records/Development/20260827T125632Z-CoreBatchSpacePointMaterialization/summary.json"
         },
-        "started_at": "2026-08-27T11:20:40.824235Z",
+        "started_at": "2026-08-27T12:56:32.179265Z",
         "timed_ambiguity_particle_efficiency": 0.972769,
-        "timed_seeding_time_per_event_ms": 284.5
+        "timed_seeding_time_per_event_ms": 282.07
       }
     ]
   },
