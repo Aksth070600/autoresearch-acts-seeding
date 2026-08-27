@@ -178,9 +178,9 @@ class Impl final : public TripletSeedFinder {
     const float scatteringInRegion2 = m_cfg.multipleScattering2 * iSinTheta2;
 
     std::size_t topDoubletOffset = 0;
-    for (auto [topDoublet, topDoubletIndex] :
-         zip(topDoublets, std::ranges::iota_view<std::size_t, std::size_t>(
-                              0, topDoublets.size()))) {
+    std::size_t nextTopDoubletIndex = 0;
+    for (auto topDoublet : topDoublets) {
+      const std::size_t topDoubletIndex = nextTopDoubletIndex++;
       const SpacePointIndex2 spT = topDoublet.spacePointIndex();
       const float cotThetaT = topDoublet.cotTheta();
 
