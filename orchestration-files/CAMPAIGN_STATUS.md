@@ -48,6 +48,18 @@ For every non-Genesis candidate, append one item to `attempt_metadata` before it
 
 `classification` is `structural` or `micro`. Current Genesis uses `baseline`. `current_attempt.state` is `queued`, `running`, `recording`, or `blocked`. Set `current_attempt` to `null` when no attempt is active. Blockers are short operator-facing strings. The pull request URL is either this repository's PR URL or `null`.
 
+Campaigns use the protocol policy targets of 20 completed attempts, 10 structural attempts, and a micro-optimization cap of 5 by default. A captain-authorized special campaign may override them by adding `targets` to `campaign`:
+
+```json
+"targets": {
+  "completed_attempts": 1,
+  "structural_attempts": 1,
+  "micro_optimization_cap": 0
+}
+```
+
+`completed_attempts` must be a positive integer. The other targets must be non-negative integers and cannot exceed `completed_attempts`. Omitting `targets` preserves the ordinary defaults.
+
 The generator rejects unknown input fields. This prevents scientific metrics from entering the hand-maintained file.
 
 ## Generate and publish
@@ -82,4 +94,4 @@ https://raw.githubusercontent.com/Aksth070600/autoresearch-acts-seeding/<final-h
 
 Only a selected open campaign refreshes, at most once per minute with cache busting. The pull-request list is not polled. A refresh error is visible and does not replace that campaign's last good snapshot. Older campaigns without snapshots show an explicit unavailable state. An open snapshot becomes stale after 15 minutes unless a future schema version changes `stale_after_seconds`; a closed snapshot is labeled final.
 
-Schema changes must be backward compatible within version 1 or use a new `schema_version`. Keep the old schema available so published campaign branches remain readable.
+Schema changes must be backward compatible within version 1 or use a new `schema_version`. Keep the old schema available so published campaign branches remain readable. Numeric per-campaign targets are a backward-compatible v1 extension: all existing snapshots with 20/10/5 remain valid, and consumers already read the generated numeric target values.
