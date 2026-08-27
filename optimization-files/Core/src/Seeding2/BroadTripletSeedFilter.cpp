@@ -196,7 +196,7 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
         continue;
       }
       if (tripletTopCandidates.curvatures()[compatibleTopSpIndex] >
-          upperLimitCurv) [[unlikely]] {
+          upperLimitCurv) {
         // the SPs are sorted in curvature so we skip unnecessary iterations
         break;
       }
