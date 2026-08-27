@@ -235,7 +235,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
 
   Acts::TripletSeedFinder::Config tripletFinderConfig;
   tripletFinderConfig.useStripInfo = false;
-  tripletFinderConfig.sortedByCotTheta = true;
+  tripletFinderConfig.sortedByCotTheta = false;
   tripletFinderConfig.minPt = m_cfg.minPt;
   tripletFinderConfig.sigmaScattering = m_cfg.sigmaScattering;
   tripletFinderConfig.radLengthPerSeed = m_cfg.radLengthPerSeed;
