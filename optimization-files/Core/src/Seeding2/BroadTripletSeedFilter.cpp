@@ -157,6 +157,12 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
     }
     return spT.zr()[1];
   };
+  cache().topR.resize(tripletTopCandidates.size());
+  for (TripletTopCandidates::Index index = 0;
+       index < tripletTopCandidates.size(); ++index) {
+    cache().topR[index] = getTopR(
+        spacePoints[tripletTopCandidates.topSpacePoints()[index]]);
+  }
 
   std::size_t beginCompTopIndex = 0;
   // loop over top SPs and other compatible top SP candidates
@@ -169,7 +175,7 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
     float invHelixDiameter = tripletTopCandidates.curvatures()[topSpIndex];
     float lowerLimitCurv = invHelixDiameter - config().deltaInvHelixDiameter;
     float upperLimitCurv = invHelixDiameter + config().deltaInvHelixDiameter;
-    float currentTopR = getTopR(spT);
+    float currentTopR = cache().topR[topSpIndex];
     float impact = tripletTopCandidates.impactParameters()[topSpIndex];
 
     float weight = -impact * config().impactWeightFactor;
@@ -183,10 +189,7 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
       if (compatibleTopSpIndex == topSpIndex) {
         continue;
       }
-      auto otherSpT = spacePoints[tripletTopCandidates
-                                      .topSpacePoints()[compatibleTopSpIndex]];
-
-      float otherTopR = getTopR(otherSpT);
+      float otherTopR = cache().topR[compatibleTopSpIndex];
 
       // curvature difference within limits?
       if (tripletTopCandidates.curvatures()[compatibleTopSpIndex] <
