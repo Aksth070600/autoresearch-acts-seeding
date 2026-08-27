@@ -84,18 +84,18 @@ class DoubletsForMiddleSp {
   /// Type alias for subset of index and cotTheta pairs
   using IndexAndCotThetaSubset = std::span<const IndexAndCotTheta>;
 
-  /// Sort doublet indices by cotTheta within given range
+  /// Sort doublets by cotTheta within given range
   /// @param range Index range to sort within
-  /// @param indices Output vector containing sorted indices
+  /// @param indexAndCotTheta Output vector containing sorted index and cotTheta pairs
   void sortByCotTheta(const IndexRange& range,
-                      std::vector<Index>& indices) const {
-    indices.clear();
-    indices.reserve(range.second - range.first);
+                      std::vector<IndexAndCotTheta>& indexAndCotTheta) const {
+    indexAndCotTheta.clear();
+    indexAndCotTheta.reserve(range.second - range.first);
     for (Index i = range.first; i < range.second; ++i) {
-      indices.push_back(i);
+      indexAndCotTheta.emplace_back(i, m_identity[i].cotTheta);
     }
-    std::ranges::sort(indices, {}, [this](Index index) {
-      return m_identity[index].cotTheta;
+    std::ranges::sort(indexAndCotTheta, {}, [](const IndexAndCotTheta& item) {
+      return item.cotTheta;
     });
   }
 
