@@ -149,10 +149,14 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   }
 
   for (std::size_t i = 0; i < grid.numberOfBins(); ++i) {
-    std::ranges::sort(grid.at(i), [&](const Acts::SpacePointIndex2& a,
-                                      const Acts::SpacePointIndex2& b) {
-      return spacePoints[a].r() < spacePoints[b].r();
-    });
+    auto& bin = grid.at(i);
+    for (auto position = bin.begin(); position != bin.end(); ++position) {
+      const auto smallest = std::ranges::min_element(
+          position, bin.end(), {}, [&](const Acts::SpacePointIndex2 index) {
+            return spacePoints[index].r();
+          });
+      std::iter_swap(position, smallest);
+    }
   }
 
   Acts::SpacePointContainer2 coreSpacePoints(
