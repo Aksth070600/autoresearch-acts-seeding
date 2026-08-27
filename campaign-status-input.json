@@ -3,7 +3,7 @@
   "campaign": {
     "name": "ACTS Seeding Development campaign v6",
     "branch": "autoresearch-acts-seeding/aug27-v6",
-    "phase": "candidate loop: 20 of 20 complete",
+    "phase": "completed: archive ready",
     "started_at": "2026-08-27T11:03:33Z"
   },
   "current_attempt": null,
