@@ -1,92 +1,49 @@
 {
   "$schema": "https://raw.githubusercontent.com/Aksth070600/autoresearch-acts-seeding/main/orchestration-files/campaign-status.schema.json",
-  "attempts": [
-    {
-      "candidate": "CompositePositiveV1",
-      "classification": "structural",
-      "duration_seconds": 812.56,
-      "finished_at": "2026-08-27T17:47:05.598432Z",
-      "implementation_commit": "ec49bd1513853d20482dd316930f71974d90c71e",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/ec49bd1513853d20482dd316930f71974d90c71e",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/composite-positive-v1/records/Development/20260827T173333Z-CompositePositiveV1/summary.json"
-      },
-      "mechanism_family": "composite-positive-v1",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260827T173333Z-CompositePositiveV1/summary.json",
-      "started_at": "2026-08-27T17:33:33.038894Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 280.31
-    }
-  ],
+  "attempts": [],
   "blockers": [],
   "campaign": {
-    "branch": "autoresearch-acts-seeding/composite-positive-v1",
-    "name": "ACTS Seeding Composite Positive V1",
-    "phase": "completed: Genesis tree restored",
-    "started_at": "2026-08-27T17:27:12Z",
+    "branch": "autoresearch-acts-seeding/campaign-v7",
+    "name": "ACTS Seeding Development Campaign V7",
+    "phase": "fresh Genesis baseline",
+    "started_at": "2026-08-27T18:07:33Z",
     "targets": {
-      "completed_attempts": 1,
-      "micro_optimization_cap": 0,
-      "structural_attempts": 1
+      "completed_attempts": 61,
+      "micro_optimization_cap": 15,
+      "structural_attempts": 30
     }
   },
-  "current_attempt": null,
+  "current_attempt": {
+    "candidate": "Genesis",
+    "classification": "baseline",
+    "controlled_stage": "queued Development run",
+    "mechanism_family": "fresh Genesis baseline",
+    "started_at": "2026-08-27T18:07:33Z",
+    "state": "queued"
+  },
   "failures": [],
-  "generated_at": "2026-08-27T17:49:25.062585Z",
+  "generated_at": "2026-08-27T18:07:34.086422Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/80800d667e42edc57211dc5271edc65db9f49f12",
-    "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/composite-positive-v1",
-    "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/27"
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/add1c4d96fe935c06946608c343bdd766417bafb",
+    "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/campaign-v7",
+    "pull_request": null
   },
   "progress": {
-    "completed_attempts": 1,
-    "elapsed_seconds": 1333.062585,
-    "estimated_remaining_seconds": 0.0,
-    "eta_basis": "Campaign attempt targets are complete.",
-    "eta_sample_count": 1,
-    "expected_finish_at": "2026-08-27T17:49:25.062585Z",
-    "median_completed_attempt_duration_seconds": 812.56,
+    "completed_attempts": 0,
+    "elapsed_seconds": 1.086422,
+    "estimated_remaining_seconds": null,
+    "eta_basis": "Unavailable until 3 completed attempt durations exist (0 available).",
+    "eta_sample_count": 0,
+    "expected_finish_at": null,
+    "median_completed_attempt_duration_seconds": null,
     "micro_optimizations": 0,
-    "structural_attempts": 1
+    "structural_attempts": 0
   },
   "promising_results": {
-    "best_ambiguity_efficiency": {
-      "candidate": "CompositePositiveV1",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/ec49bd1513853d20482dd316930f71974d90c71e",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/composite-positive-v1/records/Development/20260827T173333Z-CompositePositiveV1/summary.json"
-      },
-      "started_at": "2026-08-27T17:33:33.038894Z",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 280.31
-    },
-    "best_seeding": {
-      "candidate": "CompositePositiveV1",
-      "delta_vs_genesis_ms": null,
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/ec49bd1513853d20482dd316930f71974d90c71e",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/composite-positive-v1/records/Development/20260827T173333Z-CompositePositiveV1/summary.json"
-      },
-      "percentage_vs_genesis": null,
-      "started_at": "2026-08-27T17:33:33.038894Z",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 280.31
-    },
+    "best_ambiguity_efficiency": null,
+    "best_seeding": null,
     "latest_genesis": null,
-    "pareto_front": [
-      {
-        "candidate": "CompositePositiveV1",
-        "links": {
-          "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/ec49bd1513853d20482dd316930f71974d90c71e",
-          "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/composite-positive-v1/records/Development/20260827T173333Z-CompositePositiveV1/summary.json"
-        },
-        "started_at": "2026-08-27T17:33:33.038894Z",
-        "timed_ambiguity_particle_efficiency": 0.972769,
-        "timed_seeding_time_per_event_ms": 280.31
-      }
-    ]
+    "pareto_front": []
   },
   "protocol_id": "acts-seeding-v2",
   "repository": {

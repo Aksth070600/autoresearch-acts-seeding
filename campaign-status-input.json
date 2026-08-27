@@ -1,24 +1,25 @@
 {
   "schema_version": "1.0.0",
   "campaign": {
-    "name": "ACTS Seeding Composite Positive V1",
-    "branch": "autoresearch-acts-seeding/composite-positive-v1",
-    "phase": "completed: Genesis tree restored",
-    "started_at": "2026-08-27T17:27:12Z",
+    "name": "ACTS Seeding Development Campaign V7",
+    "branch": "autoresearch-acts-seeding/campaign-v7",
+    "phase": "fresh Genesis baseline",
+    "started_at": "2026-08-27T18:07:33Z",
     "targets": {
-      "completed_attempts": 1,
-      "structural_attempts": 1,
-      "micro_optimization_cap": 0
+      "completed_attempts": 61,
+      "structural_attempts": 30,
+      "micro_optimization_cap": 15
     }
   },
-  "current_attempt": null,
-  "attempt_metadata": [
-    {
-      "candidate": "CompositePositiveV1",
-      "mechanism_family": "composite-positive-v1",
-      "classification": "structural"
-    }
-  ],
+  "current_attempt": {
+    "candidate": "Genesis",
+    "mechanism_family": "fresh Genesis baseline",
+    "classification": "baseline",
+    "controlled_stage": "queued Development run",
+    "state": "queued",
+    "started_at": "2026-08-27T18:07:33Z"
+  },
+  "attempt_metadata": [],
   "blockers": [],
-  "pull_request_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/27"
+  "pull_request_url": null
 }
