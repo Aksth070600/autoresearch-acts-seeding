@@ -11,6 +11,7 @@
 #include "Acts/EventData/Types.hpp"
 
 #include <limits>
+#include <set>
 #include <vector>
 
 namespace Acts {
@@ -88,11 +89,7 @@ class CandidatesForMiddleSp2 {
 
  private:
   using WeightIndex = std::pair<float, Index>;
-  using Container = std::vector<WeightIndex>;
-
-  static constexpr bool comparator(const WeightIndex& a, const WeightIndex& b) {
-    return a.first > b.first;
-  }
+  using Container = std::multiset<WeightIndex>;
 
   // sizes
   // m_maxSize* is the maximum size of the indices collections. These values
