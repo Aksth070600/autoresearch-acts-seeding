@@ -24,7 +24,7 @@
   "campaign": {
     "branch": "autoresearch-acts-seeding/composite-positive-v1",
     "name": "ACTS Seeding Composite Positive V1",
-    "phase": "completed: evidence published",
+    "phase": "completed: Genesis tree restored",
     "started_at": "2026-08-27T17:27:12Z",
     "targets": {
       "completed_attempts": 1,
@@ -34,19 +34,19 @@
   },
   "current_attempt": null,
   "failures": [],
-  "generated_at": "2026-08-27T17:48:37.681200Z",
+  "generated_at": "2026-08-27T17:49:25.062585Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/bfca1d7eee07b4292dd343ac2140d13deb210866",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/80800d667e42edc57211dc5271edc65db9f49f12",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/composite-positive-v1",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/27"
   },
   "progress": {
     "completed_attempts": 1,
-    "elapsed_seconds": 1285.6812,
+    "elapsed_seconds": 1333.062585,
     "estimated_remaining_seconds": 0.0,
     "eta_basis": "Campaign attempt targets are complete.",
     "eta_sample_count": 1,
-    "expected_finish_at": "2026-08-27T17:48:37.681200Z",
+    "expected_finish_at": "2026-08-27T17:49:25.062585Z",
     "median_completed_attempt_duration_seconds": 812.56,
     "micro_optimizations": 0,
     "structural_attempts": 1
