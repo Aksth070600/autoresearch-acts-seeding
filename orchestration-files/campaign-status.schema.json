@@ -1,0 +1,290 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/Aksth070600/autoresearch-acts-seeding/main/orchestration-files/campaign-status.schema.json",
+  "title": "ACTS Seeding live campaign status",
+  "description": "Version 1.0.0 public snapshot for one controlled ACTS Seeding autoresearch campaign.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schema_version",
+    "protocol_id",
+    "generated_at",
+    "stale_after_seconds",
+    "repository",
+    "campaign",
+    "current_attempt",
+    "progress",
+    "promising_results",
+    "attempts",
+    "blockers",
+    "failures",
+    "links"
+  ],
+  "properties": {
+    "$schema": {"type": "string", "format": "uri"},
+    "schema_version": {"const": "1.0.0"},
+    "protocol_id": {"const": "acts-seeding-v2"},
+    "generated_at": {"$ref": "#/$defs/timestamp"},
+    "stale_after_seconds": {"type": "integer", "minimum": 60},
+    "repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["url", "snapshot_path"],
+      "properties": {
+        "url": {"const": "https://github.com/Aksth070600/autoresearch-acts-seeding"},
+        "snapshot_path": {"const": "campaign-status.json"}
+      }
+    },
+    "campaign": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "branch", "phase", "started_at", "targets"],
+      "properties": {
+        "name": {"$ref": "#/$defs/label"},
+        "branch": {"type": "string", "minLength": 1, "maxLength": 200},
+        "phase": {"$ref": "#/$defs/label"},
+        "started_at": {"$ref": "#/$defs/timestamp"},
+        "targets": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["completed_attempts", "structural_attempts", "micro_optimization_cap"],
+          "properties": {
+            "completed_attempts": {"const": 20},
+            "structural_attempts": {"const": 10},
+            "micro_optimization_cap": {"const": 5}
+          }
+        }
+      }
+    },
+    "current_attempt": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["candidate", "mechanism_family", "classification", "controlled_stage", "state", "started_at"],
+          "properties": {
+            "candidate": {"$ref": "#/$defs/candidate"},
+            "mechanism_family": {"$ref": "#/$defs/label"},
+            "classification": {"enum": ["baseline", "structural", "micro"]},
+            "controlled_stage": {"$ref": "#/$defs/label"},
+            "state": {"enum": ["queued", "running", "recording", "blocked"]},
+            "started_at": {
+              "oneOf": [
+                {"type": "null"},
+                {"$ref": "#/$defs/timestamp"}
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "progress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "completed_attempts",
+        "structural_attempts",
+        "micro_optimizations",
+        "elapsed_seconds",
+        "median_completed_attempt_duration_seconds",
+        "estimated_remaining_seconds",
+        "expected_finish_at",
+        "eta_sample_count",
+        "eta_basis"
+      ],
+      "properties": {
+        "completed_attempts": {"$ref": "#/$defs/nonnegativeInteger"},
+        "structural_attempts": {"$ref": "#/$defs/nonnegativeInteger"},
+        "micro_optimizations": {"$ref": "#/$defs/nonnegativeInteger"},
+        "elapsed_seconds": {"$ref": "#/$defs/nonnegativeNumber"},
+        "median_completed_attempt_duration_seconds": {"$ref": "#/$defs/nullableNonnegativeNumber"},
+        "estimated_remaining_seconds": {"$ref": "#/$defs/nullableNonnegativeNumber"},
+        "expected_finish_at": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/timestamp"}
+          ]
+        },
+        "eta_sample_count": {"$ref": "#/$defs/nonnegativeInteger"},
+        "eta_basis": {"type": "string", "minLength": 1, "maxLength": 300}
+      }
+    },
+    "promising_results": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["latest_genesis", "best_seeding", "best_ambiguity_efficiency", "pareto_front"],
+      "properties": {
+        "latest_genesis": {"$ref": "#/$defs/nullableResult"},
+        "best_seeding": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/bestSeedingResult"}
+          ]
+        },
+        "best_ambiguity_efficiency": {"$ref": "#/$defs/nullableResult"},
+        "pareto_front": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/result"}
+        }
+      }
+    },
+    "attempts": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/attempt"}
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["message"],
+        "properties": {"message": {"type": "string", "minLength": 1, "maxLength": 500}}
+      }
+    },
+    "failures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["candidate", "message", "record_url"],
+        "properties": {
+          "candidate": {"$ref": "#/$defs/candidate"},
+          "message": {"type": "string", "minLength": 1, "maxLength": 500},
+          "record_url": {"type": "string", "format": "uri"}
+        }
+      }
+    },
+    "links": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["campaign_branch", "pull_request", "active_commit"],
+      "properties": {
+        "campaign_branch": {"type": "string", "format": "uri"},
+        "pull_request": {"$ref": "#/$defs/nullableUri"},
+        "active_commit": {"$ref": "#/$defs/nullableUri"}
+      }
+    }
+  },
+  "$defs": {
+    "timestamp": {"type": "string", "format": "date-time"},
+    "label": {"type": "string", "minLength": 1, "maxLength": 120},
+    "candidate": {"type": "string", "pattern": "^[A-Za-z0-9._-]+$", "maxLength": 80},
+    "number": {"type": "number"},
+    "nonnegativeNumber": {"type": "number", "minimum": 0},
+    "nonnegativeInteger": {"type": "integer", "minimum": 0},
+    "nullableNumber": {"type": ["number", "null"]},
+    "nullableNonnegativeNumber": {"type": ["number", "null"], "minimum": 0},
+    "nullableUri": {
+      "oneOf": [
+        {"type": "null"},
+        {"type": "string", "format": "uri"}
+      ]
+    },
+    "links": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["commit", "record"],
+      "properties": {
+        "commit": {"$ref": "#/$defs/nullableUri"},
+        "record": {"type": "string", "format": "uri"}
+      }
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "candidate",
+        "timed_seeding_time_per_event_ms",
+        "timed_ambiguity_particle_efficiency",
+        "started_at",
+        "links"
+      ],
+      "properties": {
+        "candidate": {"$ref": "#/$defs/candidate"},
+        "timed_seeding_time_per_event_ms": {"$ref": "#/$defs/nonnegativeNumber"},
+        "timed_ambiguity_particle_efficiency": {"type": "number", "minimum": 0, "maximum": 1},
+        "started_at": {"$ref": "#/$defs/timestamp"},
+        "links": {"$ref": "#/$defs/links"}
+      }
+    },
+    "nullableResult": {
+      "oneOf": [
+        {"type": "null"},
+        {"$ref": "#/$defs/result"}
+      ]
+    },
+    "bestSeedingResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "candidate",
+        "timed_seeding_time_per_event_ms",
+        "timed_ambiguity_particle_efficiency",
+        "started_at",
+        "links",
+        "delta_vs_genesis_ms",
+        "percentage_vs_genesis"
+      ],
+      "properties": {
+        "candidate": {"$ref": "#/$defs/candidate"},
+        "timed_seeding_time_per_event_ms": {"$ref": "#/$defs/nonnegativeNumber"},
+        "timed_ambiguity_particle_efficiency": {"type": "number", "minimum": 0, "maximum": 1},
+        "started_at": {"$ref": "#/$defs/timestamp"},
+        "links": {"$ref": "#/$defs/links"},
+        "delta_vs_genesis_ms": {"$ref": "#/$defs/nullableNumber"},
+        "percentage_vs_genesis": {"$ref": "#/$defs/nullableNumber"}
+      }
+    },
+    "attempt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "candidate",
+        "mechanism_family",
+        "classification",
+        "state",
+        "outcome",
+        "started_at",
+        "finished_at",
+        "duration_seconds",
+        "timed_seeding_time_per_event_ms",
+        "timed_ambiguity_particle_efficiency",
+        "implementation_commit",
+        "links",
+        "record"
+      ],
+      "properties": {
+        "candidate": {"$ref": "#/$defs/candidate"},
+        "mechanism_family": {"$ref": "#/$defs/label"},
+        "classification": {"enum": ["baseline", "structural", "micro"]},
+        "state": {"enum": ["completed", "failed"]},
+        "outcome": {"type": "string", "minLength": 1, "maxLength": 500},
+        "started_at": {"$ref": "#/$defs/timestamp"},
+        "finished_at": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/timestamp"}
+          ]
+        },
+        "duration_seconds": {"$ref": "#/$defs/nullableNonnegativeNumber"},
+        "timed_seeding_time_per_event_ms": {"$ref": "#/$defs/nullableNonnegativeNumber"},
+        "timed_ambiguity_particle_efficiency": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "number", "minimum": 0, "maximum": 1}
+          ]
+        },
+        "implementation_commit": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "string", "pattern": "^[0-9a-f]{40}$"}
+          ]
+        },
+        "links": {"$ref": "#/$defs/links"},
+        "record": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

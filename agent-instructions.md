@@ -144,14 +144,15 @@ For each attempt:
 5. Choose one hypothesis based on that implementation, a prior result, an implementation detail, or a documented algorithm idea.
 6. Modify only the permitted experiment files.
 7. Inspect the diff and commit the candidate before running it.
-8. Run `make evaluate CANDIDATE=<candidate-name>`.
-9. Run `make record CANDIDATE=<candidate-name>` and judge success, failure, and improvement from its output.
-10. Add a concise lesson to `agent-learnings.md` when the attempt teaches something reusable.
-11. Keep a candidate that meets the active-base criteria. Otherwise restore the previous candidate with a safe, non-force operation on the campaign branch.
+8. Update the current attempt and its non-scientific classification in `campaign-status-input.json`, run `make campaign-status`, commit the validated state, and push it before starting the run.
+9. Run `make evaluate CANDIDATE=<candidate-name>`.
+10. Run `make record CANDIDATE=<candidate-name>` and judge success, failure, and improvement from its output.
+11. Add a concise lesson to `agent-learnings.md` when the attempt teaches something reusable. Update the phase or current controlled stage, run `make campaign-status` again, and include both status files in the normal evidence commit and push.
+12. Keep a candidate that meets the active-base criteria. Otherwise restore the previous candidate with a safe, non-force operation on the campaign branch.
     Classify each attempt by a stable mechanism key, not only by its candidate name.
     Keep a mixed ambiguity-improvement candidate when a follow-up experiment is explicitly targeting recovery of its seeding time, but do not present it as an overall improvement.
-12. Use the simplification skill to curate `agent-learnings.md` when it reaches 250 lines.
-13. Never allow `agent-learnings.md` to exceed 500 lines.
+13. Use the simplification skill to curate `agent-learnings.md` when it reaches 250 lines.
+14. Never allow `agent-learnings.md` to exceed 500 lines.
 
 Each candidate name must be unique.
 Do not overwrite generated results.
@@ -183,6 +184,19 @@ candidates are retained by the evaluator. Consumers must reject summaries whose
 protocol identity does not match `acts-seeding-v2`.
 Do not commit failure logs, temporary output, or runtime state.
 
+### Live campaign status
+
+The public dashboard contract and the exact non-scientific input format are in `orchestration-files/CAMPAIGN_STATUS.md`. Root `campaign-status.json` is generated. Never hand-edit it or copy scientific values into `campaign-status-input.json`.
+
+Publish a validated snapshot at these milestones only:
+
+- Before the fresh Genesis run and before every candidate attempt starts.
+- After `make record` has produced the attempt evidence.
+- When a blocker starts or clears.
+- At campaign closure, with `current_attempt` set to `null`.
+
+Run `make campaign-status`, commit the input and snapshot with the corresponding normal campaign milestone, and push them together. Keep updates sparse. Do not create cosmetic refresh commits for elapsed time or stage wording. The generator reads protocol-compatible Development summaries only. It does not run a workload and does not authorize Evaluation. Experiment agents must preserve the captain-only Evaluation boundary.
+
 ## GitHub campaign review
 
 Make each campaign reviewable on GitHub through one draft pull request.
@@ -190,7 +204,7 @@ After creating the campaign branch, push it and open one draft PR before the fir
 After every candidate attempt, push the branch so the draft PR shows the new implementation and its evidence.
 Keep every candidate implementation commit reachable on the campaign branch, including candidates that are later rejected; restore a rejected candidate with a safe revert commit instead of resetting away its history.
 
-After `make record`, commit the candidate's `summary.json` and any concise `agent-learnings.md` lesson in a separate evidence commit.
+After `make record`, commit the candidate's `summary.json`, the refreshed campaign status, and any concise `agent-learnings.md` lesson in a separate evidence commit.
 Commit successful and failed summaries when they exist, but never commit failure logs, temporary output, or runtime state.
 The canonical Genesis summary replacement is evidence and should be included in the campaign branch when it changes.
 

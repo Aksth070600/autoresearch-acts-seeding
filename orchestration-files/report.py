@@ -19,6 +19,7 @@ DEFAULT_OUTPUT = PROJECT_ROOT / "reports" / "site"
 REPOSITORY_URL = "https://github.com/Aksth070600/autoresearch-acts-seeding"
 FULL_COMMIT_SHA = re.compile(r"[0-9a-fA-F]{40}")
 
+from visualizations.campaign import render as render_campaign
 from visualizations.pareto import render as render_pareto
 
 VISUALIZATIONS = {"pareto": render_pareto}
@@ -364,7 +365,10 @@ def main() -> int:
             "baseline": args.baseline,
         },
     )
+    campaign_index = output_root / "campaign" / "index.html"
+    render_campaign(campaign_index)
     print(f"wrote {index}")
+    print(f"wrote {campaign_index}")
     print(f"included {len(rows)} passed record(s) from {args.dataset}")
     return 0
 

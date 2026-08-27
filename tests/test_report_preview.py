@@ -47,8 +47,13 @@ class ReportPreviewTests(unittest.TestCase):
 
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertTrue((output / ".nojekyll").is_file())
+            self.assertTrue((output / "campaign" / "index.html").is_file())
+            campaign = (output / "campaign" / "index.html").read_text(encoding="utf-8")
+            self.assertIn("ACTS Seeding Live Campaign", campaign)
+            self.assertNotIn("Open results report", campaign)
             index = (output / "index.html").read_text(encoding="utf-8")
             self.assertIn("No protocol-compatible summaries yet", index)
+            self.assertIn('href="campaign/"', index)
             self.assertIn('"rows":[]', index)
             self.assertIn('"x_metric": "timed_seeding_time_per_event_ms"', index)
 
