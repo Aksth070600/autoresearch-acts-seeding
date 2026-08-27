@@ -62,20 +62,20 @@ HTML_TEMPLATE = r"""<!doctype html>
     <h1>ACTS Seeding Autoresearch</h1>
     <a class="campaign-link" href="campaign/">Open live campaign</a>
   </div>
-  <p class="lede">Lower X is better. Higher Y is better. The reference lines show the selected baseline.</p>
+  <p id="axis-guidance" class="lede">Lower X is better. Higher Y is better. The reference lines show the selected baseline.</p>
   <section class="controls" aria-label="Chart controls">
     <label>Dataset<select id="dataset"></select></label>
     <label>Baseline<select id="baseline"></select></label>
     <fieldset class="axis-picker">
       <legend>X axis</legend>
       <label>Type<select id="x-kind"></select></label>
-      <label>Stage<select id="x-stage"></select></label>
+      <label id="x-stage-label">Stage<select id="x-stage"></select></label>
       <label id="x-metric-label">Metric<select id="x-metric"></select></label>
     </fieldset>
     <fieldset class="axis-picker">
       <legend>Y axis</legend>
       <label>Type<select id="y-kind"></select></label>
-      <label>Stage<select id="y-stage"></select></label>
+      <label id="y-stage-label">Stage<select id="y-stage"></select></label>
       <label id="y-metric-label">Metric<select id="y-metric"></select></label>
     </fieldset>
   </section>
@@ -110,6 +110,7 @@ const summaryXLabel = document.getElementById('summary-x-label');
 const summaryYValue = document.getElementById('summary-y-value');
 const summaryYLabel = document.getElementById('summary-y-label');
 const emptyState = document.getElementById('empty-state');
+const axisGuidance = document.getElementById('axis-guidance');
 const cornerOverlays = {
   topLeft: document.getElementById('corner-top-left'),
   topRight: document.getElementById('corner-top-right'),
@@ -138,6 +139,7 @@ const TOOLTIP_ROWS = [
   { label: 'D', type: 'quality', suffix: 'particle_duplicate_ratio' }
 ];
 const TOOLTIP_STAGES = ['seeding', 'ckf', 'ambiguity'];
+const TIMED_PEAK_RSS_KEY = 'timed_peak_rss_kb';
 const AXES = ['x', 'y'];
 
 function option(select, value, label) {
@@ -164,12 +166,18 @@ function axisElements(axis) {
   return {
     kind: document.getElementById(`${axis}-kind`),
     stage: document.getElementById(`${axis}-stage`),
+    stageLabel: document.getElementById(`${axis}-stage-label`),
     metric: document.getElementById(`${axis}-metric`),
     metricLabel: document.getElementById(`${axis}-metric-label`)
   };
 }
 function updateAxisOptions(axis) {
   const elements = axisElements(axis);
+  const rssSelected = elements.kind.value === 'rss';
+  elements.stageLabel.hidden = rssSelected;
+  elements.metricLabel.hidden = rssSelected || elements.kind.value === 'time';
+  if (rssSelected) return;
+
   const previousStage = elements.stage.value;
   const previousMetric = elements.metric.value;
   elements.stage.replaceChildren();
@@ -179,7 +187,6 @@ function updateAxisOptions(axis) {
   elements.stage.value = [...elements.stage.options].some((item) => item.value === previousStage)
     ? previousStage
     : elements.stage.options[0]?.value || '';
-  elements.metricLabel.hidden = elements.kind.value === 'time';
   elements.metric.replaceChildren();
   if (elements.kind.value === 'time') {
     option(elements.metric, 'time_per_event', 'Time per event');
@@ -192,11 +199,13 @@ function updateAxisOptions(axis) {
 }
 function axisKey(axis) {
   const elements = axisElements(axis);
+  if (elements.kind.value === 'rss') return TIMED_PEAK_RSS_KEY;
   if (elements.kind.value === 'time') return STAGES[elements.stage.value].time;
   return `timed_${elements.stage.value}_${elements.metric.value}`;
 }
 function axisLabel(axis) {
   const elements = axisElements(axis);
+  if (elements.kind.value === 'rss') return 'PEAK RSS';
   const stageLabel = STAGES[elements.stage.value].label;
   if (elements.kind.value === 'time') return `${stageLabel} TIME/EVENT`.toUpperCase();
   const metricLabel = QUALITY_METRICS.find(([value]) => value === elements.metric.value)?.[1] || elements.metric.value;
@@ -206,7 +215,10 @@ function axisDefaults(axis, defaultKey) {
   const elements = axisElements(axis);
   const timeStage = Object.entries(STAGES).find(([, stage]) => stage.time === defaultKey);
   const qualityMatch = /^timed_(seeding|ckf|ambiguity)_(.+)$/.exec(defaultKey || '');
-  if (timeStage) {
+  if (defaultKey === TIMED_PEAK_RSS_KEY) {
+    elements.kind.value = 'rss';
+    updateAxisOptions(axis);
+  } else if (timeStage) {
     elements.kind.value = 'time';
     updateAxisOptions(axis);
     elements.stage.value = timeStage[0];
@@ -225,14 +237,23 @@ AXES.forEach((axis) => {
   const elements = axisElements(axis);
   option(elements.kind, 'time', 'Time');
   option(elements.kind, 'metric', 'Metric');
+  option(elements.kind, 'rss', 'RSS');
 });
 axisDefaults('x', DEFAULTS.x_metric);
 axisDefaults('y', DEFAULTS.y_metric);
 updateBaselineOptions();
 
+function formatPeakRss(value, unavailable = 'Unavailable') {
+  if (!Number.isFinite(value)) return unavailable;
+  const mebibytes = value / 1024;
+  if (mebibytes >= 1024) return `${(mebibytes / 1024).toFixed(2)} GiB`;
+  if (mebibytes >= 1) return `${mebibytes.toFixed(1)} MiB`;
+  return `${value.toFixed(0)} KiB`;
+}
 function formatAxisValue(axis, value) {
   if (!Number.isFinite(value)) return 'Unavailable';
   const elements = axisElements(axis);
+  if (elements.kind.value === 'rss') return formatPeakRss(value);
   return elements.kind.value === 'time' ? `${value.toFixed(2)} ms` : `${(value * 100).toFixed(2)}%`;
 }
 function escapeHtml(value) {
@@ -257,7 +278,8 @@ function candidateTooltip(row) {
     const values = stageKeys.map((stageKey) => tooltipValue(row, stageKey, metric));
     return `${metric.label}&nbsp;&nbsp;&nbsp;${values.join('&nbsp;→&nbsp;')}`;
   }).join('<br>');
-  return `<b>${escapeHtml(row.candidate)}</b><br><span style="font-family:monospace">Stage&nbsp;&nbsp;${stageHeading}<br>${metricLines}</span>`;
+  const peakRss = formatPeakRss(row.metrics[TIMED_PEAK_RSS_KEY], 'n/a');
+  return `<b>${escapeHtml(row.candidate)}</b><br><span style="font-family:monospace">Stage&nbsp;&nbsp;${stageHeading}<br>${metricLines}<br>Peak RSS&nbsp;&nbsp;${peakRss}</span>`;
 }
 function validCommitUrl(value) {
   return typeof value === 'string'
@@ -280,6 +302,7 @@ function updatePointCursors(points) {
 }
 function axisDirection(axis) {
   const elements = axisElements(axis);
+  if (elements.kind.value === 'rss') return { lowerBetter: true, good: 'lower peak RSS', bad: 'higher peak RSS' };
   if (elements.kind.value === 'time') return { lowerBetter: true, good: 'faster', bad: 'slower' };
   const metric = elements.metric.value;
   if (metric.includes('efficiency')) return { lowerBetter: false, good: 'higher efficiency', bad: 'lower efficiency' };
@@ -328,17 +351,20 @@ function candidateColor(row, baseline, xKey, yKey) {
 function validRows(xKey, yKey) {
   return scopedRows().filter((row) => Number.isFinite(row.metrics[xKey]) && Number.isFinite(row.metrics[yKey]));
 }
-function paddedRange(points, key) {
-  const values = points.map((row) => row.metrics[key]);
+function axisPlotValue(axis, value) {
+  return axisElements(axis).kind.value === 'rss' ? value / 1024 : value;
+}
+function paddedRange(points, key, axis) {
+  const values = points.map((row) => axisPlotValue(axis, row.metrics[key]));
   const minimum = Math.min(...values);
   const maximum = Math.max(...values);
   const span = maximum - minimum || Math.max(Math.abs(maximum), 1);
   return [minimum - span * 0.20, maximum + span * 0.20];
 }
 function axisTickFormat(axis) {
-  return axisElements(axis).kind.value === 'time'
-    ? { tickformat: '.0f', ticksuffix: ' ms' }
-    : { tickformat: '.3%' };
+  const kind = axisElements(axis).kind.value;
+  if (kind === 'rss') return { tickformat: '.1f', ticksuffix: ' MiB' };
+  return kind === 'time' ? { tickformat: '.0f', ticksuffix: ' ms' } : { tickformat: '.3%' };
 }
 function baselineLabel(name, row) {
   return row && Number.isFinite(row.sample_count) ? `${name} (${row.sample_count})` : (name || 'Unavailable');
@@ -357,6 +383,9 @@ function render() {
   summaryXLabel.textContent = xLabel;
   summaryYValue.textContent = baseline ? formatAxisValue('y', baseline.metrics[yKey]) : 'Unavailable';
   summaryYLabel.textContent = yLabel;
+  const xDirection = axisDirection('x').lowerBetter ? 'Lower' : 'Higher';
+  const yDirection = axisDirection('y').lowerBetter ? 'Lower' : 'Higher';
+  axisGuidance.textContent = `${xDirection} X is better. ${yDirection} Y is better. The reference lines show the selected baseline.`;
   renderCornerOverlays(baseline);
   emptyState.hidden = points.length !== 0;
   if (!points.length) {
@@ -364,20 +393,20 @@ function render() {
     return;
   }
   const traces = [{
-    x: points.map((row) => row.metrics[xKey]),
-    y: points.map((row) => row.metrics[yKey]),
+    x: points.map((row) => axisPlotValue('x', row.metrics[xKey])),
+    y: points.map((row) => axisPlotValue('y', row.metrics[yKey])),
     text: points.map((row) => candidateTooltip(row)),
     customdata: points.map((row) => row.commit_url || ''),
     mode: 'markers', type: 'scatter', name: 'Candidates',
     marker: { size: points.map((row) => row.candidate === baselineName ? 16 : 12), symbol: points.map((row) => row.candidate === baselineName ? 'star' : 'circle'), color: points.map((row) => candidateColor(row, baseline, xKey, yKey)), line: { width: 1, color: '#e2e8f0' } },
     hovertemplate: '%{text}<extra></extra>'
   }];
-  const xRange = paddedRange(points, xKey);
-  const yRange = paddedRange(points, yKey);
+  const xRange = paddedRange(points, xKey, 'x');
+  const yRange = paddedRange(points, yKey, 'y');
   const shapes = [];
   if (baseline) {
-    const bx = baseline.metrics[xKey];
-    const by = baseline.metrics[yKey];
+    const bx = axisPlotValue('x', baseline.metrics[xKey]);
+    const by = axisPlotValue('y', baseline.metrics[yKey]);
     [
       [xRange[0], bx, by, yRange[1], true, true],
       [bx, xRange[1], by, yRange[1], false, true],
