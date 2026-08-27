@@ -75,40 +75,17 @@ HTML_TEMPLATE = r"""<!doctype html>
     #chart .point { cursor: pointer; }
     #plot-empty { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px;
       color: #94a3b8; text-align: center; pointer-events: none; }
-    .attempt-head, .attempt summary { display: grid; grid-template-columns: 1.5fr .72fr .72fr .8fr .9fr .9fr .8fr;
-      gap: 10px; align-items: center; }
-    .attempt-head { padding: 0 34px 7px 14px; color: #94a3b8; font-size: 0.7rem; font-weight: 750;
-      letter-spacing: 0.04em; text-transform: uppercase; }
-    .attempts { display: grid; gap: 7px; }
-    .attempt { background: #111827; border: 1px solid #334155; border-radius: 9px; }
-    .attempt[open] { border-color: #475569; }
-    .attempt summary { min-height: 58px; padding: 9px 12px; cursor: pointer; list-style-position: inside; }
-    .attempt summary:hover { background: rgba(30,41,59,0.55); }
-    .attempt-cell { min-width: 0; overflow-wrap: anywhere; font-size: 0.85rem; }
-    .attempt-cell strong { color: #f8fafc; }
-    .attempt-cell .mobile-label { display: none; color: #94a3b8; font-size: 0.67rem; font-weight: 750;
-      letter-spacing: 0.04em; text-transform: uppercase; }
-    .attempt-detail { display: grid; grid-template-columns: 1fr auto; gap: 12px; margin: 0 12px 12px; padding: 11px 12px;
-      color: #cbd5e1; background: #0b1120; border-radius: 7px; font-size: 0.84rem; }
-    .attempt-detail p { margin: 0; }
-    .evidence-links { display: flex; flex-wrap: wrap; gap: 9px; }
-    code { background: #334155; padding: 2px 5px; border-radius: 4px; }
     @media (max-width: 950px) {
       .timing-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .attempt-head { display: none; }
-      .attempt summary { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 12px 14px; }
-      .attempt-cell .mobile-label { display: block; margin-bottom: 2px; }
     }
     @media (max-width: 700px) {
       main { padding: 18px; }
       .campaign-heading, .section-heading { align-items: flex-start; flex-direction: column; }
       .progress-grid, .results-grid { grid-template-columns: 1fr; }
       #chart-frame { height: 510px; }
-      .attempt-detail { grid-template-columns: 1fr; }
     }
     @media (max-width: 470px) {
       .timing-grid { grid-template-columns: 1fr; }
-      .attempt summary { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -163,11 +140,6 @@ HTML_TEMPLATE = r"""<!doctype html>
       </div>
     </section>
 
-    <section class="section" aria-label="Campaign attempts">
-      <div class="attempt-head" aria-hidden="true"><span>Candidate</span><span>Class</span><span>State</span><span>Duration</span><span>Seeding</span><span>Ambiguity eff.</span><span>Evidence</span></div>
-      <div id="attempts" class="attempts"></div>
-      <div id="history-empty" class="notice" hidden>No attempt evidence has been recorded for this campaign.</div>
-    </section>
   </div>
 </main>
 <script>
@@ -400,16 +372,6 @@ function safeLink(value) {
     return url.href;
   } catch (_) { return null; }
 }
-function link(label, href) {
-  const safe = safeLink(href);
-  if (!safe) return null;
-  const anchor = document.createElement('a');
-  anchor.textContent = label;
-  anchor.href = safe;
-  anchor.target = '_blank';
-  anchor.rel = 'noopener noreferrer';
-  return anchor;
-}
 function setProgress(valueId, barId, current, target, cap = false) {
   setText(valueId, `${current} / ${target}`);
   const percentage = target > 0 ? Math.min(current / target * 100, 100) : 0;
@@ -458,80 +420,6 @@ function renderSeedingLeaders(snapshot) {
     card.append(name, value, note);
     container.appendChild(card);
   });
-}
-function evidenceCell(attempt) {
-  const wrapper = document.createElement('span');
-  wrapper.className = 'evidence-links';
-  const record = link('Record', attempt.links?.record);
-  const commit = link('Commit', attempt.links?.commit);
-  if (record) wrapper.appendChild(record);
-  if (commit) wrapper.appendChild(commit);
-  if (!wrapper.childElementCount) wrapper.textContent = 'Unavailable';
-  return wrapper;
-}
-function cell(label, content) {
-  const wrapper = document.createElement('span');
-  wrapper.className = 'attempt-cell';
-  const mobile = document.createElement('span');
-  mobile.className = 'mobile-label';
-  mobile.textContent = label;
-  wrapper.appendChild(mobile);
-  if (content instanceof Node) wrapper.appendChild(content); else wrapper.appendChild(document.createTextNode(content));
-  return wrapper;
-}
-function attemptElement(attempt) {
-  const details = document.createElement('details');
-  details.className = 'attempt';
-  const summary = document.createElement('summary');
-  const candidate = document.createElement('strong');
-  candidate.textContent = attempt.candidate;
-  const state = document.createElement('span');
-  state.className = `chip ${attempt.state === 'completed' ? 'good' : attempt.state === 'failed' ? 'bad' : 'warn'}`;
-  state.textContent = attempt.state;
-  summary.append(
-    cell('Candidate', candidate),
-    cell('Class', attempt.classification || 'Unavailable'),
-    cell('State', state),
-    cell('Duration', formatDuration(attempt.duration_seconds)),
-    cell('Seeding', formatMs(attempt.timed_seeding_time_per_event_ms)),
-    cell('Ambiguity eff.', formatEfficiency(attempt.timed_ambiguity_particle_efficiency)),
-    cell('Evidence', evidenceCell(attempt))
-  );
-  const detail = document.createElement('div');
-  detail.className = 'attempt-detail';
-  const outcome = document.createElement('p');
-  outcome.textContent = attempt.outcome || 'Current attempt has no recorded outcome yet.';
-  const dates = document.createElement('p');
-  dates.textContent = `${formatInstant(attempt.started_at)} → ${formatInstant(attempt.finished_at)}`;
-  detail.append(outcome, dates);
-  details.append(summary, detail);
-  return details;
-}
-function renderHistory(snapshot) {
-  const container = document.getElementById('attempts');
-  container.replaceChildren();
-  const attempts = [...snapshot.attempts];
-  const current = snapshot.current_attempt;
-  const currentStarted = current?.started_at ? Date.parse(current.started_at) : NaN;
-  const currentRecorded = current && attempts.some((attempt) =>
-    attempt.candidate === current.candidate
-    && (!Number.isFinite(currentStarted) || Date.parse(attempt.started_at) >= currentStarted)
-  );
-  if (current && !currentRecorded) {
-    const started = currentStarted;
-    attempts.push({
-      ...current,
-      state: current.state,
-      duration_seconds: Number.isFinite(started) ? Math.max(0, (Date.now() - started) / 1000) : null,
-      timed_seeding_time_per_event_ms: null,
-      timed_ambiguity_particle_efficiency: null,
-      outcome: `Current controlled stage: ${current.controlled_stage}`,
-      finished_at: null,
-      links: {}
-    });
-  }
-  attempts.reverse().forEach((attempt) => container.appendChild(attemptElement(attempt)));
-  document.getElementById('history-empty').hidden = attempts.length !== 0;
 }
 function comparisonPoints(snapshot) {
   const baseline = snapshot.promising_results.latest_genesis;
@@ -661,7 +549,6 @@ function renderSnapshot(snapshot, campaign) {
   renderFreshness(snapshot, campaign);
   renderSeedingLeaders(snapshot);
   renderComparisonChart(snapshot);
-  renderHistory(snapshot);
   emptyState.hidden = true;
   dashboard.hidden = false;
   document.title = 'ACTS Seeding Campaign · Live Dashboard';
