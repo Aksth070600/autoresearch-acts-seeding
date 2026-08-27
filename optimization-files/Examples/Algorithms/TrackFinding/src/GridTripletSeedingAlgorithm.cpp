@@ -160,10 +160,10 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
       Acts::SpacePointColumns::VarianceZ | Acts::SpacePointColumns::VarianceR |
       Acts::SpacePointColumns::CopyFromIndex);
   coreSpacePoints.reserve(grid.numberOfSpacePoints());
-  std::vector<std::uint32_t> gridSpacePointOffsets;
-  gridSpacePointOffsets.reserve(grid.numberOfBins() + 1);
-  gridSpacePointOffsets.push_back(0);
+  std::vector<Acts::SpacePointIndexRange2> gridSpacePointRanges;
+  gridSpacePointRanges.reserve(grid.numberOfBins());
   for (std::size_t i = 0; i < grid.numberOfBins(); ++i) {
+    std::uint32_t begin = coreSpacePoints.size();
     for (Acts::SpacePointIndex2 spIndex : grid.at(i)) {
       const ConstSpacePointProxy& sp = spacePoints[spIndex];
 
@@ -176,7 +176,8 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
       newSp.varianceR() = static_cast<float>(sp.varianceR());
       newSp.copyFromIndex() = sp.index();
     }
-    gridSpacePointOffsets.push_back(coreSpacePoints.size());
+    std::uint32_t end = coreSpacePoints.size();
+    gridSpacePointRanges.emplace_back(begin, end);
   }
 
   // Compute radius range. We rely on the fact the grid is storing the proxies
@@ -184,14 +185,12 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   const Acts::Range1D<float> rRange = [&]() -> Acts::Range1D<float> {
     float minRange = std::numeric_limits<float>::max();
     float maxRange = std::numeric_limits<float>::lowest();
-    for (std::size_t bin = 0; bin + 1 < gridSpacePointOffsets.size(); ++bin) {
-      const std::uint32_t begin = gridSpacePointOffsets[bin];
-      const std::uint32_t end = gridSpacePointOffsets[bin + 1];
-      if (begin == end) {
+    for (const Acts::SpacePointIndexRange2& range : gridSpacePointRanges) {
+      if (range.first == range.second) {
         continue;
       }
-      auto first = coreSpacePoints[begin];
-      auto last = coreSpacePoints[end - 1];
+      auto first = coreSpacePoints[range.first];
+      auto last = coreSpacePoints[range.second - 1];
       minRange = std::min(first.zr()[1], minRange);
       maxRange = std::max(last.zr()[1], maxRange);
     }
@@ -272,23 +271,14 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
     bottomSpRanges.clear();
     for (const auto b : bottom) {
       bottomSpRanges.push_back(
-          coreSpacePoints
-              .range({gridSpacePointOffsets.at(b),
-                      gridSpacePointOffsets.at(b + 1)})
-              .asConst());
+          coreSpacePoints.range(gridSpacePointRanges.at(b)).asConst());
     }
     middleSpRange =
-        coreSpacePoints
-            .range({gridSpacePointOffsets.at(middle),
-                    gridSpacePointOffsets.at(middle + 1)})
-            .asConst();
+        coreSpacePoints.range(gridSpacePointRanges.at(middle)).asConst();
     topSpRanges.clear();
     for (const auto t : top) {
       topSpRanges.push_back(
-          coreSpacePoints
-              .range({gridSpacePointOffsets.at(t),
-                      gridSpacePointOffsets.at(t + 1)})
-              .asConst());
+          coreSpacePoints.range(gridSpacePointRanges.at(t)).asConst());
     }
 
     if (middleSpRange->empty()) {
