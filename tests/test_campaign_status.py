@@ -543,6 +543,8 @@ class CampaignStatusTests(unittest.TestCase):
         self.assertIn("<h2 id=\"results-heading\">Promising Early Results</h2>", html)
         self.assertIn('id="seeding-leaders"', html)
         self.assertIn("function renderSeedingLeaders(snapshot)", html)
+        self.assertIn("name.className = 'card-name'", html)
+        self.assertIn(".card-name {", html)
         self.assertIn("function seedingComparison(result, genesis)", html)
         self.assertIn("formatSigned(comparison.deltaMs)", html)
         self.assertIn(".slice(0, 3)", html)

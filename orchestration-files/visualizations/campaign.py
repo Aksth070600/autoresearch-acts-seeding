@@ -57,6 +57,8 @@ HTML_TEMPLATE = r"""<!doctype html>
       border: 1px solid #334155; border-radius: 12px; }
     .card-label { display: block; margin-bottom: 5px; color: #94a3b8; font-size: 0.75rem; font-weight: 750;
       letter-spacing: 0.05em; text-transform: uppercase; }
+    .card-name { display: block; margin-bottom: 5px; overflow-wrap: anywhere; color: #f8fafc;
+      font-size: 0.9rem; font-weight: 750; }
     .card-value { display: block; overflow-wrap: anywhere; color: #f8fafc; font-size: 1.05rem; font-weight: 750; }
     .card-note { display: block; margin-top: 5px; color: #94a3b8; font-size: 0.79rem; line-height: 1.35; }
     .progress-track { height: 6px; margin-top: 10px; overflow: hidden; border-radius: 999px; background: #334155; }
@@ -434,7 +436,7 @@ function renderSeedingLeaders(snapshot) {
     const card = document.createElement('div');
     card.className = 'card';
     const name = document.createElement('span');
-    name.className = 'card-label';
+    name.className = 'card-name';
     name.textContent = result.candidate;
     const value = document.createElement('strong');
     value.className = 'card-value';
