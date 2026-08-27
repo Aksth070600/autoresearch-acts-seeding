@@ -312,7 +312,7 @@
   "campaign": {
     "branch": "autoresearch-acts-seeding/aug27-v6",
     "name": "ACTS Seeding Development campaign v6",
-    "phase": "candidate loop: 16 of 20 complete",
+    "phase": "candidate loop: 17 of 20",
     "started_at": "2026-08-27T11:03:33Z",
     "targets": {
       "completed_attempts": 20,
@@ -320,24 +320,31 @@
       "structural_attempts": 10
     }
   },
-  "current_attempt": null,
+  "current_attempt": {
+    "candidate": "DoubletMiddleDataflowRecord",
+    "classification": "structural",
+    "controlled_stage": "queued Development run",
+    "mechanism_family": "doublet-middle-dataflow-record",
+    "started_at": "2026-08-27T15:23:47Z",
+    "state": "queued"
+  },
   "failures": [],
-  "generated_at": "2026-08-27T15:22:27.078059Z",
+  "generated_at": "2026-08-27T15:23:47.767393Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/8e40a127f979e832aa8b345f7d6eaea323a84118",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/08c3179067db9812607368c22355f8be3e46ec80",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/aug27-v6",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/25"
   },
   "progress": {
     "completed_attempts": 16,
-    "elapsed_seconds": 15534.078059,
-    "estimated_remaining_seconds": 3185.504,
-    "eta_basis": "Median of 16 completed attempts.",
+    "elapsed_seconds": 15614.767393,
+    "estimated_remaining_seconds": 3184.736607,
+    "eta_basis": "Median of 16 completed attempts; current attempt elapsed time deducted.",
     "eta_sample_count": 16,
-    "expected_finish_at": "2026-08-27T16:15:32.582059Z",
+    "expected_finish_at": "2026-08-27T16:16:52.504000Z",
     "median_completed_attempt_duration_seconds": 796.376,
     "micro_optimizations": 3,
-    "structural_attempts": 13
+    "structural_attempts": 14
   },
   "promising_results": {
     "best_ambiguity_efficiency": {
