@@ -148,11 +148,24 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
     grid.insert(i, phi, sp.z(), sp.r());
   }
 
+  const auto radiusLess = [&](const Acts::SpacePointIndex2& a,
+                              const Acts::SpacePointIndex2& b) {
+    return spacePoints[a].r() < spacePoints[b].r();
+  };
+  std::vector<Acts::SpacePointIndex2> mergeScratch;
   for (std::size_t i = 0; i < grid.numberOfBins(); ++i) {
-    std::ranges::sort(grid.at(i), [&](const Acts::SpacePointIndex2& a,
-                                      const Acts::SpacePointIndex2& b) {
-      return spacePoints[a].r() < spacePoints[b].r();
-    });
+    auto& bin = grid.at(i);
+    mergeScratch.resize(bin.size());
+    for (std::size_t width = 1; width < bin.size(); width *= 2) {
+      for (std::size_t left = 0; left < bin.size(); left += 2 * width) {
+        const std::size_t middle = std::min(left + width, bin.size());
+        const std::size_t right = std::min(left + 2 * width, bin.size());
+        std::merge(bin.begin() + left, bin.begin() + middle,
+                   bin.begin() + middle, bin.begin() + right,
+                   mergeScratch.begin() + left, radiusLess);
+      }
+      bin.swap(mergeScratch);
+    }
   }
 
   Acts::SpacePointContainer2 coreSpacePoints(
