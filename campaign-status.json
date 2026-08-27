@@ -366,7 +366,7 @@
   "campaign": {
     "branch": "autoresearch-acts-seeding/aug27-v6",
     "name": "ACTS Seeding Development campaign v6",
-    "phase": "candidate loop: 19 of 20 complete",
+    "phase": "candidate loop: 20 of 20",
     "started_at": "2026-08-27T11:03:33Z",
     "targets": {
       "completed_attempts": 20,
@@ -374,24 +374,31 @@
       "structural_attempts": 10
     }
   },
-  "current_attempt": null,
+  "current_attempt": {
+    "candidate": "SeedDirectOriginalIndexOutput",
+    "classification": "structural",
+    "controlled_stage": "queued Development run",
+    "mechanism_family": "seed-direct-original-index-output",
+    "started_at": "2026-08-27T16:08:19Z",
+    "state": "queued"
+  },
   "failures": [],
-  "generated_at": "2026-08-27T16:07:00.334494Z",
+  "generated_at": "2026-08-27T16:08:19.425047Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/955ad2dae120192dca5c90551d1602c79dbfe209",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/32bb3850d7cec657af9af44b6e15c1bed1d3c220",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/aug27-v6",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/25"
   },
   "progress": {
     "completed_attempts": 19,
-    "elapsed_seconds": 18207.334494,
-    "estimated_remaining_seconds": 790.682,
-    "eta_basis": "Median of 19 completed attempts.",
+    "elapsed_seconds": 18286.425047,
+    "estimated_remaining_seconds": 790.2569530000001,
+    "eta_basis": "Median of 19 completed attempts; current attempt elapsed time deducted.",
     "eta_sample_count": 19,
-    "expected_finish_at": "2026-08-27T16:20:11.016494Z",
+    "expected_finish_at": "2026-08-27T16:21:29.682000Z",
     "median_completed_attempt_duration_seconds": 790.682,
     "micro_optimizations": 4,
-    "structural_attempts": 15
+    "structural_attempts": 16
   },
   "promising_results": {
     "best_ambiguity_efficiency": {
