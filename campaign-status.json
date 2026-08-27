@@ -276,7 +276,7 @@
   "campaign": {
     "branch": "autoresearch-acts-seeding/aug27-v6",
     "name": "ACTS Seeding Development campaign v6",
-    "phase": "candidate loop: 14 of 20 complete",
+    "phase": "candidate loop: 15 of 20",
     "started_at": "2026-08-27T11:03:33Z",
     "targets": {
       "completed_attempts": 20,
@@ -284,24 +284,31 @@
       "structural_attempts": 10
     }
   },
-  "current_attempt": null,
+  "current_attempt": {
+    "candidate": "GridBinInsertionSort",
+    "classification": "structural",
+    "controlled_stage": "queued Development run",
+    "mechanism_family": "grid-bin-insertion-sort",
+    "started_at": "2026-08-27T14:54:47Z",
+    "state": "queued"
+  },
   "failures": [],
-  "generated_at": "2026-08-27T14:53:40.686757Z",
+  "generated_at": "2026-08-27T14:54:47.553494Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/0a968d0495c88de25db1c386913f01bdfc974a5d",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/291adb8541df26a3c49d6e198f63d31533bf952a",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/aug27-v6",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/25"
   },
   "progress": {
     "completed_attempts": 14,
-    "elapsed_seconds": 13807.686757,
-    "estimated_remaining_seconds": 4820.946,
-    "eta_basis": "Median of 14 completed attempts.",
+    "elapsed_seconds": 13874.553494,
+    "estimated_remaining_seconds": 4820.392506,
+    "eta_basis": "Median of 14 completed attempts; current attempt elapsed time deducted.",
     "eta_sample_count": 14,
-    "expected_finish_at": "2026-08-27T16:14:01.632757Z",
+    "expected_finish_at": "2026-08-27T16:15:07.946000Z",
     "median_completed_attempt_duration_seconds": 803.491,
     "micro_optimizations": 2,
-    "structural_attempts": 12
+    "structural_attempts": 13
   },
   "promising_results": {
     "best_ambiguity_efficiency": {
