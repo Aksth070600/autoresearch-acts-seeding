@@ -177,27 +177,40 @@ class Impl final : public TripletSeedFinder {
     // eta=infinity: ~8.5%
     const float scatteringInRegion2 = m_cfg.multipleScattering2 * iSinTheta2;
 
-    struct SlopeCompatibleTop {
-      std::size_t index{};
-      float error2{};
-      float deltaCotTheta2{};
-    };
-    std::vector<SlopeCompatibleTop> slopeCompatible;
-    slopeCompatible.reserve(topDoublets.size());
-
     std::size_t topDoubletOffset = 0;
     for (auto [topDoublet, topDoubletIndex] :
          zip(topDoublets, std::ranges::iota_view<std::size_t, std::size_t>(
                               0, topDoublets.size()))) {
+      const SpacePointIndex2 spT = topDoublet.spacePointIndex();
       const float cotThetaT = topDoublet.cotTheta();
+
+      // use geometric average
       const float cotThetaAvg2 = cotThetaB * cotThetaT;
+
+      // add errors of spB-spM and spM-spT pairs and add the correlation term
+      // for errors on spM
       const float error2 = topDoublet.er() + erB +
                            2 * (cotThetaAvg2 * varianceRM + varianceZM) *
                                iDeltaRB * topDoublet.iDeltaR();
+
       const float deltaCotTheta = cotThetaB - cotThetaT;
       const float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
+
+      // Apply a cut on the compatibility between the r-z slope of the two
+      // seed segments. This is done by comparing the squared difference
+      // between slopes, and comparing to the squared uncertainty in this
+      // difference - we keep a seed if the difference is compatible within
+      // the assumed uncertainties. The uncertainties get contribution from
+      // the  space-point-related squared error (error2) and a scattering term
+      // calculated assuming the minimum pt we expect to reconstruct
+      // (scatteringInRegion2). This assumes gaussian error propagation which
+      // allows just adding the two errors if they are uncorrelated (which is
+      // fair for scattering and measurement uncertainties)
       if (deltaCotTheta2 > error2 + scatteringInRegion2) {
         if constexpr (sortedByCotTheta) {
+          // skip top SPs based on cotTheta sorting when producing triplets
+          // break if cotTheta from bottom SP < cotTheta from top SP because
+          // the SP are sorted by cotTheta
           if (cotThetaB < cotThetaT) {
             break;
           }
@@ -205,16 +218,6 @@ class Impl final : public TripletSeedFinder {
         }
         continue;
       }
-      slopeCompatible.push_back({topDoubletIndex, error2, deltaCotTheta2});
-    }
-
-    for (const SlopeCompatibleTop& candidate : slopeCompatible) {
-      const std::size_t topDoubletIndex = candidate.index;
-      const auto topDoublet = topDoublets[topDoubletIndex];
-      const SpacePointIndex2 spT = topDoublet.spacePointIndex();
-      const float cotThetaT = topDoublet.cotTheta();
-      const float error2 = candidate.error2;
-      const float deltaCotTheta2 = candidate.deltaCotTheta2;
 
       const float dU = topDoublet.u() - Ub;
       // protects against division by 0
