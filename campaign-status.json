@@ -1,0 +1,55 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Aksth070600/autoresearch-acts-seeding/main/orchestration-files/campaign-status.schema.json",
+  "attempts": [],
+  "blockers": [],
+  "campaign": {
+    "branch": "fm/acts-campaign-v6",
+    "name": "ACTS Seeding Development campaign v6",
+    "phase": "fresh Genesis baseline",
+    "started_at": "2026-08-27T11:03:33Z",
+    "targets": {
+      "completed_attempts": 20,
+      "micro_optimization_cap": 5,
+      "structural_attempts": 10
+    }
+  },
+  "current_attempt": {
+    "candidate": "Genesis",
+    "classification": "baseline",
+    "controlled_stage": "queued Development run",
+    "mechanism_family": "fresh Genesis baseline",
+    "started_at": "2026-08-27T11:03:33Z",
+    "state": "queued"
+  },
+  "failures": [],
+  "generated_at": "2026-08-27T11:03:51.655271Z",
+  "links": {
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/0ee9df6817bae9edb09472546e2cf885dd190895",
+    "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/fm/acts-campaign-v6",
+    "pull_request": null
+  },
+  "progress": {
+    "completed_attempts": 0,
+    "elapsed_seconds": 18.655271,
+    "estimated_remaining_seconds": null,
+    "eta_basis": "Unavailable until 3 completed attempt durations exist (0 available).",
+    "eta_sample_count": 0,
+    "expected_finish_at": null,
+    "median_completed_attempt_duration_seconds": null,
+    "micro_optimizations": 0,
+    "structural_attempts": 0
+  },
+  "promising_results": {
+    "best_ambiguity_efficiency": null,
+    "best_seeding": null,
+    "latest_genesis": null,
+    "pareto_front": []
+  },
+  "protocol_id": "acts-seeding-v2",
+  "repository": {
+    "snapshot_path": "campaign-status.json",
+    "url": "https://github.com/Aksth070600/autoresearch-acts-seeding"
+  },
+  "schema_version": "1.0.0",
+  "stale_after_seconds": 900
+}
