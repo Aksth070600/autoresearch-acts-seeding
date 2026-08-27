@@ -70,6 +70,7 @@ class Impl final : public DoubletSeedFinder {
                          (cotTheta * cotTheta) * (varianceRM + varianceRO));
     };
 
+    std::uint32_t candidateCount = 0;
     if constexpr (sortedByR) {
       // find the first SP inside the radius region of interest and update
       // the iterator so we don't need to look at the other SPs again
@@ -90,12 +91,28 @@ class Impl final : public DoubletSeedFinder {
         ++offset;
       }
       candidateSps = candidateSps.subrange(offset);
+
+      for (ConstSpacePointProxy2 otherSp : candidateSps) {
+        const float deltaR = isBottomCandidate
+                                 ? rM - otherSp.zr()[1]
+                                 : otherSp.zr()[1] - rM;
+        if (deltaR > m_cfg.deltaRMax || deltaR < m_cfg.deltaRMin) {
+          break;
+        }
+        ++candidateCount;
+      }
     }
 
     const SpacePointContainer2& container = candidateSps.container();
     for (auto [indexO, xyO, zrO, varianceZO, varianceRO] : candidateSps.zip(
              container.xyColumn(), container.zrColumn(),
              container.varianceZColumn(), container.varianceRColumn())) {
+      if constexpr (sortedByR) {
+        if (candidateCount == 0) {
+          break;
+        }
+        --candidateCount;
+      }
       const float xO = xyO[0];
       const float yO = xyO[1];
       const float zO = zrO[0];
@@ -104,22 +121,8 @@ class Impl final : public DoubletSeedFinder {
       float deltaR = 0;
       if constexpr (isBottomCandidate) {
         deltaR = rM - rO;
-
-        if constexpr (sortedByR) {
-          // if r-distance is too small we are done
-          if (deltaR < m_cfg.deltaRMin) {
-            break;
-          }
-        }
       } else {
         deltaR = rO - rM;
-
-        if constexpr (sortedByR) {
-          // if r-distance is too big we are done
-          if (deltaR > m_cfg.deltaRMax) {
-            break;
-          }
-        }
       }
 
       if constexpr (!sortedByR) {
