@@ -66,11 +66,14 @@ class DoubletsForMiddleSp {
   /// @param x X coordinate
   /// @param y Y coordinate
   void emplace_back(SpacePointIndex2 sp, float cotTheta, float iDeltaR,
-                    float er, float u, float v, float x, float y) {
+                    float er, float u, float v, float x, float y,
+                    bool storeTransformedXY) {
     m_identity.push_back({sp, cotTheta});
     m_er_iDeltaR.push_back({er, iDeltaR});
     m_uv.push_back({u, v});
-    m_xy.push_back({x, y});
+    if (storeTransformedXY) {
+      m_xy.push_back({x, y});
+    }
   }
 
   /// Pair of doublet index and cotTheta value.
@@ -283,6 +286,9 @@ class DoubletSeedFinder {
   struct Config {
     /// Whether the input space points are sorted by radius
     bool spacePointsSortedByRadius = false;
+
+    /// Store transformed XY fields required only by strip triplet finding.
+    bool storeTransformedXY = true;
 
     /// Direction of the doublet candidate space points. Either forward, also
     /// called top doublet, or backward, also called bottom doublet.

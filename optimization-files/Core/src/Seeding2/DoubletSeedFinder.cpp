@@ -186,8 +186,9 @@ class Impl final : public DoubletSeedFinder {
             calculateError(varianceZO, varianceRO, iDeltaR2, cotTheta);
 
         // fill output vectors
-        compatibleDoublets.emplace_back(indexO, cotTheta, iDeltaR, er, uT, vT,
-                                        xNewFrame, yNewFrame);
+        compatibleDoublets.emplace_back(
+            indexO, cotTheta, iDeltaR, er, uT, vT, xNewFrame, yNewFrame,
+            m_cfg.storeTransformedXY);
         continue;
       }
 
@@ -256,8 +257,9 @@ class Impl final : public DoubletSeedFinder {
           calculateError(varianceZO, varianceRO, iDeltaR2, cotTheta);
 
       // fill output vectors
-      compatibleDoublets.emplace_back(indexO, cotTheta, iDeltaR, er, uT, vT,
-                                      xNewFrame, yNewFrame);
+      compatibleDoublets.emplace_back(
+          indexO, cotTheta, iDeltaR, er, uT, vT, xNewFrame, yNewFrame,
+          m_cfg.storeTransformedXY);
     }
   }
 
