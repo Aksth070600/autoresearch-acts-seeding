@@ -168,6 +168,10 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
   struct Cache {
     /// Cache for top space point indices during compatibility search
     std::vector<std::uint32_t> topSpIndexVec;
+    /// Radius metric materialized for every top candidate
+    std::vector<float> topR;
+    /// Pairwise curvature and radius compatibility in sorted-index order
+    std::vector<std::uint8_t> compatibilityMatrix;
     /// Cache for compatible seed radii during score calculation
     std::vector<float> compatibleSeedR;
     /// Cache for sorted triplet candidates during selection
