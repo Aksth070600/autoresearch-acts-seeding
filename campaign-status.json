@@ -258,7 +258,7 @@
   "campaign": {
     "branch": "autoresearch-acts-seeding/aug27-v6",
     "name": "ACTS Seeding Development campaign v6",
-    "phase": "candidate loop: 13 of 20 complete",
+    "phase": "candidate loop: 14 of 20",
     "started_at": "2026-08-27T11:03:33Z",
     "targets": {
       "completed_attempts": 20,
@@ -266,24 +266,31 @@
       "structural_attempts": 10
     }
   },
-  "current_attempt": null,
+  "current_attempt": {
+    "candidate": "FilterCurvatureInsertionSort",
+    "classification": "structural",
+    "controlled_stage": "queued Development run",
+    "mechanism_family": "filter-curvature-insertion-sort",
+    "started_at": "2026-08-27T14:40:14Z",
+    "state": "queued"
+  },
   "failures": [],
-  "generated_at": "2026-08-27T14:39:39.251601Z",
+  "generated_at": "2026-08-27T14:40:14.975220Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/4c12b4ac36600fa6b6f8a8af351e3b898a6d63b9",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/163b6771ae4ece0e0aa097939590ddbc7995a4c9",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/aug27-v6",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/25"
   },
   "progress": {
     "completed_attempts": 13,
-    "elapsed_seconds": 12966.251601,
-    "estimated_remaining_seconds": 5626.88,
-    "eta_basis": "Median of 13 completed attempts.",
+    "elapsed_seconds": 13001.97522,
+    "estimated_remaining_seconds": 5625.90478,
+    "eta_basis": "Median of 13 completed attempts; current attempt elapsed time deducted.",
     "eta_sample_count": 13,
-    "expected_finish_at": "2026-08-27T16:13:26.131601Z",
+    "expected_finish_at": "2026-08-27T16:14:00.880000Z",
     "median_completed_attempt_duration_seconds": 803.84,
     "micro_optimizations": 2,
-    "structural_attempts": 11
+    "structural_attempts": 12
   },
   "promising_results": {
     "best_ambiguity_efficiency": {
