@@ -50,21 +50,27 @@ bool CandidatesForMiddleSp2::push(Container& container, Size nMax,
   }
 
   if (container.size() < nMax) {
+    // If there is still space, add anything
     m_storage.emplace_back(spB, spM, spT, weight, zOrigin, isQuality);
-    container.emplace(weight, m_storage.size() - 1);
+    container.emplace_back(weight, m_storage.size() - 1);
+    std::ranges::push_heap(container, comparator);
     return true;
   }
 
-  const auto smallest = container.begin();
-  if (weight <= smallest->first) {
+  // If no space, replace one if quality is enough
+  // Compare to element with lowest weight
+  const auto [smallestWeight, smallestIndex] = container.front();
+  if (weight <= smallestWeight) {
     return false;
   }
 
-  const Index smallestIndex = smallest->second;
+  // Remove element with lower weight and add this one
   m_storage[smallestIndex] =
       TripletCandidate2(spB, spM, spT, weight, zOrigin, isQuality);
-  container.erase(smallest);
-  container.emplace(weight, smallestIndex);
+  std::ranges::pop_heap(container, comparator);
+  container.back() = {weight, smallestIndex};
+  std::ranges::push_heap(container, comparator);
+
   return true;
 }
 
@@ -73,12 +79,14 @@ void CandidatesForMiddleSp2::toSortedCandidates(
   output.clear();
   output.reserve(size());
 
-  for (auto item = m_indicesHigh.rbegin(); item != m_indicesHigh.rend();
-       ++item) {
-    output.emplace_back(m_storage[item->second]);
+  std::ranges::sort_heap(m_indicesHigh, comparator);
+  std::ranges::sort_heap(m_indicesLow, comparator);
+
+  for (const auto& [weight, index] : m_indicesHigh) {
+    output.emplace_back(m_storage[index]);
   }
-  for (auto item = m_indicesLow.rbegin(); item != m_indicesLow.rend(); ++item) {
-    output.emplace_back(m_storage[item->second]);
+  for (const auto& [weight, index] : m_indicesLow) {
+    output.emplace_back(m_storage[index]);
   }
 
   clear();
