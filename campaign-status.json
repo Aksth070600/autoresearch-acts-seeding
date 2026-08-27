@@ -34,15 +34,15 @@
   },
   "current_attempt": null,
   "failures": [],
-  "generated_at": "2026-08-27T11:17:59.080573Z",
+  "generated_at": "2026-08-27T11:18:22.942972Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/610d4d9503222679e51ee4a0422a9462dd11fa3f",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/719ebc5a7ef00e40fb0e61a2ff7989c3d28d47be",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/fm/acts-campaign-v6",
-    "pull_request": null
+    "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/24"
   },
   "progress": {
     "completed_attempts": 0,
-    "elapsed_seconds": 866.080573,
+    "elapsed_seconds": 889.942972,
     "estimated_remaining_seconds": null,
     "eta_basis": "Unavailable until 3 completed attempt durations exist (0 available).",
     "eta_sample_count": 0,
