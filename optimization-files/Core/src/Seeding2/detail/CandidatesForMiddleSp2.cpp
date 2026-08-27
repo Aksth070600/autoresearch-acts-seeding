@@ -49,30 +49,25 @@ bool CandidatesForMiddleSp2::push(Container& container, Size nMax,
     return false;
   }
 
-  const auto insertionPosition = [&](float candidateWeight) {
-    return std::ranges::lower_bound(
-        container, candidateWeight,
-        [](float left, float right) { return left > right; },
-        [](const WeightIndex& item) { return item.first; });
-  };
-
   if (container.size() < nMax) {
+    // If there is still space, add anything.
     m_storage.emplace_back(spB, spM, spT, weight, zOrigin, isQuality);
-    container.insert(insertionPosition(weight),
-                     {weight, m_storage.size() - 1});
+    container.emplace_back(weight, m_storage.size() - 1);
     return true;
   }
 
-  // The list is descending, so its last entry is the rejection threshold.
-  const auto [smallestWeight, smallestIndex] = container.back();
-  if (weight <= smallestWeight) {
+  // The configured candidate sets are tiny. A linear minimum search avoids
+  // maintaining a heap for every accepted candidate.
+  const auto smallest = std::ranges::min_element(
+      container, {}, [](const WeightIndex& item) { return item.first; });
+  if (weight <= smallest->first) {
     return false;
   }
 
+  const Index smallestIndex = smallest->second;
   m_storage[smallestIndex] =
       TripletCandidate2(spB, spM, spT, weight, zOrigin, isQuality);
-  container.pop_back();
-  container.insert(insertionPosition(weight), {weight, smallestIndex});
+  *smallest = {weight, smallestIndex};
 
   return true;
 }
@@ -81,6 +76,9 @@ void CandidatesForMiddleSp2::toSortedCandidates(
     std::vector<TripletCandidate2>& output) {
   output.clear();
   output.reserve(size());
+
+  std::ranges::sort(m_indicesHigh, comparator);
+  std::ranges::sort(m_indicesLow, comparator);
 
   for (const auto& [weight, index] : m_indicesHigh) {
     output.emplace_back(m_storage[index]);
