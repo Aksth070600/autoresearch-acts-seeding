@@ -19,6 +19,8 @@ HTML_TEMPLATE = r"""<!doctype html>
     body { margin: 0; background: #0b1120; color: #e5e7eb; }
     main { max-width: 1280px; margin: 0 auto; padding: 24px; }
     h1 { margin: 0 0 8px; }
+    .topline { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+    .campaign-link { color: #a5b4fc; font-size: 0.9rem; font-weight: 650; white-space: nowrap; text-underline-offset: 3px; }
     .lede { color: #a5b4fc; margin: 0 0 20px; }
     .controls { display: grid; grid-template-columns: repeat(2, minmax(230px, 1fr)); gap: 14px; align-items: end;
       background: #111827; border: 1px solid #334155; border-radius: 10px; padding: 16px; }
@@ -56,7 +58,10 @@ HTML_TEMPLATE = r"""<!doctype html>
 </head>
 <body>
 <main>
-  <h1>ACTS Seeding Autoresearch</h1>
+  <div class="topline">
+    <h1>ACTS Seeding Autoresearch</h1>
+    <a class="campaign-link" href="campaign/">Open live campaign</a>
+  </div>
   <p class="lede">Lower X is better. Higher Y is better. The reference lines show the selected baseline.</p>
   <section class="controls" aria-label="Chart controls">
     <label>Dataset<select id="dataset"></select></label>

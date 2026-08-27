@@ -1,0 +1,644 @@
+"""Render the public live-campaign dashboard shell."""
+
+from __future__ import annotations
+
+from datetime import datetime, timezone
+from pathlib import Path
+
+from campaign_status import StatusError, validate_ref
+
+
+REPOSITORY = "Aksth070600/autoresearch-acts-seeding"
+POLL_INTERVAL_MS = 60_000
+
+
+HTML_TEMPLATE = r"""<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ACTS Seeding Live Campaign</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #0b1120; color: #e5e7eb; }
+    main { max-width: 1280px; margin: 0 auto; padding: 24px; }
+    a { color: #a5b4fc; text-underline-offset: 3px; }
+    a:hover { color: #c4b5fd; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { margin-bottom: 8px; }
+    h2 { margin-bottom: 12px; font-size: 1.2rem; }
+    .topline { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+    .lede { color: #a5b4fc; margin: 0 0 20px; }
+    .report-link { white-space: nowrap; font-size: 0.9rem; font-weight: 650; }
+    .controls { display: grid; grid-template-columns: minmax(230px, 1fr) auto; gap: 14px; align-items: end;
+      background: #111827; border: 1px solid #334155; border-radius: 10px; padding: 16px; }
+    label { display: grid; gap: 5px; font-size: 0.9rem; font-weight: 650; }
+    input, button { min-width: 0; padding: 8px 10px; border: 1px solid #475569; border-radius: 6px;
+      background: #1e293b; color: #e5e7eb; font: inherit; }
+    button { cursor: pointer; font-weight: 700; }
+    button:hover, button:focus-visible { border-color: #818cf8; background: #273449; }
+    button:disabled { cursor: wait; opacity: 0.7; }
+    .control-note { grid-column: 1 / -1; margin: -3px 0 0; color: #94a3b8; font-size: 0.82rem; }
+    .notice { margin-top: 12px; padding: 11px 13px; border: 1px solid #475569; border-radius: 8px; background: #111827; }
+    .notice.error { border-color: #b45309; color: #fed7aa; background: rgba(120,53,15,0.18); }
+    [hidden] { display: none !important; }
+    #empty-state { min-height: 270px; display: grid; place-items: center; margin-top: 14px; padding: 32px;
+      text-align: center; color: #94a3b8; background: #111827; border: 1px solid #334155; border-radius: 10px; }
+    #empty-state strong { display: block; margin-bottom: 7px; color: #e2e8f0; font-size: 1.05rem; }
+    .campaign-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 22px 0 12px; }
+    .campaign-heading h2 { margin: 0; }
+    .chips { display: flex; flex-wrap: wrap; gap: 7px; }
+    .chip { display: inline-flex; align-items: center; width: max-content; max-width: 100%; padding: 4px 9px;
+      border: 1px solid #475569; border-radius: 999px; color: #cbd5e1; background: #1e293b;
+      font-size: 0.76rem; font-weight: 700; }
+    .chip.good { color: #bbf7d0; border-color: #15803d; background: rgba(20,83,45,0.35); }
+    .chip.warn { color: #fde68a; border-color: #a16207; background: rgba(113,63,18,0.35); }
+    .chip.bad { color: #fecaca; border-color: #b91c1c; background: rgba(127,29,29,0.35); }
+    .grid { display: grid; gap: 12px; }
+    .overview-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .progress-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 12px; }
+    .timing-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 12px; }
+    .results-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .card { min-width: 0; min-height: 82px; padding: 12px 14px; background: #111827;
+      border: 1px solid #334155; border-radius: 12px; }
+    .card-label { display: block; margin-bottom: 5px; color: #94a3b8; font-size: 0.75rem; font-weight: 750;
+      letter-spacing: 0.05em; text-transform: uppercase; }
+    .card-value { display: block; overflow-wrap: anywhere; color: #f8fafc; font-size: 1.05rem; font-weight: 750; }
+    .card-note { display: block; margin-top: 5px; color: #94a3b8; font-size: 0.79rem; line-height: 1.35; }
+    .progress-track { height: 6px; margin-top: 10px; overflow: hidden; border-radius: 999px; background: #334155; }
+    .progress-fill { display: block; width: 0; height: 100%; border-radius: inherit; background: #818cf8; transition: width 220ms ease; }
+    .progress-fill.good { background: #22c55e; }
+    .progress-fill.warn { background: #eab308; }
+    .section { margin-top: 24px; }
+    .section-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+    .note { color: #94a3b8; font-size: 0.86rem; }
+    .issue-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+    .issue { padding: 11px 13px; border-left: 3px solid #ef4444; border-radius: 6px; background: #111827; }
+    .issue.failure { border-left-color: #f59e0b; }
+    #chart-frame { position: relative; height: 520px; background: #111827; border: 1px solid #334155;
+      border-radius: 10px; overflow: hidden; }
+    #chart { height: 100%; }
+    #plot-empty { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px;
+      color: #94a3b8; text-align: center; pointer-events: none; }
+    .attempt-head, .attempt summary { display: grid; grid-template-columns: 1.25fr 1.25fr .72fr .72fr .8fr .9fr .9fr .8fr;
+      gap: 10px; align-items: center; }
+    .attempt-head { padding: 0 34px 7px 14px; color: #94a3b8; font-size: 0.7rem; font-weight: 750;
+      letter-spacing: 0.04em; text-transform: uppercase; }
+    .attempts { display: grid; gap: 7px; }
+    .attempt { background: #111827; border: 1px solid #334155; border-radius: 9px; }
+    .attempt[open] { border-color: #475569; }
+    .attempt summary { min-height: 58px; padding: 9px 12px; cursor: pointer; list-style-position: inside; }
+    .attempt summary:hover { background: rgba(30,41,59,0.55); }
+    .attempt-cell { min-width: 0; overflow-wrap: anywhere; font-size: 0.85rem; }
+    .attempt-cell strong { color: #f8fafc; }
+    .attempt-cell .mobile-label { display: none; color: #94a3b8; font-size: 0.67rem; font-weight: 750;
+      letter-spacing: 0.04em; text-transform: uppercase; }
+    .attempt-detail { display: grid; grid-template-columns: 1fr auto; gap: 12px; margin: 0 12px 12px; padding: 11px 12px;
+      color: #cbd5e1; background: #0b1120; border-radius: 7px; font-size: 0.84rem; }
+    .attempt-detail p { margin: 0; }
+    .evidence-links { display: flex; flex-wrap: wrap; gap: 9px; }
+    code { background: #334155; padding: 2px 5px; border-radius: 4px; }
+    @media (max-width: 950px) {
+      .overview-grid, .timing-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .attempt-head { display: none; }
+      .attempt summary { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 12px 14px; }
+      .attempt-cell .mobile-label { display: block; margin-bottom: 2px; }
+    }
+    @media (max-width: 700px) {
+      main { padding: 18px; }
+      .topline, .campaign-heading, .section-heading { align-items: flex-start; flex-direction: column; }
+      .controls { grid-template-columns: 1fr; }
+      .control-note { grid-column: 1; }
+      .progress-grid, .results-grid { grid-template-columns: 1fr; }
+      #chart-frame { height: 430px; }
+      .attempt-detail { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 470px) {
+      .overview-grid, .timing-grid { grid-template-columns: 1fr; }
+      .attempt summary { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <div class="topline">
+    <div>
+      <h1>ACTS Seeding Live Campaign</h1>
+      <p class="lede">Public Development progress on the two controlled objectives.</p>
+    </div>
+    <a class="report-link" href="../">Open results report</a>
+  </div>
+
+  <form id="campaign-form" class="controls">
+    <label>Campaign branch or ref
+      <input id="campaign-ref" name="ref" type="text" maxlength="200" autocomplete="off"
+        spellcheck="false" placeholder="autoresearch-acts-seeding/aug25">
+    </label>
+    <button id="load-button" type="submit">Load campaign</button>
+    <p class="control-note">Use a public branch that commits <code>campaign-status.json</code>. Add <code>?ref=&lt;branch&gt;</code> to share this view.</p>
+  </form>
+  <div id="fetch-error" class="notice error" role="alert" hidden></div>
+  <div id="empty-state">
+    <div><strong>Choose a public campaign branch</strong>The last good snapshot stays visible if a later refresh fails.</div>
+  </div>
+
+  <div id="dashboard" hidden>
+    <div class="campaign-heading">
+      <h2><span id="campaign-name"></span></h2>
+      <div class="chips">
+        <span id="freshness" class="chip"></span>
+        <span id="campaign-branch" class="chip"></span>
+      </div>
+    </div>
+
+    <section class="grid overview-grid" aria-label="Campaign state">
+      <div class="card"><span class="card-label">Phase</span><strong id="phase" class="card-value"></strong></div>
+      <div class="card"><span class="card-label">Current candidate</span><strong id="current-candidate" class="card-value"></strong></div>
+      <div class="card"><span class="card-label">Mechanism family</span><strong id="mechanism" class="card-value"></strong></div>
+      <div class="card"><span class="card-label">Controlled stage</span><strong id="controlled-stage" class="card-value"></strong></div>
+    </section>
+
+    <section class="grid progress-grid" aria-label="Campaign progress">
+      <div class="card"><span class="card-label">Completed attempts</span><strong id="completed-progress" class="card-value"></strong><div class="progress-track"><span id="completed-bar" class="progress-fill"></span></div></div>
+      <div class="card"><span class="card-label">Structural attempts</span><strong id="structural-progress" class="card-value"></strong><div class="progress-track"><span id="structural-bar" class="progress-fill"></span></div></div>
+      <div class="card"><span class="card-label">Micro-optimizations</span><strong id="micro-progress" class="card-value"></strong><div class="progress-track"><span id="micro-bar" class="progress-fill warn"></span></div></div>
+    </section>
+
+    <section class="grid timing-grid" aria-label="Campaign timing">
+      <div class="card"><span class="card-label">Elapsed</span><strong id="elapsed" class="card-value"></strong></div>
+      <div class="card"><span class="card-label">Median attempt</span><strong id="median-duration" class="card-value"></strong><span id="median-basis" class="card-note"></span></div>
+      <div class="card"><span class="card-label">Estimated remaining</span><strong id="remaining" class="card-value"></strong><span id="eta-basis" class="card-note"></span></div>
+      <div class="card"><span class="card-label">Expected finish</span><strong id="expected-finish" class="card-value"></strong><span id="last-update" class="card-note"></span></div>
+    </section>
+
+    <section class="section" aria-labelledby="links-heading">
+      <div class="section-heading"><h2 id="links-heading">Campaign links</h2><div id="campaign-links" class="evidence-links"></div></div>
+    </section>
+
+    <section id="issues-section" class="section" aria-labelledby="issues-heading" hidden>
+      <h2 id="issues-heading">Blockers and failures</h2>
+      <ul id="issues" class="issue-list"></ul>
+    </section>
+
+    <section class="section" aria-labelledby="results-heading">
+      <div class="section-heading">
+        <h2 id="results-heading">Promising Development results</h2>
+        <span class="note">Timed seeding is minimized. Particle ambiguity efficiency is maximized.</span>
+      </div>
+      <div class="grid results-grid">
+        <div class="card"><span class="card-label">Latest Genesis</span><strong id="genesis-result" class="card-value"></strong><span id="genesis-note" class="card-note"></span></div>
+        <div class="card"><span class="card-label">Best timed seeding</span><strong id="seeding-result" class="card-value"></strong><span id="seeding-note" class="card-note"></span></div>
+        <div class="card"><span class="card-label">Best ambiguity efficiency</span><strong id="efficiency-result" class="card-value"></strong><span id="efficiency-note" class="card-note"></span></div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="pareto-heading">
+      <div class="section-heading">
+        <h2 id="pareto-heading">Current two-objective Pareto front</h2>
+        <span class="note">Lower X and higher Y are better. Select a point to open its record.</span>
+      </div>
+      <div id="chart-frame">
+        <div id="plot-empty" hidden>No complete protocol-compatible Development results yet.</div>
+        <div id="chart" role="img" aria-label="Current campaign Pareto front"></div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="history-heading">
+      <div class="section-heading">
+        <h2 id="history-heading">Attempt history</h2>
+        <span id="history-count" class="note"></span>
+      </div>
+      <div class="attempt-head" aria-hidden="true"><span>Candidate</span><span>Mechanism</span><span>Class</span><span>State</span><span>Duration</span><span>Seeding</span><span>Ambiguity eff.</span><span>Evidence</span></div>
+      <div id="attempts" class="attempts"></div>
+      <div id="history-empty" class="notice" hidden>No attempt evidence has been recorded for this campaign.</div>
+    </section>
+  </div>
+</main>
+<script>
+const REPOSITORY = '__REPOSITORY__';
+const STATUS_PATH = 'campaign-status.json';
+const POLL_INTERVAL_MS = __POLL_INTERVAL_MS__;
+const form = document.getElementById('campaign-form');
+const refInput = document.getElementById('campaign-ref');
+const loadButton = document.getElementById('load-button');
+const fetchError = document.getElementById('fetch-error');
+const emptyState = document.getElementById('empty-state');
+const dashboard = document.getElementById('dashboard');
+let lastGoodSnapshot = null;
+let lastGoodRef = '';
+let lastFetchStarted = 0;
+let activeRef = '';
+
+function safeRef(raw) {
+  if (typeof raw !== 'string') return null;
+  const ref = raw.trim();
+  const forbidden = ['..', '@{', '\\', '~', '^', ':', '?', '*', '['];
+  if (!ref || ref.length > 200 || /^[/.\-]/.test(ref) || /[/.]$/.test(ref)
+      || ref.includes('//') || forbidden.some((token) => ref.includes(token))
+      || [...ref].some((character) => character.charCodeAt(0) < 33 || character.charCodeAt(0) === 127)
+      || !/^[A-Za-z0-9][A-Za-z0-9._/-]*$/.test(ref)) return null;
+  if (ref.split('/').some((part) => !part || part === '.' || part === '..' || part.startsWith('.') || part.endsWith('.lock'))) return null;
+  return ref;
+}
+function snapshotUrl(ref) {
+  const encodedRef = ref.split('/').map(encodeURIComponent).join('/');
+  return `https://raw.githubusercontent.com/${REPOSITORY}/refs/heads/${encodedRef}/${STATUS_PATH}?_=${Date.now()}`;
+}
+function finite(value) { return typeof value === 'number' && Number.isFinite(value); }
+function validObjective(value) { return value === null || finite(value); }
+function validateSnapshot(value, requestedRef) {
+  if (!value || typeof value !== 'object' || value.schema_version !== '1.0.0'
+      || value.protocol_id !== 'acts-seeding-v2' || !value.campaign || value.campaign.branch !== requestedRef
+      || !value.progress || !value.promising_results || !Array.isArray(value.attempts)
+      || !Array.isArray(value.blockers) || !Array.isArray(value.failures)
+      || !Number.isFinite(Date.parse(value.generated_at))) {
+    throw new Error('The fetched file is not a compatible campaign-status v1 snapshot.');
+  }
+  const target = value.campaign.targets;
+  if (!target || !finite(target.completed_attempts) || !finite(target.structural_attempts)
+      || !finite(target.micro_optimization_cap)) {
+    throw new Error('The campaign snapshot has invalid targets.');
+  }
+  for (const attempt of value.attempts) {
+    if (!attempt || typeof attempt.candidate !== 'string'
+        || !['baseline', 'structural', 'micro'].includes(attempt.classification)
+        || !validObjective(attempt.timed_seeding_time_per_event_ms)
+        || !validObjective(attempt.timed_ambiguity_particle_efficiency)) {
+      throw new Error('The campaign snapshot has invalid attempt evidence.');
+    }
+  }
+  return value;
+}
+function setText(id, value) { document.getElementById(id).textContent = value; }
+function unavailable(value) { return value === null || value === undefined || value === ''; }
+function formatDuration(seconds) {
+  if (!finite(seconds)) return 'Unavailable';
+  const rounded = Math.max(0, Math.round(seconds));
+  const days = Math.floor(rounded / 86400);
+  const hours = Math.floor((rounded % 86400) / 3600);
+  const minutes = Math.floor((rounded % 3600) / 60);
+  if (days) return `${days}d ${hours}h`;
+  if (hours) return `${hours}h ${minutes}m`;
+  if (minutes) return `${minutes}m`;
+  return `${rounded}s`;
+}
+function formatInstant(value) {
+  if (!value || !Number.isFinite(Date.parse(value))) return 'Unavailable';
+  return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short', timeZoneName: 'short' }).format(new Date(value));
+}
+function formatRelative(value) {
+  const timestamp = Date.parse(value);
+  if (!Number.isFinite(timestamp)) return 'unknown time';
+  const seconds = Math.max(0, Math.round((Date.now() - timestamp) / 1000));
+  if (seconds < 60) return `${seconds}s ago`;
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+  return `${Math.floor(seconds / 86400)}d ago`;
+}
+function formatMs(value) { return finite(value) ? `${value.toFixed(2)} ms/event` : 'Unavailable'; }
+function formatEfficiency(value) { return finite(value) ? `${(value * 100).toFixed(2)}%` : 'Unavailable'; }
+function signed(value, digits = 2) {
+  if (!finite(value)) return 'Unavailable';
+  const sign = value > 0 ? '+' : value < 0 ? '−' : '';
+  return `${sign}${Math.abs(value).toFixed(digits)}`;
+}
+function freshnessState(snapshot) {
+  const updated = Date.parse(snapshot.generated_at);
+  const age = Math.max(0, (Date.now() - updated) / 1000);
+  const staleAfter = finite(snapshot.stale_after_seconds) ? snapshot.stale_after_seconds : 900;
+  if (age >= staleAfter) return { label: `Stale · ${formatRelative(snapshot.generated_at)}`, className: 'bad' };
+  if (age >= staleAfter / 2) return { label: `Aging · ${formatRelative(snapshot.generated_at)}`, className: 'warn' };
+  return { label: `Fresh · ${formatRelative(snapshot.generated_at)}`, className: 'good' };
+}
+function renderFreshness(snapshot) {
+  const freshness = freshnessState(snapshot);
+  const element = document.getElementById('freshness');
+  element.textContent = freshness.label;
+  element.className = `chip ${freshness.className}`;
+  setText('last-update', `Updated ${formatInstant(snapshot.generated_at)} · ${formatRelative(snapshot.generated_at)}`);
+}
+function safeLink(value) {
+  if (typeof value !== 'string') return null;
+  try {
+    const url = new URL(value);
+    if (url.protocol !== 'https:' || url.hostname !== 'github.com') return null;
+    if (!url.pathname.startsWith(`/${REPOSITORY}/`)) return null;
+    if (!/^\/(Aksth070600\/autoresearch-acts-seeding)\/(commit|blob|tree|pull)\//.test(url.pathname)) return null;
+    return url.href;
+  } catch (_) { return null; }
+}
+function link(label, href) {
+  const safe = safeLink(href);
+  if (!safe) return null;
+  const anchor = document.createElement('a');
+  anchor.textContent = label;
+  anchor.href = safe;
+  anchor.target = '_blank';
+  anchor.rel = 'noopener noreferrer';
+  return anchor;
+}
+function setProgress(valueId, barId, current, target, cap = false) {
+  setText(valueId, `${current} / ${target}`);
+  const percentage = target > 0 ? Math.min(current / target * 100, 100) : 0;
+  const bar = document.getElementById(barId);
+  bar.style.width = `${percentage}%`;
+  bar.classList.toggle('good', !cap && current >= target);
+  bar.classList.toggle('bad', cap && current > target);
+}
+function setResult(prefix, result, kind) {
+  if (!result) {
+    setText(`${prefix}-result`, 'Unavailable');
+    setText(`${prefix}-note`, 'Waiting for complete Development evidence.');
+    return;
+  }
+  if (kind === 'genesis') {
+    setText(`${prefix}-result`, `${result.candidate} · ${formatMs(result.timed_seeding_time_per_event_ms)}`);
+    setText(`${prefix}-note`, `${formatEfficiency(result.timed_ambiguity_particle_efficiency)} particle ambiguity efficiency`);
+  } else if (kind === 'seeding') {
+    setText(`${prefix}-result`, `${result.candidate} · ${formatMs(result.timed_seeding_time_per_event_ms)}`);
+    const delta = finite(result.delta_vs_genesis_ms)
+      ? `${signed(result.delta_vs_genesis_ms)} ms (${signed(result.percentage_vs_genesis)}%) versus latest Genesis`
+      : 'Latest Genesis comparison unavailable';
+    setText(`${prefix}-note`, delta);
+  } else {
+    setText(`${prefix}-result`, `${result.candidate} · ${formatEfficiency(result.timed_ambiguity_particle_efficiency)}`);
+    setText(`${prefix}-note`, formatMs(result.timed_seeding_time_per_event_ms));
+  }
+}
+function renderIssues(snapshot) {
+  const section = document.getElementById('issues-section');
+  const list = document.getElementById('issues');
+  list.replaceChildren();
+  snapshot.blockers.forEach((blocker) => {
+    const item = document.createElement('li');
+    item.className = 'issue';
+    item.textContent = blocker.message;
+    list.appendChild(item);
+  });
+  snapshot.failures.forEach((failure) => {
+    const item = document.createElement('li');
+    item.className = 'issue failure';
+    const strong = document.createElement('strong');
+    strong.textContent = `${failure.candidate}: `;
+    item.append(strong, document.createTextNode(failure.message));
+    const record = link(' record', failure.record_url);
+    if (record) item.append(' · ', record);
+    list.appendChild(item);
+  });
+  section.hidden = list.childElementCount === 0;
+}
+function renderLinks(snapshot) {
+  const container = document.getElementById('campaign-links');
+  container.replaceChildren();
+  [['Campaign branch', snapshot.links?.campaign_branch], ['Active pull request', snapshot.links?.pull_request], ['Active commit', snapshot.links?.active_commit]].forEach(([label, href]) => {
+    const anchor = link(label, href);
+    if (anchor) container.appendChild(anchor);
+  });
+  if (!container.childElementCount) container.textContent = 'No active links published.';
+}
+function evidenceCell(attempt) {
+  const wrapper = document.createElement('span');
+  wrapper.className = 'evidence-links';
+  const record = link('Record', attempt.links?.record);
+  const commit = link('Commit', attempt.links?.commit);
+  if (record) wrapper.appendChild(record);
+  if (commit) wrapper.appendChild(commit);
+  if (!wrapper.childElementCount) wrapper.textContent = 'Unavailable';
+  return wrapper;
+}
+function cell(label, content) {
+  const wrapper = document.createElement('span');
+  wrapper.className = 'attempt-cell';
+  const mobile = document.createElement('span');
+  mobile.className = 'mobile-label';
+  mobile.textContent = label;
+  wrapper.appendChild(mobile);
+  if (content instanceof Node) wrapper.appendChild(content); else wrapper.appendChild(document.createTextNode(content));
+  return wrapper;
+}
+function attemptElement(attempt) {
+  const details = document.createElement('details');
+  details.className = 'attempt';
+  const summary = document.createElement('summary');
+  const candidate = document.createElement('strong');
+  candidate.textContent = attempt.candidate;
+  const state = document.createElement('span');
+  state.className = `chip ${attempt.state === 'completed' ? 'good' : attempt.state === 'failed' ? 'bad' : 'warn'}`;
+  state.textContent = attempt.state;
+  summary.append(
+    cell('Candidate', candidate),
+    cell('Mechanism', attempt.mechanism_family || 'Unavailable'),
+    cell('Class', attempt.classification || 'Unavailable'),
+    cell('State', state),
+    cell('Duration', formatDuration(attempt.duration_seconds)),
+    cell('Seeding', formatMs(attempt.timed_seeding_time_per_event_ms)),
+    cell('Ambiguity eff.', formatEfficiency(attempt.timed_ambiguity_particle_efficiency)),
+    cell('Evidence', evidenceCell(attempt))
+  );
+  const detail = document.createElement('div');
+  detail.className = 'attempt-detail';
+  const outcome = document.createElement('p');
+  outcome.textContent = attempt.outcome || 'Current attempt has no recorded outcome yet.';
+  const dates = document.createElement('p');
+  dates.textContent = `${formatInstant(attempt.started_at)} → ${formatInstant(attempt.finished_at)}`;
+  detail.append(outcome, dates);
+  details.append(summary, detail);
+  return details;
+}
+function renderHistory(snapshot) {
+  const container = document.getElementById('attempts');
+  container.replaceChildren();
+  const attempts = [...snapshot.attempts];
+  const current = snapshot.current_attempt;
+  const currentStarted = current?.started_at ? Date.parse(current.started_at) : NaN;
+  const currentRecorded = current && attempts.some((attempt) =>
+    attempt.candidate === current.candidate
+    && (!Number.isFinite(currentStarted) || Date.parse(attempt.started_at) >= currentStarted)
+  );
+  if (current && !currentRecorded) {
+    const started = currentStarted;
+    attempts.push({
+      ...current,
+      state: current.state,
+      duration_seconds: Number.isFinite(started) ? Math.max(0, (Date.now() - started) / 1000) : null,
+      timed_seeding_time_per_event_ms: null,
+      timed_ambiguity_particle_efficiency: null,
+      outcome: `Current controlled stage: ${current.controlled_stage}`,
+      finished_at: null,
+      links: {}
+    });
+  }
+  attempts.reverse().forEach((attempt) => container.appendChild(attemptElement(attempt)));
+  setText('history-count', `${attempts.length} attempt${attempts.length === 1 ? '' : 's'}`);
+  document.getElementById('history-empty').hidden = attempts.length !== 0;
+}
+function renderPareto(snapshot) {
+  const points = snapshot.promising_results.pareto_front || [];
+  const plotEmpty = document.getElementById('plot-empty');
+  plotEmpty.hidden = points.length !== 0;
+  if (!points.length || typeof Plotly === 'undefined') {
+    if (typeof Plotly !== 'undefined') Plotly.purge('chart');
+    if (typeof Plotly === 'undefined') {
+      plotEmpty.hidden = false;
+      plotEmpty.textContent = 'Interactive chart library could not be loaded.';
+    }
+    return;
+  }
+  const trace = {
+    x: points.map((point) => point.timed_seeding_time_per_event_ms),
+    y: points.map((point) => point.timed_ambiguity_particle_efficiency),
+    text: points.map((point) => `<b>${escapeHtml(point.candidate)}</b><br>${formatMs(point.timed_seeding_time_per_event_ms)}<br>${formatEfficiency(point.timed_ambiguity_particle_efficiency)}`),
+    customdata: points.map((point) => point.links?.record || ''),
+    mode: 'lines+markers', type: 'scatter', name: 'Pareto front',
+    line: { color: '#818cf8', width: 2 },
+    marker: {
+      size: points.map((point) => point.candidate === 'Genesis' ? 16 : 12),
+      symbol: points.map((point) => point.candidate === 'Genesis' ? 'star' : 'circle'),
+      color: points.map((point) => point.candidate === 'Genesis' ? '#fbbf24' : '#22c55e'),
+      line: { width: 1, color: '#e2e8f0' }
+    },
+    hovertemplate: '%{text}<extra></extra>'
+  };
+  Plotly.react('chart', [trace], {
+    xaxis: { title: 'Timed seeding time/event (ms) · lower is better', ticksuffix: ' ms', zeroline: false, gridcolor: 'rgba(71,85,105,0.35)', tickfont: { color: '#cbd5e1' } },
+    yaxis: { title: 'Particle ambiguity efficiency · higher is better', tickformat: '.2%', zeroline: false, gridcolor: 'rgba(71,85,105,0.35)', tickfont: { color: '#cbd5e1' } },
+    hovermode: 'closest', margin: { l: 78, r: 30, t: 42, b: 70 },
+    paper_bgcolor: '#111827', plot_bgcolor: '#0b1120', font: { color: '#cbd5e1' },
+    legend: { orientation: 'h', x: 0, y: 1.08 }
+  }, { responsive: true, displaylogo: false }).then(() => {
+    const chart = document.getElementById('chart');
+    if (chart.campaignClickHandler) chart.removeListener?.('plotly_click', chart.campaignClickHandler);
+    chart.campaignClickHandler = (event) => {
+      const target = safeLink(event.points?.[0]?.customdata);
+      if (target) window.open(target, '_blank', 'noopener,noreferrer');
+    };
+    chart.on('plotly_click', chart.campaignClickHandler);
+  });
+}
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
+}
+function renderSnapshot(snapshot, ref) {
+  const current = snapshot.current_attempt;
+  setText('campaign-name', snapshot.campaign.name);
+  setText('campaign-branch', snapshot.campaign.branch);
+  setText('phase', snapshot.campaign.phase);
+  setText('current-candidate', current?.candidate || 'No active attempt');
+  setText('mechanism', current?.mechanism_family || 'Unavailable');
+  setText('controlled-stage', current?.controlled_stage || 'Idle');
+  const progress = snapshot.progress;
+  const targets = snapshot.campaign.targets;
+  setProgress('completed-progress', 'completed-bar', progress.completed_attempts, targets.completed_attempts);
+  setProgress('structural-progress', 'structural-bar', progress.structural_attempts, targets.structural_attempts);
+  setProgress('micro-progress', 'micro-bar', progress.micro_optimizations, targets.micro_optimization_cap, true);
+  setText('elapsed', formatDuration(progress.elapsed_seconds));
+  setText('median-duration', formatDuration(progress.median_completed_attempt_duration_seconds));
+  setText('median-basis', `${progress.eta_sample_count} completed sample${progress.eta_sample_count === 1 ? '' : 's'}`);
+  setText('remaining', formatDuration(progress.estimated_remaining_seconds));
+  setText('eta-basis', progress.eta_basis);
+  setText('expected-finish', formatInstant(progress.expected_finish_at));
+  renderFreshness(snapshot);
+  setResult('genesis', snapshot.promising_results.latest_genesis, 'genesis');
+  setResult('seeding', snapshot.promising_results.best_seeding, 'seeding');
+  setResult('efficiency', snapshot.promising_results.best_ambiguity_efficiency, 'efficiency');
+  renderLinks(snapshot);
+  renderIssues(snapshot);
+  renderPareto(snapshot);
+  renderHistory(snapshot);
+  emptyState.hidden = true;
+  dashboard.hidden = false;
+  document.title = `${snapshot.campaign.name} · ACTS Seeding Live Campaign`;
+  activeRef = ref;
+}
+function setFetchError(message) {
+  fetchError.textContent = message;
+  fetchError.hidden = false;
+}
+async function loadCampaign(ref, { automatic = false } = {}) {
+  const validated = safeRef(ref);
+  if (!validated) {
+    setFetchError('Enter a safe public Git branch or ref. Spaces, ref operators, hidden segments, and traversal are not allowed.');
+    return;
+  }
+  const now = Date.now();
+  if (validated === activeRef && now - lastFetchStarted < POLL_INTERVAL_MS) return;
+  lastFetchStarted = now;
+  fetchError.hidden = true;
+  loadButton.disabled = true;
+  loadButton.textContent = automatic ? 'Refreshing…' : 'Loading…';
+  try {
+    const response = await fetch(snapshotUrl(validated), { cache: 'no-store', credentials: 'omit', mode: 'cors' });
+    if (!response.ok) throw new Error(response.status === 404 ? 'No campaign-status.json exists on that public branch.' : `GitHub returned HTTP ${response.status}.`);
+    const snapshot = validateSnapshot(await response.json(), validated);
+    lastGoodSnapshot = snapshot;
+    lastGoodRef = validated;
+    renderSnapshot(snapshot, validated);
+    const url = new URL(window.location.href);
+    url.searchParams.set('ref', validated);
+    window.history.replaceState(null, '', url);
+  } catch (error) {
+    const retained = lastGoodSnapshot ? ` Showing the last good snapshot for ${lastGoodRef}.` : '';
+    setFetchError(`Refresh failed: ${error.message}${retained}`);
+    if (lastGoodSnapshot) renderFreshness(lastGoodSnapshot);
+    if (!lastGoodSnapshot) {
+      dashboard.hidden = true;
+      emptyState.hidden = false;
+      emptyState.innerHTML = '<div><strong>Campaign snapshot unavailable</strong>Check that the branch is public and has a generated campaign-status.json.</div>';
+    }
+  } finally {
+    loadButton.disabled = false;
+    loadButton.textContent = 'Load campaign';
+  }
+}
+form.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const ref = refInput.value.trim();
+  if (ref !== activeRef) lastFetchStarted = 0;
+  loadCampaign(ref);
+});
+const initialRef = new URLSearchParams(window.location.search).get('ref');
+if (initialRef) {
+  refInput.value = initialRef;
+  loadCampaign(initialRef);
+}
+setInterval(() => {
+  if (activeRef && document.visibilityState === 'visible') loadCampaign(activeRef, { automatic: true });
+}, POLL_INTERVAL_MS);
+</script>
+</body>
+</html>
+"""
+
+
+def freshness_state(updated_at: str, now: datetime, stale_after_seconds: int = 900) -> str:
+    """Return the dashboard freshness class for focused state tests."""
+
+    try:
+        updated = datetime.fromisoformat(updated_at.replace("Z", "+00:00"))
+    except (AttributeError, ValueError) as error:
+        raise StatusError("updated_at must be an ISO 8601 timestamp") from error
+    if updated.tzinfo is None:
+        raise StatusError("updated_at must include a timezone")
+    age = max((now.astimezone(timezone.utc) - updated.astimezone(timezone.utc)).total_seconds(), 0)
+    if age >= stale_after_seconds:
+        return "stale"
+    if age >= stale_after_seconds / 2:
+        return "aging"
+    return "fresh"
+
+
+def render(output: Path) -> None:
+    """Write the static dashboard without changing the results report."""
+
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(
+        HTML_TEMPLATE.replace("__REPOSITORY__", REPOSITORY).replace(
+            "__POLL_INTERVAL_MS__", str(POLL_INTERVAL_MS)
+        ),
+        encoding="utf-8",
+    )
+
+
+__all__ = ["freshness_state", "render", "validate_ref"]

@@ -24,6 +24,13 @@ PROTOCOL_METADATA: dict[str, Any] = {
     "expected_unmasked_fpe_handling": "accept only after every requested event completed",
 }
 
+# Operational attempt limits do not change scientific protocol compatibility.
+CAMPAIGN_ATTEMPT_POLICY: dict[str, int] = {
+    "completed_attempt_target": 20,
+    "structural_attempt_target": 10,
+    "micro_optimization_cap": 5,
+}
+
 
 def current_protocol() -> dict[str, Any]:
     """Return a copy suitable for embedding in a summary or report."""

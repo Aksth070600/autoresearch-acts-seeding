@@ -5,7 +5,9 @@ It runs controlled candidates on the fixed ITk workload through ACTS on HEPP02, 
 The active protocol uses ACTS v46.5.0, one ACTS thread, 10-event development runs, and 50-event evaluation runs.
 Each timed comparison has three repetitions, with the median seeding timing and particle ambiguity efficiency used for candidate comparison. Full-chain and CKF timing remain diagnostic.
 
-[Open the interactive report](https://aksth070600.github.io/autoresearch-acts-seeding/)
+[Open the interactive results report](https://aksth070600.github.io/autoresearch-acts-seeding/)
+
+[Open the live campaign dashboard](https://aksth070600.github.io/autoresearch-acts-seeding/campaign/), then enter a public campaign branch. A shareable view uses `?ref=<branch>`, for example `campaign/?ref=autoresearch-acts-seeding%2Faug25`. It fetches the generated snapshot from that branch without credentials and keeps the last good snapshot visible if a refresh fails.
 
 ## How the repository works
 
@@ -27,6 +29,7 @@ flowchart LR
   Full-chain and CKF timing remain diagnostics unless the candidate changes those implementation areas.
 - `make evaluate CANDIDATE=name` runs the controlled development workload.
 - `make record CANDIDATE=name` returns the latest summary and failure details without editing the archive.
+- `make campaign-status` atomically builds root `campaign-status.json` from Development summaries and the small non-scientific `campaign-status-input.json`. The format and input example are in [`orchestration-files/CAMPAIGN_STATUS.md`](orchestration-files/CAMPAIGN_STATUS.md).
 - `make evaluate-selected` evaluates Genesis, the two strongest particle ambiguity-efficiency candidates, and two lowest-seeding-time candidates, filling overlaps with the next unique candidates.
 - `records/` stores reproducible summaries used by evolution and reports.
 - `agent-learnings.md` stores short lessons so agents do not repeat failed ideas.
@@ -54,9 +57,12 @@ make record CANDIDATE=<candidate-name>
 make select-evaluation
 make evaluate-selected
 make report
+make campaign-status
 ```
 
 `make evaluate` runs 10-event development stages. `EVALUATION=1` runs the 50-event evaluation stages for captain/operator-controlled review. Timed stages run three repetitions and store every repetition plus their median in each summary.
+
+`make report` keeps the results report at `reports/site/index.html` and adds the separate live view at `reports/site/campaign/index.html`. The published live view polls public branch snapshots no more than once per minute. To inspect it locally, run `make report`, serve `reports/site/` over HTTP, and open `/campaign/?ref=<public-branch>`.
 
 Focused protocol and objective tests run with:
 

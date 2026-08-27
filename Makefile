@@ -25,7 +25,7 @@ HEPP_APPTAINER ?= /cvmfs/atlas.cern.ch/repo/containers/sw/apptainer/x86_64-el9/c
 HEPP_CONTAINER_IMAGE ?= /cvmfs/atlas.cern.ch/repo/containers/images/singularity/x86_64-almalinux9.img
 HEPP_CONTAINER_BINDS ?= -B /cvmfs -B /storage -B /home/aksth
 
-.PHONY: help test setupActs setup build export-hepp-files hepp02-tmux-create hepp02-tmux-attach hepp02-tmux hepp02-tmux-status hepp02-setupActs hepp02-build hepp02-setup hepp02-setup-and-build hepp02-full-chain-itk evaluate report evolve record select-evaluation evaluate-selected
+.PHONY: help test setupActs setup build export-hepp-files hepp02-tmux-create hepp02-tmux-attach hepp02-tmux hepp02-tmux-status hepp02-setupActs hepp02-build hepp02-setup hepp02-setup-and-build hepp02-full-chain-itk evaluate report campaign-status evolve record select-evaluation evaluate-selected
 
 help:
 	@printf '%s\n' \
@@ -47,7 +47,8 @@ help:
 	  '  ITK_STAGE=seeding stops after seeding; full runs reconstruction.' \
 	  '  ITK_METRICS=time adds GNU time RSS and CPU metrics; none runs clean.' \
 	  'make evaluate CANDIDATE=name  Run 10-event development stages for a committed candidate.' \
-	  'make report                 Build the interactive local comparison report.' \
+	  'make report                 Build the results report and live campaign dashboard.' \
+	  'make campaign-status        Generate campaign-status.json from records and live state.' \
 	  'make evolve                 Select a protocol-compatible Pareto candidate.' \
 	  'make record CANDIDATE=name  Print the latest candidate result and failure logs.' \
 	  'make select-evaluation      Show Genesis plus four unique evaluation candidates.' \
@@ -110,6 +111,9 @@ report:
 		--x-metric '$(REPORT_X_METRIC)' \
 		--y-metric '$(REPORT_Y_METRIC)' \
 		--output reports/site
+
+campaign-status:
+	/usr/bin/python3 orchestration-files/campaign_status.py
 
 evolve:
 	$(EVOLUTION_PYTHON) orchestration-files/evolution.py --dataset development
