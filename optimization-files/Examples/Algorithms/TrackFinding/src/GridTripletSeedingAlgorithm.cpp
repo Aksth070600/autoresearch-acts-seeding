@@ -136,14 +136,6 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   Acts::CylindricalSpacePointGrid2 grid(m_gridConfig,
                                         logger().cloneWithSuffix("Grid"));
 
-  struct PackedGridInput {
-    std::array<float, 2> xy{};
-    std::array<float, 2> zr{};
-    float varianceZ{};
-    float varianceR{};
-    Acts::SpacePointIndex2 copyFromIndex{};
-  };
-  std::vector<PackedGridInput> packedInputs(spacePoints.size());
   for (std::size_t i = 0; i < spacePoints.size(); ++i) {
     const auto& sp = spacePoints[i];
 
@@ -152,20 +144,14 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
       continue;
     }
 
-    PackedGridInput& packed = packedInputs[i];
-    packed.xy = {static_cast<float>(sp.x()), static_cast<float>(sp.y())};
-    packed.zr = {static_cast<float>(sp.z()), static_cast<float>(sp.r())};
-    packed.varianceZ = static_cast<float>(sp.varianceZ());
-    packed.varianceR = static_cast<float>(sp.varianceR());
-    packed.copyFromIndex = sp.index();
-    const float phi = std::atan2(packed.xy[1], packed.xy[0]);
-    grid.insert(i, phi, packed.zr[0], packed.zr[1]);
+    float phi = std::atan2(sp.y(), sp.x());
+    grid.insert(i, phi, sp.z(), sp.r());
   }
 
   for (std::size_t i = 0; i < grid.numberOfBins(); ++i) {
     std::ranges::sort(grid.at(i), [&](const Acts::SpacePointIndex2& a,
                                       const Acts::SpacePointIndex2& b) {
-      return packedInputs[a].zr[1] < packedInputs[b].zr[1];
+      return spacePoints[a].r() < spacePoints[b].r();
     });
   }
 
@@ -180,14 +166,16 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   for (std::size_t i = 0; i < grid.numberOfBins(); ++i) {
     std::uint32_t begin = coreIndex;
     for (Acts::SpacePointIndex2 spIndex : grid.at(i)) {
-      const PackedGridInput& packed = packedInputs[spIndex];
+      const ConstSpacePointProxy& sp = spacePoints[spIndex];
 
       auto newSp = coreSpacePoints[coreIndex++];
-      newSp.xy() = packed.xy;
-      newSp.zr() = packed.zr;
-      newSp.varianceZ() = packed.varianceZ;
-      newSp.varianceR() = packed.varianceR;
-      newSp.copyFromIndex() = packed.copyFromIndex;
+      newSp.xy() = std::array<float, 2>{static_cast<float>(sp.x()),
+                                        static_cast<float>(sp.y())};
+      newSp.zr() = std::array<float, 2>{static_cast<float>(sp.z()),
+                                        static_cast<float>(sp.r())};
+      newSp.varianceZ() = static_cast<float>(sp.varianceZ());
+      newSp.varianceR() = static_cast<float>(sp.varianceR());
+      newSp.copyFromIndex() = sp.index();
     }
     gridSpacePointRanges.emplace_back(begin, coreIndex);
   }
