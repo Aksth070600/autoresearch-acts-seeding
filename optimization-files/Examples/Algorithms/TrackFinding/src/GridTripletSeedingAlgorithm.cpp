@@ -209,7 +209,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   bottomDoubletFinderConfig.deltaZMin = m_cfg.deltaZMin;
   bottomDoubletFinderConfig.deltaZMax = m_cfg.deltaZMax;
   bottomDoubletFinderConfig.impactMax = m_cfg.impactMax;
-  bottomDoubletFinderConfig.interactionPointCut = true;
+  bottomDoubletFinderConfig.interactionPointCut = m_cfg.interactionPointCut;
   bottomDoubletFinderConfig.collisionRegionMin = m_cfg.collisionRegionMin;
   bottomDoubletFinderConfig.collisionRegionMax = m_cfg.collisionRegionMax;
   bottomDoubletFinderConfig.cotThetaMax = m_cfg.cotThetaMax;
