@@ -240,7 +240,7 @@
   "campaign": {
     "branch": "autoresearch-acts-seeding/aug27-v6",
     "name": "ACTS Seeding Development campaign v6",
-    "phase": "candidate loop: 12 of 20 complete",
+    "phase": "candidate loop: 13 of 20",
     "started_at": "2026-08-27T11:03:33Z",
     "targets": {
       "completed_attempts": 20,
@@ -248,24 +248,31 @@
       "structural_attempts": 10
     }
   },
-  "current_attempt": null,
+  "current_attempt": {
+    "candidate": "GridPackedInputStaging",
+    "classification": "structural",
+    "controlled_stage": "queued Development run",
+    "mechanism_family": "grid-packed-input-staging",
+    "started_at": "2026-08-27T14:26:13Z",
+    "state": "queued"
+  },
   "failures": [],
-  "generated_at": "2026-08-27T14:25:10.856924Z",
+  "generated_at": "2026-08-27T14:26:13.328934Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/4c7e26dba3c81dfe1e4772eb0f83b1a4374fb0f3",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/831c12abff41906e4008187381d313228d4f2709",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/aug27-v6",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/25"
   },
   "progress": {
     "completed_attempts": 12,
-    "elapsed_seconds": 12097.856924,
-    "estimated_remaining_seconds": 6433.856,
-    "eta_basis": "Median of 12 completed attempts.",
+    "elapsed_seconds": 12160.328934,
+    "estimated_remaining_seconds": 6433.527066,
+    "eta_basis": "Median of 12 completed attempts; current attempt elapsed time deducted.",
     "eta_sample_count": 12,
-    "expected_finish_at": "2026-08-27T16:12:24.712924Z",
+    "expected_finish_at": "2026-08-27T16:13:26.856000Z",
     "median_completed_attempt_duration_seconds": 804.232,
     "micro_optimizations": 2,
-    "structural_attempts": 10
+    "structural_attempts": 11
   },
   "promising_results": {
     "best_ambiguity_efficiency": {
