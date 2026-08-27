@@ -265,18 +265,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   Acts::SeedContainer2 seeds;
   seeds.assignSpacePointContainer(spacePoints);
 
-  using SeedingGroup = decltype(*grid.binnedGroup().begin());
-  std::vector<SeedingGroup> seedingGroups;
-  for (const auto group : grid.binnedGroup()) {
-    seedingGroups.push_back(group);
-  }
-  std::ranges::sort(seedingGroups, [&](const SeedingGroup& left,
-                                       const SeedingGroup& right) {
-    return grid.at(std::get<1>(left)).size() >
-           grid.at(std::get<1>(right)).size();
-  });
-
-  for (const auto& [bottom, middle, top] : seedingGroups) {
+  for (const auto [bottom, middle, top] : grid.binnedGroup()) {
     ACTS_VERBOSE("Process middle " << middle);
 
     bottomSpRanges.clear();
