@@ -3,7 +3,7 @@ set -euo pipefail
 
 ACTS_SOURCE="${ACTS_SOURCE:-/storage/thomaaks/acts-v46.5.0}"
 ACTS_BUILD_DIR="${ACTS_BUILD_DIR:-$ACTS_SOURCE/build}"
-ACTS_BUILD_JOBS="${ACTS_BUILD_JOBS:-$(nproc 2>/dev/null || printf '1')}"
+ACTS_BUILD_JOBS="${ACTS_BUILD_JOBS:-8}"
 ACTS_LCG_SETUP="${ACTS_LCG_SETUP:-/cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc13-opt/setup.sh}"
 
 if [[ -f "$ACTS_LCG_SETUP" ]]; then
@@ -30,5 +30,6 @@ command -v cmake >/dev/null 2>&1 || {
   exit 1
 }
 
+echo "ACTS build parallel jobs: $ACTS_BUILD_JOBS"
 cmake --build "$ACTS_BUILD_DIR" --parallel "$ACTS_BUILD_JOBS"
 echo "ACTS build completed: $ACTS_BUILD_DIR"

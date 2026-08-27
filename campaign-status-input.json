@@ -3,8 +3,8 @@
   "campaign": {
     "name": "ACTS Seeding Development Campaign V7",
     "branch": "autoresearch-acts-seeding/campaign-v7",
-    "phase": "fresh Genesis baseline",
-    "started_at": "2026-08-27T18:07:33Z",
+    "phase": "fresh Genesis baseline with capped build resources",
+    "started_at": "2026-08-27T18:23:05Z",
     "targets": {
       "completed_attempts": 61,
       "structural_attempts": 30,
@@ -15,9 +15,9 @@
     "candidate": "Genesis",
     "mechanism_family": "fresh Genesis baseline",
     "classification": "baseline",
-    "controlled_stage": "queued Development run",
+    "controlled_stage": "queued Development run with ACTS_BUILD_JOBS=8",
     "state": "queued",
-    "started_at": "2026-08-27T18:07:33Z"
+    "started_at": "2026-08-27T18:23:05Z"
   },
   "attempt_metadata": [],
   "blockers": [],

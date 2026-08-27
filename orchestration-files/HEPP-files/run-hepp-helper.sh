@@ -10,6 +10,7 @@ HEPP_STORAGE="${HEPP_STORAGE:-/storage/thomaaks}"
 HEPP_TMUX_TARGET="${HEPP_TMUX_TARGET:-acts-hepp02:0}"
 ACTS_SOURCE="${ACTS_SOURCE:-/storage/thomaaks/acts-v46.5.0}"
 ACTS_BUILD_DIR="${ACTS_BUILD_DIR:-$ACTS_SOURCE/build}"
+ACTS_BUILD_JOBS="${ACTS_BUILD_JOBS:-8}"
 HEPP_RUN_TIMEOUT="${HEPP_RUN_TIMEOUT:-1800}"
 
 if [[ ! "$HELPER" =~ ^[A-Za-z0-9._-]+\.sh$ ]]; then
@@ -24,7 +25,7 @@ fi
 start_marker="ACTS_HELPER_START[$RUN_ID]"
 end_marker="ACTS_HELPER_DONE[$RUN_ID]"
 remote_log="/tmp/acts-helper-$RUN_ID.log"
-remote_command="printf '%s\\n' '$start_marker'; (cd $(printf '%q' "$HEPP_STORAGE") && ACTS_SOURCE=$(printf '%q' "$ACTS_SOURCE") ACTS_BUILD_DIR=$(printf '%q' "$ACTS_BUILD_DIR") bash $(printf '%q' "HEPP-files/$HELPER")"
+remote_command="printf '%s\\n' '$start_marker'; (cd $(printf '%q' "$HEPP_STORAGE") && ACTS_SOURCE=$(printf '%q' "$ACTS_SOURCE") ACTS_BUILD_DIR=$(printf '%q' "$ACTS_BUILD_DIR") ACTS_BUILD_JOBS=$(printf '%q' "$ACTS_BUILD_JOBS") bash $(printf '%q' "HEPP-files/$HELPER")"
 for argument in "$@"; do
   remote_command+=" $(printf '%q' "$argument")"
 done

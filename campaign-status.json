@@ -5,8 +5,8 @@
   "campaign": {
     "branch": "autoresearch-acts-seeding/campaign-v7",
     "name": "ACTS Seeding Development Campaign V7",
-    "phase": "fresh Genesis baseline",
-    "started_at": "2026-08-27T18:07:33Z",
+    "phase": "fresh Genesis baseline with capped build resources",
+    "started_at": "2026-08-27T18:23:05Z",
     "targets": {
       "completed_attempts": 61,
       "micro_optimization_cap": 15,
@@ -16,21 +16,21 @@
   "current_attempt": {
     "candidate": "Genesis",
     "classification": "baseline",
-    "controlled_stage": "queued Development run",
+    "controlled_stage": "queued Development run with ACTS_BUILD_JOBS=8",
     "mechanism_family": "fresh Genesis baseline",
-    "started_at": "2026-08-27T18:07:33Z",
+    "started_at": "2026-08-27T18:23:05Z",
     "state": "queued"
   },
   "failures": [],
-  "generated_at": "2026-08-27T18:08:00.355244Z",
+  "generated_at": "2026-08-27T18:23:06.061069Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/6a635ca653e2b2d101bc34296c44e5f0e717a5ad",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/7e84bac9d5549517eff336dd8822f24a3586861e",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/campaign-v7",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/28"
   },
   "progress": {
     "completed_attempts": 0,
-    "elapsed_seconds": 27.355244,
+    "elapsed_seconds": 1.061069,
     "estimated_remaining_seconds": null,
     "eta_basis": "Unavailable until 3 completed attempt durations exist (0 available).",
     "eta_sample_count": 0,
