@@ -7,7 +7,7 @@ Each timed comparison has three repetitions, with the median seeding timing and 
 
 [Open the interactive results report](https://aksth070600.github.io/autoresearch-acts-seeding/)
 
-[Open the live campaign dashboard](https://aksth070600.github.io/autoresearch-acts-seeding/campaign/). It discovers public campaign pull requests once, sorts them newest first, and selects the newest campaign. A shareable view uses `?ref=<branch>`, for example `campaign/?ref=autoresearch-acts-seeding%2Faug25`. The ref remains a safe direct fallback if discovery fails. Running campaigns read the branch snapshot. Completed campaigns use the pull request's immutable final head commit. Older campaigns without snapshots show an unavailable state.
+[Open the live campaign dashboard](https://aksth070600.github.io/autoresearch-acts-seeding/campaign/)
 
 ## How the repository works
 
@@ -29,7 +29,7 @@ flowchart LR
   Full-chain and CKF timing remain diagnostics unless the candidate changes those implementation areas.
 - `make evaluate CANDIDATE=name` runs the controlled development workload.
 - `make record CANDIDATE=name` returns the latest summary and failure details without editing the archive.
-- `make campaign-status` atomically builds root `campaign-status.json` from Development summaries and the small non-scientific `campaign-status-input.json`. The format and input example are in [`orchestration-files/CAMPAIGN_STATUS.md`](orchestration-files/CAMPAIGN_STATUS.md).
+- `make campaign-status` builds the live snapshot. See [`orchestration-files/CAMPAIGN_STATUS.md`](orchestration-files/CAMPAIGN_STATUS.md).
 - `make evaluate-selected` evaluates Genesis, the two strongest particle ambiguity-efficiency candidates, and two lowest-seeding-time candidates, filling overlaps with the next unique candidates.
 - `records/` stores reproducible summaries used by evolution and reports.
 - `agent-learnings.md` stores short lessons so agents do not repeat failed ideas.
@@ -61,8 +61,6 @@ make campaign-status
 ```
 
 `make evaluate` runs 10-event development stages. `EVALUATION=1` runs the 50-event evaluation stages for captain/operator-controlled review. Timed stages run three repetitions and store every repetition plus their median in each summary.
-
-`make report` keeps the results report at `reports/site/index.html` and adds the separate live view at `reports/site/campaign/index.html`. The published live view requests the public campaign PR list once at page load. It polls only the selected running campaign snapshot, no more than once per minute. To inspect it locally, run `make report`, serve `reports/site/` over HTTP, and open `/campaign/` or `/campaign/?ref=<public-branch>`.
 
 Focused protocol and objective tests run with:
 
