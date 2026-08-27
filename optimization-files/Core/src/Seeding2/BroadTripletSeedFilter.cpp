@@ -159,6 +159,8 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
   };
 
   std::size_t beginCompTopIndex = 0;
+  std::size_t endCompTopIndex = 0;
+  const auto& curvatures = tripletTopCandidates.curvatures();
   // loop over top SPs and other compatible top SP candidates
   for (const std::size_t topSpIndex : cache().topSpIndexVec) {
     auto topSp = tripletTopCandidates.topSpacePoints()[topSpIndex];
@@ -174,11 +176,22 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
 
     float weight = -impact * config().impactWeightFactor;
 
-    // loop over compatible top SP candidates
+    while (beginCompTopIndex < cache().topSpIndexVec.size() &&
+           curvatures[cache().topSpIndexVec[beginCompTopIndex]] <
+               lowerLimitCurv) {
+      ++beginCompTopIndex;
+    }
+    endCompTopIndex = std::max(endCompTopIndex, beginCompTopIndex);
+    while (endCompTopIndex < cache().topSpIndexVec.size() &&
+           curvatures[cache().topSpIndexVec[endCompTopIndex]] <=
+               upperLimitCurv) {
+      ++endCompTopIndex;
+    }
+
+    // loop over the monotonic curvature compatibility window
     for (std::size_t variableCompTopIndex = beginCompTopIndex;
-         variableCompTopIndex < cache().topSpIndexVec.size();
-         variableCompTopIndex++) {
-      std::size_t compatibleTopSpIndex =
+         variableCompTopIndex < endCompTopIndex; ++variableCompTopIndex) {
+      const std::size_t compatibleTopSpIndex =
           cache().topSpIndexVec[variableCompTopIndex];
       if (compatibleTopSpIndex == topSpIndex) {
         continue;
@@ -188,18 +201,6 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
 
       float otherTopR = getTopR(otherSpT);
 
-      // curvature difference within limits?
-      if (tripletTopCandidates.curvatures()[compatibleTopSpIndex] <
-          lowerLimitCurv) {
-        // the SPs are sorted in curvature so we skip unnecessary iterations
-        beginCompTopIndex = variableCompTopIndex + 1;
-        continue;
-      }
-      if (tripletTopCandidates.curvatures()[compatibleTopSpIndex] >
-          upperLimitCurv) {
-        // the SPs are sorted in curvature so we skip unnecessary iterations
-        break;
-      }
       // compared top SP should have at least deltaRMin distance
       float deltaR = currentTopR - otherTopR;
       if (std::abs(deltaR) < config().deltaRMin) {
