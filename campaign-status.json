@@ -342,13 +342,31 @@
       "state": "completed",
       "timed_ambiguity_particle_efficiency": 0.972769,
       "timed_seeding_time_per_event_ms": 299.23
+    },
+    {
+      "candidate": "TripletReserveElision",
+      "classification": "micro",
+      "duration_seconds": 790.682,
+      "finished_at": "2026-08-27T16:06:39.189066Z",
+      "implementation_commit": "27b8954c18329c01da4e2b75f671916cf7713d92",
+      "links": {
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/27b8954c18329c01da4e2b75f671916cf7713d92",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug27-v6/records/Development/20260827T155328Z-TripletReserveElision/summary.json"
+      },
+      "mechanism_family": "triplet-reserve-elision",
+      "outcome": "Passed all controlled Development stages.",
+      "record": "records/Development/20260827T155328Z-TripletReserveElision/summary.json",
+      "started_at": "2026-08-27T15:53:28.507180Z",
+      "state": "completed",
+      "timed_ambiguity_particle_efficiency": 0.972769,
+      "timed_seeding_time_per_event_ms": 277.38
     }
   ],
   "blockers": [],
   "campaign": {
     "branch": "autoresearch-acts-seeding/aug27-v6",
     "name": "ACTS Seeding Development campaign v6",
-    "phase": "candidate loop: 19 of 20",
+    "phase": "candidate loop: 19 of 20 complete",
     "started_at": "2026-08-27T11:03:33Z",
     "targets": {
       "completed_attempts": 20,
@@ -356,54 +374,47 @@
       "structural_attempts": 10
     }
   },
-  "current_attempt": {
-    "candidate": "TripletReserveElision",
-    "classification": "micro",
-    "controlled_stage": "queued Development run",
-    "mechanism_family": "triplet-reserve-elision",
-    "started_at": "2026-08-27T15:53:25Z",
-    "state": "queued"
-  },
+  "current_attempt": null,
   "failures": [],
-  "generated_at": "2026-08-27T15:53:25.323120Z",
+  "generated_at": "2026-08-27T16:07:00.334494Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/27b8954c18329c01da4e2b75f671916cf7713d92",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/955ad2dae120192dca5c90551d1602c79dbfe209",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/aug27-v6",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/25"
   },
   "progress": {
-    "completed_attempts": 18,
-    "elapsed_seconds": 17392.32312,
-    "estimated_remaining_seconds": 1592.42888,
-    "eta_basis": "Median of 18 completed attempts; current attempt elapsed time deducted.",
-    "eta_sample_count": 18,
-    "expected_finish_at": "2026-08-27T16:19:57.752000Z",
-    "median_completed_attempt_duration_seconds": 796.376,
+    "completed_attempts": 19,
+    "elapsed_seconds": 18207.334494,
+    "estimated_remaining_seconds": 790.682,
+    "eta_basis": "Median of 19 completed attempts.",
+    "eta_sample_count": 19,
+    "expected_finish_at": "2026-08-27T16:20:11.016494Z",
+    "median_completed_attempt_duration_seconds": 790.682,
     "micro_optimizations": 4,
     "structural_attempts": 15
   },
   "promising_results": {
     "best_ambiguity_efficiency": {
-      "candidate": "TripletDirectIndexCounter",
+      "candidate": "TripletReserveElision",
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/447ffebf24963cd8cdcbb0e09297cc5a6b20fb56",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug27-v6/records/Development/20260827T141153Z-TripletDirectIndexCounter/summary.json"
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/27b8954c18329c01da4e2b75f671916cf7713d92",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug27-v6/records/Development/20260827T155328Z-TripletReserveElision/summary.json"
       },
-      "started_at": "2026-08-27T14:11:53.039477Z",
+      "started_at": "2026-08-27T15:53:28.507180Z",
       "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 282.79
+      "timed_seeding_time_per_event_ms": 277.38
     },
     "best_seeding": {
-      "candidate": "DoubletMiddleDataflowRecord",
-      "delta_vs_genesis_ms": -16.039999999999964,
+      "candidate": "TripletReserveElision",
+      "delta_vs_genesis_ms": -18.649999999999977,
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/08c3179067db9812607368c22355f8be3e46ec80",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug27-v6/records/Development/20260827T152354Z-DoubletMiddleDataflowRecord/summary.json"
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/27b8954c18329c01da4e2b75f671916cf7713d92",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug27-v6/records/Development/20260827T155328Z-TripletReserveElision/summary.json"
       },
-      "percentage_vs_genesis": -5.418369759821628,
-      "started_at": "2026-08-27T15:23:54.119442Z",
+      "percentage_vs_genesis": -6.300037158396102,
+      "started_at": "2026-08-27T15:53:28.507180Z",
       "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 279.99
+      "timed_seeding_time_per_event_ms": 277.38
     },
     "latest_genesis": {
       "candidate": "Genesis",
@@ -417,14 +428,14 @@
     },
     "pareto_front": [
       {
-        "candidate": "DoubletMiddleDataflowRecord",
+        "candidate": "TripletReserveElision",
         "links": {
-          "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/08c3179067db9812607368c22355f8be3e46ec80",
-          "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug27-v6/records/Development/20260827T152354Z-DoubletMiddleDataflowRecord/summary.json"
+          "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/27b8954c18329c01da4e2b75f671916cf7713d92",
+          "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug27-v6/records/Development/20260827T155328Z-TripletReserveElision/summary.json"
         },
-        "started_at": "2026-08-27T15:23:54.119442Z",
+        "started_at": "2026-08-27T15:53:28.507180Z",
         "timed_ambiguity_particle_efficiency": 0.972769,
-        "timed_seeding_time_per_event_ms": 279.99
+        "timed_seeding_time_per_event_ms": 277.38
       }
     ]
   },
