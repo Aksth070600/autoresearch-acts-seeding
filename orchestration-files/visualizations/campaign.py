@@ -283,6 +283,15 @@ function topSeedingAttempts(attempts) {
     .sort((left, right) => left.timed_seeding_time_per_event_ms - right.timed_seeding_time_per_event_ms)
     .slice(0, 3);
 }
+function seedingComparison(result, genesis) {
+  const resultMs = result?.timed_seeding_time_per_event_ms;
+  const genesisMs = genesis?.timed_seeding_time_per_event_ms;
+  if (!Number.isFinite(resultMs) || !Number.isFinite(genesisMs) || genesisMs === 0) return null;
+  return {
+    deltaMs: resultMs - genesisMs,
+    percentage: (resultMs - genesisMs) / genesisMs * 100
+  };
+}
 /* CAMPAIGN_DISCOVERY_LOGIC_END */
 
 const POLL_INTERVAL_MS = __POLL_INTERVAL_MS__;
@@ -354,6 +363,11 @@ function formatRelative(value) {
 }
 function formatMs(value) { return finite(value) ? `${value.toFixed(2)} ms/event` : 'Unavailable'; }
 function formatEfficiency(value) { return finite(value) ? `${(value * 100).toFixed(2)}%` : 'Unavailable'; }
+function formatSigned(value) {
+  if (!finite(value)) return 'Unavailable';
+  const sign = value < 0 ? '−' : value > 0 ? '+' : '';
+  return `${sign}${Math.abs(value).toFixed(2)}`;
+}
 function freshnessState(snapshot) {
   const updated = Date.parse(snapshot.generated_at);
   const age = Math.max(0, (Date.now() - updated) / 1000);
@@ -405,6 +419,7 @@ function renderSeedingLeaders(snapshot) {
   const container = document.getElementById('seeding-leaders');
   container.replaceChildren();
   const leaders = topSeedingAttempts(snapshot.attempts);
+  const genesis = snapshot.promising_results.latest_genesis;
   if (!leaders.length) {
     const card = document.createElement('div');
     card.className = 'card';
@@ -415,19 +430,22 @@ function renderSeedingLeaders(snapshot) {
     container.appendChild(card);
     return;
   }
-  leaders.forEach((result, index) => {
+  leaders.forEach((result) => {
     const card = document.createElement('div');
     card.className = 'card';
-    const label = document.createElement('span');
-    label.className = 'card-label';
-    label.textContent = `#${index + 1} seeding time`;
+    const name = document.createElement('span');
+    name.className = 'card-label';
+    name.textContent = result.candidate;
     const value = document.createElement('strong');
     value.className = 'card-value';
-    value.textContent = `${result.candidate} · ${formatMs(result.timed_seeding_time_per_event_ms)}`;
+    value.textContent = formatMs(result.timed_seeding_time_per_event_ms);
     const note = document.createElement('span');
     note.className = 'card-note';
-    note.textContent = `${formatEfficiency(result.timed_ambiguity_particle_efficiency)} particle ambiguity efficiency`;
-    card.append(label, value, note);
+    const comparison = seedingComparison(result, genesis);
+    note.textContent = comparison
+      ? `${formatSigned(comparison.deltaMs)} ms (${formatSigned(comparison.percentage)}%)`
+      : 'Genesis comparison unavailable';
+    card.append(name, value, note);
     container.appendChild(card);
   });
 }

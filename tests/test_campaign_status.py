@@ -405,9 +405,15 @@ class CampaignStatusTests(unittest.TestCase):
             "const leaders = topSeedingAttempts("
             f"{json.dumps(attempts)}"
             ").map((attempt) => attempt.candidate);"
-            "console.log(JSON.stringify(leaders));"
+            "const comparison = seedingComparison("
+            "{timed_seeding_time_per_event_ms: 90},"
+            "{timed_seeding_time_per_event_ms: 100}"
+            ");"
+            "console.log(JSON.stringify({leaders, comparison}));"
         )
-        self.assertEqual(result, ["First", "Second", "Third"])
+        self.assertEqual(result["leaders"], ["First", "Second", "Third"])
+        self.assertEqual(result["comparison"]["deltaMs"], -10)
+        self.assertEqual(result["comparison"]["percentage"], -10)
 
     def test_dashboard_timestamp_formatter_is_browser_compatible(self) -> None:
         if shutil.which("node") is None:
@@ -499,6 +505,8 @@ class CampaignStatusTests(unittest.TestCase):
         self.assertIn("<h2 id=\"results-heading\">Promising Early Results</h2>", html)
         self.assertIn('id="seeding-leaders"', html)
         self.assertIn("function renderSeedingLeaders(snapshot)", html)
+        self.assertIn("function seedingComparison(result, genesis)", html)
+        self.assertIn("formatSigned(comparison.deltaMs)", html)
         self.assertIn(".slice(0, 3)", html)
         self.assertEqual(html.count("fetch(PULLS_API_URL"), 1)
         polling = html[html.index("setInterval(() => {") :]
