@@ -53,9 +53,7 @@ class CandidatesForMiddleSp2 {
   /// @param nHigh Maximum number of candidates in the high-quality collection
   CandidatesForMiddleSp2(Size nLow, Size nHigh);
 
-  Size size() const {
-    return static_cast<Size>(m_candidatesLow.size() + m_candidatesHigh.size());
-  }
+  Size size() const { return m_storage.size(); }
 
   /// @brief Clear the internal storage
   void clear();
@@ -63,13 +61,13 @@ class CandidatesForMiddleSp2 {
   /// @brief Retrieve the number of Low quality candidates
   /// @returns The number of Low quality candidates
   Size nLowQualityCandidates() const {
-    return static_cast<Size>(m_candidatesLow.size());
+    return static_cast<Size>(m_indicesLow.size());
   }
 
   /// @brief Retrieve the number of High quality candidates
   /// @returns The number of High quality candidates
   Size nHighQualityCandidates() const {
-    return static_cast<Size>(m_candidatesHigh.size());
+    return static_cast<Size>(m_indicesHigh.size());
   }
 
   /// @brief Adding a new triplet candidate to the collection, should it satisfy the
@@ -89,11 +87,11 @@ class CandidatesForMiddleSp2 {
   void toSortedCandidates(std::vector<TripletCandidate2>& output);
 
  private:
-  using Container = std::vector<TripletCandidate2>;
+  using WeightIndex = std::pair<float, Index>;
+  using Container = std::vector<WeightIndex>;
 
-  static constexpr bool comparator(const TripletCandidate2& a,
-                                   const TripletCandidate2& b) {
-    return a.weight > b.weight;
+  static constexpr bool comparator(const WeightIndex& a, const WeightIndex& b) {
+    return a.first > b.first;
   }
 
   // sizes
@@ -102,8 +100,11 @@ class CandidatesForMiddleSp2 {
   Size m_maxSizeLow{kNoSize};
   Size m_maxSizeHigh{kNoSize};
 
-  Container m_candidatesLow;
-  Container m_candidatesHigh;
+  // storage contains the collection of the candidates
+  std::vector<TripletCandidate2> m_storage;
+
+  Container m_indicesLow;
+  Container m_indicesHigh;
 
   bool push(Container& container, Size nMax, SpacePointIndex2 spB,
             SpacePointIndex2 spM, SpacePointIndex2 spT, float weight,
