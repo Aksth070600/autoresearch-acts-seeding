@@ -114,7 +114,7 @@
   "campaign": {
     "branch": "autoresearch-acts-seeding/aug27-v6",
     "name": "ACTS Seeding Development campaign v6",
-    "phase": "candidate loop: 5 of 20 complete",
+    "phase": "candidate loop: 6 of 20",
     "started_at": "2026-08-27T11:03:33Z",
     "targets": {
       "completed_attempts": 20,
@@ -122,24 +122,31 @@
       "structural_attempts": 10
     }
   },
-  "current_attempt": null,
+  "current_attempt": {
+    "candidate": "DoubletProxyTraversal",
+    "classification": "structural",
+    "controlled_stage": "queued Development run",
+    "mechanism_family": "doublet-proxy-traversal",
+    "started_at": "2026-08-27T12:41:36Z",
+    "state": "queued"
+  },
   "failures": [],
-  "generated_at": "2026-08-27T12:40:46.248062Z",
+  "generated_at": "2026-08-27T12:41:36.298036Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/d1363e33f809eb71ed929d23545876a0185167aa",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/3f70bab2179336bae51d3bddfc8e7b1cbb48f981",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/aug27-v6",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/25"
   },
   "progress": {
     "completed_attempts": 5,
-    "elapsed_seconds": 5833.248062,
-    "estimated_remaining_seconds": 12110.595000000001,
-    "eta_basis": "Median of 5 completed attempts.",
+    "elapsed_seconds": 5883.298036,
+    "estimated_remaining_seconds": 12110.296964000001,
+    "eta_basis": "Median of 5 completed attempts; current attempt elapsed time deducted.",
     "eta_sample_count": 5,
-    "expected_finish_at": "2026-08-27T16:02:36.843062Z",
+    "expected_finish_at": "2026-08-27T16:03:26.595000Z",
     "median_completed_attempt_duration_seconds": 807.373,
     "micro_optimizations": 0,
-    "structural_attempts": 5
+    "structural_attempts": 6
   },
   "promising_results": {
     "best_ambiguity_efficiency": {

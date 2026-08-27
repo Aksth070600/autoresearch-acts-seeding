@@ -3,10 +3,17 @@
   "campaign": {
     "name": "ACTS Seeding Development campaign v6",
     "branch": "autoresearch-acts-seeding/aug27-v6",
-    "phase": "candidate loop: 5 of 20 complete",
+    "phase": "candidate loop: 6 of 20",
     "started_at": "2026-08-27T11:03:33Z"
   },
-  "current_attempt": null,
+  "current_attempt": {
+    "candidate": "DoubletProxyTraversal",
+    "mechanism_family": "doublet-proxy-traversal",
+    "classification": "structural",
+    "controlled_stage": "queued Development run",
+    "state": "queued",
+    "started_at": "2026-08-27T12:41:36Z"
+  },
   "attempt_metadata": [
     {
       "candidate": "DoubletInsertionSort",
@@ -31,6 +38,11 @@
     {
       "candidate": "FilterCurvatureOrderRecords",
       "mechanism_family": "filter-curvature-order-records",
+      "classification": "structural"
+    },
+    {
+      "candidate": "DoubletProxyTraversal",
+      "mechanism_family": "doublet-proxy-traversal",
       "classification": "structural"
     }
   ],
