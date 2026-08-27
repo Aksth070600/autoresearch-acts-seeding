@@ -141,9 +141,6 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
     /// compatible SPs
     bool useDeltaRinsteadOfTopRadius = false;
 
-    /// Write each seed with the source container index stored by CopyFromIndex.
-    bool outputUsesCopyFromIndex = false;
-
     /// Custom cuts interface for experiments
     std::shared_ptr<ITripletSeedCuts> experimentCuts;
   };

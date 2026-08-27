@@ -376,22 +376,14 @@ void BroadTripletSeedFilter::filterTripletsMiddleFixed(
     setBestSeedQuality(state().bestSeedQualityMap, triplet[0], triplet[1],
                        triplet[2], bestSeedQuality);
 
-    std::array<SpacePointIndex2, 3> outputTriplet = triplet;
-    if (config().outputUsesCopyFromIndex) {
-      for (std::size_t i = 0; i < outputTriplet.size(); ++i) {
-        outputTriplet[i] = spacePoints[triplet[i]].copyFromIndex();
-      }
-    }
-
     ACTS_VERBOSE("Adding seed: original indices=["
-                 << outputTriplet[0] << ", " << outputTriplet[1] << ", "
-                 << outputTriplet[2] << "], internal indices=[" << bottom
-                 << ", " << middle << ", " << top
-                 << "], quality=" << bestSeedQuality
+                 << triplet[0] << ", " << triplet[1] << ", " << triplet[2]
+                 << "], internal indices=[" << bottom << ", " << middle << ", "
+                 << top << "], quality=" << bestSeedQuality
                  << ", vertexZ=" << zOrigin);
 
     auto seed = outputCollection.createSeed();
-    seed.assignSpacePointIndices(outputTriplet);
+    seed.assignSpacePointIndices(triplet);
     seed.vertexZ() = zOrigin;
     seed.quality() = bestSeedQuality;
 
