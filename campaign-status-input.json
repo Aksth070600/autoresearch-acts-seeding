@@ -41,7 +41,7 @@
     {
       "candidate": "DoubletInteractionPointPruning",
       "mechanism_family": "doublet-interaction-point-pruning",
-      "classification": "structural"
+      "classification": "micro"
     }
   ],
   "blockers": [],

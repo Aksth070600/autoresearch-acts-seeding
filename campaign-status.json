@@ -111,7 +111,7 @@
     },
     {
       "candidate": "DoubletInteractionPointPruning",
-      "classification": "structural",
+      "classification": "micro",
       "duration_seconds": 797.755,
       "finished_at": "2026-08-27T20:05:10.653452Z",
       "implementation_commit": "188fe967a2f2968ffe92845cfa608fa85ab6d13c",
@@ -142,22 +142,22 @@
   },
   "current_attempt": null,
   "failures": [],
-  "generated_at": "2026-08-27T20:05:10.906437Z",
+  "generated_at": "2026-08-27T20:05:43.900321Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/d4ffccea411a8cca3b71f2d35b37ad75158303b4",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/47134515d1b9047c393583a2811397eec8506f02",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/campaign-v7",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/28"
   },
   "progress": {
     "completed_attempts": 6,
-    "elapsed_seconds": 6125.906437,
+    "elapsed_seconds": 6158.900321,
     "estimated_remaining_seconds": 44069.52,
     "eta_basis": "Median of 6 completed attempts.",
     "eta_sample_count": 6,
-    "expected_finish_at": "2026-08-28T08:19:40.426437Z",
+    "expected_finish_at": "2026-08-28T08:20:13.420321Z",
     "median_completed_attempt_duration_seconds": 801.2639999999999,
-    "micro_optimizations": 0,
-    "structural_attempts": 6
+    "micro_optimizations": 1,
+    "structural_attempts": 5
   },
   "promising_results": {
     "best_ambiguity_efficiency": {
