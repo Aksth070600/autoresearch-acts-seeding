@@ -16,11 +16,7 @@ CandidatesForMiddleSp2::CandidatesForMiddleSp2()
     : CandidatesForMiddleSp2(kNoSize, kNoSize) {}
 
 CandidatesForMiddleSp2::CandidatesForMiddleSp2(Size nLow, Size nHigh)
-    : m_maxSizeLow(nLow), m_maxSizeHigh(nHigh) {
-  // Reserve enough memory for all collections
-  m_storage.reserve((nLow != kNoSize ? nLow : 0) +
-                    (nHigh != kNoSize ? nHigh : 0));
-}
+    : m_maxSizeLow(nLow), m_maxSizeHigh(nHigh) {}
 
 void CandidatesForMiddleSp2::clear() {
   m_storage.clear();
