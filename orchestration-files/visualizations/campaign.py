@@ -66,9 +66,6 @@ HTML_TEMPLATE = r"""<!doctype html>
     .section { margin-top: 24px; }
     .section-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
     .note { color: #94a3b8; font-size: 0.86rem; }
-    .issue-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
-    .issue { padding: 11px 13px; border-left: 3px solid #ef4444; border-radius: 6px; background: #111827; }
-    .issue.failure { border-left-color: #f59e0b; }
     #chart-frame { position: relative; height: 520px; background: #111827; border: 1px solid #334155;
       border-radius: 10px; overflow: hidden; }
     #chart { height: 100%; }
@@ -151,25 +148,11 @@ HTML_TEMPLATE = r"""<!doctype html>
       <div class="card"><span class="card-label">Expected finish</span><strong id="expected-finish" class="card-value"></strong></div>
     </section>
 
-    <section class="section" aria-labelledby="links-heading">
-      <div class="section-heading"><h2 id="links-heading">Campaign links</h2><div id="campaign-links" class="evidence-links"></div></div>
-    </section>
-
-    <section id="issues-section" class="section" aria-labelledby="issues-heading" hidden>
-      <h2 id="issues-heading">Blockers and failures</h2>
-      <ul id="issues" class="issue-list"></ul>
-    </section>
-
     <section class="section" aria-labelledby="results-heading">
       <div class="section-heading">
-        <h2 id="results-heading">Promising Development results</h2>
-        <span class="note">Timed seeding is minimized. Particle ambiguity efficiency is maximized.</span>
+        <h2 id="results-heading">Promising Early Results</h2>
       </div>
-      <div class="grid results-grid">
-        <div class="card"><span class="card-label">Latest Genesis</span><strong id="genesis-result" class="card-value"></strong><span id="genesis-note" class="card-note"></span></div>
-        <div class="card"><span class="card-label">Best timed seeding</span><strong id="seeding-result" class="card-value"></strong><span id="seeding-note" class="card-note"></span></div>
-        <div class="card"><span class="card-label">Best ambiguity efficiency</span><strong id="efficiency-result" class="card-value"></strong><span id="efficiency-note" class="card-note"></span></div>
-      </div>
+      <div id="seeding-leaders" class="grid results-grid"></div>
     </section>
 
     <section class="section" aria-labelledby="pareto-heading">
@@ -291,6 +274,15 @@ function snapshotUrl(source, cacheBuster = Date.now()) {
   const encodedRef = source.fetchRef.split('/').map(encodeURIComponent).join('/');
   return `https://raw.githubusercontent.com/${REPOSITORY}/${encodedRef}/${STATUS_PATH}?_=${cacheBuster}`;
 }
+function topSeedingAttempts(attempts) {
+  if (!Array.isArray(attempts)) return [];
+  return attempts
+    .filter((attempt) => attempt?.candidate !== 'Genesis'
+      && attempt?.state === 'completed'
+      && Number.isFinite(attempt?.timed_seeding_time_per_event_ms))
+    .sort((left, right) => left.timed_seeding_time_per_event_ms - right.timed_seeding_time_per_event_ms)
+    .slice(0, 3);
+}
 /* CAMPAIGN_DISCOVERY_LOGIC_END */
 
 const POLL_INTERVAL_MS = __POLL_INTERVAL_MS__;
@@ -362,11 +354,6 @@ function formatRelative(value) {
 }
 function formatMs(value) { return finite(value) ? `${value.toFixed(2)} ms/event` : 'Unavailable'; }
 function formatEfficiency(value) { return finite(value) ? `${(value * 100).toFixed(2)}%` : 'Unavailable'; }
-function signed(value, digits = 2) {
-  if (!finite(value)) return 'Unavailable';
-  const sign = value > 0 ? '+' : value < 0 ? '−' : '';
-  return `${sign}${Math.abs(value).toFixed(digits)}`;
-}
 function freshnessState(snapshot) {
   const updated = Date.parse(snapshot.generated_at);
   const age = Math.max(0, (Date.now() - updated) / 1000);
@@ -414,56 +401,35 @@ function setProgress(valueId, barId, current, target, cap = false) {
   bar.classList.toggle('good', !cap && current >= target);
   bar.classList.toggle('bad', cap && current > target);
 }
-function setResult(prefix, result, kind) {
-  if (!result) {
-    setText(`${prefix}-result`, 'Unavailable');
-    setText(`${prefix}-note`, 'Waiting for complete Development evidence.');
+function renderSeedingLeaders(snapshot) {
+  const container = document.getElementById('seeding-leaders');
+  container.replaceChildren();
+  const leaders = topSeedingAttempts(snapshot.attempts);
+  if (!leaders.length) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    const value = document.createElement('strong');
+    value.className = 'card-value';
+    value.textContent = 'Waiting for complete Development evidence.';
+    card.appendChild(value);
+    container.appendChild(card);
     return;
   }
-  if (kind === 'genesis') {
-    setText(`${prefix}-result`, `${result.candidate} · ${formatMs(result.timed_seeding_time_per_event_ms)}`);
-    setText(`${prefix}-note`, `${formatEfficiency(result.timed_ambiguity_particle_efficiency)} particle ambiguity efficiency`);
-  } else if (kind === 'seeding') {
-    setText(`${prefix}-result`, `${result.candidate} · ${formatMs(result.timed_seeding_time_per_event_ms)}`);
-    const delta = finite(result.delta_vs_genesis_ms)
-      ? `${signed(result.delta_vs_genesis_ms)} ms (${signed(result.percentage_vs_genesis)}%) versus latest Genesis`
-      : 'Latest Genesis comparison unavailable';
-    setText(`${prefix}-note`, delta);
-  } else {
-    setText(`${prefix}-result`, `${result.candidate} · ${formatEfficiency(result.timed_ambiguity_particle_efficiency)}`);
-    setText(`${prefix}-note`, formatMs(result.timed_seeding_time_per_event_ms));
-  }
-}
-function renderIssues(snapshot) {
-  const section = document.getElementById('issues-section');
-  const list = document.getElementById('issues');
-  list.replaceChildren();
-  snapshot.blockers.forEach((blocker) => {
-    const item = document.createElement('li');
-    item.className = 'issue';
-    item.textContent = blocker.message;
-    list.appendChild(item);
+  leaders.forEach((result, index) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    const label = document.createElement('span');
+    label.className = 'card-label';
+    label.textContent = `#${index + 1} seeding time`;
+    const value = document.createElement('strong');
+    value.className = 'card-value';
+    value.textContent = `${result.candidate} · ${formatMs(result.timed_seeding_time_per_event_ms)}`;
+    const note = document.createElement('span');
+    note.className = 'card-note';
+    note.textContent = `${formatEfficiency(result.timed_ambiguity_particle_efficiency)} particle ambiguity efficiency`;
+    card.append(label, value, note);
+    container.appendChild(card);
   });
-  snapshot.failures.forEach((failure) => {
-    const item = document.createElement('li');
-    item.className = 'issue failure';
-    const strong = document.createElement('strong');
-    strong.textContent = `${failure.candidate}: `;
-    item.append(strong, document.createTextNode(failure.message));
-    const record = link(' record', failure.record_url);
-    if (record) item.append(' · ', record);
-    list.appendChild(item);
-  });
-  section.hidden = list.childElementCount === 0;
-}
-function renderLinks(snapshot, campaign = activeCampaign) {
-  const container = document.getElementById('campaign-links');
-  container.replaceChildren();
-  [['Campaign branch', snapshot.links?.campaign_branch], ['Campaign pull request', snapshot.links?.pull_request || campaign?.pullUrl], ['Active commit', snapshot.links?.active_commit]].forEach(([label, href]) => {
-    const anchor = link(label, href);
-    if (anchor) container.appendChild(anchor);
-  });
-  if (!container.childElementCount) container.textContent = 'No active links published.';
 }
 function evidenceCell(attempt) {
   const wrapper = document.createElement('span');
@@ -600,11 +566,7 @@ function renderSnapshot(snapshot, campaign) {
   setText('remaining', formatDuration(progress.estimated_remaining_seconds));
   setText('expected-finish', formatInstant(progress.expected_finish_at));
   renderFreshness(snapshot, campaign);
-  setResult('genesis', snapshot.promising_results.latest_genesis, 'genesis');
-  setResult('seeding', snapshot.promising_results.best_seeding, 'seeding');
-  setResult('efficiency', snapshot.promising_results.best_ambiguity_efficiency, 'efficiency');
-  renderLinks(snapshot, campaign);
-  renderIssues(snapshot);
+  renderSeedingLeaders(snapshot);
   renderPareto(snapshot);
   renderHistory(snapshot);
   emptyState.hidden = true;

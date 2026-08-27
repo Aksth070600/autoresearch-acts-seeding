@@ -384,6 +384,31 @@ class CampaignStatusTests(unittest.TestCase):
         )
         self.assertIn(f"/{7:040x}/campaign-status.json", result["closedUrl"])
 
+    def test_dashboard_ranks_three_fastest_completed_non_genesis_attempts(self) -> None:
+        def attempt(candidate: str, state: str, seeding_ms: float | None) -> dict:
+            return {
+                "candidate": candidate,
+                "state": state,
+                "timed_seeding_time_per_event_ms": seeding_ms,
+            }
+
+        attempts = [
+            attempt("Genesis", "completed", 1),
+            attempt("Fourth", "completed", 14),
+            attempt("Third", "completed", 13),
+            attempt("Running", "running", 2),
+            attempt("First", "completed", 10),
+            attempt("Missing", "completed", None),
+            attempt("Second", "completed", 11),
+        ]
+        result = self.run_discovery_javascript(
+            "const leaders = topSeedingAttempts("
+            f"{json.dumps(attempts)}"
+            ").map((attempt) => attempt.candidate);"
+            "console.log(JSON.stringify(leaders));"
+        )
+        self.assertEqual(result, ["First", "Second", "Third"])
+
     def test_dashboard_timestamp_formatter_is_browser_compatible(self) -> None:
         if shutil.which("node") is None:
             self.skipTest("node is required for dashboard JavaScript tests")
@@ -453,6 +478,14 @@ class CampaignStatusTests(unittest.TestCase):
             'id="median-basis"',
             'id="eta-basis"',
             'id="last-update"',
+            'id="links-heading"',
+            'id="campaign-links"',
+            'id="issues-section"',
+            'id="issues-heading"',
+            'id="issues"',
+            'id="genesis-result"',
+            'id="efficiency-result"',
+            "Timed seeding is minimized. Particle ambiguity efficiency is maximized.",
             "timeZoneName: 'short'",
             "Public Development progress on the two controlled objectives.",
             "Campaigns are sorted newest to oldest.",
@@ -463,6 +496,10 @@ class CampaignStatusTests(unittest.TestCase):
         self.assertIn("<h2>ACTS Seeding Campaign</h2>", html)
         self.assertIn("Updated · ${formatRelative(snapshot.generated_at)}", html)
         self.assertIn("`${state} · ACTS Seeding Campaign", html)
+        self.assertIn("<h2 id=\"results-heading\">Promising Early Results</h2>", html)
+        self.assertIn('id="seeding-leaders"', html)
+        self.assertIn("function renderSeedingLeaders(snapshot)", html)
+        self.assertIn(".slice(0, 3)", html)
         self.assertEqual(html.count("fetch(PULLS_API_URL"), 1)
         polling = html[html.index("setInterval(() => {") :]
         self.assertNotIn("PULLS_API_URL", polling)
