@@ -306,13 +306,31 @@
       "state": "completed",
       "timed_ambiguity_particle_efficiency": 0.972769,
       "timed_seeding_time_per_event_ms": 280.83
+    },
+    {
+      "candidate": "DoubletMiddleDataflowRecord",
+      "classification": "structural",
+      "duration_seconds": 807.495,
+      "finished_at": "2026-08-27T15:37:21.614366Z",
+      "implementation_commit": "08c3179067db9812607368c22355f8be3e46ec80",
+      "links": {
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/08c3179067db9812607368c22355f8be3e46ec80",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug27-v6/records/Development/20260827T152354Z-DoubletMiddleDataflowRecord/summary.json"
+      },
+      "mechanism_family": "doublet-middle-dataflow-record",
+      "outcome": "Passed all controlled Development stages.",
+      "record": "records/Development/20260827T152354Z-DoubletMiddleDataflowRecord/summary.json",
+      "started_at": "2026-08-27T15:23:54.119442Z",
+      "state": "completed",
+      "timed_ambiguity_particle_efficiency": 0.972769,
+      "timed_seeding_time_per_event_ms": 279.99
     }
   ],
   "blockers": [],
   "campaign": {
     "branch": "autoresearch-acts-seeding/aug27-v6",
     "name": "ACTS Seeding Development campaign v6",
-    "phase": "candidate loop: 17 of 20",
+    "phase": "candidate loop: 17 of 20 complete",
     "started_at": "2026-08-27T11:03:33Z",
     "targets": {
       "completed_attempts": 20,
@@ -320,29 +338,22 @@
       "structural_attempts": 10
     }
   },
-  "current_attempt": {
-    "candidate": "DoubletMiddleDataflowRecord",
-    "classification": "structural",
-    "controlled_stage": "queued Development run",
-    "mechanism_family": "doublet-middle-dataflow-record",
-    "started_at": "2026-08-27T15:23:47Z",
-    "state": "queued"
-  },
+  "current_attempt": null,
   "failures": [],
-  "generated_at": "2026-08-27T15:23:47.767393Z",
+  "generated_at": "2026-08-27T15:37:43.190252Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/08c3179067db9812607368c22355f8be3e46ec80",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/13131ee9155d21b73fafc3087fc7067476338dc4",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/aug27-v6",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/25"
   },
   "progress": {
-    "completed_attempts": 16,
-    "elapsed_seconds": 15614.767393,
-    "estimated_remaining_seconds": 3184.736607,
-    "eta_basis": "Median of 16 completed attempts; current attempt elapsed time deducted.",
-    "eta_sample_count": 16,
-    "expected_finish_at": "2026-08-27T16:16:52.504000Z",
-    "median_completed_attempt_duration_seconds": 796.376,
+    "completed_attempts": 17,
+    "elapsed_seconds": 16450.190252,
+    "estimated_remaining_seconds": 2409.4260000000004,
+    "eta_basis": "Median of 17 completed attempts.",
+    "eta_sample_count": 17,
+    "expected_finish_at": "2026-08-27T16:17:52.616252Z",
+    "median_completed_attempt_duration_seconds": 803.142,
     "micro_optimizations": 3,
     "structural_attempts": 14
   },
@@ -358,16 +369,16 @@
       "timed_seeding_time_per_event_ms": 282.79
     },
     "best_seeding": {
-      "candidate": "GridBinInsertionSort",
-      "delta_vs_genesis_ms": -15.239999999999952,
+      "candidate": "DoubletMiddleDataflowRecord",
+      "delta_vs_genesis_ms": -16.039999999999964,
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/291adb8541df26a3c49d6e198f63d31533bf952a",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug27-v6/records/Development/20260827T145453Z-GridBinInsertionSort/summary.json"
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/08c3179067db9812607368c22355f8be3e46ec80",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug27-v6/records/Development/20260827T152354Z-DoubletMiddleDataflowRecord/summary.json"
       },
-      "percentage_vs_genesis": -5.148126879032515,
-      "started_at": "2026-08-27T14:54:53.424318Z",
+      "percentage_vs_genesis": -5.418369759821628,
+      "started_at": "2026-08-27T15:23:54.119442Z",
       "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 280.79
+      "timed_seeding_time_per_event_ms": 279.99
     },
     "latest_genesis": {
       "candidate": "Genesis",
@@ -381,14 +392,14 @@
     },
     "pareto_front": [
       {
-        "candidate": "GridBinInsertionSort",
+        "candidate": "DoubletMiddleDataflowRecord",
         "links": {
-          "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/291adb8541df26a3c49d6e198f63d31533bf952a",
-          "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug27-v6/records/Development/20260827T145453Z-GridBinInsertionSort/summary.json"
+          "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/08c3179067db9812607368c22355f8be3e46ec80",
+          "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug27-v6/records/Development/20260827T152354Z-DoubletMiddleDataflowRecord/summary.json"
         },
-        "started_at": "2026-08-27T14:54:53.424318Z",
+        "started_at": "2026-08-27T15:23:54.119442Z",
         "timed_ambiguity_particle_efficiency": 0.972769,
-        "timed_seeding_time_per_event_ms": 280.79
+        "timed_seeding_time_per_event_ms": 279.99
       }
     ]
   },
