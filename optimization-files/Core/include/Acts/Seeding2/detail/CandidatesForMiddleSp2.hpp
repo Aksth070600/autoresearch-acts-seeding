@@ -10,7 +10,6 @@
 
 #include "Acts/EventData/Types.hpp"
 
-#include <deque>
 #include <limits>
 #include <vector>
 
@@ -102,7 +101,7 @@ class CandidatesForMiddleSp2 {
   Size m_maxSizeHigh{kNoSize};
 
   // storage contains the collection of the candidates
-  std::deque<TripletCandidate2> m_storage;
+  std::vector<TripletCandidate2> m_storage;
 
   Container m_indicesLow;
   Container m_indicesHigh;
