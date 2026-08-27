@@ -487,6 +487,7 @@ class CampaignStatusTests(unittest.TestCase):
             'id="fetch-error"',
             "Showing the last good snapshot",
             "Attempt history",
+            "max-width: 1920px;",
             "height: 615px;",
             "#chart-frame { height: 510px; }",
             "autosize: true",

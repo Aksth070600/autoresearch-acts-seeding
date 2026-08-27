@@ -23,7 +23,7 @@ HTML_TEMPLATE = r"""<!doctype html>
     :root { color-scheme: dark; font-family: system-ui, sans-serif; }
     * { box-sizing: border-box; }
     body { margin: 0; background: #0b1120; color: #e5e7eb; }
-    main { max-width: 1280px; margin: 0 auto; padding: 24px; }
+    main { max-width: 1920px; margin: 0 auto; padding: 24px; }
     a { color: #a5b4fc; text-underline-offset: 3px; }
     a:hover { color: #c4b5fd; }
     h1, h2, h3, p { margin-top: 0; }
