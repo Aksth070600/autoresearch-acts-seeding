@@ -52,4 +52,20 @@ No two of the nine included mechanisms are mutually exclusive in source. `Double
 
 ## Development result
 
-Pending exactly one controlled Development candidate run. No fresh Genesis will be run.
+Exactly one controlled Development run completed. All requested stages passed. Each timed repetition processed all 10 events; the existing expected-unmasked-FPE rule accepted one unmasked FPE only after all events completed.
+
+Timed seeding repetitions were 280.31, 278.96, and 280.71 ms/event. Their median was 280.31 ms/event. Timed ambiguity particle efficiency was 0.972769 in every repetition.
+
+| Comparison | Timed seeding | Difference | Timed ambiguity particle efficiency | Difference |
+| --- | ---: | ---: | ---: | ---: |
+| Historical latest compatible Genesis, 296.03 ms/event | 280.31 ms/event | -15.72 ms (-5.31%) | 0.972769 | 0 |
+| Strongest prior `TripletReserveElision`, 277.38 ms/event | 280.31 ms/event | +2.93 ms (+1.06%) | 0.972769 | 0 |
+
+The composite improves the historical Genesis primary timing objective without reducing the efficiency objective. It does not beat the strongest prior candidate. The positive effects were not additive under combination.
+
+Diagnostic-only median timing was 2134.99 ms/event for CKF and 2447.54 ms/event for the selected full-chain sum. Historical Genesis measured 2200.93 and 2531.34 ms/event, while `TripletReserveElision` measured 2084.53 and 2392.56 ms/event. These diagnostics do not change the primary-objective assessment.
+
+- Record: `records/Development/20260827T173333Z-CompositePositiveV1/summary.json`
+- Outcome: keep as a Genesis improvement, then restore by campaign contract for archive publication.
+- Lesson: source-compatible improvements can interact non-additively. Preserve `TripletReserveElision` as the stronger prior seeding result rather than assuming that adding the v5 layout and selection mechanisms improves its timing.
+- Genesis comparison is historical. It was not rerun concurrently.
