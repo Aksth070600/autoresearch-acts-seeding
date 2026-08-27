@@ -24,9 +24,9 @@
       "classification": "structural",
       "duration_seconds": 807.373,
       "finished_at": "2026-08-27T11:34:08.196901Z",
-      "implementation_commit": "0608396f2258fe910fcc344aaf817ae04dfb601d",
+      "implementation_commit": "776df4d2d1f54c3e05ead9c8cc3f4b56559a1e50",
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/0608396f2258fe910fcc344aaf817ae04dfb601d",
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/776df4d2d1f54c3e05ead9c8cc3f4b56559a1e50",
         "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug27-v6/records/Development/20260827T112040Z-DoubletInsertionSort/summary.json"
       },
       "mechanism_family": "doublet-insertion-sort",
@@ -36,13 +36,31 @@
       "state": "completed",
       "timed_ambiguity_particle_efficiency": 0.972769,
       "timed_seeding_time_per_event_ms": 284.5
+    },
+    {
+      "candidate": "FilterCurvatureSweepWindow",
+      "classification": "structural",
+      "duration_seconds": 780.017,
+      "finished_at": "2026-08-27T11:52:00.570520Z",
+      "implementation_commit": "8e0f4ab283f0afc361fe1e4f6388a921b08435fa",
+      "links": {
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/8e0f4ab283f0afc361fe1e4f6388a921b08435fa",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug27-v6/records/Development/20260827T113900Z-FilterCurvatureSweepWindow/summary.json"
+      },
+      "mechanism_family": "filter-curvature-sweep-window",
+      "outcome": "Passed all controlled Development stages.",
+      "record": "records/Development/20260827T113900Z-FilterCurvatureSweepWindow/summary.json",
+      "started_at": "2026-08-27T11:39:00.554017Z",
+      "state": "completed",
+      "timed_ambiguity_particle_efficiency": 0.972769,
+      "timed_seeding_time_per_event_ms": 288.09
     }
   ],
   "blockers": [],
   "campaign": {
     "branch": "autoresearch-acts-seeding/aug27-v6",
     "name": "ACTS Seeding Development campaign v6",
-    "phase": "candidate loop: 2 of 20",
+    "phase": "candidate loop: 2 of 20 complete",
     "started_at": "2026-08-27T11:03:33Z",
     "targets": {
       "completed_attempts": 20,
@@ -50,29 +68,22 @@
       "structural_attempts": 10
     }
   },
-  "current_attempt": {
-    "candidate": "FilterCurvatureSweepWindow",
-    "classification": "structural",
-    "controlled_stage": "queued Development run",
-    "mechanism_family": "filter-curvature-sweep-window",
-    "started_at": "2026-08-27T11:38:51Z",
-    "state": "queued"
-  },
+  "current_attempt": null,
   "failures": [],
-  "generated_at": "2026-08-27T11:38:51.863096Z",
+  "generated_at": "2026-08-27T11:55:21.304247Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/8e0f4ab283f0afc361fe1e4f6388a921b08435fa",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/469fbd90f56e3cafbbeaee62feaec4ca598cf971",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/aug27-v6",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/25"
   },
   "progress": {
-    "completed_attempts": 1,
-    "elapsed_seconds": 2118.863096,
+    "completed_attempts": 2,
+    "elapsed_seconds": 3108.304247,
     "estimated_remaining_seconds": null,
-    "eta_basis": "Unavailable until 3 completed attempt durations exist (1 available).",
-    "eta_sample_count": 1,
+    "eta_basis": "Unavailable until 3 completed attempt durations exist (2 available).",
+    "eta_sample_count": 2,
     "expected_finish_at": null,
-    "median_completed_attempt_duration_seconds": 807.373,
+    "median_completed_attempt_duration_seconds": 793.695,
     "micro_optimizations": 0,
     "structural_attempts": 2
   },
@@ -91,7 +102,7 @@
       "candidate": "DoubletInsertionSort",
       "delta_vs_genesis_ms": -11.529999999999973,
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/0608396f2258fe910fcc344aaf817ae04dfb601d",
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/776df4d2d1f54c3e05ead9c8cc3f4b56559a1e50",
         "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug27-v6/records/Development/20260827T112040Z-DoubletInsertionSort/summary.json"
       },
       "percentage_vs_genesis": -3.8948755193730276,
@@ -113,7 +124,7 @@
       {
         "candidate": "DoubletInsertionSort",
         "links": {
-          "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/0608396f2258fe910fcc344aaf817ae04dfb601d",
+          "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/776df4d2d1f54c3e05ead9c8cc3f4b56559a1e50",
           "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug27-v6/records/Development/20260827T112040Z-DoubletInsertionSort/summary.json"
         },
         "started_at": "2026-08-27T11:20:40.824235Z",
