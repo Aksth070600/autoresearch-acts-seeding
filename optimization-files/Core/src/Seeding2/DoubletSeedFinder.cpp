@@ -93,77 +93,61 @@ class Impl final : public DoubletSeedFinder {
     }
 
     const SpacePointContainer2& container = candidateSps.container();
-    for (auto [indexO, xyO, zrO, varianceZO, varianceRO] : candidateSps.zip(
-             container.xyColumn(), container.zrColumn(),
-             container.varianceZColumn(), container.varianceRColumn())) {
-      const float xO = xyO[0];
-      const float yO = xyO[1];
-      const float zO = zrO[0];
-      const float rO = zrO[1];
-
-      float deltaR = 0;
-      if constexpr (isBottomCandidate) {
-        deltaR = rM - rO;
-
-        if constexpr (sortedByR) {
-          // if r-distance is too small we are done
-          if (deltaR < m_cfg.deltaRMin) {
-            break;
-          }
+    struct PrefilteredDoublet {
+      SpacePointIndex2 index{};
+      float deltaR{};
+      float deltaZ{};
+    };
+    std::vector<PrefilteredDoublet> prefiltered;
+    prefiltered.reserve(candidateSps.size());
+    for (ConstSpacePointProxy2 otherSp : candidateSps) {
+      const float rO = otherSp.zr()[1];
+      const float zO = otherSp.zr()[0];
+      const float deltaR =
+          isBottomCandidate ? rM - rO : rO - rM;
+      if constexpr (sortedByR) {
+        if ((isBottomCandidate && deltaR < m_cfg.deltaRMin) ||
+            (!isBottomCandidate && deltaR > m_cfg.deltaRMax)) {
+          break;
         }
-      } else {
-        deltaR = rO - rM;
-
-        if constexpr (sortedByR) {
-          // if r-distance is too big we are done
-          if (deltaR > m_cfg.deltaRMax) {
-            break;
-          }
-        }
-      }
-
-      if constexpr (!sortedByR) {
-        if (outsideRangeCheck(deltaR, m_cfg.deltaRMin, m_cfg.deltaRMax)) {
-          continue;
-        }
-      }
-
-      float deltaZ = 0;
-      if constexpr (isBottomCandidate) {
-        deltaZ = zM - zO;
-      } else {
-        deltaZ = zO - zM;
-      }
-
-      if (outsideRangeCheck(deltaZ, m_cfg.deltaZMin, m_cfg.deltaZMax)) {
+      } else if (outsideRangeCheck(deltaR, m_cfg.deltaRMin,
+                                   m_cfg.deltaRMax)) {
         continue;
       }
 
-      // the longitudinal impact parameter zOrigin is defined as (zM - rM *
-      // cotTheta) where cotTheta is the ratio Z/R (forward angle) of space
-      // point duplet but instead we calculate (zOrigin * deltaR) and multiply
-      // collisionRegion by deltaR to avoid divisions
+      const float deltaZ =
+          isBottomCandidate ? zM - zO : zO - zM;
+      if (outsideRangeCheck(deltaZ, m_cfg.deltaZMin, m_cfg.deltaZMax)) {
+        continue;
+      }
       const float zOriginTimesDeltaR = zM * deltaR - rM * deltaZ;
-      // check if duplet origin on z axis within collision region
       if (outsideRangeCheck(zOriginTimesDeltaR,
                             m_cfg.collisionRegionMin * deltaR,
                             m_cfg.collisionRegionMax * deltaR)) {
         continue;
       }
-
-      // if interactionPointCut is false we apply z cuts before coordinate
-      // transformation to avoid unnecessary calculations. If
-      // interactionPointCut is true we apply the curvature cut first because it
-      // is more frequent but requires the coordinate transformation
       if constexpr (!interactionPointCut) {
-        // check if duplet cotTheta is within the region of interest
-        // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
-        // cotThetaMax by deltaR to avoid division
         if (outsideRangeCheck(deltaZ, -m_cfg.cotThetaMax * deltaR,
                               m_cfg.cotThetaMax * deltaR)) {
           continue;
         }
+      }
+      prefiltered.push_back({otherSp.index(), deltaR, deltaZ});
+    }
 
+    for (const PrefilteredDoublet& candidate : prefiltered) {
+      const SpacePointIndex2 indexO = candidate.index;
+      const ConstSpacePointProxy2 otherSp = container[indexO];
+      const float xO = otherSp.xy()[0];
+      const float yO = otherSp.xy()[1];
+      const float deltaR = candidate.deltaR;
+      const float deltaZ = candidate.deltaZ;
+      const float varianceZO = otherSp.varianceZ();
+      const float varianceRO = otherSp.varianceR();
+
+      // Cheap radius, z, collision-region, and cotTheta cuts were staged before
+      // loading the coordinate and variance columns.
+      if constexpr (!interactionPointCut) {
         // transform SP coordinates to the u-v reference frame
         const float deltaX = xO - xM;
         const float deltaY = yO - yM;
