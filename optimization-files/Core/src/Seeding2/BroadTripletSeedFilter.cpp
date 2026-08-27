@@ -158,51 +158,53 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
     return spT.zr()[1];
   };
 
-  const std::size_t candidateCount = cache().topSpIndexVec.size();
-  cache().topR.resize(candidateCount);
-  for (std::size_t index = 0; index < candidateCount; ++index) {
-    cache().topR[index] = getTopR(
-        spacePoints[tripletTopCandidates.topSpacePoints()[index]]);
-  }
-
-  cache().compatibilityMatrix.assign(candidateCount * candidateCount, 0);
-  for (std::size_t left = 0; left < candidateCount; ++left) {
-    const std::size_t leftIndex = cache().topSpIndexVec[left];
-    const float curvature = tripletTopCandidates.curvatures()[leftIndex];
-    const float lower = curvature - config().deltaInvHelixDiameter;
-    const float upper = curvature + config().deltaInvHelixDiameter;
-    for (std::size_t right = 0; right < candidateCount; ++right) {
-      const std::size_t rightIndex = cache().topSpIndexVec[right];
-      const float otherCurvature =
-          tripletTopCandidates.curvatures()[rightIndex];
-      cache().compatibilityMatrix[left * candidateCount + right] =
-          left != right && otherCurvature >= lower && otherCurvature <= upper &&
-          std::abs(cache().topR[leftIndex] - cache().topR[rightIndex]) >=
-              config().deltaRMin;
-    }
-  }
-
-  // loop over top SPs and the precomputed pair-compatibility graph
-  for (std::size_t topPosition = 0; topPosition < candidateCount;
-       ++topPosition) {
-    const std::size_t topSpIndex = cache().topSpIndexVec[topPosition];
+  std::size_t beginCompTopIndex = 0;
+  // loop over top SPs and other compatible top SP candidates
+  for (const std::size_t topSpIndex : cache().topSpIndexVec) {
     auto topSp = tripletTopCandidates.topSpacePoints()[topSpIndex];
     auto spT = spacePoints[topSp];
 
     cache().compatibleSeedR.clear();
 
+    float invHelixDiameter = tripletTopCandidates.curvatures()[topSpIndex];
+    float lowerLimitCurv = invHelixDiameter - config().deltaInvHelixDiameter;
+    float upperLimitCurv = invHelixDiameter + config().deltaInvHelixDiameter;
+    float currentTopR = getTopR(spT);
     float impact = tripletTopCandidates.impactParameters()[topSpIndex];
+
     float weight = -impact * config().impactWeightFactor;
 
-    for (std::size_t compatiblePosition = 0;
-         compatiblePosition < candidateCount; ++compatiblePosition) {
-      if (cache().compatibilityMatrix[topPosition * candidateCount +
-                                      compatiblePosition] == 0) {
+    // loop over compatible top SP candidates
+    for (std::size_t variableCompTopIndex = beginCompTopIndex;
+         variableCompTopIndex < cache().topSpIndexVec.size();
+         variableCompTopIndex++) {
+      std::size_t compatibleTopSpIndex =
+          cache().topSpIndexVec[variableCompTopIndex];
+      if (compatibleTopSpIndex == topSpIndex) {
         continue;
       }
-      const std::size_t compatibleTopSpIndex =
-          cache().topSpIndexVec[compatiblePosition];
-      const float otherTopR = cache().topR[compatibleTopSpIndex];
+      auto otherSpT = spacePoints[tripletTopCandidates
+                                      .topSpacePoints()[compatibleTopSpIndex]];
+
+      float otherTopR = getTopR(otherSpT);
+
+      // curvature difference within limits?
+      if (tripletTopCandidates.curvatures()[compatibleTopSpIndex] <
+          lowerLimitCurv) {
+        // the SPs are sorted in curvature so we skip unnecessary iterations
+        beginCompTopIndex = variableCompTopIndex + 1;
+        continue;
+      }
+      if (tripletTopCandidates.curvatures()[compatibleTopSpIndex] >
+          upperLimitCurv) {
+        // the SPs are sorted in curvature so we skip unnecessary iterations
+        break;
+      }
+      // compared top SP should have at least deltaRMin distance
+      float deltaR = currentTopR - otherTopR;
+      if (std::abs(deltaR) < config().deltaRMin) {
+        continue;
+      }
       bool newCompSeed = true;
       for (const float previousDiameter : cache().compatibleSeedR) {
         // original ATLAS code uses higher min distance for 2nd found compatible
