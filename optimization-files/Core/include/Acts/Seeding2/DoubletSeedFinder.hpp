@@ -15,7 +15,6 @@
 #include "Acts/Utilities/detail/ContainerIterator.hpp"
 
 #include <cstdint>
-#include <deque>
 #include <vector>
 
 namespace Acts {
@@ -71,12 +70,12 @@ class DoubletsForMiddleSp {
 
   /// Get reference to space point indices container
   /// @return Const reference to space point indices vector
-  const std::deque<SpacePointIndex2>& spacePoints() const {
+  const std::vector<SpacePointIndex2>& spacePoints() const {
     return m_spacePoints;
   }
   /// Get reference to cotTheta values container
   /// @return Const reference to cotTheta values vector
-  const std::deque<float>& cotTheta() const { return m_cotTheta; }
+  const std::vector<float>& cotTheta() const { return m_cotTheta; }
 
   /// Pair of doublet index and cotTheta value.
   struct IndexAndCotTheta {
@@ -253,13 +252,13 @@ class DoubletsForMiddleSp {
   }
 
  private:
-  std::deque<SpacePointIndex2> m_spacePoints;
+  std::vector<SpacePointIndex2> m_spacePoints;
 
   // parameters required to calculate a circle with linear equation
-  std::deque<float> m_cotTheta;
-  std::deque<std::array<float, 2>> m_er_iDeltaR;
-  std::deque<std::array<float, 2>> m_uv;
-  std::deque<std::array<float, 2>> m_xy;
+  std::vector<float> m_cotTheta;
+  std::vector<std::array<float, 2>> m_er_iDeltaR;
+  std::vector<std::array<float, 2>> m_uv;
+  std::vector<std::array<float, 2>> m_xy;
 };
 
 /// Derived quantities for the middle space point in a doublet.
