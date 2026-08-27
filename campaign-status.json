@@ -5,7 +5,7 @@
   "campaign": {
     "branch": "autoresearch-acts-seeding/composite-positive-v1",
     "name": "ACTS Seeding Composite Positive V1",
-    "phase": "inventorying positive candidate evidence",
+    "phase": "queued one controlled Development candidate",
     "started_at": "2026-08-27T17:27:12Z",
     "targets": {
       "completed_attempts": 1,
@@ -13,24 +13,31 @@
       "structural_attempts": 1
     }
   },
-  "current_attempt": null,
+  "current_attempt": {
+    "candidate": "CompositePositiveV1",
+    "classification": "structural",
+    "controlled_stage": "queued Development run",
+    "mechanism_family": "composite-positive-v1",
+    "started_at": "2026-08-27T17:32:53Z",
+    "state": "queued"
+  },
   "failures": [],
-  "generated_at": "2026-08-27T17:27:51.811951Z",
+  "generated_at": "2026-08-27T17:33:07.704379Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/d2cff7b273cf2ccdaa67a784a0afd0e2077fe792",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/ec49bd1513853d20482dd316930f71974d90c71e",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/composite-positive-v1",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/27"
   },
   "progress": {
     "completed_attempts": 0,
-    "elapsed_seconds": 39.811951,
+    "elapsed_seconds": 355.704379,
     "estimated_remaining_seconds": null,
     "eta_basis": "Unavailable until 3 completed attempt durations exist (0 available).",
     "eta_sample_count": 0,
     "expected_finish_at": null,
     "median_completed_attempt_duration_seconds": null,
     "micro_optimizations": 0,
-    "structural_attempts": 0
+    "structural_attempts": 1
   },
   "promising_results": {
     "best_ambiguity_efficiency": null,

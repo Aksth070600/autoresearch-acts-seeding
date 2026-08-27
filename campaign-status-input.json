@@ -3,7 +3,7 @@
   "campaign": {
     "name": "ACTS Seeding Composite Positive V1",
     "branch": "autoresearch-acts-seeding/composite-positive-v1",
-    "phase": "inventorying positive candidate evidence",
+    "phase": "queued one controlled Development candidate",
     "started_at": "2026-08-27T17:27:12Z",
     "targets": {
       "completed_attempts": 1,
@@ -11,8 +11,21 @@
       "micro_optimization_cap": 0
     }
   },
-  "current_attempt": null,
-  "attempt_metadata": [],
+  "current_attempt": {
+    "candidate": "CompositePositiveV1",
+    "mechanism_family": "composite-positive-v1",
+    "classification": "structural",
+    "controlled_stage": "queued Development run",
+    "state": "queued",
+    "started_at": "2026-08-27T17:32:53Z"
+  },
+  "attempt_metadata": [
+    {
+      "candidate": "CompositePositiveV1",
+      "mechanism_family": "composite-positive-v1",
+      "classification": "structural"
+    }
+  ],
   "blockers": [],
   "pull_request_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/27"
 }
