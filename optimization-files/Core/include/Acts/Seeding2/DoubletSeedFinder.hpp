@@ -14,7 +14,6 @@
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/detail/ContainerIterator.hpp"
 
-#include <algorithm>
 #include <cstdint>
 #include <vector>
 
@@ -99,26 +98,9 @@ class DoubletsForMiddleSp {
     for (Index i = range.first; i < range.second; ++i) {
       indexAndCotTheta.emplace_back(i, m_cotTheta[i]);
     }
-    const auto cotThetaLess = [](const IndexAndCotTheta& left,
-                                 const IndexAndCotTheta& right) {
-      return left.cotTheta < right.cotTheta;
-    };
-    std::vector<IndexAndCotTheta> mergeScratch(indexAndCotTheta.size());
-    for (std::size_t width = 1; width < indexAndCotTheta.size(); width *= 2) {
-      for (std::size_t left = 0; left < indexAndCotTheta.size();
-           left += 2 * width) {
-        const std::size_t middle =
-            std::min(left + width, indexAndCotTheta.size());
-        const std::size_t right =
-            std::min(left + 2 * width, indexAndCotTheta.size());
-        std::merge(indexAndCotTheta.begin() + left,
-                   indexAndCotTheta.begin() + middle,
-                   indexAndCotTheta.begin() + middle,
-                   indexAndCotTheta.begin() + right,
-                   mergeScratch.begin() + left, cotThetaLess);
-      }
-      indexAndCotTheta.swap(mergeScratch);
-    }
+    std::ranges::sort(indexAndCotTheta, {}, [](const IndexAndCotTheta& item) {
+      return item.cotTheta;
+    });
   }
 
   /// Proxy accessor for a single doublet entry.
