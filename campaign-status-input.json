@@ -3,7 +3,7 @@
   "campaign": {
     "name": "ACTS Seeding Development Campaign V7",
     "branch": "autoresearch-acts-seeding/campaign-v7",
-    "phase": "fresh Genesis baseline complete; structural search",
+    "phase": "Development attempt 2 of 61",
     "started_at": "2026-08-27T18:23:05Z",
     "targets": {
       "completed_attempts": 61,
@@ -11,8 +11,21 @@
       "micro_optimization_cap": 15
     }
   },
-  "current_attempt": null,
-  "attempt_metadata": [],
+  "current_attempt": {
+    "candidate": "GridBinHeapSort",
+    "mechanism_family": "grid-bin-heap-sort",
+    "classification": "structural",
+    "controlled_stage": "queued Development run with ACTS_BUILD_JOBS=8",
+    "state": "queued",
+    "started_at": "2026-08-27T18:41:03.195083Z"
+  },
+  "attempt_metadata": [
+    {
+      "candidate": "GridBinHeapSort",
+      "mechanism_family": "grid-bin-heap-sort",
+      "classification": "structural"
+    }
+  ],
   "blockers": [],
   "pull_request_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/28"
 }
