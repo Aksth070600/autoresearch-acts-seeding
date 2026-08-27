@@ -132,7 +132,7 @@
   "campaign": {
     "branch": "autoresearch-acts-seeding/aug27-v6",
     "name": "ACTS Seeding Development campaign v6",
-    "phase": "candidate loop: 6 of 20 complete",
+    "phase": "candidate loop: 7 of 20",
     "started_at": "2026-08-27T11:03:33Z",
     "targets": {
       "completed_attempts": 20,
@@ -140,24 +140,31 @@
       "structural_attempts": 10
     }
   },
-  "current_attempt": null,
+  "current_attempt": {
+    "candidate": "CoreBatchSpacePointMaterialization",
+    "classification": "structural",
+    "controlled_stage": "queued Development run",
+    "mechanism_family": "core-batch-spacepoint-materialization",
+    "started_at": "2026-08-27T12:56:27Z",
+    "state": "queued"
+  },
   "failures": [],
-  "generated_at": "2026-08-27T12:55:19.212409Z",
+  "generated_at": "2026-08-27T12:56:27.433526Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/daf40bb48a52facbdbc160d7bc7aca2c6d43f462",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/59e7fb575596a7adc2936cd40bf1b06a6303b79a",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/aug27-v6",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/25"
   },
   "progress": {
     "completed_attempts": 6,
-    "elapsed_seconds": 6706.212409,
-    "estimated_remaining_seconds": 11283.979000000001,
-    "eta_basis": "Median of 6 completed attempts.",
+    "elapsed_seconds": 6774.433526,
+    "estimated_remaining_seconds": 11283.545474,
+    "eta_basis": "Median of 6 completed attempts; current attempt elapsed time deducted.",
     "eta_sample_count": 6,
-    "expected_finish_at": "2026-08-27T16:03:23.191409Z",
+    "expected_finish_at": "2026-08-27T16:04:30.979000Z",
     "median_completed_attempt_duration_seconds": 805.9985,
     "micro_optimizations": 0,
-    "structural_attempts": 6
+    "structural_attempts": 7
   },
   "promising_results": {
     "best_ambiguity_efficiency": {
