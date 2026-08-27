@@ -87,12 +87,7 @@ class CandidatesForMiddleSp2 {
   void toSortedCandidates(std::vector<TripletCandidate2>& output);
 
  private:
-  using WeightIndex = std::pair<float, Index>;
-  using Container = std::vector<WeightIndex>;
-
-  static constexpr bool comparator(const WeightIndex& a, const WeightIndex& b) {
-    return a.first > b.first;
-  }
+  using Container = std::vector<Index>;
 
   // sizes
   // m_maxSize* is the maximum size of the indices collections. These values
