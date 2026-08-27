@@ -144,6 +144,92 @@ class CampaignStatusTests(unittest.TestCase):
         self.assertEqual(schema["properties"]["protocol_id"]["const"], "acts-seeding-v2")
         self.assertFalse(schema["additionalProperties"])
 
+    def test_candidate_commit_link_skips_following_status_only_commit(self) -> None:
+        state = self.live_state(
+            [
+                {
+                    "candidate": "Candidate",
+                    "mechanism_family": "candidate-mechanism",
+                    "classification": "structural",
+                }
+            ]
+        )
+        with tempfile.TemporaryDirectory() as temporary:
+            repository = Path(temporary)
+            subprocess.run(["git", "init", "-q", repository], check=True)
+            subprocess.run(
+                ["git", "-C", repository, "config", "user.email", "test@example.com"],
+                check=True,
+            )
+            subprocess.run(
+                ["git", "-C", repository, "config", "user.name", "Campaign Test"],
+                check=True,
+            )
+            implementation = repository / "optimization-files" / "candidate.cpp"
+            implementation.parent.mkdir()
+            implementation.write_text("candidate\n", encoding="utf-8")
+            subprocess.run(["git", "-C", repository, "add", "."], check=True)
+            subprocess.run(
+                ["git", "-C", repository, "commit", "-q", "-m", "Implement candidate"],
+                check=True,
+            )
+            implementation_commit = subprocess.check_output(
+                ["git", "-C", repository, "rev-parse", "HEAD"], text=True
+            ).strip()
+
+            (repository / "campaign-status.json").write_text("{}\n", encoding="utf-8")
+            subprocess.run(["git", "-C", repository, "add", "."], check=True)
+            subprocess.run(
+                ["git", "-C", repository, "commit", "-q", "-m", "Queue candidate"],
+                check=True,
+            )
+            status_commit = subprocess.check_output(
+                ["git", "-C", repository, "rev-parse", "HEAD"], text=True
+            ).strip()
+
+            records = repository / "records"
+            records.mkdir()
+            self.write_summary(
+                records,
+                "genesis",
+                self.summary(
+                    "Genesis",
+                    "2026-08-27T09:05:00Z",
+                    90,
+                    100,
+                    0.90,
+                    commit=status_commit,
+                ),
+            )
+            self.write_summary(
+                records,
+                "candidate",
+                self.summary(
+                    "Candidate",
+                    "2026-08-27T09:10:00Z",
+                    90,
+                    90,
+                    0.90,
+                    commit=status_commit,
+                ),
+            )
+
+            attempts = load_attempts(records, state, repository)
+
+        by_candidate = {attempt["candidate"]: attempt for attempt in attempts}
+        self.assertEqual(
+            by_candidate["Candidate"]["implementation_commit"],
+            implementation_commit,
+        )
+        self.assertEqual(
+            by_candidate["Candidate"]["links"]["commit"],
+            f"https://github.com/Aksth070600/autoresearch-acts-seeding/commit/{implementation_commit}",
+        )
+        self.assertEqual(
+            by_candidate["Genesis"]["links"]["commit"],
+            f"https://github.com/Aksth070600/autoresearch-acts-seeding/commit/{status_commit}",
+        )
+
     def test_derives_latest_genesis_promising_results_and_pareto_front(self) -> None:
         metadata = [
             {

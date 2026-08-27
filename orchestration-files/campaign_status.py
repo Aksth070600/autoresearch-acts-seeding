@@ -320,7 +320,32 @@ def commit_url(commit: Any) -> str | None:
     return None
 
 
-def load_attempts(records_root: Path, live_state: dict[str, Any]) -> list[dict[str, Any]]:
+def resolve_implementation_commit(
+    summary: dict[str, Any], repository_root: Path | None
+) -> str | None:
+    recorded = summary.get("implementation_commit")
+    if not isinstance(recorded, str) or commit_url(recorded) is None:
+        return None
+    recorded = recorded.lower()
+    if summary.get("candidate_name") == "Genesis" or repository_root is None:
+        return recorded
+
+    resolved = git_output(
+        repository_root,
+        "rev-list",
+        "-1",
+        recorded,
+        "--",
+        "optimization-files",
+    ).lower()
+    return resolved if FULL_COMMIT_SHA.fullmatch(resolved) else recorded
+
+
+def load_attempts(
+    records_root: Path,
+    live_state: dict[str, Any],
+    repository_root: Path | None = None,
+) -> list[dict[str, Any]]:
     """Load protocol-compatible Development attempts belonging to this campaign."""
 
     campaign_start = parse_instant(live_state["campaign"]["started_at"], "campaign.started_at")
@@ -393,6 +418,9 @@ def load_attempts(records_root: Path, live_state: dict[str, Any]) -> list[dict[s
             if isinstance(error, str) and error.strip()
             else "Controlled Development attempt did not pass."
         )
+        implementation_commit = resolve_implementation_commit(
+            summary, repository_root
+        )
         attempts.append(
             {
                 "candidate": candidate,
@@ -405,13 +433,9 @@ def load_attempts(records_root: Path, live_state: dict[str, Any]) -> list[dict[s
                 "duration_seconds": duration_seconds,
                 "timed_seeding_time_per_event_ms": seeding,
                 "timed_ambiguity_particle_efficiency": efficiency,
-                "implementation_commit": (
-                    str(summary.get("implementation_commit"))
-                    if commit_url(summary.get("implementation_commit"))
-                    else None
-                ),
+                "implementation_commit": implementation_commit,
                 "links": {
-                    "commit": commit_url(summary.get("implementation_commit")),
+                    "commit": commit_url(implementation_commit),
                     "record": repository_file_url(
                         live_state["campaign"]["branch"],
                         f"records/{relative}",
@@ -907,7 +931,9 @@ def main() -> int:
                 "input campaign branch does not match the checked-out branch: "
                 f"{branch}"
             )
-        attempts = load_attempts(args.records.resolve(), live_state)
+        attempts = load_attempts(
+            args.records.resolve(), live_state, repository_root
+        )
         status = build_status(
             live_state,
             attempts,

@@ -121,6 +121,25 @@ def require_clean_repository() -> str:
     return git_output("rev-parse", "HEAD")
 
 
+def candidate_implementation_commit(
+    candidate_name: str, repository_commit: str
+) -> str:
+    if candidate_name == "Genesis":
+        return repository_commit
+    commit = git_output(
+        "rev-list",
+        "-1",
+        repository_commit,
+        "--",
+        "optimization-files",
+    ).lower()
+    if not re.fullmatch(r"[0-9a-f]{40}", commit):
+        raise EvaluationError(
+            "could not determine the candidate optimization-files commit"
+        )
+    return commit
+
+
 def validate_candidate_name(candidate_name: str) -> None:
     if not re.fullmatch(r"[A-Za-z0-9._-]+", candidate_name):
         raise EvaluationError(
@@ -480,7 +499,10 @@ def main() -> int:
     args = parse_args()
     validate_candidate_name(args.candidate_name)
     relative_files = validate_optimization_files()
-    commit = require_clean_repository()
+    repository_commit = require_clean_repository()
+    commit = candidate_implementation_commit(
+        args.candidate_name, repository_commit
+    )
 
     started = datetime.now(timezone.utc)
     run_id = f"{started.strftime('%Y%m%dT%H%M%SZ')}-{args.candidate_name}"
