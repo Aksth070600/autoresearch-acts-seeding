@@ -136,23 +136,29 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   Acts::CylindricalSpacePointGrid2 grid(m_gridConfig,
                                         logger().cloneWithSuffix("Grid"));
 
+  struct GridInput {
+    std::size_t index{};
+    float phi{};
+    float z{};
+    float radius{};
+  };
+  std::vector<GridInput> gridInputs;
+  gridInputs.reserve(spacePoints.size());
   for (std::size_t i = 0; i < spacePoints.size(); ++i) {
     const auto& sp = spacePoints[i];
 
-    // check if the space point passes the selection
     if (m_spacePointSelector.connected() && !m_spacePointSelector(sp)) {
       continue;
     }
 
-    float phi = std::atan2(sp.y(), sp.x());
-    grid.insert(i, phi, sp.z(), sp.r());
+    gridInputs.push_back(
+        {i, std::atan2(sp.y(), sp.x()), static_cast<float>(sp.z()),
+         static_cast<float>(sp.r())});
   }
 
-  for (std::size_t i = 0; i < grid.numberOfBins(); ++i) {
-    std::ranges::sort(grid.at(i), [&](const Acts::SpacePointIndex2& a,
-                                      const Acts::SpacePointIndex2& b) {
-      return spacePoints[a].r() < spacePoints[b].r();
-    });
+  std::ranges::sort(gridInputs, {}, &GridInput::radius);
+  for (const GridInput& input : gridInputs) {
+    grid.insert(input.index, input.phi, input.z, input.radius);
   }
 
   Acts::SpacePointContainer2 coreSpacePoints(
