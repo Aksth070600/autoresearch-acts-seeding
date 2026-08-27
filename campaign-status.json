@@ -15,15 +15,15 @@
   },
   "current_attempt": null,
   "failures": [],
-  "generated_at": "2026-08-27T17:27:21.574324Z",
+  "generated_at": "2026-08-27T17:27:51.811951Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/ab2e810237f319a3243633b5943f575e1912a51e",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/d2cff7b273cf2ccdaa67a784a0afd0e2077fe792",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/composite-positive-v1",
-    "pull_request": null
+    "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/27"
   },
   "progress": {
     "completed_attempts": 0,
-    "elapsed_seconds": 9.574324,
+    "elapsed_seconds": 39.811951,
     "estimated_remaining_seconds": null,
     "eta_basis": "Unavailable until 3 completed attempt durations exist (0 available).",
     "eta_sample_count": 0,
