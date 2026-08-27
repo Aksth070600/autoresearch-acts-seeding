@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/Types.hpp"
 
+#include <algorithm>
 #include <limits>
 #include <vector>
 
@@ -53,7 +54,10 @@ class CandidatesForMiddleSp2 {
   /// @param nHigh Maximum number of candidates in the high-quality collection
   CandidatesForMiddleSp2(Size nLow, Size nHigh);
 
-  Size size() const { return m_storage.size(); }
+  Size size() const {
+    return retainedSize(m_candidatesLow, m_maxSizeLow) +
+           retainedSize(m_candidatesHigh, m_maxSizeHigh);
+  }
 
   /// @brief Clear the internal storage
   void clear();
@@ -61,13 +65,13 @@ class CandidatesForMiddleSp2 {
   /// @brief Retrieve the number of Low quality candidates
   /// @returns The number of Low quality candidates
   Size nLowQualityCandidates() const {
-    return static_cast<Size>(m_indicesLow.size());
+    return retainedSize(m_candidatesLow, m_maxSizeLow);
   }
 
   /// @brief Retrieve the number of High quality candidates
   /// @returns The number of High quality candidates
   Size nHighQualityCandidates() const {
-    return static_cast<Size>(m_indicesHigh.size());
+    return retainedSize(m_candidatesHigh, m_maxSizeHigh);
   }
 
   /// @brief Adding a new triplet candidate to the collection, should it satisfy the
@@ -87,11 +91,15 @@ class CandidatesForMiddleSp2 {
   void toSortedCandidates(std::vector<TripletCandidate2>& output);
 
  private:
-  using WeightIndex = std::pair<float, Index>;
-  using Container = std::vector<WeightIndex>;
+  using Container = std::vector<TripletCandidate2>;
 
-  static constexpr bool comparator(const WeightIndex& a, const WeightIndex& b) {
-    return a.first > b.first;
+  static Size retainedSize(const Container& container, Size maximum) {
+    return std::min(static_cast<Size>(container.size()), maximum);
+  }
+
+  static constexpr bool comparator(const TripletCandidate2& a,
+                                   const TripletCandidate2& b) {
+    return a.weight > b.weight;
   }
 
   // sizes
@@ -100,11 +108,8 @@ class CandidatesForMiddleSp2 {
   Size m_maxSizeLow{kNoSize};
   Size m_maxSizeHigh{kNoSize};
 
-  // storage contains the collection of the candidates
-  std::vector<TripletCandidate2> m_storage;
-
-  Container m_indicesLow;
-  Container m_indicesHigh;
+  Container m_candidatesLow;
+  Container m_candidatesHigh;
 
   bool push(Container& container, Size nMax, SpacePointIndex2 spB,
             SpacePointIndex2 spM, SpacePointIndex2 spT, float weight,
