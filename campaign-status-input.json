@@ -1,0 +1,114 @@
+{
+  "schema_version": "1.0.0",
+  "campaign": {
+    "name": "ACTS Seeding Development campaign v6",
+    "branch": "autoresearch-acts-seeding/aug27-v6",
+    "phase": "completed: archive ready",
+    "started_at": "2026-08-27T11:03:33Z"
+  },
+  "current_attempt": null,
+  "attempt_metadata": [
+    {
+      "candidate": "DoubletInsertionSort",
+      "mechanism_family": "doublet-insertion-sort",
+      "classification": "structural"
+    },
+    {
+      "candidate": "FilterCurvatureSweepWindow",
+      "mechanism_family": "filter-curvature-sweep-window",
+      "classification": "structural"
+    },
+    {
+      "candidate": "CandidateFullRecordHeaps",
+      "mechanism_family": "candidate-full-record-heaps",
+      "classification": "structural"
+    },
+    {
+      "candidate": "GridCountedBinAllocation",
+      "mechanism_family": "grid-counted-bin-allocation",
+      "classification": "structural"
+    },
+    {
+      "candidate": "FilterCurvatureOrderRecords",
+      "mechanism_family": "filter-curvature-order-records",
+      "classification": "structural"
+    },
+    {
+      "candidate": "DoubletProxyTraversal",
+      "mechanism_family": "doublet-proxy-traversal",
+      "classification": "structural"
+    },
+    {
+      "candidate": "CoreBatchSpacePointMaterialization",
+      "mechanism_family": "core-batch-spacepoint-materialization",
+      "classification": "structural"
+    },
+    {
+      "candidate": "GridGlobalRadiusOrderedFill",
+      "mechanism_family": "grid-global-radius-ordered-fill",
+      "classification": "structural"
+    },
+    {
+      "candidate": "CandidateDeferredPartialSelection",
+      "mechanism_family": "candidate-deferred-partial-selection",
+      "classification": "structural"
+    },
+    {
+      "candidate": "SeederUnifiedDoubletStorage",
+      "mechanism_family": "seeder-unified-doublet-storage",
+      "classification": "structural"
+    },
+    {
+      "candidate": "GridCoreRangeViewCache",
+      "mechanism_family": "grid-core-range-view-cache",
+      "classification": "micro"
+    },
+    {
+      "candidate": "TripletDirectIndexCounter",
+      "mechanism_family": "triplet-direct-index-counter",
+      "classification": "micro"
+    },
+    {
+      "candidate": "GridPackedInputStaging",
+      "mechanism_family": "grid-packed-input-staging",
+      "classification": "structural"
+    },
+    {
+      "candidate": "FilterCurvatureInsertionSort",
+      "mechanism_family": "filter-curvature-insertion-sort",
+      "classification": "structural"
+    },
+    {
+      "candidate": "GridBinInsertionSort",
+      "mechanism_family": "grid-bin-insertion-sort",
+      "classification": "structural"
+    },
+    {
+      "candidate": "TripletCurvatureSqrtReuse",
+      "mechanism_family": "triplet-curvature-sqrt-reuse",
+      "classification": "micro"
+    },
+    {
+      "candidate": "DoubletMiddleDataflowRecord",
+      "mechanism_family": "doublet-middle-dataflow-record",
+      "classification": "structural"
+    },
+    {
+      "candidate": "DoubletLinearRadiusWindow",
+      "mechanism_family": "doublet-linear-radius-window",
+      "classification": "structural"
+    },
+    {
+      "candidate": "TripletReserveElision",
+      "mechanism_family": "triplet-reserve-elision",
+      "classification": "micro"
+    },
+    {
+      "candidate": "SeedDirectOriginalIndexOutput",
+      "mechanism_family": "seed-direct-original-index-output",
+      "classification": "structural"
+    }
+  ],
+  "blockers": [],
+  "pull_request_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/25"
+}
