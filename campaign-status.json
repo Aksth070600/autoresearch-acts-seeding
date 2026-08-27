@@ -270,13 +270,31 @@
       "state": "completed",
       "timed_ambiguity_particle_efficiency": 0.972769,
       "timed_seeding_time_per_event_ms": 285.14
+    },
+    {
+      "candidate": "GridBinInsertionSort",
+      "classification": "structural",
+      "duration_seconds": 781.304,
+      "finished_at": "2026-08-27T15:07:54.728386Z",
+      "implementation_commit": "291adb8541df26a3c49d6e198f63d31533bf952a",
+      "links": {
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/291adb8541df26a3c49d6e198f63d31533bf952a",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug27-v6/records/Development/20260827T145453Z-GridBinInsertionSort/summary.json"
+      },
+      "mechanism_family": "grid-bin-insertion-sort",
+      "outcome": "Passed all controlled Development stages.",
+      "record": "records/Development/20260827T145453Z-GridBinInsertionSort/summary.json",
+      "started_at": "2026-08-27T14:54:53.424318Z",
+      "state": "completed",
+      "timed_ambiguity_particle_efficiency": 0.972769,
+      "timed_seeding_time_per_event_ms": 280.79
     }
   ],
   "blockers": [],
   "campaign": {
     "branch": "autoresearch-acts-seeding/aug27-v6",
     "name": "ACTS Seeding Development campaign v6",
-    "phase": "candidate loop: 15 of 20",
+    "phase": "candidate loop: 15 of 20 complete",
     "started_at": "2026-08-27T11:03:33Z",
     "targets": {
       "completed_attempts": 20,
@@ -284,29 +302,22 @@
       "structural_attempts": 10
     }
   },
-  "current_attempt": {
-    "candidate": "GridBinInsertionSort",
-    "classification": "structural",
-    "controlled_stage": "queued Development run",
-    "mechanism_family": "grid-bin-insertion-sort",
-    "started_at": "2026-08-27T14:54:47Z",
-    "state": "queued"
-  },
+  "current_attempt": null,
   "failures": [],
-  "generated_at": "2026-08-27T14:54:47.553494Z",
+  "generated_at": "2026-08-27T15:08:11.659416Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/291adb8541df26a3c49d6e198f63d31533bf952a",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/6f124d321cc72c6ed5a101e3b6ab10939e679a0e",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/aug27-v6",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/25"
   },
   "progress": {
-    "completed_attempts": 14,
-    "elapsed_seconds": 13874.553494,
-    "estimated_remaining_seconds": 4820.392506,
-    "eta_basis": "Median of 14 completed attempts; current attempt elapsed time deducted.",
-    "eta_sample_count": 14,
-    "expected_finish_at": "2026-08-27T16:15:07.946000Z",
-    "median_completed_attempt_duration_seconds": 803.491,
+    "completed_attempts": 15,
+    "elapsed_seconds": 14678.659416,
+    "estimated_remaining_seconds": 4015.71,
+    "eta_basis": "Median of 15 completed attempts.",
+    "eta_sample_count": 15,
+    "expected_finish_at": "2026-08-27T16:15:07.369416Z",
+    "median_completed_attempt_duration_seconds": 803.142,
     "micro_optimizations": 2,
     "structural_attempts": 13
   },
@@ -322,16 +333,16 @@
       "timed_seeding_time_per_event_ms": 282.79
     },
     "best_seeding": {
-      "candidate": "GridCoreRangeViewCache",
-      "delta_vs_genesis_ms": -14.979999999999961,
+      "candidate": "GridBinInsertionSort",
+      "delta_vs_genesis_ms": -15.239999999999952,
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/a44b3b89ea2373bc03549d272c43bf4505daa530",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug27-v6/records/Development/20260827T135747Z-GridCoreRangeViewCache/summary.json"
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/291adb8541df26a3c49d6e198f63d31533bf952a",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug27-v6/records/Development/20260827T145453Z-GridBinInsertionSort/summary.json"
       },
-      "percentage_vs_genesis": -5.0602979427760575,
-      "started_at": "2026-08-27T13:57:47.552000Z",
+      "percentage_vs_genesis": -5.148126879032515,
+      "started_at": "2026-08-27T14:54:53.424318Z",
       "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 281.05
+      "timed_seeding_time_per_event_ms": 280.79
     },
     "latest_genesis": {
       "candidate": "Genesis",
@@ -345,14 +356,14 @@
     },
     "pareto_front": [
       {
-        "candidate": "GridCoreRangeViewCache",
+        "candidate": "GridBinInsertionSort",
         "links": {
-          "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/a44b3b89ea2373bc03549d272c43bf4505daa530",
-          "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug27-v6/records/Development/20260827T135747Z-GridCoreRangeViewCache/summary.json"
+          "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/291adb8541df26a3c49d6e198f63d31533bf952a",
+          "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug27-v6/records/Development/20260827T145453Z-GridBinInsertionSort/summary.json"
         },
-        "started_at": "2026-08-27T13:57:47.552000Z",
+        "started_at": "2026-08-27T14:54:53.424318Z",
         "timed_ambiguity_particle_efficiency": 0.972769,
-        "timed_seeding_time_per_event_ms": 281.05
+        "timed_seeding_time_per_event_ms": 280.79
       }
     ]
   },
