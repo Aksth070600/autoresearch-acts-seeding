@@ -180,6 +180,12 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
     gridSpacePointRanges.emplace_back(begin, coreIndex);
   }
 
+  std::vector<Acts::SpacePointContainer2::ConstRange> gridSpacePointViews;
+  gridSpacePointViews.reserve(gridSpacePointRanges.size());
+  for (const Acts::SpacePointIndexRange2& range : gridSpacePointRanges) {
+    gridSpacePointViews.push_back(coreSpacePoints.range(range).asConst());
+  }
+
   // Compute radius range. We rely on the fact the grid is storing the proxies
   // with a sorting in the radius
   const Acts::Range1D<float> rRange = [&]() -> Acts::Range1D<float> {
@@ -270,15 +276,12 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
 
     bottomSpRanges.clear();
     for (const auto b : bottom) {
-      bottomSpRanges.push_back(
-          coreSpacePoints.range(gridSpacePointRanges.at(b)).asConst());
+      bottomSpRanges.push_back(gridSpacePointViews.at(b));
     }
-    middleSpRange =
-        coreSpacePoints.range(gridSpacePointRanges.at(middle)).asConst();
+    middleSpRange = gridSpacePointViews.at(middle);
     topSpRanges.clear();
     for (const auto t : top) {
-      topSpRanges.push_back(
-          coreSpacePoints.range(gridSpacePointRanges.at(t)).asConst());
+      topSpRanges.push_back(gridSpacePointViews.at(t));
     }
 
     if (middleSpRange->empty()) {
