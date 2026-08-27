@@ -186,7 +186,7 @@
   "campaign": {
     "branch": "autoresearch-acts-seeding/aug27-v6",
     "name": "ACTS Seeding Development campaign v6",
-    "phase": "candidate loop: 9 of 20 complete",
+    "phase": "candidate loop: 10 of 20",
     "started_at": "2026-08-27T11:03:33Z",
     "targets": {
       "completed_attempts": 20,
@@ -194,24 +194,31 @@
       "structural_attempts": 10
     }
   },
-  "current_attempt": null,
+  "current_attempt": {
+    "candidate": "SeederUnifiedDoubletStorage",
+    "classification": "structural",
+    "controlled_stage": "queued Development run",
+    "mechanism_family": "seeder-unified-doublet-storage",
+    "started_at": "2026-08-27T13:42:46Z",
+    "state": "queued"
+  },
   "failures": [],
-  "generated_at": "2026-08-27T13:41:33.540293Z",
+  "generated_at": "2026-08-27T13:42:47.137169Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/1c3cea1c47c8b338165fa60a7f2811cd9ca1d271",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/5d231ed0dfeb23bc8954290146ea3fdd38ddda88",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/aug27-v6",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/25"
   },
   "progress": {
     "completed_attempts": 9,
-    "elapsed_seconds": 9480.540293,
-    "estimated_remaining_seconds": 8881.103000000001,
-    "eta_basis": "Median of 9 completed attempts.",
+    "elapsed_seconds": 9554.137169,
+    "estimated_remaining_seconds": 8879.965831000001,
+    "eta_basis": "Median of 9 completed attempts; current attempt elapsed time deducted.",
     "eta_sample_count": 9,
-    "expected_finish_at": "2026-08-27T16:09:34.643293Z",
+    "expected_finish_at": "2026-08-27T16:10:47.103000Z",
     "median_completed_attempt_duration_seconds": 807.373,
     "micro_optimizations": 0,
-    "structural_attempts": 9
+    "structural_attempts": 10
   },
   "promising_results": {
     "best_ambiguity_efficiency": {
