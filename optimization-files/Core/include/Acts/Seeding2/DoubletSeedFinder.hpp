@@ -278,6 +278,13 @@ struct MiddleSpInfo {
   float cosPhiM{};
   /// ratio between middle SP y position and radius
   float sinPhiM{};
+  /// Middle-space-point coordinates and variances reused by every group.
+  float x{};
+  float y{};
+  float z{};
+  float r{};
+  float varianceZ{};
+  float varianceR{};
 };
 
 /// Interface and a collection of standard implementations for a doublet seed
