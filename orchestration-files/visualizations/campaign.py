@@ -30,17 +30,11 @@ HTML_TEMPLATE = r"""<!doctype html>
     h1 { margin-bottom: 8px; }
     h2 { margin-bottom: 12px; font-size: 1.2rem; }
     .topline { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
-    .lede { color: #a5b4fc; margin: 0 0 20px; }
     .report-link { white-space: nowrap; font-size: 0.9rem; font-weight: 650; }
-    .controls { display: grid; grid-template-columns: minmax(230px, 1.15fr) minmax(220px, 1fr) auto; gap: 14px; align-items: end;
-      background: #111827; border: 1px solid #334155; border-radius: 10px; padding: 16px; }
+    .controls { background: #111827; border: 1px solid #334155; border-radius: 10px; padding: 16px; }
     label { display: grid; gap: 5px; font-size: 0.9rem; font-weight: 650; }
-    input, select, button { min-width: 0; padding: 8px 10px; border: 1px solid #475569; border-radius: 6px;
+    select { min-width: 0; width: 100%; padding: 8px 10px; border: 1px solid #475569; border-radius: 6px;
       background: #1e293b; color: #e5e7eb; font: inherit; }
-    button { cursor: pointer; font-weight: 700; }
-    button:hover, button:focus-visible { border-color: #818cf8; background: #273449; }
-    button:disabled { cursor: wait; opacity: 0.7; }
-    .control-note { grid-column: 1 / -1; margin: -3px 0 0; color: #94a3b8; font-size: 0.82rem; }
     .notice { margin-top: 12px; padding: 11px 13px; border: 1px solid #475569; border-radius: 8px; background: #111827; }
     .notice.error { border-color: #b45309; color: #fed7aa; background: rgba(120,53,15,0.18); }
     [hidden] { display: none !important; }
@@ -109,8 +103,6 @@ HTML_TEMPLATE = r"""<!doctype html>
     @media (max-width: 700px) {
       main { padding: 18px; }
       .topline, .campaign-heading, .section-heading { align-items: flex-start; flex-direction: column; }
-      .controls { grid-template-columns: 1fr; }
-      .control-note { grid-column: 1; }
       .progress-grid, .results-grid { grid-template-columns: 1fr; }
       #chart-frame { height: 430px; }
       .attempt-detail { grid-template-columns: 1fr; }
@@ -124,26 +116,17 @@ HTML_TEMPLATE = r"""<!doctype html>
 <body>
 <main>
   <div class="topline">
-    <div>
-      <h1>ACTS Seeding Live Campaign</h1>
-      <p class="lede">Public Development progress on the two controlled objectives.</p>
-    </div>
+    <h1>ACTS Seeding Live Campaign</h1>
     <a class="report-link" href="../">Open results report</a>
   </div>
 
-  <form id="campaign-form" class="controls">
+  <section class="controls" aria-label="Campaign selection">
     <label>Campaign
       <select id="campaign-select" disabled>
         <option>Discovering public campaigns…</option>
       </select>
     </label>
-    <label>Branch or ref
-      <input id="campaign-ref" name="ref" type="text" maxlength="200" autocomplete="off"
-        spellcheck="false" placeholder="autoresearch-acts-seeding/aug25">
-    </label>
-    <button id="load-button" type="submit">Load campaign</button>
-    <p id="discovery-note" class="control-note">Loading campaign pull requests once. Add <code>?ref=&lt;branch&gt;</code> to share or recover a direct view.</p>
-  </form>
+  </section>
   <div id="fetch-error" class="notice error" role="alert" hidden></div>
   <div id="empty-state">
     <div><strong>Discovering public campaigns</strong>Loading the campaign list once, without credentials.</div>
@@ -323,11 +306,7 @@ function snapshotUrl(source, cacheBuster = Date.now()) {
 
 const POLL_INTERVAL_MS = __POLL_INTERVAL_MS__;
 const PULLS_API_URL = `https://api.github.com/repos/${REPOSITORY}/pulls?state=all&per_page=100&sort=created&direction=desc`;
-const form = document.getElementById('campaign-form');
 const campaignSelect = document.getElementById('campaign-select');
-const refInput = document.getElementById('campaign-ref');
-const discoveryNote = document.getElementById('discovery-note');
-const loadButton = document.getElementById('load-button');
 const fetchError = document.getElementById('fetch-error');
 const emptyState = document.getElementById('empty-state');
 const dashboard = document.getElementById('dashboard');
@@ -335,7 +314,6 @@ const lastGoodSnapshots = new Map();
 const lastFetchStarted = new Map();
 let discoveredCampaigns = [];
 let activeCampaign = null;
-let loadSequence = 0;
 
 function finite(value) { return typeof value === 'number' && Number.isFinite(value); }
 function validObjective(value) { return value === null || finite(value); }
@@ -379,7 +357,10 @@ function formatDuration(seconds) {
 }
 function formatInstant(value) {
   if (!value || !Number.isFinite(Date.parse(value))) return 'Unavailable';
-  return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short', timeZoneName: 'short' }).format(new Date(value));
+  return new Intl.DateTimeFormat(undefined, {
+    year: 'numeric', month: 'short', day: 'numeric',
+    hour: 'numeric', minute: '2-digit', timeZoneName: 'short'
+  }).format(new Date(value));
 }
 function formatRelative(value) {
   const timestamp = Date.parse(value);
@@ -703,7 +684,7 @@ function showEmptyState(heading, detail) {
 async function loadCampaign(campaign, { automatic = false } = {}) {
   const source = campaignFetchSource(campaign);
   if (!source) {
-    setFetchError('Enter a safe public Git branch or ref. Spaces, ref operators, hidden segments, and traversal are not allowed.');
+    setFetchError('This campaign does not have a safe public source.');
     return;
   }
   const key = campaign.ref;
@@ -717,10 +698,7 @@ async function loadCampaign(campaign, { automatic = false } = {}) {
     return;
   }
   lastFetchStarted.set(key, now);
-  const sequence = ++loadSequence;
   fetchError.hidden = true;
-  loadButton.disabled = true;
-  loadButton.textContent = automatic ? 'Refreshing…' : 'Loading…';
   try {
     const response = await fetch(snapshotUrl(source), { cache: 'no-store', credentials: 'omit', mode: 'cors' });
     if (!response.ok) {
@@ -745,18 +723,12 @@ async function loadCampaign(campaign, { automatic = false } = {}) {
         'This public campaign has no compatible snapshot. Older campaigns may predate live status publishing.'
       );
     }
-  } finally {
-    if (sequence === loadSequence) {
-      loadButton.disabled = false;
-      loadButton.textContent = 'Load campaign';
-    }
   }
 }
 function selectCampaign(campaign, { automatic = false } = {}) {
   if (!campaign) return;
   fetchError.hidden = true;
   activeCampaign = campaign;
-  refInput.value = campaign.ref;
   populateCampaignSelect(campaign);
   updateDeepLink(campaign);
   const cached = lastGoodSnapshots.get(campaign.ref);
@@ -765,34 +737,28 @@ function selectCampaign(campaign, { automatic = false } = {}) {
   loadCampaign(campaign, { automatic });
 }
 async function discoverCampaigns(initialRef) {
+  let discoveryError = null;
   try {
     const response = await fetch(PULLS_API_URL, { cache: 'no-store', credentials: 'omit', mode: 'cors' });
     if (!response.ok) throw new Error(`GitHub returned HTTP ${response.status}.`);
     discoveredCampaigns = sortCampaigns(await response.json());
-    discoveryNote.textContent = discoveredCampaigns.length
-      ? 'Campaigns are sorted newest to oldest. Completed campaigns use their immutable final head commit.'
-      : 'No campaign pull requests matched the public campaign branch contract. Use a direct branch or ref.';
   } catch (error) {
     discoveredCampaigns = [];
-    discoveryNote.textContent = `Campaign discovery unavailable: ${error.message} Use a direct branch or ?ref= deep link.`;
+    discoveryError = error;
   }
   const selected = selectInitialCampaign(discoveredCampaigns, initialRef);
   populateCampaignSelect(selected);
-  if (selected) selectCampaign(selected);
-  else showEmptyState('Choose a public campaign branch', 'Campaign discovery found no default. Enter a safe branch or ref to load its status.');
+  if (selected) {
+    selectCampaign(selected);
+    if (discoveryError) setFetchError(`Campaign discovery unavailable: ${discoveryError.message}`);
+  } else {
+    if (discoveryError) setFetchError(`Campaign discovery unavailable: ${discoveryError.message}`);
+    showEmptyState('No campaigns available', 'No public campaign could be selected.');
+  }
 }
 campaignSelect.addEventListener('change', () => {
   const selected = campaignForId(campaignSelect.value);
   if (selected) selectCampaign(selected);
-});
-form.addEventListener('submit', (event) => {
-  event.preventDefault();
-  const selected = selectInitialCampaign(discoveredCampaigns, refInput.value.trim());
-  if (!selected) {
-    setFetchError('Enter a safe public Git branch or ref. Spaces, ref operators, hidden segments, and traversal are not allowed.');
-    return;
-  }
-  selectCampaign(selected);
 });
 const requestedRef = new URLSearchParams(window.location.search).get('ref');
 const invalidRequestedRef = Boolean(requestedRef && !safeRef(requestedRef));

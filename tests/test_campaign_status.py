@@ -384,6 +384,29 @@ class CampaignStatusTests(unittest.TestCase):
         )
         self.assertIn(f"/{7:040x}/campaign-status.json", result["closedUrl"])
 
+    def test_dashboard_timestamp_formatter_is_browser_compatible(self) -> None:
+        if shutil.which("node") is None:
+            self.skipTest("node is required for dashboard JavaScript tests")
+        html = self.dashboard_html()
+        formatter = "function formatInstant" + html.split(
+            "function formatInstant", 1
+        )[1].split("function formatRelative", 1)[0]
+        result = subprocess.run(
+            [
+                "node",
+                "-e",
+                formatter
+                + "console.log(formatInstant('2026-08-27T12:00:00Z'));",
+            ],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("2026", result.stdout)
+        self.assertNotIn("Unavailable", result.stdout)
+
     def test_dashboard_html_has_empty_stale_error_and_interactive_essentials(self) -> None:
         now = datetime(2026, 8, 27, 12, tzinfo=UTC)
         self.assertEqual(freshness_state("2026-08-27T11:59:00Z", now), "fresh")
@@ -415,6 +438,17 @@ class CampaignStatusTests(unittest.TestCase):
             "if (source?.poll",
         ):
             self.assertIn(essential, html)
+        for removed_control in (
+            'id="campaign-form"',
+            'id="campaign-ref"',
+            'id="load-button"',
+            'id="discovery-note"',
+            "Public Development progress on the two controlled objectives.",
+            "Campaigns are sorted newest to oldest.",
+        ):
+            self.assertNotIn(removed_control, html)
+        self.assertIn("campaignSelect.addEventListener('change'", html)
+        self.assertIn("if (selected) selectCampaign(selected);", html)
         self.assertEqual(html.count("fetch(PULLS_API_URL"), 1)
         polling = html[html.index("setInterval(() => {") :]
         self.assertNotIn("PULLS_API_URL", polling)
