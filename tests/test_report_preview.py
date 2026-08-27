@@ -1,4 +1,5 @@
 import json
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -58,7 +59,13 @@ class ReportPreviewTests(unittest.TestCase):
             self.assertIn('"x_metric": "timed_seeding_time_per_event_ms"', index)
 
     @staticmethod
-    def summary(candidate: str, category: str, time: float, efficiency: float) -> dict:
+    def summary(
+        candidate: str,
+        category: str,
+        time: float,
+        efficiency: float,
+        peak_rss_kb: float | None = None,
+    ) -> dict:
         run_metrics = {
             "timing_total": {"time_per_event_ms": time},
             "timing": {
@@ -97,9 +104,22 @@ class ReportPreviewTests(unittest.TestCase):
                 "complete": True,
                 "repetitions": repetitions,
                 "median_run_metrics": run_metrics,
-                "median_resource_metrics": {},
+                "median_resource_metrics": (
+                    {"peak_rss_kb": peak_rss_kb} if peak_rss_kb is not None else {}
+                ),
             },
         }
+
+    def test_timed_peak_rss_is_loaded_from_median_resource_metrics(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            records = Path(temporary) / "records" / "Development" / "Candidate"
+            records.mkdir(parents=True)
+            summary = self.summary("Candidate", "Development", 12.0, 0.9, 2_097_152.0)
+            (records / "summary.json").write_text(json.dumps(summary), encoding="utf-8")
+
+            row = load_records(records.parents[1], "development")[0]
+
+            self.assertEqual(row["metrics"]["timed_peak_rss_kb"], 2_097_152.0)
 
     def test_genesis_report_averages_only_genesis_and_keeps_provenance(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -184,6 +204,181 @@ class ReportPreviewTests(unittest.TestCase):
         self.assertEqual(
             evaluation["rows"][0]["metrics"]["timed_total_time_per_event_ms"], 120.0
         )
+
+    @staticmethod
+    def run_pareto_javascript(report: dict, body: str) -> dict:
+        if shutil.which("node") is None:
+            raise unittest.SkipTest("node is required for report JavaScript tests")
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary) / "index.html"
+            render(
+                report,
+                output,
+                defaults={
+                    "x_metric": "timed_seeding_time_per_event_ms",
+                    "y_metric": "timed_ambiguity_particle_efficiency",
+                    "baseline": "Genesis",
+                },
+            )
+            html = output.read_text(encoding="utf-8")
+        script = html.rsplit("<script>", 1)[1].split("</script>", 1)[0]
+        browser_stub = r"""
+class FakeElement {
+  constructor(tagName = 'DIV') {
+    this.tagName = tagName.toUpperCase();
+    this.options = [];
+    this.children = [];
+    this._value = '';
+    this.hidden = false;
+    this.textContent = '';
+    this.style = {};
+  }
+  get value() { return this._value; }
+  set value(value) { this._value = String(value); }
+  appendChild(child) {
+    this.children.push(child);
+    if (child.tagName === 'OPTION') {
+      this.options.push(child);
+      if (this.options.length === 1) this._value = child.value;
+    }
+    return child;
+  }
+  replaceChildren(...children) {
+    this.children = [];
+    this.options = [];
+    this._value = '';
+    children.forEach((child) => this.appendChild(child));
+  }
+  addEventListener() {}
+  on() {}
+  removeListener() {}
+  set innerHTML(value) { this._innerHTML = value; }
+  get innerHTML() { return this._innerHTML || ''; }
+}
+const elements = new Map();
+const document = {
+  createElement: (tagName) => new FakeElement(tagName),
+  getElementById: (id) => {
+    if (!elements.has(id)) elements.set(id, new FakeElement());
+    return elements.get(id);
+  },
+  querySelectorAll: () => []
+};
+const window = { open: () => {} };
+const Plotly = {
+  purge: () => {},
+  react: () => ({ then: (callback) => callback() })
+};
+"""
+        result = subprocess.run(
+            ["node", "-e", browser_stub + script + "\n" + body],
+            cwd=PROJECT_ROOT,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+        if result.returncode != 0:
+            raise AssertionError(result.stderr)
+        return json.loads(result.stdout)
+
+    def test_rss_axis_behavior_and_unavailable_rows(self) -> None:
+        metric = "timed_ambiguity_particle_efficiency"
+        time = "timed_seeding_time_per_event_ms"
+        rss = "timed_peak_rss_kb"
+        rows = [
+            {
+                "candidate": "Genesis",
+                "category": "Development",
+                "commit_url": REPOSITORY_URL,
+                "metrics": {time: 10.0, metric: 0.90, rss: 2_097_152.0},
+            },
+            {
+                "candidate": "Lean",
+                "category": "Development",
+                "commit_url": "",
+                "metrics": {time: 9.0, metric: 0.91, rss: 1_048_576.0},
+            },
+            {
+                "candidate": "NoResourceData",
+                "category": "Development",
+                "commit_url": "",
+                "metrics": {time: 8.0, metric: 0.92},
+            },
+        ]
+        result = self.run_pareto_javascript(
+            {"rows": rows, "dataset": "development"},
+            r"""
+const x = axisElements('x');
+const y = axisElements('y');
+x.kind.value = 'metric';
+updateAxisOptions('x');
+x.stage.value = 'ambiguity';
+x.metric.value = 'particle_fake_ratio';
+x.kind.value = 'rss';
+updateAxisOptions('x');
+const rssState = {
+  key: axisKey('x'),
+  label: axisLabel('x'),
+  stageHidden: x.stageLabel.hidden,
+  metricHidden: x.metricLabel.hidden,
+  formatted: formatAxisValue('x', 2097152),
+  unavailable: formatAxisValue('x', undefined),
+  lowerBetter: axisDirection('x').lowerBetter,
+  tickSuffix: axisTickFormat('x').ticksuffix
+};
+y.kind.value = 'time';
+updateAxisOptions('y');
+y.stage.value = 'seeding';
+const rssTimeCount = validRows(axisKey('x'), axisKey('y')).length;
+y.kind.value = 'metric';
+updateAxisOptions('y');
+y.stage.value = 'ambiguity';
+y.metric.value = 'particle_efficiency';
+const rssMetricCount = validRows(axisKey('x'), axisKey('y')).length;
+const baseline = rows.find((row) => row.candidate === 'Genesis');
+const lean = rows.find((row) => row.candidate === 'Lean');
+const leanColor = candidateColor(lean, baseline, axisKey('x'), axisKey('y'));
+const missingTooltip = candidateTooltip(rows.find((row) => row.candidate === 'NoResourceData'));
+x.kind.value = 'metric';
+updateAxisOptions('x');
+const restored = { stage: x.stage.value, metric: x.metric.value, stageHidden: x.stageLabel.hidden, metricHidden: x.metricLabel.hidden };
+y.kind.value = 'rss';
+updateAxisOptions('y');
+console.log(JSON.stringify({
+  kinds: [...x.kind.options].map((item) => [item.value, item.textContent]),
+  rssState,
+  rssTimeCount,
+  rssMetricCount,
+  leanColor,
+  missingTooltip,
+  restored,
+  yRss: { key: axisKey('y'), lowerBetter: axisDirection('y').lowerBetter, stageHidden: y.stageLabel.hidden, metricHidden: y.metricLabel.hidden }
+}));
+""",
+        )
+
+        self.assertEqual(result["kinds"], [["time", "Time"], ["metric", "Metric"], ["rss", "RSS"]])
+        self.assertEqual(result["rssState"]["key"], rss)
+        self.assertEqual(result["rssState"]["label"], "PEAK RSS")
+        self.assertTrue(result["rssState"]["stageHidden"])
+        self.assertTrue(result["rssState"]["metricHidden"])
+        self.assertEqual(result["rssState"]["formatted"], "2.00 GiB")
+        self.assertEqual(result["rssState"]["unavailable"], "Unavailable")
+        self.assertTrue(result["rssState"]["lowerBetter"])
+        self.assertEqual(result["rssState"]["tickSuffix"], " MiB")
+        self.assertEqual(result["rssTimeCount"], 2)
+        self.assertEqual(result["rssMetricCount"], 2)
+        self.assertEqual(result["leanColor"], "#22c55e")
+        self.assertIn("Peak RSS&nbsp;&nbsp;n/a", result["missingTooltip"])
+        self.assertEqual(result["restored"]["stage"], "ambiguity")
+        self.assertEqual(result["restored"]["metric"], "particle_fake_ratio")
+        self.assertFalse(result["restored"]["stageHidden"])
+        self.assertFalse(result["restored"]["metricHidden"])
+        self.assertEqual(result["yRss"]["key"], rss)
+        self.assertTrue(result["yRss"]["lowerBetter"])
+        self.assertTrue(result["yRss"]["stageHidden"])
+        self.assertTrue(result["yRss"]["metricHidden"])
 
     def test_interactive_selector_and_candidate_tooltip(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

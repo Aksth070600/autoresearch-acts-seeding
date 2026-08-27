@@ -218,7 +218,7 @@ def metric_label(key: str) -> str:
         "timed_ambiguity_time_per_event_ms": "Timed ambiguity time/event (ms)",
         "clean_ambiguity_particle_efficiency": "Clean ambiguity particle efficiency",
         "timed_ambiguity_particle_efficiency": "PRIMARY: timed ambiguity particle efficiency",
-        "timed_peak_rss_kb": "Timed peak RSS (kB)",
+        "timed_peak_rss_kb": "Peak RSS (KiB)",
         "timed_user_seconds": "Timed user CPU (s)",
         "timed_system_seconds": "Timed system CPU (s)",
     }
