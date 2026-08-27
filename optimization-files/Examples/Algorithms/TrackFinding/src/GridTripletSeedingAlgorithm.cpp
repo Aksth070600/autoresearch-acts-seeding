@@ -167,11 +167,14 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
     for (Acts::SpacePointIndex2 spIndex : grid.at(i)) {
       const ConstSpacePointProxy& sp = spacePoints[spIndex];
 
-      coreSpacePoints.createPackedSpacePoint(
-          {static_cast<float>(sp.x()), static_cast<float>(sp.y())},
-          {static_cast<float>(sp.z()), static_cast<float>(sp.r())},
-          static_cast<float>(sp.varianceZ()),
-          static_cast<float>(sp.varianceR()), sp.index());
+      auto newSp = coreSpacePoints.createSpacePoint();
+      newSp.xy() = std::array<float, 2>{static_cast<float>(sp.x()),
+                                        static_cast<float>(sp.y())};
+      newSp.zr() = std::array<float, 2>{static_cast<float>(sp.z()),
+                                        static_cast<float>(sp.r())};
+      newSp.varianceZ() = static_cast<float>(sp.varianceZ());
+      newSp.varianceR() = static_cast<float>(sp.varianceR());
+      newSp.copyFromIndex() = sp.index();
     }
     std::uint32_t end = coreSpacePoints.size();
     gridSpacePointRanges.emplace_back(begin, end);
