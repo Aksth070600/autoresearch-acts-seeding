@@ -13,7 +13,6 @@
 #include "Acts/Seeding2/DoubletSeedFinder.hpp"
 #include "Acts/Utilities/detail/ContainerIterator.hpp"
 
-#include <deque>
 #include <vector>
 
 namespace Acts {
@@ -33,7 +32,11 @@ class TripletTopCandidates {
 
   /// @brief Reserves storage space for the specified number of candidates
   /// @param size Number of candidates to reserve space for
-  void reserve(Index /*size*/) {}
+  void reserve(Index size) {
+    m_topSpacePoints.reserve(size);
+    m_curvatures.reserve(size);
+    m_impactParameters.reserve(size);
+  }
 
   /// @brief Clears all stored triplet candidates
   /// Removes all candidates from the container and frees memory
@@ -56,15 +59,15 @@ class TripletTopCandidates {
 
   /// @brief Returns the vector of top space point indices
   /// @return Const reference to vector containing all top space point indices
-  const std::deque<SpacePointIndex2>& topSpacePoints() const {
+  const std::vector<SpacePointIndex2>& topSpacePoints() const {
     return m_topSpacePoints;
   }
   /// @brief Returns the vector of track curvature estimations
   /// @return Const reference to vector containing curvature values for all candidates
-  const std::deque<float>& curvatures() const { return m_curvatures; }
+  const std::vector<float>& curvatures() const { return m_curvatures; }
   /// @brief Returns the vector of impact parameter estimations
   /// @return Const reference to vector containing impact parameter values for all candidates
-  const std::deque<float>& impactParameters() const {
+  const std::vector<float>& impactParameters() const {
     return m_impactParameters;
   }
 
@@ -115,9 +118,9 @@ class TripletTopCandidates {
   const_iterator end() const { return const_iterator(*this, size()); }
 
  private:
-  std::deque<SpacePointIndex2> m_topSpacePoints;
-  std::deque<float> m_curvatures;
-  std::deque<float> m_impactParameters;
+  std::vector<SpacePointIndex2> m_topSpacePoints;
+  std::vector<float> m_curvatures;
+  std::vector<float> m_impactParameters;
 };
 
 /// Interface and a collection of standard implementations for a triplet seed
