@@ -75,7 +75,7 @@ HTML_TEMPLATE = r"""<!doctype html>
     #chart .point { cursor: pointer; }
     #plot-empty { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px;
       color: #94a3b8; text-align: center; pointer-events: none; }
-    .attempt-head, .attempt summary { display: grid; grid-template-columns: 1.25fr 1.25fr .72fr .72fr .8fr .9fr .9fr .8fr;
+    .attempt-head, .attempt summary { display: grid; grid-template-columns: 1.5fr .72fr .72fr .8fr .9fr .9fr .8fr;
       gap: 10px; align-items: center; }
     .attempt-head { padding: 0 34px 7px 14px; color: #94a3b8; font-size: 0.7rem; font-weight: 750;
       letter-spacing: 0.04em; text-transform: uppercase; }
@@ -163,12 +163,8 @@ HTML_TEMPLATE = r"""<!doctype html>
       </div>
     </section>
 
-    <section class="section" aria-labelledby="history-heading">
-      <div class="section-heading">
-        <h2 id="history-heading">Attempt history</h2>
-        <span id="history-count" class="note"></span>
-      </div>
-      <div class="attempt-head" aria-hidden="true"><span>Candidate</span><span>Mechanism</span><span>Class</span><span>State</span><span>Duration</span><span>Seeding</span><span>Ambiguity eff.</span><span>Evidence</span></div>
+    <section class="section" aria-label="Campaign attempts">
+      <div class="attempt-head" aria-hidden="true"><span>Candidate</span><span>Class</span><span>State</span><span>Duration</span><span>Seeding</span><span>Ambiguity eff.</span><span>Evidence</span></div>
       <div id="attempts" class="attempts"></div>
       <div id="history-empty" class="notice" hidden>No attempt evidence has been recorded for this campaign.</div>
     </section>
@@ -494,7 +490,6 @@ function attemptElement(attempt) {
   state.textContent = attempt.state;
   summary.append(
     cell('Candidate', candidate),
-    cell('Mechanism', attempt.mechanism_family || 'Unavailable'),
     cell('Class', attempt.classification || 'Unavailable'),
     cell('State', state),
     cell('Duration', formatDuration(attempt.duration_seconds)),
@@ -536,7 +531,6 @@ function renderHistory(snapshot) {
     });
   }
   attempts.reverse().forEach((attempt) => container.appendChild(attemptElement(attempt)));
-  setText('history-count', `${attempts.length} attempt${attempts.length === 1 ? '' : 's'}`);
   document.getElementById('history-empty').hidden = attempts.length !== 0;
 }
 function comparisonPoints(snapshot) {
