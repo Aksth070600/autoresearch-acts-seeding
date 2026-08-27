@@ -11,6 +11,7 @@
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
+#include <algorithm>
 #include <stdexcept>
 
 #include <boost/mp11.hpp>
@@ -70,32 +71,37 @@ class Impl final : public DoubletSeedFinder {
                          (cotTheta * cotTheta) * (varianceRM + varianceRO));
     };
 
+    std::uint32_t candidateCount = candidateSps.size();
     if constexpr (sortedByR) {
-      // find the first SP inside the radius region of interest and update
-      // the iterator so we don't need to look at the other SPs again
-      std::uint32_t offset = 0;
-      for (ConstSpacePointProxy2 otherSp : candidateSps) {
-        if constexpr (isBottomCandidate) {
-          // if r-distance is too big, try next SP in bin
-          if (rM - otherSp.zr()[1] <= m_cfg.deltaRMax) {
-            break;
-          }
-        } else {
-          // if r-distance is too small, try next SP in bin
-          if (otherSp.zr()[1] - rM >= m_cfg.deltaRMin) {
-            break;
-          }
-        }
-
-        ++offset;
-      }
-      candidateSps = candidateSps.subrange(offset);
+      // The input is sorted by radius. Restrict traversal to exactly the
+      // direction-specific radius window.
+      const float firstRadius = isBottomCandidate
+                                    ? rM - m_cfg.deltaRMax
+                                    : rM + m_cfg.deltaRMin;
+      const float pastLastRadius = isBottomCandidate
+                                       ? rM - m_cfg.deltaRMin
+                                       : rM + m_cfg.deltaRMax;
+      const auto radius = [](const ConstSpacePointProxy2& sp) {
+        return sp.zr()[1];
+      };
+      const auto first =
+          std::ranges::lower_bound(candidateSps, firstRadius, {}, radius);
+      const auto last =
+          std::ranges::upper_bound(candidateSps, pastLastRadius, {}, radius);
+      candidateCount = static_cast<std::uint32_t>(last - first);
+      candidateSps = candidateSps.subrange(
+          static_cast<std::uint32_t>(first - candidateSps.begin()));
     }
 
     const SpacePointContainer2& container = candidateSps.container();
     for (auto [indexO, xyO, zrO, varianceZO, varianceRO] : candidateSps.zip(
              container.xyColumn(), container.zrColumn(),
              container.varianceZColumn(), container.varianceRColumn())) {
+      if constexpr (sortedByR) {
+        if (candidateCount-- == 0) {
+          break;
+        }
+      }
       const float xO = xyO[0];
       const float yO = xyO[1];
       const float zO = zrO[0];
@@ -104,22 +110,8 @@ class Impl final : public DoubletSeedFinder {
       float deltaR = 0;
       if constexpr (isBottomCandidate) {
         deltaR = rM - rO;
-
-        if constexpr (sortedByR) {
-          // if r-distance is too small we are done
-          if (deltaR < m_cfg.deltaRMin) {
-            break;
-          }
-        }
       } else {
         deltaR = rO - rM;
-
-        if constexpr (sortedByR) {
-          // if r-distance is too big we are done
-          if (deltaR > m_cfg.deltaRMax) {
-            break;
-          }
-        }
       }
 
       if constexpr (!sortedByR) {
