@@ -1,6 +1,6 @@
 # ACTS Seeding Autoresearch
 
-An experiment platform for making ACTS Seeding2 faster without sacrificing reconstruction quality.
+An experiment platform for making ACTS Seeding faster without sacrificing reconstruction quality.
 It runs controlled candidates on the fixed ITk workload through ACTS on HEPP02, keeps the results, and helps the next experiment build on what worked.
 The active protocol uses ACTS v46.5.0, one ACTS thread, 10-event development runs, and 50-event evaluation runs.
 Each timed comparison has three repetitions, with the median seeding timing and particle ambiguity efficiency used for candidate comparison. Full-chain and CKF timing remain diagnostic.
