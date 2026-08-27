@@ -3,10 +3,17 @@
   "campaign": {
     "name": "ACTS Seeding Development campaign v6",
     "branch": "autoresearch-acts-seeding/aug27-v6",
-    "phase": "candidate loop: 10 of 20 complete",
+    "phase": "candidate loop: 11 of 20",
     "started_at": "2026-08-27T11:03:33Z"
   },
-  "current_attempt": null,
+  "current_attempt": {
+    "candidate": "GridCoreRangeViewCache",
+    "mechanism_family": "grid-core-range-view-cache",
+    "classification": "micro",
+    "controlled_stage": "queued Development run",
+    "state": "queued",
+    "started_at": "2026-08-27T13:57:44Z"
+  },
   "attempt_metadata": [
     {
       "candidate": "DoubletInsertionSort",
@@ -57,6 +64,11 @@
       "candidate": "SeederUnifiedDoubletStorage",
       "mechanism_family": "seeder-unified-doublet-storage",
       "classification": "structural"
+    },
+    {
+      "candidate": "GridCoreRangeViewCache",
+      "mechanism_family": "grid-core-range-view-cache",
+      "classification": "micro"
     }
   ],
   "blockers": [],
