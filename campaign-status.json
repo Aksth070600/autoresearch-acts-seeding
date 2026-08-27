@@ -132,7 +132,7 @@
   "campaign": {
     "branch": "autoresearch-acts-seeding/campaign-v7",
     "name": "ACTS Seeding Development Campaign V7",
-    "phase": "Development attempt 6 of 61 recorded",
+    "phase": "Development attempt 7 of 61",
     "started_at": "2026-08-27T18:23:05Z",
     "targets": {
       "completed_attempts": 61,
@@ -140,24 +140,31 @@
       "structural_attempts": 30
     }
   },
-  "current_attempt": null,
+  "current_attempt": {
+    "candidate": "GridBinBottomUpMergeSort",
+    "classification": "structural",
+    "controlled_stage": "queued Development run with ACTS_BUILD_JOBS=8",
+    "mechanism_family": "grid-bin-bottom-up-merge-sort",
+    "started_at": "2026-08-27T20:06:17.703263Z",
+    "state": "queued"
+  },
   "failures": [],
-  "generated_at": "2026-08-27T20:05:43.900321Z",
+  "generated_at": "2026-08-27T20:06:17.883962Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/47134515d1b9047c393583a2811397eec8506f02",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/a9c7868cc03619c3c7816c670d2b3dddb19b215b",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/campaign-v7",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/28"
   },
   "progress": {
     "completed_attempts": 6,
-    "elapsed_seconds": 6158.900321,
-    "estimated_remaining_seconds": 44069.52,
-    "eta_basis": "Median of 6 completed attempts.",
+    "elapsed_seconds": 6192.883962,
+    "estimated_remaining_seconds": 44069.33930099999,
+    "eta_basis": "Median of 6 completed attempts; current attempt elapsed time deducted.",
     "eta_sample_count": 6,
-    "expected_finish_at": "2026-08-28T08:20:13.420321Z",
+    "expected_finish_at": "2026-08-28T08:20:47.223263Z",
     "median_completed_attempt_duration_seconds": 801.2639999999999,
     "micro_optimizations": 1,
-    "structural_attempts": 5
+    "structural_attempts": 6
   },
   "promising_results": {
     "best_ambiguity_efficiency": {
