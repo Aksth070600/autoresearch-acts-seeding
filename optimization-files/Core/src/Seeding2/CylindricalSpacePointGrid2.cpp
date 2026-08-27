@@ -174,7 +174,7 @@ std::optional<std::size_t> CylindricalSpacePointGrid2::insert(
   const std::optional<std::size_t> gridIndex = binIndex(phi, z, r);
   if (gridIndex.has_value()) {
     BinType& bin = grid().at(*gridIndex);
-    bin.push_back({index, r});
+    bin.push_back(index);
     ++m_counter;
   }
   return gridIndex;
@@ -191,12 +191,14 @@ void CylindricalSpacePointGrid2::extend(
 }
 
 void CylindricalSpacePointGrid2::sortBinsByR(
-    const SpacePointContainer2& /*spacePoints*/) {
+    const SpacePointContainer2& spacePoints) {
   ACTS_VERBOSE("Sorting the grid");
 
   for (std::size_t i = 0; i < grid().size(); ++i) {
     BinType& bin = grid().at(i);
-    std::ranges::sort(bin, {}, &BinEntry::radius);
+    std::ranges::sort(bin, {}, [&](SpacePointIndex2 spIndex) {
+      return spacePoints[spIndex].zr()[1];
+    });
   }
 
   ACTS_VERBOSE(
@@ -204,15 +206,17 @@ void CylindricalSpacePointGrid2::sortBinsByR(
 }
 
 Range1D<float> CylindricalSpacePointGrid2::computeRadiusRange(
-    const SpacePointContainer2& /*spacePoints*/) const {
+    const SpacePointContainer2& spacePoints) const {
   float minRange = std::numeric_limits<float>::max();
   float maxRange = std::numeric_limits<float>::lowest();
   for (const BinType& bin : grid()) {
     if (bin.empty()) {
       continue;
     }
-    minRange = std::min(bin.front().radius, minRange);
-    maxRange = std::max(bin.back().radius, maxRange);
+    auto first = spacePoints[bin.front()];
+    auto last = spacePoints[bin.back()];
+    minRange = std::min(first.zr()[1], minRange);
+    maxRange = std::max(last.zr()[1], maxRange);
   }
   return {minRange, maxRange};
 }
