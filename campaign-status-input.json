@@ -3,7 +3,7 @@
   "campaign": {
     "name": "ACTS Seeding Development Campaign V7",
     "branch": "autoresearch-acts-seeding/campaign-v7",
-    "phase": "Development attempt 18 of 61 recorded",
+    "phase": "Development attempt 19 of 61",
     "started_at": "2026-08-27T18:23:05Z",
     "targets": {
       "completed_attempts": 61,
@@ -11,7 +11,14 @@
       "micro_optimization_cap": 15
     }
   },
-  "current_attempt": null,
+  "current_attempt": {
+    "candidate": "FilterPairCompatibilityGraph",
+    "mechanism_family": "filter-pair-compatibility-graph",
+    "classification": "structural",
+    "controlled_stage": "queued Development run with ACTS_BUILD_JOBS=8",
+    "state": "queued",
+    "started_at": "2026-08-27T22:55:38.021893Z"
+  },
   "attempt_metadata": [
     {
       "candidate": "GridBinHeapSort",
@@ -101,6 +108,11 @@
     {
       "candidate": "FilterCurvatureSelectionSort",
       "mechanism_family": "filter-curvature-selection-sort",
+      "classification": "structural"
+    },
+    {
+      "candidate": "FilterPairCompatibilityGraph",
+      "mechanism_family": "filter-pair-compatibility-graph",
       "classification": "structural"
     }
   ],
