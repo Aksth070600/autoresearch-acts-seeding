@@ -149,10 +149,8 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   }
 
   for (std::size_t i = 0; i < grid.numberOfBins(); ++i) {
-    std::ranges::sort(grid.at(i), [&](const Acts::SpacePointIndex2& a,
-                                      const Acts::SpacePointIndex2& b) {
-      return spacePoints[a].r() < spacePoints[b].r();
-    });
+    std::ranges::sort(
+        grid.at(i), {}, &Acts::CylindricalSpacePointGrid2::BinEntry::radius);
   }
 
   Acts::SpacePointContainer2 coreSpacePoints(
@@ -164,8 +162,8 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   gridSpacePointRanges.reserve(grid.numberOfBins());
   for (std::size_t i = 0; i < grid.numberOfBins(); ++i) {
     std::uint32_t begin = coreSpacePoints.size();
-    for (Acts::SpacePointIndex2 spIndex : grid.at(i)) {
-      const ConstSpacePointProxy& sp = spacePoints[spIndex];
+    for (const auto& entry : grid.at(i)) {
+      const ConstSpacePointProxy& sp = spacePoints[entry.index];
 
       auto newSp = coreSpacePoints.createSpacePoint();
       newSp.xy() = std::array<float, 2>{static_cast<float>(sp.x()),

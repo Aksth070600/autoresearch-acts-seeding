@@ -29,8 +29,13 @@ class CylindricalSpacePointGrid2 {
  public:
   /// Space point index type used in the grid.
   using SpacePointIndex = std::uint32_t;
-  /// Type alias for bin container holding space point indices
-  using BinType = std::vector<SpacePointIndex>;
+  /// Grid-bin value with its radius sort key.
+  struct BinEntry {
+    SpacePointIndex index{};
+    float radius{};
+  };
+  /// Type alias for bin container holding space point records
+  using BinType = std::vector<BinEntry>;
   /// Type alias for phi axis with equidistant binning and closed boundaries
   using PhiAxisType = Axis<AxisType::Equidistant, AxisBoundaryType::Closed>;
   /// Type alias for z axis with variable binning and open boundaries
