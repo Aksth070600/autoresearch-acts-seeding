@@ -216,13 +216,31 @@
       "state": "completed",
       "timed_ambiguity_particle_efficiency": 0.972769,
       "timed_seeding_time_per_event_ms": 281.05
+    },
+    {
+      "candidate": "TripletDirectIndexCounter",
+      "classification": "micro",
+      "duration_seconds": 780.528,
+      "finished_at": "2026-08-27T14:24:53.567004Z",
+      "implementation_commit": "447ffebf24963cd8cdcbb0e09297cc5a6b20fb56",
+      "links": {
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/447ffebf24963cd8cdcbb0e09297cc5a6b20fb56",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug27-v6/records/Development/20260827T141153Z-TripletDirectIndexCounter/summary.json"
+      },
+      "mechanism_family": "triplet-direct-index-counter",
+      "outcome": "Passed all controlled Development stages.",
+      "record": "records/Development/20260827T141153Z-TripletDirectIndexCounter/summary.json",
+      "started_at": "2026-08-27T14:11:53.039477Z",
+      "state": "completed",
+      "timed_ambiguity_particle_efficiency": 0.972769,
+      "timed_seeding_time_per_event_ms": 282.79
     }
   ],
   "blockers": [],
   "campaign": {
     "branch": "autoresearch-acts-seeding/aug27-v6",
     "name": "ACTS Seeding Development campaign v6",
-    "phase": "candidate loop: 12 of 20",
+    "phase": "candidate loop: 12 of 20 complete",
     "started_at": "2026-08-27T11:03:33Z",
     "targets": {
       "completed_attempts": 20,
@@ -230,42 +248,35 @@
       "structural_attempts": 10
     }
   },
-  "current_attempt": {
-    "candidate": "TripletDirectIndexCounter",
-    "classification": "micro",
-    "controlled_stage": "queued Development run",
-    "mechanism_family": "triplet-direct-index-counter",
-    "started_at": "2026-08-27T14:11:50Z",
-    "state": "queued"
-  },
+  "current_attempt": null,
   "failures": [],
-  "generated_at": "2026-08-27T14:11:50.407282Z",
+  "generated_at": "2026-08-27T14:25:10.856924Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/447ffebf24963cd8cdcbb0e09297cc5a6b20fb56",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/4c7e26dba3c81dfe1e4772eb0f83b1a4374fb0f3",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/aug27-v6",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/25"
   },
   "progress": {
-    "completed_attempts": 11,
-    "elapsed_seconds": 11297.407282,
-    "estimated_remaining_seconds": 7241.208718,
-    "eta_basis": "Median of 11 completed attempts; current attempt elapsed time deducted.",
-    "eta_sample_count": 11,
-    "expected_finish_at": "2026-08-27T16:12:31.616000Z",
-    "median_completed_attempt_duration_seconds": 804.624,
+    "completed_attempts": 12,
+    "elapsed_seconds": 12097.856924,
+    "estimated_remaining_seconds": 6433.856,
+    "eta_basis": "Median of 12 completed attempts.",
+    "eta_sample_count": 12,
+    "expected_finish_at": "2026-08-27T16:12:24.712924Z",
+    "median_completed_attempt_duration_seconds": 804.232,
     "micro_optimizations": 2,
     "structural_attempts": 10
   },
   "promising_results": {
     "best_ambiguity_efficiency": {
-      "candidate": "SeederUnifiedDoubletStorage",
+      "candidate": "TripletDirectIndexCounter",
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/5d231ed0dfeb23bc8954290146ea3fdd38ddda88",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug27-v6/records/Development/20260827T134250Z-SeederUnifiedDoubletStorage/summary.json"
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/447ffebf24963cd8cdcbb0e09297cc5a6b20fb56",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug27-v6/records/Development/20260827T141153Z-TripletDirectIndexCounter/summary.json"
       },
-      "started_at": "2026-08-27T13:42:50.037905Z",
+      "started_at": "2026-08-27T14:11:53.039477Z",
       "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 281.42
+      "timed_seeding_time_per_event_ms": 282.79
     },
     "best_seeding": {
       "candidate": "GridCoreRangeViewCache",
