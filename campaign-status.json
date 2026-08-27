@@ -18,13 +18,31 @@
       "state": "completed",
       "timed_ambiguity_particle_efficiency": 0.972769,
       "timed_seeding_time_per_event_ms": 297.99
+    },
+    {
+      "candidate": "GridBinHeapSort",
+      "classification": "structural",
+      "duration_seconds": 790.803,
+      "finished_at": "2026-08-27T18:54:17.389850Z",
+      "implementation_commit": "2b8f404def2078b5b54b0af4958fc44a6ace6aa8",
+      "links": {
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/2b8f404def2078b5b54b0af4958fc44a6ace6aa8",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260827T184106Z-GridBinHeapSort/summary.json"
+      },
+      "mechanism_family": "grid-bin-heap-sort",
+      "outcome": "Passed all controlled Development stages.",
+      "record": "records/Development/20260827T184106Z-GridBinHeapSort/summary.json",
+      "started_at": "2026-08-27T18:41:06.587300Z",
+      "state": "completed",
+      "timed_ambiguity_particle_efficiency": 0.972769,
+      "timed_seeding_time_per_event_ms": 299.82
     }
   ],
   "blockers": [],
   "campaign": {
     "branch": "autoresearch-acts-seeding/campaign-v7",
     "name": "ACTS Seeding Development Campaign V7",
-    "phase": "Development attempt 2 of 61",
+    "phase": "Development attempt 2 of 61 recorded",
     "started_at": "2026-08-27T18:23:05Z",
     "targets": {
       "completed_attempts": 61,
@@ -32,42 +50,35 @@
       "structural_attempts": 30
     }
   },
-  "current_attempt": {
-    "candidate": "GridBinHeapSort",
-    "classification": "structural",
-    "controlled_stage": "queued Development run with ACTS_BUILD_JOBS=8",
-    "mechanism_family": "grid-bin-heap-sort",
-    "started_at": "2026-08-27T18:41:03.195083Z",
-    "state": "queued"
-  },
+  "current_attempt": null,
   "failures": [],
-  "generated_at": "2026-08-27T18:41:03.307852Z",
+  "generated_at": "2026-08-27T18:54:17.658140Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/2b8f404def2078b5b54b0af4958fc44a6ace6aa8",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/475de003f5ba2ba0bf9aca1e0762349dffcfbd8c",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/campaign-v7",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/28"
   },
   "progress": {
-    "completed_attempts": 0,
-    "elapsed_seconds": 1078.307852,
+    "completed_attempts": 1,
+    "elapsed_seconds": 1872.65814,
     "estimated_remaining_seconds": null,
-    "eta_basis": "Unavailable until 3 completed attempt durations exist (0 available).",
-    "eta_sample_count": 0,
+    "eta_basis": "Unavailable until 3 completed attempt durations exist (1 available).",
+    "eta_sample_count": 1,
     "expected_finish_at": null,
-    "median_completed_attempt_duration_seconds": null,
+    "median_completed_attempt_duration_seconds": 790.803,
     "micro_optimizations": 0,
     "structural_attempts": 1
   },
   "promising_results": {
     "best_ambiguity_efficiency": {
-      "candidate": "Genesis",
+      "candidate": "GridBinHeapSort",
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/37703e9855ca78019fd09c6412637da847af417a",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260827T182329402303Z-Genesis/summary.json"
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/2b8f404def2078b5b54b0af4958fc44a6ace6aa8",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260827T184106Z-GridBinHeapSort/summary.json"
       },
-      "started_at": "2026-08-27T18:23:29.402303Z",
+      "started_at": "2026-08-27T18:41:06.587300Z",
       "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 297.99
+      "timed_seeding_time_per_event_ms": 299.82
     },
     "best_seeding": {
       "candidate": "Genesis",
