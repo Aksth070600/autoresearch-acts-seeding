@@ -105,13 +105,10 @@ class CandidatesForMiddleSp2 {
 
   Container m_indicesLow;
   Container m_indicesHigh;
-  Size m_minimumLow{};
-  Size m_minimumHigh{};
 
-  bool push(Container& container, Size& minimumPosition, Size nMax,
-            SpacePointIndex2 spB, SpacePointIndex2 spM, SpacePointIndex2 spT,
-            float weight, float zOrigin, bool isQuality);
-  static Size findMinimumPosition(const Container& container);
+  bool push(Container& container, Size nMax, SpacePointIndex2 spB,
+            SpacePointIndex2 spM, SpacePointIndex2 spT, float weight,
+            float zOrigin, bool isQuality);
 };
 
 }  // namespace Acts
