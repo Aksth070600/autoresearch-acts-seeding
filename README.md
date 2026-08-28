@@ -1,6 +1,6 @@
 # ACTS Seeding Autoresearch
 
-ACTS Seeding Autoresearch runs controlled experiments on HEPP02 to improve ACTS seeding speed while preserving reconstruction quality on a fixed ITk workload.
+ACTS Seeding Autoresearch runs controlled experiments to improve ACTS seeding speed while preserving reconstruction quality on a fixed ITk workload.
 
 - [View the interactive results report](https://aksth070600.github.io/autoresearch-acts-seeding/)
 - [View the live campaign dashboard](https://aksth070600.github.io/autoresearch-acts-seeding/campaign/)
@@ -34,13 +34,6 @@ make test                                 # Run the non-scientific repository te
 ```
 
 Follow `agent-instructions.md` when running an experiment.
-
-## Safety and scientific controls
-
-- Experiment agents run Development only. The captain controls Evaluation.
-- Development and Evaluation use the fixed evaluator protocol. Agents must not override it.
-- Each campaign starts from a fresh Genesis baseline. A completed continuous campaign restores the Genesis implementation.
-- Pareto comparison uses measured median seeding time per event, which is minimized, and measured median seeding-stage particle efficiency, which is maximized. Peak RSS is diagnostic, not a Pareto objective.
 
 ## More detail
 
