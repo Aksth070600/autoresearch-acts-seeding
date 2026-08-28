@@ -164,7 +164,6 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
     auto topSp = tripletTopCandidates.topSpacePoints()[topSpIndex];
     auto spT = spacePoints[topSp];
 
-    cache().compatibleCandidateR.clear();
     cache().compatibleSeedR.clear();
 
     const auto& kinematics = tripletTopCandidates.kinematics(topSpIndex);
@@ -208,20 +207,21 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
       if (std::abs(deltaR) < config().deltaRMin) {
         continue;
       }
-      cache().compatibleCandidateR.push_back(otherTopR);
-    }
-
-    // Select compatible radii in radial order. For a one-dimensional minimum
-    // separation, greedy selection from the smallest radius finds the maximum
-    // cardinality subset and only needs to compare with the last selection.
-    std::ranges::sort(cache().compatibleCandidateR);
-    for (float otherTopR : cache().compatibleCandidateR) {
-      if (!cache().compatibleSeedR.empty() &&
-          otherTopR - cache().compatibleSeedR.back() < config().deltaRMin) {
-        continue;
+      bool newCompSeed = true;
+      for (const float previousDiameter : cache().compatibleSeedR) {
+        // original ATLAS code uses higher min distance for 2nd found compatible
+        // seed (20mm instead of 5mm)
+        // add new compatible seed only if distance larger than rmin to all
+        // other compatible seeds
+        if (std::abs(previousDiameter - otherTopR) < config().deltaRMin) {
+          newCompSeed = false;
+          break;
+        }
       }
-      cache().compatibleSeedR.push_back(otherTopR);
-      weight += config().compatSeedWeight;
+      if (newCompSeed) {
+        cache().compatibleSeedR.push_back(otherTopR);
+        weight += config().compatSeedWeight;
+      }
       if (cache().compatibleSeedR.size() >= config().compatSeedLimit) {
         break;
       }
