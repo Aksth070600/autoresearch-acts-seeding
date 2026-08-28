@@ -26,19 +26,26 @@ from visualizations.pareto import render  # noqa: E402
 
 class ReportPreviewTests(unittest.TestCase):
     def run_report(
-        self, records: Path, output: Path, dataset: str = "development"
+        self,
+        records: Path,
+        output: Path,
+        dataset: str = "development",
+        x_metric: str | None = None,
     ) -> subprocess.CompletedProcess[str]:
+        command = [
+            sys.executable,
+            str(REPORT),
+            "--records",
+            str(records),
+            "--output",
+            str(output),
+            "--dataset",
+            dataset,
+        ]
+        if x_metric is not None:
+            command.extend(["--x-metric", x_metric])
         return subprocess.run(
-            [
-                sys.executable,
-                str(REPORT),
-                "--records",
-                str(records),
-                "--output",
-                str(output),
-                "--dataset",
-                dataset,
-            ],
+            command,
             cwd=PROJECT_ROOT,
             text=True,
             capture_output=True,
@@ -61,7 +68,7 @@ class ReportPreviewTests(unittest.TestCase):
             self.assertIn("ACTS Seeding Live Campaign", campaign)
             self.assertNotIn("Open results report", campaign)
             index = (output / "index.html").read_text(encoding="utf-8")
-            self.assertIn("No protocol-compatible summaries yet", index)
+            self.assertIn("No complete v2/v3 seeding-objective summaries yet", index)
             self.assertIn('href="campaign/"', index)
             self.assertIn('"rows":[]', index)
             self.assertIn('"x_metric": "timed_seeding_time_per_event_ms"', index)
@@ -147,6 +154,89 @@ class ReportPreviewTests(unittest.TestCase):
             },
         }
 
+    @staticmethod
+    def v2_summary(
+        candidate: str = "Genesis",
+        category: str = "Development",
+        time: float = 12.0,
+        seeding_efficiency: float = 0.9,
+        ambiguity_efficiency: float = 0.5,
+        peak_rss_kb: float = 1024.0,
+    ) -> dict:
+        events = 10 if category == "Development" else 50
+        run_metrics = {
+            "timing": {"seeding": {"time_per_event_ms": time}},
+            "performance": {
+                "seeding": {"efficiency_particles": seeding_efficiency},
+                "ambiguity_resolution": {
+                    "efficiency_particles": ambiguity_efficiency
+                },
+            },
+        }
+        repetitions = [
+            {
+                "repetition": number,
+                "events": events,
+                "status": "passed",
+                "run_metrics": run_metrics,
+            }
+            for number in (1, 2, 3)
+        ]
+        return {
+            "candidate_name": candidate,
+            "category": category,
+            "status": "passed",
+            "baseline": candidate == "Genesis",
+            "protocol_id": "acts-seeding-v2",
+            "protocol": {
+                "id": "acts-seeding-v2",
+                "acts_version": "v46.5.0",
+                "dataset": "ttbar_pu200",
+                "execution_target": "HEPP02",
+                "threads": 1,
+                "seed": 42,
+                "pileup": 200,
+                "development_events": 10,
+                "evaluation_events": 50,
+                "timed_repetitions": 3,
+                "timed_aggregation": "median",
+                "expected_unmasked_fpe_handling": "accept only after every requested event completed",
+            },
+            "started_at": "2026-08-26T12:00:00+00:00",
+            "stages": [
+                {
+                    "name": "ten_event_full_clean",
+                    "comparison": "clean",
+                    "metrics_mode": "none",
+                    "events": events,
+                    "status": "passed",
+                    "run_metrics": run_metrics,
+                },
+                *[
+                    {
+                        "name": f"timed_full_repetition_{number}",
+                        "comparison": "timed",
+                        "repetition": number,
+                        "metrics_mode": "time",
+                        "events": events,
+                        "status": "passed",
+                        "run_metrics": run_metrics,
+                    }
+                    for number in (1, 2, 3)
+                ],
+            ],
+            "timed_comparison": {
+                "aggregation": "median",
+                "repetition_count": 3,
+                "required_repetitions": 3,
+                "events": events,
+                "complete": True,
+                "repetitions": repetitions,
+                "median_run_metrics": run_metrics,
+                "median_resource_metrics": {"peak_rss_kb": peak_rss_kb},
+            },
+        }
+
     def test_report_reads_hypothesis_from_measured_summary_copy(self) -> None:
         commit = "a" * 40
         proposal = {
@@ -191,6 +281,187 @@ class ReportPreviewTests(unittest.TestCase):
             row = load_records(records.parents[1], "development")[0]
 
         self.assertEqual(row["proposal"]["hypothesis"], proposal["hypothesis"])
+
+    def test_rss_offset_preserves_v2_deltas_raw_provenance_and_v3_values(self) -> None:
+        def row(
+            candidate: str,
+            protocol_id: str,
+            raw_rss: float,
+            record: str,
+        ) -> dict:
+            raw_key = (
+                "timed_peak_rss_kb"
+                if protocol_id == "acts-seeding-v2"
+                else "rss_peak_rss_kb"
+            )
+            return {
+                "candidate": candidate,
+                "category": "Development",
+                "commit": "",
+                "commit_url": "",
+                "record": record,
+                "protocol_id": protocol_id,
+                "source_protocol_id": protocol_id,
+                "metrics": {
+                    "timed_seeding_time_per_event_ms": 10.0,
+                    "timed_seeding_particle_efficiency": 0.9,
+                    raw_key: raw_rss,
+                },
+            }
+
+        rows = [
+            row("Genesis", "acts-seeding-v2", 100.0, "Development/V2Genesis1"),
+            row("Genesis", "acts-seeding-v2", 140.0, "Development/V2Genesis2"),
+            row("Genesis", "acts-seeding-v2", 0.0, "Development/V2GenesisInvalid"),
+            row("Genesis", "acts-seeding-v3", 200.0, "Development/V3Genesis1"),
+            row("Genesis", "acts-seeding-v3", 220.0, "Development/V3Genesis2"),
+            row("Historical", "acts-seeding-v2", 150.0, "Development/Historical"),
+            row("Current", "acts-seeding-v3", 250.0, "Development/Current"),
+        ]
+
+        report = build_report(rows, "Genesis", "development")
+        by_candidate = {row["candidate"]: row for row in report["rows"]}
+        display_key = "rss_genesis_offset_peak_rss_kb"
+
+        self.assertEqual(
+            report["rss_normalization"],
+            {
+                "method": "genesis_offset",
+                "diagnostic_only": True,
+                "dataset": "development",
+                "genesis_candidate": "Genesis",
+                "v2_genesis_mean_kb": 120.0,
+                "v2_genesis_samples": 2,
+                "v3_genesis_mean_kb": 210.0,
+                "v3_genesis_samples": 2,
+                "offset_kb": 90.0,
+            },
+        )
+        self.assertEqual(by_candidate["Historical"]["metrics"][display_key], 240.0)
+        self.assertEqual(by_candidate["Historical"]["metrics"]["timed_peak_rss_kb"], 150.0)
+        self.assertEqual(by_candidate["Historical"]["rss_provenance"]["raw_peak_rss_kb"], 150.0)
+        self.assertEqual(by_candidate["Historical"]["rss_provenance"]["offset_kb"], 90.0)
+        self.assertEqual(by_candidate["Current"]["metrics"][display_key], 250.0)
+        self.assertEqual(by_candidate["Current"]["metrics"]["rss_peak_rss_kb"], 250.0)
+        self.assertEqual(by_candidate["Genesis"]["metrics"][display_key], 210.0)
+        self.assertEqual(240.0 - 210.0, 150.0 - 120.0)
+        self.assertEqual(report["rss_metric_key"], display_key)
+
+    def test_rss_offsets_can_be_negative_and_are_dataset_specific(self) -> None:
+        def row(
+            candidate: str,
+            category: str,
+            protocol_id: str,
+            raw_rss: float,
+            record: str,
+        ) -> dict:
+            raw_key = (
+                "timed_peak_rss_kb"
+                if protocol_id == "acts-seeding-v2"
+                else "rss_peak_rss_kb"
+            )
+            return {
+                "candidate": candidate,
+                "category": category,
+                "record": record,
+                "protocol_id": protocol_id,
+                "source_protocol_id": protocol_id,
+                "metrics": {
+                    "timed_seeding_time_per_event_ms": 10.0,
+                    "timed_seeding_particle_efficiency": 0.9,
+                    raw_key: raw_rss,
+                },
+            }
+
+        rows = [
+            row("Genesis", "Development", "acts-seeding-v2", 100.0, "D/V2G"),
+            row("Genesis", "Development", "acts-seeding-v3", 150.0, "D/V3G"),
+            row("DevCandidate", "Development", "acts-seeding-v2", 120.0, "D/C"),
+            row("Genesis", "Evaluation", "acts-seeding-v2", 200.0, "E/V2G"),
+            row("Genesis", "Evaluation", "acts-seeding-v3", 160.0, "E/V3G"),
+            row("EvalCandidate", "Evaluation", "acts-seeding-v2", 190.0, "E/C"),
+        ]
+        display_key = "rss_genesis_offset_peak_rss_kb"
+
+        development = build_report(rows, "Genesis", "development")
+        evaluation = build_report(rows, "Genesis", "evaluation")
+        development_candidate = next(
+            row for row in development["rows"] if row["candidate"] == "DevCandidate"
+        )
+        evaluation_candidate = next(
+            row for row in evaluation["rows"] if row["candidate"] == "EvalCandidate"
+        )
+
+        self.assertEqual(development["rss_normalization"]["offset_kb"], 50.0)
+        self.assertEqual(development_candidate["metrics"][display_key], 170.0)
+        self.assertEqual(evaluation["rss_normalization"]["offset_kb"], -40.0)
+        self.assertEqual(evaluation_candidate["metrics"][display_key], 150.0)
+        self.assertEqual(
+            evaluation_candidate["metrics"]["timed_seeding_time_per_event_ms"],
+            10.0,
+        )
+        self.assertEqual(
+            evaluation_candidate["metrics"]["timed_seeding_particle_efficiency"],
+            0.9,
+        )
+
+    def test_rss_offset_requires_valid_baselines_and_positive_outputs(self) -> None:
+        def row(candidate: str, protocol_id: str, raw_rss: float, record: str) -> dict:
+            raw_key = (
+                "timed_peak_rss_kb"
+                if protocol_id == "acts-seeding-v2"
+                else "rss_peak_rss_kb"
+            )
+            return {
+                "candidate": candidate,
+                "category": "Development",
+                "record": record,
+                "protocol_id": protocol_id,
+                "source_protocol_id": protocol_id,
+                "metrics": {
+                    "timed_seeding_time_per_event_ms": 10.0,
+                    "timed_seeding_particle_efficiency": 0.9,
+                    raw_key: raw_rss,
+                },
+            }
+
+        display_key = "rss_genesis_offset_peak_rss_kb"
+        cases = {
+            "missing v3 Genesis": [
+                row("Genesis", "acts-seeding-v2", 100.0, "V2G"),
+                row("Candidate", "acts-seeding-v2", 120.0, "V2C"),
+            ],
+            "missing v2 Genesis": [
+                row("Genesis", "acts-seeding-v3", 100.0, "V3G"),
+                row("Candidate", "acts-seeding-v2", 120.0, "V2C"),
+            ],
+            "non-positive v2 Genesis": [
+                row("Genesis", "acts-seeding-v2", 0.0, "V2G"),
+                row("Genesis", "acts-seeding-v3", 100.0, "V3G"),
+                row("Candidate", "acts-seeding-v2", 120.0, "V2C"),
+            ],
+            "non-positive adjusted output": [
+                row("Genesis", "acts-seeding-v2", 200.0, "V2G"),
+                row("Genesis", "acts-seeding-v3", 50.0, "V3G"),
+                row("Candidate", "acts-seeding-v2", 100.0, "V2C"),
+            ],
+            "non-finite candidate input": [
+                row("Genesis", "acts-seeding-v2", 100.0, "V2G"),
+                row("Genesis", "acts-seeding-v3", 200.0, "V3G"),
+                row("Candidate", "acts-seeding-v2", float("inf"), "V2C"),
+            ],
+        }
+
+        for name, rows in cases.items():
+            with self.subTest(name=name):
+                report = build_report(rows, "Genesis", "development")
+                candidate = next(
+                    row for row in report["rows"] if row["candidate"] == "Candidate"
+                )
+                self.assertNotIn(display_key, candidate["metrics"])
+                self.assertIsNone(
+                    candidate["rss_provenance"]["display_peak_rss_kb"]
+                )
 
     def test_peak_rss_is_loaded_only_from_separate_rss_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -367,29 +638,43 @@ const Plotly = {
     def test_rss_axis_behavior_and_unavailable_rows(self) -> None:
         metric = "timed_seeding_particle_efficiency"
         time = "timed_seeding_time_per_event_ms"
-        rss = "rss_peak_rss_kb"
+        rss = "rss_genesis_offset_peak_rss_kb"
         rows = [
             {
                 "candidate": "Genesis",
                 "category": "Development",
                 "commit_url": REPOSITORY_URL,
-                "metrics": {time: 10.0, metric: 0.90, rss: 2_097_152.0},
+                "metrics": {
+                    time: 10.0,
+                    metric: 0.90,
+                    rss: 2_097_152.0,
+                    "rss_peak_rss_kb": 3_145_728.0,
+                },
             },
             {
                 "candidate": "Lean",
                 "category": "Development",
                 "commit_url": "",
-                "metrics": {time: 9.0, metric: 0.91, rss: 1_048_576.0},
+                "metrics": {
+                    time: 9.0,
+                    metric: 0.91,
+                    rss: 1_048_576.0,
+                    "timed_peak_rss_kb": 10_485_760.0,
+                },
             },
             {
                 "candidate": "NoResourceData",
                 "category": "Development",
                 "commit_url": "",
-                "metrics": {time: 8.0, metric: 0.92},
+                "metrics": {
+                    time: 8.0,
+                    metric: 0.92,
+                    "timed_peak_rss_kb": 524_288.0,
+                },
             },
         ]
         result = self.run_pareto_javascript(
-            {"rows": rows, "dataset": "development"},
+            {"rows": rows, "dataset": "development", "rss_metric_key": rss},
             r"""
 const x = axisElements('x');
 const y = axisElements('y');
@@ -440,9 +725,15 @@ console.log(JSON.stringify({
 """,
         )
 
-        self.assertEqual(result["kinds"], [["time", "Time"], ["metric", "Metric"], ["rss", "RSS"]])
+        self.assertEqual(
+            result["kinds"],
+            [["time", "Time"], ["metric", "Metric"], ["rss", "RSS (adjusted)"]],
+        )
         self.assertEqual(result["rssState"]["key"], rss)
-        self.assertEqual(result["rssState"]["label"], "PEAK RSS")
+        self.assertEqual(
+            result["rssState"]["label"],
+            "PEAK RSS (GENESIS-OFFSET ADJUSTED)",
+        )
         self.assertTrue(result["rssState"]["stageHidden"])
         self.assertTrue(result["rssState"]["metricHidden"])
         self.assertEqual(result["rssState"]["formatted"], "2.00 GiB")
@@ -452,7 +743,9 @@ console.log(JSON.stringify({
         self.assertEqual(result["rssTimeCount"], 2)
         self.assertEqual(result["rssMetricCount"], 2)
         self.assertEqual(result["leanColor"], "#22c55e")
-        self.assertIn("Peak RSS&nbsp;&nbsp;n/a", result["missingTooltip"])
+        self.assertIn(
+            "Peak RSS (adjusted)&nbsp;&nbsp;n/a", result["missingTooltip"]
+        )
         self.assertEqual(result["restored"]["stage"], "seeding")
         self.assertEqual(result["restored"]["metric"], "particle_fake_ratio")
         self.assertFalse(result["restored"]["stageHidden"])
@@ -533,6 +826,8 @@ console.log(JSON.stringify({
         self.assertIn("timingEvidenceTooltip(row)", tooltip)
         self.assertIn("Median/range/MAD", html)
         self.assertIn("row.proposal.hypothesis", tooltip)
+        self.assertNotIn("protocol_id", tooltip)
+        self.assertNotIn("source_protocol", tooltip)
 
         hover = html[html.index("hovertemplate"): html.index("hovertemplate") + 100]
         for field in ("X:", "Y:", "Category:", "Record:", "Commit:"):
@@ -575,45 +870,192 @@ console.log(JSON.stringify({
         report = build_report([row, second], "Genesis", "development")
         self.assertEqual(report["rows"][0]["commit_url"], REPOSITORY_URL)
 
-    def test_v2_summary_is_readable_but_not_compared_under_v3_report(self) -> None:
+    def test_v2_only_archive_uses_the_shared_seeding_objective_pool(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            records = root / "records" / "Development" / "Genesis"
+            records.mkdir(parents=True)
+            (records / "summary.json").write_text(
+                json.dumps(self.v2_summary()), encoding="utf-8"
+            )
+            output = root / "site"
+
+            self.assertEqual(len(load_records(records.parents[1], "development")), 1)
+            result = self.run_report(records.parents[1], output)
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            index = (output / "index.html").read_text(encoding="utf-8")
+            payload = json.loads(
+                index.split("const REPORT = ", 1)[1].split(";", 1)[0]
+            )
+            self.assertEqual(
+                payload["protocol_id"],
+                "acts-seeding-v2-v3-seeding-objectives",
+            )
+            self.assertEqual(len(payload["rows"]), 1)
+            self.assertEqual(payload["rows"][0]["source_protocol_ids"], ["acts-seeding-v2"])
+            self.assertEqual(
+                payload["primary_objectives"]["maximize"],
+                "timed_seeding_particle_efficiency",
+            )
+            self.assertNotIn("rss_peak_rss_kb", payload["rows"][0]["metrics"])
+            self.assertIn("timed_peak_rss_kb", payload["rows"][0]["metrics"])
+            self.assertIn("Captain-approved seeding objective pool", index)
+            self.assertNotIn("fallback", index.lower())
+
+            rss_output = root / "rss-site"
+            rss_result = self.run_report(
+                records.parents[1],
+                rss_output,
+                x_metric="rss_genesis_offset_peak_rss_kb",
+            )
+            self.assertEqual(rss_result.returncode, 0, rss_result.stderr)
+            rss_index = (rss_output / "index.html").read_text(encoding="utf-8")
+            self.assertIn(
+                '"x_metric": "rss_genesis_offset_peak_rss_kb"', rss_index
+            )
+
+    def test_v3_only_archive_uses_raw_rss_in_the_shared_pool(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             records = root / "records" / "Development" / "Genesis"
             records.mkdir(parents=True)
             (records / "summary.json").write_text(
                 json.dumps(
-                    {
-                        "candidate_name": "Genesis",
-                        "category": "Development",
-                        "status": "passed",
-                        "protocol_id": "acts-seeding-v2",
-                        "protocol": {
-                            "id": "acts-seeding-v2",
-                            "acts_version": "v46.5.0",
-                            "dataset": "ttbar_pu200",
-                            "execution_target": "HEPP02",
-                            "threads": 1,
-                            "seed": 42,
-                            "pileup": 200,
-                            "development_events": 10,
-                            "evaluation_events": 50,
-                            "timed_repetitions": 3,
-                            "timed_aggregation": "median",
-                            "expected_unmasked_fpe_handling": "accept only after every requested event completed",
-                        },
-                        "stages": [],
-                    }
+                    self.summary("Genesis", "Development", 30.0, 0.8, 4096.0)
                 ),
                 encoding="utf-8",
             )
             output = root / "site"
 
-            self.assertEqual(load_records(records.parents[1], "development"), [])
             result = self.run_report(records.parents[1], output)
 
             self.assertEqual(result.returncode, 0, result.stderr)
             index = (output / "index.html").read_text(encoding="utf-8")
-            self.assertIn("No protocol-compatible summaries yet", index)
+            payload = json.loads(
+                index.split("const REPORT = ", 1)[1].split(";", 1)[0]
+            )
+            genesis = payload["rows"][0]
+            display_key = "rss_genesis_offset_peak_rss_kb"
+            self.assertEqual(genesis["source_protocol_ids"], ["acts-seeding-v3"])
+            self.assertEqual(genesis["metrics"]["rss_peak_rss_kb"], 4096.0)
+            self.assertEqual(genesis["metrics"][display_key], 4096.0)
+            self.assertIsNone(payload["rss_normalization"]["v2_genesis_mean_kb"])
+            self.assertIsNone(payload["rss_normalization"]["offset_kb"])
+
+    def test_v2_and_v3_share_objectives_genesis_and_dataset_pool(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            records = root / "records"
+            summaries = (
+                ("Development/V2Genesis", self.v2_summary()),
+                (
+                    "Development/V3Genesis",
+                    self.summary("Genesis", "Development", 30.0, 0.8, 4096.0),
+                ),
+                (
+                    "Development/Historical",
+                    self.v2_summary(
+                        "Historical",
+                        time=8.0,
+                        seeding_efficiency=0.92,
+                        ambiguity_efficiency=0.01,
+                        peak_rss_kb=2048.0,
+                    ),
+                ),
+                (
+                    "Development/Current",
+                    self.summary("Current", "Development", 27.0, 0.91, 8192.0),
+                ),
+                (
+                    "Evaluation/Evaluated",
+                    self.v2_summary("Evaluated", "Evaluation", 7.0, 0.93),
+                ),
+            )
+            for relative, summary in summaries:
+                folder = records / relative
+                folder.mkdir(parents=True)
+                (folder / "summary.json").write_text(
+                    json.dumps(summary), encoding="utf-8"
+                )
+
+            development_output = root / "development-site"
+            result = self.run_report(records, development_output)
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            index = (development_output / "index.html").read_text(encoding="utf-8")
+            payload = json.loads(
+                index.split("const REPORT = ", 1)[1].split(";", 1)[0]
+            )
+            self.assertEqual(
+                [row["candidate"] for row in payload["rows"]],
+                ["Genesis", "Current", "Historical"],
+            )
+            genesis = payload["rows"][0]
+            self.assertEqual(genesis["sample_count"], 2)
+            self.assertEqual(
+                genesis["source_protocol_ids"],
+                ["acts-seeding-v2", "acts-seeding-v3"],
+            )
+            self.assertAlmostEqual(
+                genesis["metrics"]["timed_seeding_time_per_event_ms"], 11.0
+            )
+            self.assertAlmostEqual(
+                genesis["metrics"]["timed_seeding_particle_efficiency"], 0.85
+            )
+            historical = payload["rows"][2]
+            self.assertEqual(historical["protocol_id"], "acts-seeding-v2")
+            self.assertEqual(
+                historical["metrics"]["timed_seeding_particle_efficiency"], 0.92
+            )
+            self.assertNotEqual(
+                historical["metrics"]["timed_seeding_particle_efficiency"], 0.01
+            )
+            rss_display = "rss_genesis_offset_peak_rss_kb"
+            self.assertEqual(historical["metrics"]["timed_peak_rss_kb"], 2048.0)
+            self.assertEqual(historical["metrics"][rss_display], 5120.0)
+            self.assertEqual(genesis["metrics"][rss_display], 4096.0)
+            self.assertEqual(5120.0 - 4096.0, 2048.0 - 1024.0)
+            current = payload["rows"][1]
+            self.assertEqual(current["protocol_id"], "acts-seeding-v3")
+            self.assertEqual(current["metrics"]["rss_peak_rss_kb"], 8192.0)
+            self.assertEqual(current["metrics"][rss_display], 8192.0)
+            self.assertEqual(payload["rss_metric_key"], rss_display)
+            self.assertNotIn("Evaluated", [row["candidate"] for row in payload["rows"]])
+
+            evaluation_output = root / "evaluation-site"
+            result = self.run_report(records, evaluation_output, "evaluation")
+            self.assertEqual(result.returncode, 0, result.stderr)
+            evaluation_index = (evaluation_output / "index.html").read_text(
+                encoding="utf-8"
+            )
+            evaluation = json.loads(
+                evaluation_index.split("const REPORT = ", 1)[1].split(";", 1)[0]
+            )
+            self.assertEqual(
+                [(row["candidate"], row["category"]) for row in evaluation["rows"]],
+                [("Evaluated", "Evaluation")],
+            )
+
+    def test_changed_v2_metadata_is_not_compared_with_the_archive(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            records = root / "records" / "Development" / "Genesis"
+            records.mkdir(parents=True)
+            summary = self.v2_summary()
+            summary["protocol"]["threads"] = 2
+            (records / "summary.json").write_text(
+                json.dumps(summary), encoding="utf-8"
+            )
+
+            output = root / "site"
+            result = self.run_report(records.parents[1], output)
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            index = (output / "index.html").read_text(encoding="utf-8")
+            self.assertIn(
+                '"protocol_id":"acts-seeding-v2-v3-seeding-objectives"', index
+            )
             self.assertIn('"rows":[]', index)
 
     def test_malformed_v3_summary_keeps_strict_metric_validation(self) -> None:

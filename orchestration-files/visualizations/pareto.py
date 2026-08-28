@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import html
 import json
 from pathlib import Path
 from typing import Any
@@ -21,6 +22,7 @@ HTML_TEMPLATE = r"""<!doctype html>
     h1 { margin: 0 0 8px; }
     .topline { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
     .campaign-link { color: #a5b4fc; font-size: 0.9rem; font-weight: 650; white-space: nowrap; text-underline-offset: 3px; }
+    .protocol-context { color: #c4b5fd; margin: 0 0 8px; font-size: 0.9rem; font-weight: 650; }
     .lede { color: #a5b4fc; margin: 0 0 20px; }
     .controls { display: grid; grid-template-columns: repeat(2, minmax(230px, 1fr)); gap: 14px; align-items: end;
       background: #111827; border: 1px solid #334155; border-radius: 10px; padding: 16px; }
@@ -62,6 +64,7 @@ HTML_TEMPLATE = r"""<!doctype html>
     <h1>ACTS Seeding Autoresearch</h1>
     <a class="campaign-link" href="campaign/">Open live campaign</a>
   </div>
+  <p id="protocol-context" class="protocol-context">__PROTOCOL_CONTEXT__</p>
   <p id="axis-guidance" class="lede">Lower X is better. Higher Y is better. The reference lines show the selected baseline.</p>
   <section class="controls" aria-label="Chart controls">
     <label>Dataset<select id="dataset"></select></label>
@@ -86,7 +89,7 @@ HTML_TEMPLATE = r"""<!doctype html>
     <div class="summary-card"><div class="summary-heading"><span class="summary-label">Y axis baseline</span><span id="summary-y-label" class="summary-chip"></span></div><strong id="summary-y-value" class="summary-value"></strong></div>
   </section>
   <div id="chart-frame">
-    <div id="empty-state" class="note" hidden>No protocol-compatible summaries yet. Run a fresh Genesis baseline to populate this report.</div>
+    <div id="empty-state" class="note" hidden>No complete v2/v3 seeding-objective summaries yet. Run a fresh Genesis baseline to populate this report.</div>
     <div id="chart" role="img" aria-label="Interactive Pareto comparison chart"></div>
     <div id="corner-overlays" aria-hidden="true">
       <div id="corner-top-left" class="corner-stack top-left"></div>
@@ -136,7 +139,7 @@ const TOOLTIP_ROWS = [
   { label: 'D', type: 'quality', suffix: 'particle_duplicate_ratio' }
 ];
 const TOOLTIP_STAGES = ['seeding'];
-const RSS_PEAK_KEY = 'rss_peak_rss_kb';
+const RSS_PEAK_KEY = REPORT.rss_metric_key || 'rss_genesis_offset_peak_rss_kb';
 const AXES = ['x', 'y'];
 
 function option(select, value, label) {
@@ -201,7 +204,7 @@ function axisKey(axis) {
 }
 function axisLabel(axis) {
   const elements = axisElements(axis);
-  if (elements.kind.value === 'rss') return 'PEAK RSS';
+  if (elements.kind.value === 'rss') return 'PEAK RSS (GENESIS-OFFSET ADJUSTED)';
   const stageLabel = STAGES[elements.stage.value].label;
   if (elements.kind.value === 'time') return `${stageLabel} TIME/EVENT`.toUpperCase();
   const metricLabel = QUALITY_METRICS.find(([value]) => value === elements.metric.value)?.[1] || elements.metric.value;
@@ -233,7 +236,7 @@ AXES.forEach((axis) => {
   const elements = axisElements(axis);
   option(elements.kind, 'time', 'Time');
   option(elements.kind, 'metric', 'Metric');
-  option(elements.kind, 'rss', 'RSS');
+  option(elements.kind, 'rss', 'RSS (adjusted)');
 });
 axisDefaults('x', DEFAULTS.x_metric);
 axisDefaults('y', DEFAULTS.y_metric);
@@ -287,7 +290,7 @@ function candidateTooltip(row) {
   }).join('<br>');
   const peakRss = formatPeakRss(row.metrics[RSS_PEAK_KEY], 'n/a');
   const hypothesis = row.proposal ? `<br>Hypothesis&nbsp;&nbsp;${escapeHtml(row.proposal.hypothesis)}` : '';
-  return `<b>${escapeHtml(row.candidate)}</b><br><span style="font-family:monospace">Stage&nbsp;&nbsp;${stageHeading}<br>${metricLines}<br>Peak RSS&nbsp;&nbsp;${peakRss}${timingEvidenceTooltip(row)}${hypothesis}</span>`;
+  return `<b>${escapeHtml(row.candidate)}</b><br><span style="font-family:monospace">Stage&nbsp;&nbsp;${stageHeading}<br>${metricLines}<br>Peak RSS (adjusted)&nbsp;&nbsp;${peakRss}${timingEvidenceTooltip(row)}${hypothesis}</span>`;
 }
 function validCommitUrl(value) {
   return typeof value === 'string'
@@ -455,8 +458,25 @@ render();
 def render(report: dict[str, Any], output: Path, *, defaults: dict[str, str]) -> None:
     payload = json.dumps(report, sort_keys=True, separators=(",", ":")).replace("</", "<\\/")
     default_json = json.dumps(defaults, sort_keys=True)
+    selected_protocol = str(report.get("protocol_id", ""))
+    protocol = report.get("protocol", {})
+    members = protocol.get("members", []) if isinstance(protocol, dict) else []
+    if len(members) == 2:
+        protocol_context = (
+            "Captain-approved seeding objective pool: "
+            f"{members[0]} and {members[1]} seeding time and particle efficiency "
+            "are directly comparable. Peak RSS is an approximate diagnostic: "
+            "v2 raw RSS + (v3 Genesis mean - v2 Genesis mean); v3 stays raw. "
+            "V2 RSS is unavailable until both dataset-specific Genesis means exist."
+        )
+    elif selected_protocol:
+        protocol_context = f"Protocol {selected_protocol}."
+    else:
+        protocol_context = ""
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(
-        HTML_TEMPLATE.replace("__REPORT_JSON__", payload).replace("__DEFAULTS_JSON__", default_json),
+        HTML_TEMPLATE.replace("__REPORT_JSON__", payload)
+        .replace("__DEFAULTS_JSON__", default_json)
+        .replace("__PROTOCOL_CONTEXT__", html.escape(protocol_context)),
         encoding="utf-8",
     )
