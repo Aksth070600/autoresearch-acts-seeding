@@ -52,6 +52,10 @@ class Impl final : public DoubletSeedFinder {
     const float rM = middleSp.zr()[1];
     const float varianceZM = middleSp.varianceZ();
     const float varianceRM = middleSp.varianceR();
+    const float deltaRMin = m_cfg.deltaRMin;
+    const float deltaRMax = m_cfg.deltaRMax;
+    const float deltaZMin = m_cfg.deltaZMin;
+    const float deltaZMax = m_cfg.deltaZMax;
 
     // equivalent to impactMax / (rM * rM);
     const float vIPAbs = impactMax * middleSpInfo.uIP2;
@@ -77,12 +81,12 @@ class Impl final : public DoubletSeedFinder {
       for (ConstSpacePointProxy2 otherSp : candidateSps) {
         if constexpr (isBottomCandidate) {
           // if r-distance is too big, try next SP in bin
-          if (rM - otherSp.zr()[1] <= m_cfg.deltaRMax) {
+          if (rM - otherSp.zr()[1] <= deltaRMax) {
             break;
           }
         } else {
           // if r-distance is too small, try next SP in bin
-          if (otherSp.zr()[1] - rM >= m_cfg.deltaRMin) {
+          if (otherSp.zr()[1] - rM >= deltaRMin) {
             break;
           }
         }
@@ -107,7 +111,7 @@ class Impl final : public DoubletSeedFinder {
 
         if constexpr (sortedByR) {
           // if r-distance is too small we are done
-          if (deltaR < m_cfg.deltaRMin) {
+          if (deltaR < deltaRMin) {
             break;
           }
         }
@@ -116,14 +120,14 @@ class Impl final : public DoubletSeedFinder {
 
         if constexpr (sortedByR) {
           // if r-distance is too big we are done
-          if (deltaR > m_cfg.deltaRMax) {
+          if (deltaR > deltaRMax) {
             break;
           }
         }
       }
 
       if constexpr (!sortedByR) {
-        if (outsideRangeCheck(deltaR, m_cfg.deltaRMin, m_cfg.deltaRMax)) {
+        if (outsideRangeCheck(deltaR, deltaRMin, deltaRMax)) {
           continue;
         }
       }
@@ -135,7 +139,7 @@ class Impl final : public DoubletSeedFinder {
         deltaZ = zO - zM;
       }
 
-      if (outsideRangeCheck(deltaZ, m_cfg.deltaZMin, m_cfg.deltaZMax)) {
+      if (outsideRangeCheck(deltaZ, deltaZMin, deltaZMax)) {
         continue;
       }
 
