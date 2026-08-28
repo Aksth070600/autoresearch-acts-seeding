@@ -154,7 +154,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   std::vector<Acts::SpacePointIndex2> radixScratch;
   for (std::size_t i = 0; i < grid.numberOfBins(); ++i) {
     auto& bin = grid.at(i);
-    if (bin.size() < 64) [[likely]] {
+    if (bin.size() < 64) {
       std::ranges::sort(bin, [&](const Acts::SpacePointIndex2& a,
                                  const Acts::SpacePointIndex2& b) {
         return spacePoints[a].r() < spacePoints[b].r();
