@@ -3,7 +3,7 @@
   "campaign": {
     "name": "ACTS Seeding Development Campaign V7",
     "branch": "autoresearch-acts-seeding/campaign-v7",
-    "phase": "Development attempt 28 of 61 recorded",
+    "phase": "Development attempt 29 of 61",
     "started_at": "2026-08-27T18:23:05Z",
     "targets": {
       "completed_attempts": 61,
@@ -11,7 +11,14 @@
       "micro_optimization_cap": 15
     }
   },
-  "current_attempt": null,
+  "current_attempt": {
+    "candidate": "SeederUnifiedSortedDoubletArena",
+    "mechanism_family": "seeder-unified-sorted-doublet-arena",
+    "classification": "structural",
+    "controlled_stage": "queued Development run with ACTS_BUILD_JOBS=8",
+    "state": "queued",
+    "started_at": "2026-08-28T01:19:37.184971Z"
+  },
   "attempt_metadata": [
     {
       "candidate": "GridBinHeapSort",
@@ -152,6 +159,11 @@
       "candidate": "DoubletDistanceConfigCache",
       "mechanism_family": "doublet-distance-config-cache",
       "classification": "micro"
+    },
+    {
+      "candidate": "SeederUnifiedSortedDoubletArena",
+      "mechanism_family": "seeder-unified-sorted-doublet-arena",
+      "classification": "structural"
     }
   ],
   "blockers": [],
