@@ -1,119 +1,35 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "campaign": {
-    "name": "ACTS Seeding Development Campaign V8",
-    "branch": "autoresearch-acts-seeding/campaign-v8",
-    "phase": "completed Development campaign; canonical Genesis restored",
-    "started_at": "2026-08-28T10:50:43Z",
+    "name": "ACTS Seeding continuous aug29",
+    "branch": "autoresearch-acts-seeding/aug29",
+    "phase": "continuous Development",
+    "started_at": "2026-08-28T23:32:45Z",
+    "mode": "continuous",
+    "campaign_id": "acts-seeding-aug29-20260829",
+    "control_id": "277074895a3b09a536336bc5ad8b96a6e37f6a3a88c5decfdb47fcfa9842d434",
+    "genesis_commit": "f8e809e118e41889850cf9cf3c46988e7c583625",
     "targets": {
-      "completed_attempts": 20,
-      "structural_attempts": 10,
-      "micro_optimization_cap": 5
+      "major_percentage": 50,
+      "minor_percentage": 25,
+      "combination_percentage": 25
     }
   },
   "current_attempt": null,
-  "attempt_metadata": [
-    {
-      "candidate": "CorePackedVarianceLayout",
-      "mechanism_family": "core-packed-variance-layout",
-      "classification": "structural"
-    },
-    {
-      "candidate": "CandidateCachedMinimumRetention",
-      "mechanism_family": "candidate-cached-minimum-retention",
-      "classification": "structural"
-    },
-    {
-      "candidate": "TripletKinematicsPairLayout",
-      "mechanism_family": "triplet-kinematics-pair-layout",
-      "classification": "structural"
-    },
-    {
-      "candidate": "GridBinAdaptiveRadixSort",
-      "mechanism_family": "grid-bin-adaptive-radix-sort",
-      "classification": "structural"
-    },
-    {
-      "candidate": "DoubletSlopeErrorPairLayout",
-      "mechanism_family": "doublet-slope-error-pair-layout",
-      "classification": "structural"
-    },
-    {
-      "candidate": "DoubletCotThetaIDeltaRMaterialization",
-      "mechanism_family": "doublet-cottheta-ideltar-materialization",
-      "classification": "structural"
-    },
-    {
-      "candidate": "FilterRadiusOrderedCompatibility",
-      "mechanism_family": "filter-radius-ordered-compatibility-selection",
-      "classification": "structural"
-    },
-    {
-      "candidate": "CorePackedXYZRLayout",
-      "mechanism_family": "core-packed-xyzr-layout",
-      "classification": "structural"
-    },
-    {
-      "candidate": "DoubletLongitudinalBoundIntersection",
-      "mechanism_family": "doublet-longitudinal-bound-intersection",
-      "classification": "structural"
-    },
-    {
-      "candidate": "GridSortedBinRadiusRange",
-      "mechanism_family": "grid-sorted-bin-radius-range",
-      "classification": "structural"
-    },
-    {
-      "candidate": "TripletIdentityImpactPairLayout",
-      "mechanism_family": "triplet-identity-impact-pair-layout",
-      "classification": "structural"
-    },
-    {
-      "candidate": "SeederStreamedBottomGroups",
-      "mechanism_family": "seeder-streamed-bottom-groups",
-      "classification": "structural"
-    },
-    {
-      "candidate": "SeederCrossGroupTopWindowCarry",
-      "mechanism_family": "seeder-cross-group-top-window-carry",
-      "classification": "structural"
-    },
-    {
-      "candidate": "GridRadixFloatKeyLayout",
-      "mechanism_family": "grid-radix-float-key-layout",
-      "classification": "structural"
-    },
-    {
-      "candidate": "CoreScalarCoordinateLayout",
-      "mechanism_family": "core-scalar-coordinate-layout",
-      "classification": "structural"
-    },
-    {
-      "candidate": "DoubletNaturalOrderFastPath",
-      "mechanism_family": "doublet-natural-order-fast-path",
-      "classification": "structural"
-    },
-    {
-      "candidate": "DoubletMonotonicDirectionFastPath",
-      "mechanism_family": "doublet-monotonic-direction-fast-path",
-      "classification": "structural"
-    },
-    {
-      "candidate": "GridRadixShortBinBranchHint",
-      "mechanism_family": "grid-radix-short-bin-branch-hint",
-      "classification": "micro"
-    },
-    {
-      "candidate": "SeederStreamedBottomEmptyBranchHint",
-      "mechanism_family": "seeder-streamed-bottom-empty-branch-hint",
-      "classification": "micro"
-    },
-    {
-      "candidate": "DoubletNaturalOrderFallbackBranchHint",
-      "mechanism_family": "doublet-natural-order-fallback-branch-hint",
-      "classification": "micro"
-    }
-  ],
+  "attempt_metadata": [],
   "blockers": [],
-  "pull_request_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/29"
+  "pull_request_url": null,
+  "control": {
+    "state": "open",
+    "request": null,
+    "observed_at": null,
+    "consumed_at": null,
+    "completed_at": null
+  },
+  "scheduler": {
+    "state": "running",
+    "combination_readiness": null,
+    "final_targets": null,
+    "blocker": null
+  }
 }
