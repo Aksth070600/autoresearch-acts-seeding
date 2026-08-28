@@ -78,7 +78,7 @@
   "campaign": {
     "branch": "autoresearch-acts-seeding/campaign-v8",
     "name": "ACTS Seeding Development Campaign V8",
-    "phase": "candidate mechanism selection after 3 of 20",
+    "phase": "candidate evaluation 4 of 20",
     "started_at": "2026-08-28T10:50:43Z",
     "targets": {
       "completed_attempts": 20,
@@ -86,24 +86,31 @@
       "structural_attempts": 10
     }
   },
-  "current_attempt": null,
+  "current_attempt": {
+    "candidate": "GridBinAdaptiveRadixSort",
+    "classification": "structural",
+    "controlled_stage": "queued Development run",
+    "mechanism_family": "grid-bin-adaptive-radix-sort",
+    "started_at": "2026-08-28T11:55:45Z",
+    "state": "queued"
+  },
   "failures": [],
-  "generated_at": "2026-08-28T11:54:20.308641Z",
+  "generated_at": "2026-08-28T11:55:45.922899Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/dfed83876117fbc78297fc4126cd9f22dee4fdde",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/0256a37b6cd54a318e57c32935c1b157fc876843",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/campaign-v8",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/29"
   },
   "progress": {
     "completed_attempts": 3,
-    "elapsed_seconds": 3817.308641,
-    "estimated_remaining_seconds": 13838.68,
-    "eta_basis": "Median of 3 completed attempts.",
+    "elapsed_seconds": 3902.922899,
+    "estimated_remaining_seconds": 13837.757101,
+    "eta_basis": "Median of 3 completed attempts; current attempt elapsed time deducted.",
     "eta_sample_count": 3,
-    "expected_finish_at": "2026-08-28T15:44:58.988641Z",
+    "expected_finish_at": "2026-08-28T15:46:23.680000Z",
     "median_completed_attempt_duration_seconds": 814.04,
     "micro_optimizations": 0,
-    "structural_attempts": 3
+    "structural_attempts": 4
   },
   "promising_results": {
     "best_ambiguity_efficiency": {
