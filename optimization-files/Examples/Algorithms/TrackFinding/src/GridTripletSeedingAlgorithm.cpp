@@ -270,15 +270,21 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
 
     bottomSpRanges.clear();
     for (const auto b : bottom) {
-      bottomSpRanges.push_back(
-          coreSpacePoints.range(gridSpacePointRanges.at(b)).asConst());
+      auto range =
+          coreSpacePoints.range(gridSpacePointRanges.at(b)).asConst();
+      if (!range.empty()) {
+        bottomSpRanges.push_back(range);
+      }
     }
     middleSpRange =
         coreSpacePoints.range(gridSpacePointRanges.at(middle)).asConst();
     topSpRanges.clear();
     for (const auto t : top) {
-      topSpRanges.push_back(
-          coreSpacePoints.range(gridSpacePointRanges.at(t)).asConst());
+      auto range =
+          coreSpacePoints.range(gridSpacePointRanges.at(t)).asConst();
+      if (!range.empty()) {
+        topSpRanges.push_back(range);
+      }
     }
 
     if (middleSpRange->empty()) {
