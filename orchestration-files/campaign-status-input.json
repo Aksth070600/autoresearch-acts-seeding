@@ -3,7 +3,7 @@
   "campaign": {
     "name": "ACTS Seeding continuous aug29",
     "branch": "autoresearch-acts-seeding/aug29",
-    "phase": "continuous Development",
+    "phase": "empty-range candidate queued Development",
     "started_at": "2026-08-28T23:32:45Z",
     "mode": "continuous",
     "campaign_id": "acts-seeding-aug29-20260829",
@@ -15,7 +15,16 @@
       "combination_percentage": 25
     }
   },
-  "current_attempt": null,
+  "current_attempt": {
+    "candidate": "GridEmptyNeighborRangePrune",
+    "mechanism_key": "grid-empty-neighbor-range-prune",
+    "mechanism_family": "grid-neighbor-dataflow-pruning",
+    "classification": "major",
+    "controlled_stage": "queued Development run",
+    "state": "queued",
+    "started_at": "2026-08-28T23:59:18Z",
+    "scheduling": "ordinary"
+  },
   "attempt_metadata": [
     {
       "candidate": "FilterDisabledConfirmationQualityMapElision",
@@ -117,6 +126,48 @@
         "lesson": "The one-event smoke segfaulted after a successful build, so the upstream experiment-cut dispatch is unsafe in the controlled v46.5.0 ITk path as applied.",
         "prediction_assessment": "inconclusive",
         "prediction_assessment_rationale": "The smoke stage crashed before any timed or seeding-efficiency evidence was produced."
+      }
+    },
+    {
+      "candidate": "GridEmptyNeighborRangePrune",
+      "mechanism_key": "grid-empty-neighbor-range-prune",
+      "mechanism_family": "grid-neighbor-dataflow-pruning",
+      "classification": "major",
+      "proposal": {
+        "schema_version": "1.0.0",
+        "candidate": "GridEmptyNeighborRangePrune",
+        "implementation_commit": "8d38f98aa430aa2ac48360cb51db5088b25d5182",
+        "hypothesis": "Pruning empty bottom and top neighbor ranges while constructing the binned-group inputs will preserve the successful historical empty-group mechanism while also avoiding empty range storage and finder dispatch, reducing median seeding time without changing selected seeds.",
+        "falsifier": "The prediction fails if median seeding time does not decrease from fresh Genesis or timed seeding particle efficiency changes.",
+        "predicted_directions": {
+          "timed_seeding_time_per_event_ms": "decrease",
+          "timed_seeding_particle_efficiency": "unchanged"
+        },
+        "expected_hot_path": "ActsExamples::GridTripletSeedingAlgorithm::execute binned-neighborhood range construction before Acts::TripletSeeder dispatch.",
+        "changed_symbols": [
+          "ActsExamples::GridTripletSeedingAlgorithm::execute"
+        ],
+        "intended_files": [
+          "optimization-files/Examples/Algorithms/TrackFinding/src/GridTripletSeedingAlgorithm.cpp"
+        ],
+        "novelty_reason": "The historical source checked empty groups inside TripletSeeder; this adaptation moves the invariant to the producer seam so empty ranges are neither stored nor dispatched, without changing nonempty group order or seeding cuts.",
+        "source_references": [
+          {
+            "source_type": "prior record/commit",
+            "reference": "57b3a2571813146fd1898c74e2662df759d54cb0",
+            "relevance": "The directly inspected successful v2 implementation showed that skipping empty top and bottom groups completed all stages and reduced seeding time; this candidate preserves that mechanism at an earlier data-flow seam.",
+            "directly_inspected": true,
+            "inspected_scope": "Full optimization-files/Core/src/Seeding2/TripletSeeder.cpp implementation diff for SeederEmptyGroupPrune, including both top and bottom group loops.",
+            "acts_mapping": "The prior TripletSeeder group loops consume the bottomSpRanges and topSpRanges built by ActsExamples::GridTripletSeedingAlgorithm::execute, where this adaptation removes empty producer entries."
+          },
+          {
+            "source_type": "Genesis",
+            "reference": "records/Development/20260828T233358598694Z-Genesis/summary.json",
+            "relevance": "The fresh v3 Genesis provides the current controlled objective baseline for this low-risk traversal adaptation.",
+            "directly_inspected": true
+          }
+        ],
+        "combination_provenance": null
       }
     }
   ],

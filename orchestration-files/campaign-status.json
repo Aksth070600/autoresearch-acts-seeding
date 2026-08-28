@@ -168,7 +168,7 @@
     "genesis_commit": "f8e809e118e41889850cf9cf3c46988e7c583625",
     "mode": "continuous",
     "name": "ACTS Seeding continuous aug29",
-    "phase": "continuous Development",
+    "phase": "empty-range candidate queued Development",
     "started_at": "2026-08-28T23:32:45Z",
     "targets": {
       "combination_percentage": 25,
@@ -183,7 +183,16 @@
     "request": null,
     "state": "open"
   },
-  "current_attempt": null,
+  "current_attempt": {
+    "candidate": "GridEmptyNeighborRangePrune",
+    "classification": "major",
+    "controlled_stage": "queued Development run",
+    "mechanism_family": "grid-neighbor-dataflow-pruning",
+    "mechanism_key": "grid-empty-neighbor-range-prune",
+    "scheduling": "ordinary",
+    "started_at": "2026-08-28T23:59:18Z",
+    "state": "queued"
+  },
   "failures": [
     {
       "candidate": "FilterDisabledConfirmationQualityMapElision",
@@ -196,9 +205,9 @@
       "record_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug29/records/Failed/20260828T235354Z-DoubletDisabledIPExperimentCuts/summary.json"
     }
   ],
-  "generated_at": "2026-08-28T23:58:17.747084Z",
+  "generated_at": "2026-08-28T23:59:18.461941Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/c1d9511a2c839df20ade965cd844b8c4c46b2e0c",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/8d38f98aa430aa2ac48360cb51db5088b25d5182",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/aug29",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/36"
   },
@@ -225,7 +234,7 @@
         "target_percentage": 25.0
       }
     },
-    "elapsed_seconds": 1532.747084,
+    "elapsed_seconds": 1593.461941,
     "estimated_remaining_seconds": null,
     "eta_basis": "Unavailable until a stop request fixes the exact final candidate target.",
     "eta_sample_count": 0,
@@ -289,9 +298,9 @@
     "blocker": null,
     "combination_eligible": false,
     "decision": {
-      "action": "schedule",
+      "action": "finish-active",
       "category": "major",
-      "reason": "Selected by deterministic target deficit and category-order tie-break."
+      "reason": "Finish the active candidate transaction and record its restoration evidence."
     },
     "final_targets": null,
     "state": "running",
