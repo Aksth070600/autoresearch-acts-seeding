@@ -95,21 +95,27 @@ class DoubletsForMiddleSp {
                       std::vector<IndexAndCotTheta>& indexAndCotTheta) const {
     indexAndCotTheta.clear();
     indexAndCotTheta.reserve(range.second - range.first);
-    bool naturallySorted = true;
+    bool naturallyAscending = true;
+    bool naturallyDescending = true;
     for (Index i = range.first; i < range.second; ++i) {
       const float cotTheta = m_cotTheta[i];
-      if (!indexAndCotTheta.empty() &&
-          cotTheta < indexAndCotTheta.back().cotTheta) {
-        naturallySorted = false;
+      if (!indexAndCotTheta.empty()) {
+        naturallyAscending &= cotTheta >= indexAndCotTheta.back().cotTheta;
+        naturallyDescending &= cotTheta <= indexAndCotTheta.back().cotTheta;
       }
       indexAndCotTheta.emplace_back(i, cotTheta);
     }
-    if (!naturallySorted) {
-      std::ranges::sort(indexAndCotTheta, {},
-                        [](const IndexAndCotTheta& item) {
-                          return item.cotTheta;
-                        });
+    if (naturallyAscending) {
+      return;
     }
+    if (naturallyDescending) {
+      std::ranges::reverse(indexAndCotTheta);
+      return;
+    }
+    std::ranges::sort(indexAndCotTheta, {},
+                      [](const IndexAndCotTheta& item) {
+                        return item.cotTheta;
+                      });
   }
 
   /// Proxy accessor for a single doublet entry.
