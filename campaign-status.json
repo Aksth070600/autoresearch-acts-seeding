@@ -648,13 +648,31 @@
       "state": "completed",
       "timed_ambiguity_particle_efficiency": 0.972769,
       "timed_seeding_time_per_event_ms": 308.48
+    },
+    {
+      "candidate": "DoubletGallopingRadiusBound",
+      "classification": "structural",
+      "duration_seconds": 788.753,
+      "finished_at": "2026-08-28T02:58:15.815704Z",
+      "implementation_commit": "b5637c66b363eeb245a0564f7dfa75e8d9cbc34c",
+      "links": {
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/b5637c66b363eeb245a0564f7dfa75e8d9cbc34c",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260828T024507Z-DoubletGallopingRadiusBound/summary.json"
+      },
+      "mechanism_family": "doublet-galloping-radius-bound",
+      "outcome": "Passed all controlled Development stages.",
+      "record": "records/Development/20260828T024507Z-DoubletGallopingRadiusBound/summary.json",
+      "started_at": "2026-08-28T02:45:07.063153Z",
+      "state": "completed",
+      "timed_ambiguity_particle_efficiency": 0.972769,
+      "timed_seeding_time_per_event_ms": 300.56
     }
   ],
   "blockers": [],
   "campaign": {
     "branch": "autoresearch-acts-seeding/campaign-v7",
     "name": "ACTS Seeding Development Campaign V7",
-    "phase": "Development attempt 35 of 61",
+    "phase": "Development attempt 35 of 61 recorded",
     "started_at": "2026-08-27T18:23:05Z",
     "targets": {
       "completed_attempts": 61,
@@ -662,14 +680,7 @@
       "structural_attempts": 30
     }
   },
-  "current_attempt": {
-    "candidate": "DoubletGallopingRadiusBound",
-    "classification": "structural",
-    "controlled_stage": "queued Development run with ACTS_BUILD_JOBS=8",
-    "mechanism_family": "doublet-galloping-radius-bound",
-    "started_at": "2026-08-28T02:45:04.827850Z",
-    "state": "queued"
-  },
+  "current_attempt": null,
   "failures": [
     {
       "candidate": "TripletSlopePrefilterStaging",
@@ -677,20 +688,20 @@
       "record_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Errors/20260827T232540Z-TripletSlopePrefilterStaging/summary.json"
     }
   ],
-  "generated_at": "2026-08-28T02:45:04.878796Z",
+  "generated_at": "2026-08-28T02:58:15.942471Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/b5637c66b363eeb245a0564f7dfa75e8d9cbc34c",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/a7125cd48f80d116f713e6d1cf87a0eb906b0c3d",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/campaign-v7",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/28"
   },
   "progress": {
-    "completed_attempts": 34,
-    "elapsed_seconds": 30119.878796,
-    "estimated_remaining_seconds": 21756.630054,
-    "eta_basis": "Median of 34 completed attempts; current attempt elapsed time deducted.",
-    "eta_sample_count": 34,
-    "expected_finish_at": "2026-08-28T08:47:41.508850Z",
-    "median_completed_attempt_duration_seconds": 805.803,
+    "completed_attempts": 35,
+    "elapsed_seconds": 30910.942471,
+    "estimated_remaining_seconds": 20950.722,
+    "eta_basis": "Median of 35 completed attempts.",
+    "eta_sample_count": 35,
+    "expected_finish_at": "2026-08-28T08:47:26.664471Z",
+    "median_completed_attempt_duration_seconds": 805.797,
     "micro_optimizations": 5,
     "structural_attempts": 30
   },
