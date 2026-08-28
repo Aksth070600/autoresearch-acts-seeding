@@ -132,7 +132,7 @@
   "campaign": {
     "branch": "autoresearch-acts-seeding/campaign-v8",
     "name": "ACTS Seeding Development Campaign V8",
-    "phase": "candidate mechanism selection after 6 of 20",
+    "phase": "candidate evaluation 7 of 20",
     "started_at": "2026-08-28T10:50:43Z",
     "targets": {
       "completed_attempts": 20,
@@ -140,24 +140,31 @@
       "structural_attempts": 10
     }
   },
-  "current_attempt": null,
+  "current_attempt": {
+    "candidate": "FilterRadiusOrderedCompatibility",
+    "classification": "structural",
+    "controlled_stage": "queued Development run",
+    "mechanism_family": "filter-radius-ordered-compatibility-selection",
+    "started_at": "2026-08-28T12:41:46Z",
+    "state": "queued"
+  },
   "failures": [],
-  "generated_at": "2026-08-28T12:40:16.277434Z",
+  "generated_at": "2026-08-28T12:41:47.087591Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/a542e4fdb98acfd1c8e4681c8e5b8bd3555cf8ed",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/835193fbeaf086710acc5833eb6c6aa987758fa6",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/campaign-v8",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/29"
   },
   "progress": {
     "completed_attempts": 6,
-    "elapsed_seconds": 6573.277434,
-    "estimated_remaining_seconds": 11360.076,
-    "eta_basis": "Median of 6 completed attempts.",
+    "elapsed_seconds": 6664.087591,
+    "estimated_remaining_seconds": 11358.988409,
+    "eta_basis": "Median of 6 completed attempts; current attempt elapsed time deducted.",
     "eta_sample_count": 6,
-    "expected_finish_at": "2026-08-28T15:49:36.353434Z",
+    "expected_finish_at": "2026-08-28T15:51:06.076000Z",
     "median_completed_attempt_duration_seconds": 811.434,
     "micro_optimizations": 0,
-    "structural_attempts": 6
+    "structural_attempts": 7
   },
   "promising_results": {
     "best_ambiguity_efficiency": {
