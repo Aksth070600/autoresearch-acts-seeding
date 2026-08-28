@@ -270,13 +270,31 @@
       "state": "completed",
       "timed_ambiguity_particle_efficiency": 0.655284,
       "timed_seeding_time_per_event_ms": 261.22
+    },
+    {
+      "candidate": "GridRadixFloatKeyLayout",
+      "classification": "structural",
+      "duration_seconds": 798.841,
+      "finished_at": "2026-08-28T14:46:47.925467Z",
+      "implementation_commit": "c3c06d354ade3cf169f80bea69312a027fd97806",
+      "links": {
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/c3c06d354ade3cf169f80bea69312a027fd97806",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T143329Z-GridRadixFloatKeyLayout/summary.json"
+      },
+      "mechanism_family": "grid-radix-float-key-layout",
+      "outcome": "Passed all controlled Development stages.",
+      "record": "records/Development/20260828T143329Z-GridRadixFloatKeyLayout/summary.json",
+      "started_at": "2026-08-28T14:33:29.084640Z",
+      "state": "completed",
+      "timed_ambiguity_particle_efficiency": 0.972769,
+      "timed_seeding_time_per_event_ms": 289.92
     }
   ],
   "blockers": [],
   "campaign": {
     "branch": "autoresearch-acts-seeding/campaign-v8",
     "name": "ACTS Seeding Development Campaign V8",
-    "phase": "candidate evaluation 14 of 20",
+    "phase": "candidate mechanism selection after 14 of 20",
     "started_at": "2026-08-28T10:50:43Z",
     "targets": {
       "completed_attempts": 20,
@@ -284,14 +302,7 @@
       "structural_attempts": 10
     }
   },
-  "current_attempt": {
-    "candidate": "GridRadixFloatKeyLayout",
-    "classification": "structural",
-    "controlled_stage": "queued Development run",
-    "mechanism_family": "grid-radix-float-key-layout",
-    "started_at": "2026-08-28T14:33:25Z",
-    "state": "queued"
-  },
+  "current_attempt": null,
   "failures": [
     {
       "candidate": "CorePackedXYZRLayout",
@@ -299,20 +310,20 @@
       "record_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Failed/20260828T125743Z-CorePackedXYZRLayout/summary.json"
     }
   ],
-  "generated_at": "2026-08-28T14:33:25.707590Z",
+  "generated_at": "2026-08-28T14:46:59.610377Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/c3c06d354ade3cf169f80bea69312a027fd97806",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/47f5bb705433bca81006b1027319a531469792a5",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/campaign-v8",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/29"
   },
   "progress": {
-    "completed_attempts": 13,
-    "elapsed_seconds": 13362.70759,
-    "estimated_remaining_seconds": 5661.08841,
-    "eta_basis": "Median of 13 completed attempts; current attempt elapsed time deducted.",
-    "eta_sample_count": 13,
-    "expected_finish_at": "2026-08-28T16:07:46.796000Z",
-    "median_completed_attempt_duration_seconds": 808.828,
+    "completed_attempts": 14,
+    "elapsed_seconds": 14176.610377,
+    "estimated_remaining_seconds": 4850.169,
+    "eta_basis": "Median of 14 completed attempts.",
+    "eta_sample_count": 14,
+    "expected_finish_at": "2026-08-28T16:07:49.779377Z",
+    "median_completed_attempt_duration_seconds": 808.3615,
     "micro_optimizations": 0,
     "structural_attempts": 14
   },
@@ -361,14 +372,14 @@
         "timed_seeding_time_per_event_ms": 261.22
       },
       {
-        "candidate": "SeederStreamedBottomGroups",
+        "candidate": "GridRadixFloatKeyLayout",
         "links": {
-          "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/af0fae5f0de8314a25e2ea28467aa7e0b9fd917b",
-          "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T140512Z-SeederStreamedBottomGroups/summary.json"
+          "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/c3c06d354ade3cf169f80bea69312a027fd97806",
+          "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T143329Z-GridRadixFloatKeyLayout/summary.json"
         },
-        "started_at": "2026-08-28T14:05:12.333928Z",
+        "started_at": "2026-08-28T14:33:29.084640Z",
         "timed_ambiguity_particle_efficiency": 0.972769,
-        "timed_seeding_time_per_event_ms": 290.85
+        "timed_seeding_time_per_event_ms": 289.92
       }
     ]
   },
