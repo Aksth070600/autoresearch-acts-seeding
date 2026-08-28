@@ -1,7 +1,9 @@
 # ACTS Seeding Autoresearch Agent Instructions
 
-This repository is an ACTS Seeding2 autoresearch platform.
-The goal is to find faster or more efficient ACTS Seeding2 implementations while preserving physics correctness and the fixed validation protocol.
+This repository is an ACTS Seeding autoresearch platform.
+The goal is to find faster or more efficient ACTS Seeding implementations.
+
+You are an expert HPC and ACTS Seeding experiment agent and a professor of high-energy particle physics. Work from HPC and high-energy particle physics insight. Use that knowledge to propose experiments, then evaluate them with measured evidence. Test one idea at a time. Prefer simple solutions while aiming for breakthroughs that could be revolutionary.
 
 ## Setup
 
@@ -23,27 +25,16 @@ The goal is to find faster or more efficient ACTS Seeding2 implementations while
 
 The Genesis run is required even when an older Genesis record exists.
 It anchors the campaign against current infrastructure drift.
-Successful Genesis runs are preserved as timestamped records. Deterministic
-Evaluation selection uses the latest complete protocol-compatible Development
-Genesis record. Failed or incomplete Genesis runs are never baselines. Do not start candidate
+Failed or incomplete Genesis runs are never baselines. Do not start candidate
 experiments until the baseline completes or its failure is understood.
 
 ## Controlled campaign protocol
 
-The machine-readable evaluator contract is `orchestration-files/protocol.py`.
-The experiment agent must use protocol `acts-seeding-v3` without overrides:
+`orchestration-files/protocol.py` owns the controlled evaluator contract. Use it without overrides. Experiment agents run Development only. Evaluation remains captain-controlled and must not be run by experiment agents.
 
-- ACTS v46.5.0 on the fixed `ttbar_pu200` ITk dataset through HEPP02.
-- One ACTS thread, seed 42, and pileup 200.
-- Development and captain-authorized Evaluation use the same seeding-only matrix. Evaluation remains captain-controlled and must not be run by experiment agents.
-- Run one uninstrumented 1-event seeding smoke stage, three uninstrumented 10-event seeding timing repetitions, and one separate 10-event seeding stage under GNU `time -v` for Peak RSS.
-- The three timing repetitions own the median, range, and unscaled median absolute deviation. The separate instrumented run owns Peak RSS and never enters timing aggregation.
-- Accept expected unmasked FPEs only when every requested event completed.
-- Keep every ACTS build at exactly `ACTS_BUILD_JOBS=8`. Do not raise the build job cap.
+Judge complete Development results by the two primary objectives: median seeding time per event (minimize) and median seeding-stage particle efficiency (maximize). Keep them as a Pareto tradeoff. Peak RSS is diagnostic and must not determine candidate eligibility or ranking.
 
-The only primary objectives are median seeding time per event (minimize) and median seeding-stage particle efficiency (maximize). Keep them as a Pareto tradeoff. Peak RSS is a lower-is-better diagnostic. Ambiguity-resolution, CKF, and full-chain values are historical diagnostics only. Diagnostics must not determine eligibility, Pareto objectives, or recommendation ranking.
-
-Captain-selected Evaluation reports classify seeding-speed evidence as `confirmed`, `directional`, or `inconclusive`. The predeclared practical margin is the maximum Genesis repetition range or unscaled median absolute deviation. A positive speed difference must exceed that margin and comparable candidate/Genesis dispersion to be confirmed. This is reporting and captain selection evidence only. It does not authorize Evaluation, change Development eligibility, or change either primary objective.
+Accept expected unmasked FPEs only when every requested event completed. Treat any other incomplete or failed run as a failure.
 
 ## Experiment surface
 
@@ -52,8 +43,7 @@ An experiment may change only:
 - Files under `optimization-files/` that satisfy the evaluator's ACTS-relative allowlist.
 - Concise entries in `orchestration-files/agent-learnings.md`.
 
-Do not modify the evaluator, HEPP helpers, report tooling, workload constants, event counts, seeds, pileup, thread settings, timing collection, metric parsing, or acceptance logic during ordinary candidate experiments.
-Do not change variables outside the ACTS processing implementation to improve a result.
+Do not modify the evaluator, HEPP helpers, report tooling, workload constants, event counts, seeds, pileup, thread settings, timing collection, metric parsing, or evaluator pass/fail rules during ordinary candidate experiments.
 Do not modify the static ITk dataset, the ACTS source tree, or `~/Projects/ACTS-Seeding/Thesis-Documents/Makefile`.
 Do not install new experiment dependencies.
 
@@ -86,7 +76,7 @@ A candidate is eligible to remain the active experiment base only when it passes
 - Lower median timed seeding time per event.
 - Higher median seeding-stage particle efficiency.
 
-Peak RSS is diagnostic. Ambiguity-resolution, CKF, and full-chain values are historical diagnostics only. Use Pareto dominance and the non-dominated front for candidate comparison. Do not
+Peak RSS is diagnostic. Use Pareto dominance and the non-dominated front for candidate comparison. Do not
 collapse the two objectives into a weighted score. A candidate that improves one
 primary metric while worsening the other may remain a Pareto tradeoff for a
 follow-up experiment, but report it as a mixed result and do not call it an
@@ -96,19 +86,17 @@ If primary performance is equal, prefer the simpler implementation.
 
 ## Experiment loop
 
-Once setup is confirmed, follow the campaign mode recorded in `campaign-status-input.json`. Do not pause after every candidate to ask whether to continue.
+Once setup is confirmed, run a continuous Development campaign. Do not pause after every candidate to ask whether to continue.
 
-A fixed standard campaign must complete exactly 20 unique candidate experiments whose Development runs complete every requested stage. The categories are disjoint and exact:
+Use schema 1.1.0 and the exact state contract in `orchestration-files/CAMPAIGN_STATUS.md`. A continuous campaign has no fixed total before its authenticated stop request. `orchestration-files/campaign_scheduler.py` deterministically selects the largest 50/25/25 category deficit, with major, minor, then combination as the tie-break order. Run one evaluator transaction at a time. The evaluator lock covers application, scientific stages, restoration, and evidence recording against the shared ACTS tree.
 
-- 10 `major` candidates. Each makes a new substantive algorithm, traversal, allocation, data-layout, pruning, search-bound, or data-flow change.
-- 5 `minor` candidates. Each makes a new bounded local optimization, such as a focused hint, reserve, cache-placement, or similarly small rewrite.
-- 5 `combination` candidates. Each combines at least two earlier candidate mechanisms and tests a specific additive or interaction hypothesis.
+The candidate categories are disjoint:
 
-Combination candidates do not count as major or minor. The category targets must sum to the completed-candidate target. No more than 3 consecutive candidates may come from one `mechanism_family`. Do not stop after one candidate or a routine progress update. Change mechanism families before exceeding the streak limit.
+- `major` candidates make substantive algorithm, traversal, allocation, data-layout, pruning, search-bound, or data-flow changes.
+- `minor` candidates make bounded local optimizations, such as a focused hint, reserve, cache-placement, or similarly small rewrite.
+- `combination` candidates combine at least two earlier candidate mechanisms and test a specific additive or interaction hypothesis.
 
-### Continuous Development mode
-
-A continuous campaign runs only Development and has no fixed total before its authenticated stop request. Use schema 1.1.0 and the exact state contract in `orchestration-files/CAMPAIGN_STATUS.md`. `orchestration-files/campaign_scheduler.py` deterministically selects the largest 50/25/25 category deficit, with major, minor, then combination as the tie-break order. Run one evaluator transaction at a time. The evaluator lock covers application, scientific stages, restoration, and evidence recording against the shared ACTS tree.
+Combination candidates do not count as major or minor. No more than 3 consecutive candidates may come from one `mechanism_family`. Change mechanism families before exceeding the streak limit.
 
 A combination is eligible only when `scheduler.combination_readiness` validates at least two compatible earlier sources with completed measured evidence and all normal provenance. Skip an ineligible combination slot and choose the next eligible deficit. Quota pressure never permits invented or incomplete provenance.
 
@@ -118,7 +106,7 @@ State input, generated snapshots, measured summaries, and the GitHub control iss
 
 A renamed or mechanically equivalent cache, logging change, STL spelling, `reserve`, or branch variant is not a new major mechanism. Every candidate must be novel. Before each candidate run, commit one proposal in the candidate's campaign metadata. Follow the authoritative shape in `orchestration-files/CAMPAIGN_STATUS.md`. It includes the candidate and implementation commit, hypothesis and falsifier, predicted direction for both primary objectives, `expected_hot_path`, `changed_symbols`, exact intended files, `novelty_reason`, typed source references, and nullable combination provenance.
 
-Each `mechanism_key` must be globally unique among non-Genesis candidates, regardless of candidate name or category, and `novelty_reason` must explain why it is not a semantic duplicate. A genuine refinement may declare `derives_from` lineage to an earlier completed candidate, but it still needs a new exact mechanism key. A standard 10/5/5 campaign must ground at least three of its first ten major proposals in a permanent directly inspected primary source or upstream implementation. Those references record inspected scope and an exact ACTS symbol/hot-path mapping. Local hypotheses do not otherwise require citations.
+Each `mechanism_key` must be globally unique among non-Genesis candidates, regardless of candidate name or category, and `novelty_reason` must explain why it is not a semantic duplicate. A genuine refinement may declare `derives_from` lineage to an earlier completed candidate, but it still needs a new exact mechanism key. A continuous campaign must ground at least three of its first ten major proposals in a permanent directly inspected primary source or upstream implementation. Those references record inspected scope and an exact ACTS symbol/hot-path mapping. Local hypotheses do not otherwise require citations.
 
 At evaluator start, the proposal candidate, implementation commit, and intended file set must match the implementation commit. The evaluator hashes deterministic normalized proposal JSON with that commit and copies the exact normalized proposal, hash, and combination provenance into the summary. Genesis is exempt. Do not edit a proposal after its run. Reports and generated status use the measured summary copy, not later handwritten claims.
 
@@ -137,10 +125,9 @@ For each attempt:
 9. Run `make evaluate CANDIDATE=<candidate-name>`.
 10. Run `make record CANDIDATE=<candidate-name>` and judge success, failure, and improvement from its output.
 11. Record the result in `orchestration-files/agent-learnings.md`. In status input, add exact changed file ranges, outcome, lesson, and a `held`, `not held`, `mixed`, or `inconclusive` prediction assessment with rationale. Do not restate proposal claims. Update the phase or current controlled stage, run `make campaign-status` again, and include both status files in the normal evidence commit and push.
-12. Keep a candidate that meets the active-base criteria. Otherwise restore the previous candidate with a safe, non-force operation on the campaign branch. Keep a mixed seeding-efficiency candidate when a follow-up explicitly targets recovery of its seeding time, but do not present it as an overall improvement.
-13. Use the simplification skill to curate `orchestration-files/agent-learnings.md` when it reaches 250 lines.
-14. Never allow `orchestration-files/agent-learnings.md` to exceed 500 lines.
-15. After all 20 fixed-campaign candidates, or after all persisted continuous finalization deficits, restore the canonical Genesis implementation with a safe revert commit. Keep every candidate implementation commit reachable.
+12. Keep a candidate that meets the active-base criteria. Otherwise restore the previous candidate with a safe, non-force operation on the campaign branch. Keep a mixed seeding-efficiency candidate, but do not present it as an overall improvement.
+13. After every finished campaign, use the simplification skill to curate `orchestration-files/agent-learnings.md`.
+14. After all persisted continuous finalization deficits, restore the canonical Genesis implementation with a safe revert commit. Keep every candidate implementation commit reachable.
 
 Each candidate name must be unique.
 Do not overwrite generated results.
@@ -150,7 +137,7 @@ Do not overwrite generated results.
 If `make evaluate` fails, run `make record CANDIDATE=<candidate-name>` and classify the result.
 
 - For a dumb implementation error, such as a syntax error, missing import, typo, or obvious local bug, fix it and retry the same candidate once.
-- For a project setup, HEPP02, ACTS environment, dataset, transport, or otherwise uncertain failure, stop and ask the captain to inspect or repair it.
+- For a project setup, HEPP02, ACTS environment, dataset, transport, or otherwise uncertain failure, stop and ask the user to inspect or repair it.
 - For a fundamentally broken idea or repeated failed fixes, record the lesson and return to the last accepted candidate.
 
 Expected unmasked floating-point exceptions are nonfatal only when every requested event completed.
@@ -162,10 +149,6 @@ Do not inspect or edit generated summaries and logs directly during the ordinary
 Use `make record` for run output and inspect named historical commits directly when they inform a new candidate.
 Use `make report` for interactive comparison when the captain requests a broader visual review.
 
-A successful Genesis development run writes a unique timestamped record under
-`records/Development/` and retains any older records. The legacy canonical
-`records/Development/Genesis/summary.json` location remains readable for
-compatibility. Each v3 summary records protocol identity, the exact seeding-only stage matrix, all three uninstrumented timing repetitions and their aggregate, and separate Peak RSS evidence. A failed or incomplete Genesis run must not be used as a baseline. Successful non-Genesis candidates are retained by the evaluator. Comparison consumers accept only `acts-seeding-v3`. Read-only record lookup and legacy campaign views continue to accept v2 evidence.
 Do not commit failure logs, temporary output, or runtime state.
 
 ### Live campaign status
@@ -184,25 +167,33 @@ Run `make campaign-status`, commit the input and snapshot with the corresponding
 
 ## GitHub campaign review
 
-Make each campaign reviewable on GitHub through one draft pull request.
-After creating the campaign branch, push it and open one draft PR before the first mutation experiment.
-After every candidate attempt, push the branch so the draft PR shows the new implementation and its evidence.
-Keep every candidate implementation commit reachable on the campaign branch, including candidates that are later rejected; restore a rejected candidate with a safe revert commit instead of resetting away its history.
+Use one draft PR for the whole campaign:
 
-After `make record`, commit the candidate's `summary.json`, the refreshed campaign status, and any concise `orchestration-files/agent-learnings.md` lesson in a separate evidence commit.
-Commit successful and failed summaries when they exist, but never commit failure logs, temporary output, or runtime state.
-The canonical Genesis summary replacement is evidence and should be included in the campaign branch when it changes.
+- Push the campaign branch and open the draft before the first mutation experiment.
+- Push after every candidate attempt so the PR shows its implementation and evidence.
+- Keep every candidate implementation commit reachable. Restore rejected candidates with safe revert commits, never by resetting history.
 
-Create or update the draft PR with `gh-axi` and keep its body current with the campaign tag, candidate name, hypothesis, changed files, development result, and whether the candidate is the active base.
-Use PR comments for additional candidate results when rewriting the body would hide history.
-The campaign worker never merges its own PR. For future continuous archive PRs only, firstmate may use the captain's standing authority after every gate below passes. This authority excludes implementation and platform PRs, Evaluation, red CI, security-sensitive findings, destructive choices, and unresolved decisions.
+### Evidence and PR updates
 
-The `main` branch must always contain the Genesis implementation.
-Before a campaign archive PR is merged, revert candidate implementation changes in a final commit while keeping the candidate commits, summaries, lessons, and report in the PR history.
-Merge archive PRs with a regular merge commit, never squash, so each candidate implementation commit remains reachable to future campaigns.
-Do not delete a campaign branch until its archive PR has merged and its records are present on `main`.
+After `make record`, make a separate evidence commit with the candidate `summary.json`, refreshed campaign status, and any concise `orchestration-files/agent-learnings.md` lesson. Commit successful and failed summaries, plus a changed canonical Genesis summary. Exclude failure logs, temporary output, and runtime state.
 
-Before firstmate merges a continuous archive, `make campaign-finalize` must have passed and the terminal snapshot must prove a consumed valid request, exact 2:1:1 retained counts, complete implementation/proposal/mechanism/provenance/measured evidence, Development-only protocol use, exact Genesis restoration, and reachable candidate commits. The PR must be cleanly mergeable with green CI. Any unresolved scientific, product, security, destructive, or irreversible decision blocks autonomous merge. The campaign worker prepares the ignored `build/site/` archive report and direct archive PR, then leaves merge execution to firstmate.
+Use `gh-axi` to keep the PR body current with the campaign tag, candidate, hypothesis, changed files, Development result, and active-base decision. Add PR comments when replacing the body would hide earlier results.
+
+### Archive and merge
+
+The campaign worker never merges its own PR. To prepare the archive:
+
+1. Restore `optimization-files/` exactly to Genesis with a final safe revert. The `main` branch must always contain Genesis.
+2. Build the ignored `build/site/` archive report and run `make campaign-finalize`.
+3. Leave the archive PR for firstmate to merge.
+
+For future continuous archive PRs only, firstmate has standing authority to merge when all of these gates pass:
+
+- The terminal snapshot proves a consumed valid request, exact 2:1:1 retained counts, complete implementation/proposal/mechanism/provenance/measured evidence, Development-only protocol use, exact Genesis restoration, and reachable candidate commits.
+- The PR is cleanly mergeable and CI is green.
+- No scientific, product, security, destructive, or irreversible decision remains open.
+
+This authority excludes implementation and platform PRs, Evaluation, red CI, security-sensitive findings, destructive choices, and unresolved decisions. Use a regular merge commit, never squash. Keep the campaign branch until the archive has merged and its records are on `main`.
 
 ## Agent learnings
 
@@ -226,5 +217,4 @@ commit before editing. Do not infer provenance from the current tree after later
 commits moved the lines. Existing entries without this metadata are historical
 and must not be silently reinterpreted.
 
-Keep the file below 500 lines. At 250 lines, invoke the simplification skill to
-merge duplicate lessons, remove stale details, and keep it below the hard limit.
+After every finished campaign, invoke the simplification skill to merge duplicate lessons and remove stale details.
