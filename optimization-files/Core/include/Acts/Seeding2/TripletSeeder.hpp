@@ -31,8 +31,10 @@ class TripletSeeder {
     /// Cache for top doublets associated with middle space points
     DoubletsForMiddleSp topDoublets;
 
-    /// Shared sorted key-index arena for bottom and top doublets.
-    std::vector<DoubletsForMiddleSp::IndexAndCotTheta> sortedDoublets;
+    /// Sorted container of bottom doublet indices with cotangent theta values
+    std::vector<DoubletsForMiddleSp::IndexAndCotTheta> sortedBottoms;
+    /// Sorted container of top doublet indices with cotangent theta values
+    std::vector<DoubletsForMiddleSp::IndexAndCotTheta> sortedTops;
 
     /// Cache for triplet top candidates during seed formation
     TripletTopCandidates tripletTopCandidates;

@@ -90,22 +90,14 @@ void createSeedsFromGroupsImpl(
   // combine doublets to triplets
   if (tripletFinder.config().sortedByCotTheta) {
     cache.bottomDoublets.sortByCotTheta({0, cache.bottomDoublets.size()},
-                                        cache.sortedDoublets);
-    const std::size_t bottomCount = cache.sortedDoublets.size();
+                                        cache.sortedBottoms);
     cache.topDoublets.sortByCotTheta({0, cache.topDoublets.size()},
-                                     cache.sortedDoublets, true);
-    const auto sortedBottoms =
-        std::span<const DoubletsForMiddleSp::IndexAndCotTheta>(
-            cache.sortedDoublets)
-            .first(bottomCount);
-    const auto sortedTops =
-        std::span<const DoubletsForMiddleSp::IndexAndCotTheta>(
-            cache.sortedDoublets)
-            .subspan(bottomCount);
+                                     cache.sortedTops);
 
     createAndFilterTriplets(cache, tripletFinder, filter, spacePoints,
-                            cache.bottomDoublets.subset(sortedBottoms), middleSp,
-                            cache.topDoublets.subset(sortedTops));
+                            cache.bottomDoublets.subset(cache.sortedBottoms),
+                            middleSp,
+                            cache.topDoublets.subset(cache.sortedTops));
   } else {
     createAndFilterTriplets(cache, tripletFinder, filter, spacePoints,
                             cache.bottomDoublets.range(), middleSp,

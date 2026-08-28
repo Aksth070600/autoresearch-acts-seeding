@@ -92,19 +92,15 @@ class DoubletsForMiddleSp {
   /// @param range Index range to sort within
   /// @param indexAndCotTheta Output vector containing sorted index and cotTheta pairs
   void sortByCotTheta(const IndexRange& range,
-                      std::vector<IndexAndCotTheta>& indexAndCotTheta,
-                      bool append = false) const {
-    if (!append) {
-      indexAndCotTheta.clear();
-    }
-    const std::size_t begin = indexAndCotTheta.size();
-    indexAndCotTheta.reserve(begin + range.second - range.first);
+                      std::vector<IndexAndCotTheta>& indexAndCotTheta) const {
+    indexAndCotTheta.clear();
+    indexAndCotTheta.reserve(range.second - range.first);
     for (Index i = range.first; i < range.second; ++i) {
       indexAndCotTheta.emplace_back(i, m_cotTheta[i]);
     }
-    std::ranges::sort(
-        std::span(indexAndCotTheta).subspan(begin), {},
-        [](const IndexAndCotTheta& item) { return item.cotTheta; });
+    std::ranges::sort(indexAndCotTheta, {}, [](const IndexAndCotTheta& item) {
+      return item.cotTheta;
+    });
   }
 
   /// Proxy accessor for a single doublet entry.
