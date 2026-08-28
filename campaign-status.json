@@ -252,13 +252,31 @@
       "state": "completed",
       "timed_ambiguity_particle_efficiency": 0.972769,
       "timed_seeding_time_per_event_ms": 290.85
+    },
+    {
+      "candidate": "SeederCrossGroupTopWindowCarry",
+      "classification": "structural",
+      "duration_seconds": 704.478,
+      "finished_at": "2026-08-28T14:31:58.335762Z",
+      "implementation_commit": "8911e4896c20e38b9e458600faab6af4b6785767",
+      "links": {
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/8911e4896c20e38b9e458600faab6af4b6785767",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T142013Z-SeederCrossGroupTopWindowCarry/summary.json"
+      },
+      "mechanism_family": "seeder-cross-group-top-window-carry",
+      "outcome": "Passed all controlled Development stages.",
+      "record": "records/Development/20260828T142013Z-SeederCrossGroupTopWindowCarry/summary.json",
+      "started_at": "2026-08-28T14:20:13.858224Z",
+      "state": "completed",
+      "timed_ambiguity_particle_efficiency": 0.655284,
+      "timed_seeding_time_per_event_ms": 261.22
     }
   ],
   "blockers": [],
   "campaign": {
     "branch": "autoresearch-acts-seeding/campaign-v8",
     "name": "ACTS Seeding Development Campaign V8",
-    "phase": "candidate evaluation 13 of 20",
+    "phase": "candidate mechanism selection after 13 of 20",
     "started_at": "2026-08-28T10:50:43Z",
     "targets": {
       "completed_attempts": 20,
@@ -266,14 +284,7 @@
       "structural_attempts": 10
     }
   },
-  "current_attempt": {
-    "candidate": "SeederCrossGroupTopWindowCarry",
-    "classification": "structural",
-    "controlled_stage": "queued Development run",
-    "mechanism_family": "seeder-cross-group-top-window-carry",
-    "started_at": "2026-08-28T14:20:11Z",
-    "state": "queued"
-  },
+  "current_attempt": null,
   "failures": [
     {
       "candidate": "CorePackedXYZRLayout",
@@ -281,20 +292,20 @@
       "record_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Failed/20260828T125743Z-CorePackedXYZRLayout/summary.json"
     }
   ],
-  "generated_at": "2026-08-28T14:20:11.154812Z",
+  "generated_at": "2026-08-28T14:32:15.864273Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/8911e4896c20e38b9e458600faab6af4b6785767",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/57aadb854d99f26a916bc3cebdbb111e0c23cc98",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/campaign-v8",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/29"
   },
   "progress": {
-    "completed_attempts": 12,
-    "elapsed_seconds": 12568.154812,
-    "estimated_remaining_seconds": 6488.953188,
-    "eta_basis": "Median of 12 completed attempts; current attempt elapsed time deducted.",
-    "eta_sample_count": 12,
-    "expected_finish_at": "2026-08-28T16:08:20.108000Z",
-    "median_completed_attempt_duration_seconds": 811.1385,
+    "completed_attempts": 13,
+    "elapsed_seconds": 13292.864273,
+    "estimated_remaining_seconds": 5661.796,
+    "eta_basis": "Median of 13 completed attempts.",
+    "eta_sample_count": 13,
+    "expected_finish_at": "2026-08-28T16:06:37.660273Z",
+    "median_completed_attempt_duration_seconds": 808.828,
     "micro_optimizations": 0,
     "structural_attempts": 13
   },
@@ -310,16 +321,16 @@
       "timed_seeding_time_per_event_ms": 294.61
     },
     "best_seeding": {
-      "candidate": "SeederStreamedBottomGroups",
-      "delta_vs_genesis_ms": -7.399999999999977,
+      "candidate": "SeederCrossGroupTopWindowCarry",
+      "delta_vs_genesis_ms": -37.02999999999997,
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/af0fae5f0de8314a25e2ea28467aa7e0b9fd917b",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T140512Z-SeederStreamedBottomGroups/summary.json"
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/8911e4896c20e38b9e458600faab6af4b6785767",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T142013Z-SeederCrossGroupTopWindowCarry/summary.json"
       },
-      "percentage_vs_genesis": -2.481139983235533,
-      "started_at": "2026-08-28T14:05:12.333928Z",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 290.85
+      "percentage_vs_genesis": -12.415758591785405,
+      "started_at": "2026-08-28T14:20:13.858224Z",
+      "timed_ambiguity_particle_efficiency": 0.655284,
+      "timed_seeding_time_per_event_ms": 261.22
     },
     "latest_genesis": {
       "candidate": "Genesis",
@@ -332,6 +343,16 @@
       "timed_seeding_time_per_event_ms": 298.25
     },
     "pareto_front": [
+      {
+        "candidate": "SeederCrossGroupTopWindowCarry",
+        "links": {
+          "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/8911e4896c20e38b9e458600faab6af4b6785767",
+          "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T142013Z-SeederCrossGroupTopWindowCarry/summary.json"
+        },
+        "started_at": "2026-08-28T14:20:13.858224Z",
+        "timed_ambiguity_particle_efficiency": 0.655284,
+        "timed_seeding_time_per_event_ms": 261.22
+      },
       {
         "candidate": "SeederStreamedBottomGroups",
         "links": {
