@@ -3,7 +3,7 @@
   "campaign": {
     "name": "ACTS Seeding Development Campaign V8",
     "branch": "autoresearch-acts-seeding/campaign-v8",
-    "phase": "candidate evaluation 3 of 20",
+    "phase": "candidate mechanism selection after 3 of 20",
     "started_at": "2026-08-28T10:50:43Z",
     "targets": {
       "completed_attempts": 20,
@@ -11,14 +11,7 @@
       "micro_optimization_cap": 5
     }
   },
-  "current_attempt": {
-    "candidate": "TripletKinematicsPairLayout",
-    "mechanism_family": "triplet-kinematics-pair-layout",
-    "classification": "structural",
-    "controlled_stage": "queued Development run",
-    "state": "queued",
-    "started_at": "2026-08-28T11:40:28Z"
-  },
+  "current_attempt": null,
   "attempt_metadata": [
     {
       "candidate": "CorePackedVarianceLayout",
