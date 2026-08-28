@@ -15,8 +15,6 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 
-#include <boost/container/small_vector.hpp>
-
 #include <numbers>
 #include <vector>
 
@@ -32,7 +30,7 @@ class CylindricalSpacePointGrid2 {
   /// Space point index type used in the grid.
   using SpacePointIndex = std::uint32_t;
   /// Type alias for bin container holding space point indices
-  using BinType = boost::container::small_vector<SpacePointIndex, 16>;
+  using BinType = std::vector<SpacePointIndex>;
   /// Type alias for phi axis with equidistant binning and closed boundaries
   using PhiAxisType = Axis<AxisType::Equidistant, AxisBoundaryType::Closed>;
   /// Type alias for z axis with variable binning and open boundaries
