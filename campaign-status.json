@@ -564,7 +564,7 @@
   "campaign": {
     "branch": "autoresearch-acts-seeding/campaign-v7",
     "name": "ACTS Seeding Development Campaign V7",
-    "phase": "Development attempt 29 of 61 recorded",
+    "phase": "Development attempt 30 of 61",
     "started_at": "2026-08-27T18:23:05Z",
     "targets": {
       "completed_attempts": 61,
@@ -572,7 +572,14 @@
       "structural_attempts": 30
     }
   },
-  "current_attempt": null,
+  "current_attempt": {
+    "candidate": "SeederInterleavedDoubletFlow",
+    "classification": "structural",
+    "controlled_stage": "queued Development run with ACTS_BUILD_JOBS=8",
+    "mechanism_family": "seeder-interleaved-doublet-flow",
+    "started_at": "2026-08-28T01:34:10.791958Z",
+    "state": "queued"
+  },
   "failures": [
     {
       "candidate": "TripletSlopePrefilterStaging",
@@ -580,22 +587,22 @@
       "record_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Errors/20260827T232540Z-TripletSlopePrefilterStaging/summary.json"
     }
   ],
-  "generated_at": "2026-08-28T01:33:18.559927Z",
+  "generated_at": "2026-08-28T01:34:10.836000Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/6ca867bfdf594711be8204de5a8b3f86f7124511",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/4b36925c3170b6a4237f40529b11acd02dc23442",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/campaign-v7",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/28"
   },
   "progress": {
     "completed_attempts": 29,
-    "elapsed_seconds": 25813.559927,
-    "estimated_remaining_seconds": 25785.888,
-    "eta_basis": "Median of 29 completed attempts.",
+    "elapsed_seconds": 25865.836,
+    "estimated_remaining_seconds": 25785.843957999998,
+    "eta_basis": "Median of 29 completed attempts; current attempt elapsed time deducted.",
     "eta_sample_count": 29,
-    "expected_finish_at": "2026-08-28T08:43:04.447927Z",
+    "expected_finish_at": "2026-08-28T08:43:56.679958Z",
     "median_completed_attempt_duration_seconds": 805.809,
     "micro_optimizations": 4,
-    "structural_attempts": 25
+    "structural_attempts": 26
   },
   "promising_results": {
     "best_ambiguity_efficiency": {
