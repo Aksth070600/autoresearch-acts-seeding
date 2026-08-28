@@ -421,7 +421,14 @@ def main() -> int:
     # A freshly reset campaign has no summaries and should still produce a
     # reviewable placeholder. If summaries exist, retain strict metric checks
     # so malformed or incomplete Genesis records do not pass unnoticed.
-    summary_paths = list(records_root.glob(f"{args.dataset.title()}/**/summary.json"))
+    summary_paths = []
+    for path in records_root.glob(f"{args.dataset.title()}/**/summary.json"):
+        try:
+            summary = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if is_compatible_summary(summary):
+            summary_paths.append(path)
     if rows or summary_paths:
         if args.x_metric not in report["metric_keys"]:
             raise SystemExit(f"x metric not found: {args.x_metric}")

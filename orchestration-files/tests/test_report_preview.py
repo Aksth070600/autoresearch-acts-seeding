@@ -575,7 +575,7 @@ console.log(JSON.stringify({
         report = build_report([row, second], "Genesis", "development")
         self.assertEqual(report["rows"][0]["commit_url"], REPOSITORY_URL)
 
-    def test_existing_summary_keeps_strict_metric_validation(self) -> None:
+    def test_v2_summary_is_readable_but_not_compared_under_v3_report(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             records = root / "records" / "Development" / "Genesis"
@@ -611,9 +611,26 @@ console.log(JSON.stringify({
             self.assertEqual(load_records(records.parents[1], "development"), [])
             result = self.run_report(records.parents[1], output)
 
-            self.assertNotEqual(result.returncode, 0)
-            self.assertIn("x metric not found", result.stderr)
-            self.assertFalse((output / "index.html").exists())
+            self.assertEqual(result.returncode, 0, result.stderr)
+            index = (output / "index.html").read_text(encoding="utf-8")
+            self.assertIn("No protocol-compatible summaries yet", index)
+            self.assertIn('"rows":[]', index)
+
+    def test_malformed_v3_summary_keeps_strict_metric_validation(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            records = root / "records" / "Development" / "Genesis"
+            records.mkdir(parents=True)
+            summary = self.summary("Genesis", "Development", 12.0, 0.9)
+            summary["stages"] = []
+            (records / "summary.json").write_text(
+                json.dumps(summary), encoding="utf-8"
+            )
+
+            result = self.run_report(records.parents[1], root / "site")
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("x metric not found", result.stderr)
 
 
 if __name__ == "__main__":
