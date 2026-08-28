@@ -185,14 +185,14 @@ class Impl final : public TripletSeedFinder {
       const SpacePointIndex2 spT = topDoublet.spacePointIndex();
       const float cotThetaT = topDoublet.cotTheta();
 
-      // use geometric average
-      const float cotThetaAvg2 = cotThetaB * cotThetaT;
-
-      // add errors of spB-spM and spM-spT pairs and add the correlation term
-      // for errors on spM
-      const float error2 = topDoublet.er() + erB +
-                           2 * (cotThetaAvg2 * varianceRM + varianceZM) *
-                               iDeltaRB * topDoublet.iDeltaR();
+      // Add errors of spB-spM and spM-spT pairs and the middle-point
+      // correlation term. The top cotTheta/iDeltaR product is materialized
+      // during doublet production because every bottom pairing reuses it.
+      const float error2 =
+          topDoublet.er() + erB +
+          2 * iDeltaRB *
+              (cotThetaB * varianceRM * topDoublet.cotThetaIDeltaR() +
+               varianceZM * topDoublet.iDeltaR());
 
       const float deltaCotTheta = cotThetaB - cotThetaT;
       const float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
