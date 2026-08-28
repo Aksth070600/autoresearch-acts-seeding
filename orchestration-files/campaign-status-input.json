@@ -3,7 +3,7 @@
   "campaign": {
     "name": "ACTS Seeding continuous aug29",
     "branch": "autoresearch-acts-seeding/aug29",
-    "phase": "continuous Development",
+    "phase": "blocked: authenticated stop check unavailable",
     "started_at": "2026-08-28T23:32:45Z",
     "mode": "continuous",
     "campaign_id": "acts-seeding-aug29-20260829",
@@ -17,7 +17,9 @@
   },
   "current_attempt": null,
   "attempt_metadata": [],
-  "blockers": [],
+  "blockers": [
+    "GITHUB_TOKEN is unavailable, so the required authenticated campaign-check-stop cannot run before the first ordinary candidate."
+  ],
   "pull_request_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/36",
   "control": {
     "state": "open",
