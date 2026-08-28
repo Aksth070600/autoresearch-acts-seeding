@@ -370,11 +370,11 @@ void BroadTripletSeedFilter::filterTripletsMiddleFixed(
               getBestSeedQuality(state().bestSeedQualityMap, triplet[2])) {
         continue;
       }
-    }
 
-    // set quality of seed components
-    setBestSeedQuality(state().bestSeedQualityMap, triplet[0], triplet[1],
-                       triplet[2], bestSeedQuality);
+      // Seed quality state is only consumed when confirmation is enabled.
+      setBestSeedQuality(state().bestSeedQualityMap, triplet[0], triplet[1],
+                         triplet[2], bestSeedQuality);
+    }
 
     ACTS_VERBOSE("Adding seed: original indices=["
                  << triplet[0] << ", " << triplet[1] << ", " << triplet[2]
