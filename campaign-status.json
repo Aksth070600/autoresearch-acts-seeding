@@ -342,13 +342,31 @@
       "state": "completed",
       "timed_ambiguity_particle_efficiency": 0.972769,
       "timed_seeding_time_per_event_ms": 291.0
+    },
+    {
+      "candidate": "GridRadixShortBinBranchHint",
+      "classification": "micro",
+      "duration_seconds": 808.446,
+      "finished_at": "2026-08-28T15:48:00.174421Z",
+      "implementation_commit": "167863816cc2be13633591a7a13bcca9cb08823b",
+      "links": {
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/167863816cc2be13633591a7a13bcca9cb08823b",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T153431Z-GridRadixShortBinBranchHint/summary.json"
+      },
+      "mechanism_family": "grid-radix-short-bin-branch-hint",
+      "outcome": "Passed all controlled Development stages.",
+      "record": "records/Development/20260828T153431Z-GridRadixShortBinBranchHint/summary.json",
+      "started_at": "2026-08-28T15:34:31.728421Z",
+      "state": "completed",
+      "timed_ambiguity_particle_efficiency": 0.972769,
+      "timed_seeding_time_per_event_ms": 289.84
     }
   ],
   "blockers": [],
   "campaign": {
     "branch": "autoresearch-acts-seeding/campaign-v8",
     "name": "ACTS Seeding Development Campaign V8",
-    "phase": "candidate evaluation 18 of 20",
+    "phase": "candidate mechanism selection after 18 of 20",
     "started_at": "2026-08-28T10:50:43Z",
     "targets": {
       "completed_attempts": 20,
@@ -356,14 +374,7 @@
       "structural_attempts": 10
     }
   },
-  "current_attempt": {
-    "candidate": "GridRadixShortBinBranchHint",
-    "classification": "micro",
-    "controlled_stage": "queued Development run",
-    "mechanism_family": "grid-radix-short-bin-branch-hint",
-    "started_at": "2026-08-28T15:34:28Z",
-    "state": "queued"
-  },
+  "current_attempt": null,
   "failures": [
     {
       "candidate": "CorePackedXYZRLayout",
@@ -371,20 +382,20 @@
       "record_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Failed/20260828T125743Z-CorePackedXYZRLayout/summary.json"
     }
   ],
-  "generated_at": "2026-08-28T15:34:28.754257Z",
+  "generated_at": "2026-08-28T15:48:11.156172Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/167863816cc2be13633591a7a13bcca9cb08823b",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/257bbe06a8f8d8b706738d345f12842192816fec",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/campaign-v8",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/29"
   },
   "progress": {
-    "completed_attempts": 17,
-    "elapsed_seconds": 17025.754257,
-    "estimated_remaining_seconds": 2425.729743,
-    "eta_basis": "Median of 17 completed attempts; current attempt elapsed time deducted.",
-    "eta_sample_count": 17,
-    "expected_finish_at": "2026-08-28T16:14:54.484000Z",
-    "median_completed_attempt_duration_seconds": 808.828,
+    "completed_attempts": 18,
+    "elapsed_seconds": 17848.156172,
+    "estimated_remaining_seconds": 1617.274,
+    "eta_basis": "Median of 18 completed attempts.",
+    "eta_sample_count": 18,
+    "expected_finish_at": "2026-08-28T16:15:08.430172Z",
+    "median_completed_attempt_duration_seconds": 808.637,
     "micro_optimizations": 1,
     "structural_attempts": 17
   },
@@ -433,14 +444,14 @@
         "timed_seeding_time_per_event_ms": 261.22
       },
       {
-        "candidate": "DoubletNaturalOrderFastPath",
+        "candidate": "GridRadixShortBinBranchHint",
         "links": {
-          "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/9c857a5991e3212a1aa4509891ddbc8c4d001121",
-          "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T150445Z-DoubletNaturalOrderFastPath/summary.json"
+          "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/167863816cc2be13633591a7a13bcca9cb08823b",
+          "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T153431Z-GridRadixShortBinBranchHint/summary.json"
         },
-        "started_at": "2026-08-28T15:04:45.697032Z",
+        "started_at": "2026-08-28T15:34:31.728421Z",
         "timed_ambiguity_particle_efficiency": 0.972769,
-        "timed_seeding_time_per_event_ms": 289.87
+        "timed_seeding_time_per_event_ms": 289.84
       }
     ]
   },
