@@ -20,7 +20,15 @@ from protocol import (
     CAMPAIGN_COMPOSITION,
     PROTOCOL_ID,
     PROTOCOL_METADATA,
+    SOURCE_GROUNDED_MAJOR_MINIMUM,
     is_compatible_summary,
+)
+from proposal import (
+    ProposalError,
+    has_primary_source_grounding,
+    normalize_proposal,
+    proposal_from_summary,
+    proposal_hash as calculate_proposal_hash,
 )
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -54,6 +62,7 @@ NEW_CLASSIFICATIONS = {"major", "minor", "combination"}
 LEGACY_CLASSIFICATIONS = {"structural", "micro"}
 CURRENT_STATES = {"queued", "running", "recording", "blocked"}
 CANDIDATE_OUTCOMES = {"keep", "discard", "crash"}
+PREDICTION_ASSESSMENTS = {"held", "not held", "mixed", "inconclusive"}
 
 
 class StatusError(ValueError):
@@ -175,28 +184,18 @@ def validate_campaign_targets(value: Any, field: str) -> dict[str, int]:
 
 
 def validate_evidence(value: Any, field: str) -> dict[str, Any]:
+    """Validate post-run observations. Pre-run scientific claims live in proposal."""
+
     if not isinstance(value, dict):
         raise StatusError(f"{field} must be an object")
     fields = {
-        "implementation_commit",
-        "changed_symbols",
         "files_changed",
-        "hot_path_rationale",
-        "novelty_rationale",
         "outcome",
         "lesson",
+        "prediction_assessment",
+        "prediction_assessment_rationale",
     }
     require_keys(value, field, fields, fields)
-    commit = value["implementation_commit"]
-    if not isinstance(commit, str) or not FULL_COMMIT_SHA.fullmatch(commit.lower()):
-        raise StatusError(f"{field}.implementation_commit must be a full Git SHA")
-    changed_symbols = value["changed_symbols"]
-    if not isinstance(changed_symbols, list) or not changed_symbols:
-        raise StatusError(f"{field}.changed_symbols must be a non-empty array")
-    changed_symbols = [
-        validate_label(item, f"{field}.changed_symbols[{index}]", maximum=160)
-        for index, item in enumerate(changed_symbols)
-    ]
     files_changed = value["files_changed"]
     if not isinstance(files_changed, list) or not files_changed:
         raise StatusError(f"{field}.files_changed must be a non-empty array")
@@ -211,18 +210,18 @@ def validate_evidence(value: Any, field: str) -> dict[str, Any]:
         normalized_files.append(item)
     if value["outcome"] not in CANDIDATE_OUTCOMES:
         raise StatusError(f"{field}.outcome is invalid")
+    if value["prediction_assessment"] not in PREDICTION_ASSESSMENTS:
+        raise StatusError(f"{field}.prediction_assessment is invalid")
     return {
-        "implementation_commit": commit.lower(),
-        "changed_symbols": changed_symbols,
         "files_changed": normalized_files,
-        "hot_path_rationale": validate_label(
-            value["hot_path_rationale"], f"{field}.hot_path_rationale", maximum=500
-        ),
-        "novelty_rationale": validate_label(
-            value["novelty_rationale"], f"{field}.novelty_rationale", maximum=500
-        ),
         "outcome": value["outcome"],
         "lesson": validate_label(value["lesson"], f"{field}.lesson", maximum=500),
+        "prediction_assessment": value["prediction_assessment"],
+        "prediction_assessment_rationale": validate_label(
+            value["prediction_assessment_rationale"],
+            f"{field}.prediction_assessment_rationale",
+            maximum=700,
+        ),
     }
 
 
@@ -274,7 +273,7 @@ def validate_combination_provenance(
                 raise StatusError(f"{source_field}.candidate has no completed evidence")
             if mechanism_key != earlier["mechanism_key"]:
                 raise StatusError(f"{source_field}.mechanism_key does not match its source")
-            if commit.lower() != evidence["implementation_commit"]:
+            if commit.lower() != earlier["proposal"]["implementation_commit"]:
                 raise StatusError(
                     f"{source_field}.implementation_commit does not match its source"
                 )
@@ -303,6 +302,36 @@ def validate_combination_provenance(
     }
 
 
+def validate_derives_from(
+    value: Any,
+    field: str,
+    earlier_metadata: dict[str, dict[str, Any]],
+) -> dict[str, str]:
+    if not isinstance(value, dict):
+        raise StatusError(f"{field} must be an object")
+    fields = {"candidate", "mechanism_key", "implementation_commit"}
+    require_keys(value, field, fields, fields)
+    candidate = validate_label(value["candidate"], f"{field}.candidate", maximum=80)
+    earlier = earlier_metadata.get(candidate)
+    if earlier is None:
+        raise StatusError(f"{field}.candidate must name an earlier candidate")
+    if not isinstance(earlier.get("evidence"), dict):
+        raise StatusError(f"{field}.candidate has no completed evidence")
+    mechanism_key = validate_label(value["mechanism_key"], f"{field}.mechanism_key")
+    if mechanism_key != earlier["mechanism_key"]:
+        raise StatusError(f"{field}.mechanism_key does not match its source")
+    commit = value["implementation_commit"]
+    if not isinstance(commit, str) or not FULL_COMMIT_SHA.fullmatch(commit.lower()):
+        raise StatusError(f"{field}.implementation_commit must be a full Git SHA")
+    if commit.lower() != earlier["proposal"]["implementation_commit"]:
+        raise StatusError(f"{field}.implementation_commit does not match its source")
+    return {
+        "candidate": candidate,
+        "mechanism_key": mechanism_key,
+        "implementation_commit": commit.lower(),
+    }
+
+
 def validate_attempt_metadata(
     value: Any,
     field: str,
@@ -328,8 +357,14 @@ def validate_attempt_metadata(
             "classification": classification,
         }
 
-    required = {"candidate", "mechanism_key", "mechanism_family", "classification"}
-    allowed = required | {"evidence", "combination_provenance"}
+    required = {
+        "candidate",
+        "mechanism_key",
+        "mechanism_family",
+        "classification",
+        "proposal",
+    }
+    allowed = required | {"evidence", "combination_provenance", "derives_from"}
     require_keys(value, field, allowed, required)
     candidate = validate_label(value["candidate"], f"{field}.candidate", maximum=80)
     if not CANDIDATE_NAME.fullmatch(candidate):
@@ -337,6 +372,12 @@ def validate_attempt_metadata(
     classification = value["classification"]
     if classification not in NEW_CLASSIFICATIONS:
         raise StatusError(f"{field}.classification must be major, minor, or combination")
+    try:
+        proposal = normalize_proposal(value["proposal"], f"{field}.proposal")
+    except ProposalError as error:
+        raise StatusError(str(error)) from error
+    if proposal["candidate"] != candidate:
+        raise StatusError(f"{field}.proposal candidate does not match candidate metadata")
     normalized: dict[str, Any] = {
         "candidate": candidate,
         "mechanism_key": validate_label(value["mechanism_key"], f"{field}.mechanism_key"),
@@ -344,7 +385,14 @@ def validate_attempt_metadata(
             value["mechanism_family"], f"{field}.mechanism_family"
         ),
         "classification": classification,
+        "proposal": proposal,
     }
+    if "derives_from" in value:
+        normalized["derives_from"] = validate_derives_from(
+            value["derives_from"], f"{field}.derives_from", earlier_metadata
+        )
+        if normalized["derives_from"]["mechanism_key"] == normalized["mechanism_key"]:
+            raise StatusError(f"{field}.derives_from requires a new exact mechanism_key")
     if "evidence" in value:
         normalized["evidence"] = validate_evidence(value["evidence"], f"{field}.evidence")
     if classification == "combination":
@@ -355,8 +403,14 @@ def validate_attempt_metadata(
             f"{field}.combination_provenance",
             earlier_metadata,
         )
+        if proposal["combination_provenance"] != normalized["combination_provenance"]:
+            raise StatusError(
+                f"{field}.proposal combination provenance does not match candidate metadata"
+            )
     elif "combination_provenance" in value:
         raise StatusError(f"{field}.combination_provenance is only valid for combinations")
+    elif proposal["combination_provenance"] is not None:
+        raise StatusError(f"{field}.proposal combination provenance is only valid for combinations")
     return normalized
 
 
@@ -400,6 +454,7 @@ def validate_live_state(value: Any) -> dict[str, Any]:
         raise StatusError("input.attempt_metadata must be an array")
     metadata: list[dict[str, Any]] = []
     earlier_metadata: dict[str, dict[str, Any]] = {}
+    mechanism_keys: set[str] = set()
     for index, item in enumerate(metadata_input):
         normalized_item = validate_attempt_metadata(
             item,
@@ -412,6 +467,13 @@ def validate_live_state(value: Any) -> dict[str, Any]:
             raise StatusError("input.attempt_metadata candidate names must be unique")
         if candidate == "Genesis":
             raise StatusError("Genesis metadata is derived and must not be listed")
+        if policy_format == "candidate-composition":
+            mechanism_key = normalized_item["mechanism_key"]
+            if mechanism_key in mechanism_keys:
+                raise StatusError(
+                    "input.attempt_metadata mechanism_key values must be unique"
+                )
+            mechanism_keys.add(mechanism_key)
         metadata.append(normalized_item)
         earlier_metadata[candidate] = normalized_item
     for index in range(3, len(metadata)):
@@ -420,6 +482,26 @@ def validate_live_state(value: Any) -> dict[str, Any]:
             raise StatusError(
                 "input.attempt_metadata exceeds three consecutive candidates from one mechanism family"
             )
+
+    if (
+        policy_format == "candidate-composition"
+        and normalized_campaign["targets"] == DEFAULT_CAMPAIGN_TARGETS
+    ):
+        major_proposals = [
+            item["proposal"]
+            for item in metadata
+            if item["classification"] == "major"
+        ]
+        if len(major_proposals) >= CAMPAIGN_COMPOSITION["major_candidates"]:
+            first_ten = major_proposals[: CAMPAIGN_COMPOSITION["major_candidates"]]
+            if (
+                sum(has_primary_source_grounding(proposal) for proposal in first_ten)
+                < SOURCE_GROUNDED_MAJOR_MINIMUM
+            ):
+                raise StatusError(
+                    "a standard campaign requires at least three of ten major proposals "
+                    "grounded in directly inspected permanent primary sources"
+                )
 
     current_input = value["current_attempt"]
     current: dict[str, Any] | None = None
@@ -657,6 +739,11 @@ def load_attempts(
             else "Controlled Development attempt did not pass."
         )
         implementation_commit = resolve_implementation_commit(summary, repository_root)
+        measured_proposal = None
+        try:
+            measured_proposal = proposal_from_summary(summary)
+        except ProposalError as error:
+            raise StatusError(f"{path}: {error}") from error
         attempt = {
             "candidate": candidate,
             "mechanism_family": mechanism_family,
@@ -686,25 +773,40 @@ def load_attempts(
             evidence = item.get("evidence")
             if not isinstance(evidence, dict):
                 raise StatusError(f"{path}: candidate metadata has no completed evidence")
-            if evidence["implementation_commit"] != implementation_commit:
+            if measured_proposal is None:
+                raise StatusError(f"{path}: new-format candidate has no measured proposal copy")
+            if measured_proposal != item["proposal"]:
                 raise StatusError(
-                    f"{path}: evidence implementation commit does not match the record"
+                    f"{path}: measured proposal copy does not match pre-run metadata"
+                )
+            if measured_proposal["implementation_commit"] != implementation_commit:
+                raise StatusError(
+                    f"{path}: proposal implementation commit does not match the record"
                 )
             attempt.update(
                 {
                     "mechanism_key": item["mechanism_key"],
-                    "changed_symbols": list(evidence["changed_symbols"]),
+                    "proposal": measured_proposal,
+                    "proposal_hash": summary["proposal_binding"]["proposal_hash"],
+                    "changed_symbols": list(measured_proposal["changed_symbols"]),
                     "files_changed": list(evidence["files_changed"]),
-                    "hot_path_rationale": evidence["hot_path_rationale"],
-                    "novelty_rationale": evidence["novelty_rationale"],
+                    "hot_path_rationale": measured_proposal["expected_hot_path"],
+                    "novelty_rationale": measured_proposal["novelty_reason"],
                     "outcome": evidence["outcome"],
                     "lesson": evidence["lesson"],
+                    "prediction_assessment": evidence["prediction_assessment"],
+                    "prediction_assessment_rationale": evidence[
+                        "prediction_assessment_rationale"
+                    ],
                     "run_result": (
                         "Passed all controlled Development stages."
                         if passed
                         else failure_message
                     ),
-                    "combination_provenance": item.get("combination_provenance"),
+                    "combination_provenance": measured_proposal[
+                        "combination_provenance"
+                    ],
+                    "derives_from": item.get("derives_from"),
                 }
             )
         attempts.append(attempt)
@@ -1175,13 +1277,11 @@ def validate_status(value: Any) -> None:
                 raise StatusError(f"attempts[{index}].{objective} is invalid")
         if policy_format == "candidate-composition" and classification != "baseline":
             evidence_fields = {
-                "implementation_commit",
-                "changed_symbols",
                 "files_changed",
-                "hot_path_rationale",
-                "novelty_rationale",
                 "outcome",
                 "lesson",
+                "prediction_assessment",
+                "prediction_assessment_rationale",
             }
             if not evidence_fields.issubset(attempt):
                 raise StatusError(f"attempts[{index}] is missing candidate evidence")
@@ -1189,8 +1289,29 @@ def validate_status(value: Any) -> None:
                 {name: attempt[name] for name in evidence_fields},
                 f"attempts[{index}]",
             )
+            try:
+                proposal = normalize_proposal(
+                    attempt.get("proposal"), f"attempts[{index}].proposal"
+                )
+            except ProposalError as error:
+                raise StatusError(str(error)) from error
+            if proposal["candidate"] != attempt.get("candidate"):
+                raise StatusError(f"attempts[{index}].proposal candidate is invalid")
+            if proposal["implementation_commit"] != attempt.get("implementation_commit"):
+                raise StatusError(f"attempts[{index}].proposal commit is invalid")
+            proposal_hash = attempt.get("proposal_hash")
+            if (
+                not isinstance(proposal_hash, str)
+                or not re.fullmatch(r"[0-9a-f]{64}", proposal_hash)
+                or proposal_hash
+                != calculate_proposal_hash(proposal, attempt["implementation_commit"])
+            ):
+                raise StatusError(f"attempts[{index}].proposal_hash is invalid")
             provenance = attempt.get("combination_provenance")
-            if (classification == "combination") != (provenance is not None):
+            if (
+                (classification == "combination") != (provenance is not None)
+                or provenance != proposal["combination_provenance"]
+            ):
                 raise StatusError(f"attempts[{index}].combination_provenance is invalid")
             if provenance is not None:
                 validate_combination_provenance(

@@ -37,7 +37,7 @@ The experiment agent must use protocol `acts-seeding-v2` without overrides:
 - One ACTS thread, seed 42, and pileup 200.
 - Experiment candidates use the 10-event development workload only. Evaluation workloads are captain-controlled and must not be run by experiment agents.
 - Clean full-chain stages may run once. Timed full-chain stages run three repetitions;
-  compare their median and retain each repetition for auditability.
+  compare their median and retain each repetition, range, and unscaled median absolute deviation for auditability.
 - Accept expected unmasked FPEs only when every requested event completed.
 - Keep every ACTS build at exactly `ACTS_BUILD_JOBS=8`. Do not raise the build job cap.
 
@@ -47,6 +47,8 @@ as a Pareto tradeoff. Full-chain and CKF timing are diagnostics unless the
 candidate actually changes those implementation areas. All other metrics are
 diagnostics only and must not determine eligibility, Pareto objectives, or
 recommendation ranking.
+
+Captain-selected Evaluation reports classify seeding-speed evidence as `confirmed`, `directional`, or `inconclusive`. The predeclared practical margin is the maximum Genesis repetition range or unscaled median absolute deviation. A positive speed difference must exceed that margin and comparable candidate/Genesis dispersion to be confirmed. This is reporting and captain selection evidence only. It does not authorize Evaluation, change Development eligibility, or change either primary objective.
 
 ## Experiment surface
 
@@ -110,13 +112,11 @@ Do not pause after every candidate to ask whether to continue. A standard campai
 
 Combination candidates do not count as major or minor. The category targets must sum to the completed-candidate target. No more than 3 consecutive candidates may come from one `mechanism_family`. Do not stop after one candidate or a routine progress update. Change mechanism families before exceeding the streak limit.
 
-A renamed or mechanically equivalent cache, logging change, STL spelling, `reserve`, or branch variant is not a new major mechanism. Every candidate must be novel. Before each candidate run, state these fields in the proposal:
+A renamed or mechanically equivalent cache, logging change, STL spelling, `reserve`, or branch variant is not a new major mechanism. Every candidate must be novel. Before each candidate run, commit one proposal in the candidate's campaign metadata. Follow the authoritative shape in `orchestration-files/CAMPAIGN_STATUS.md`. It includes the candidate and implementation commit, hypothesis and falsifier, predicted direction for both primary objectives, `expected_hot_path`, `changed_symbols`, exact intended files, `novelty_reason`, typed source references, and nullable combination provenance.
 
-- `mechanism_key`: a stable key for the exact mechanism.
-- `mechanism_family`: the family used for the three-consecutive-candidate limit.
-- `changed_symbols`: the functions, classes, data members, or other symbols changed.
-- `expected_hot_path`: the hot path expected to change and the direction of change.
-- `novelty_reason`: why the mechanism is not a semantic duplicate of earlier work.
+Each `mechanism_key` must be globally unique among non-Genesis candidates, regardless of candidate name or category, and `novelty_reason` must explain why it is not a semantic duplicate. A genuine refinement may declare `derives_from` lineage to an earlier completed candidate, but it still needs a new exact mechanism key. A standard 10/5/5 campaign must ground at least three of its first ten major proposals in a permanent directly inspected primary source or upstream implementation. Those references record inspected scope and an exact ACTS symbol/hot-path mapping. Local hypotheses do not otherwise require citations.
+
+At evaluator start, the proposal candidate, implementation commit, and intended file set must match the implementation commit. The evaluator hashes deterministic normalized proposal JSON with that commit and copies the exact normalized proposal, hash, and combination provenance into the summary. Genesis is exempt. Do not edit a proposal after its run. Reports and generated status use the measured summary copy, not later handwritten claims.
 
 Before implementing a combination, run `git show <full-source-implementation-commit> -- <file>` for every source. Record at least two distinct source candidate names, source mechanism keys, and full source implementation commits. Also record that each source was directly inspected, why the mechanisms are compatible, and one specific additive or interaction hypothesis. The combination candidate's commit and dashboard link must identify the new combined implementation, not a source commit.
 
@@ -129,10 +129,10 @@ For each attempt:
 5. For a combination, inspect every source commit and write the required provenance and interaction hypothesis before editing.
 6. Modify only the permitted experiment files.
 7. Inspect the diff and commit the candidate before running it.
-8. Add its category, mechanism key, mechanism family, and any combination provenance to `orchestration-files/campaign-status-input.json`. Update `current_attempt`, run `make campaign-status`, commit the validated state, and push it before starting the run.
+8. Add its category, globally unique mechanism key, mechanism family, complete proposal, optional refinement lineage, and any matching combination provenance to `orchestration-files/campaign-status-input.json`. Update `current_attempt`, run `make campaign-status`, commit the validated state, and push it before starting the run.
 9. Run `make evaluate CANDIDATE=<candidate-name>`.
 10. Run `make record CANDIDATE=<candidate-name>` and judge success, failure, and improvement from its output.
-11. Record the full candidate evidence in `orchestration-files/agent-learnings.md` and in the status input metadata: implementation commit, changed symbols, exact files and line ranges, hot-path rationale, novelty rationale, outcome, and lesson. Update the phase or current controlled stage, run `make campaign-status` again, and include both status files in the normal evidence commit and push.
+11. Record the result in `orchestration-files/agent-learnings.md`. In status input, add exact changed file ranges, outcome, lesson, and a `held`, `not held`, `mixed`, or `inconclusive` prediction assessment with rationale. Do not restate proposal claims. Update the phase or current controlled stage, run `make campaign-status` again, and include both status files in the normal evidence commit and push.
 12. Keep a candidate that meets the active-base criteria. Otherwise restore the previous candidate with a safe, non-force operation on the campaign branch. Keep a mixed ambiguity-improvement candidate when a follow-up experiment explicitly targets recovery of its seeding time, but do not present it as an overall improvement.
 13. Use the simplification skill to curate `orchestration-files/agent-learnings.md` when it reaches 250 lines.
 14. Never allow `orchestration-files/agent-learnings.md` to exceed 500 lines.
@@ -170,7 +170,7 @@ Do not commit failure logs, temporary output, or runtime state.
 
 ### Live campaign status
 
-The public dashboard contract and the exact non-scientific input format are in `orchestration-files/CAMPAIGN_STATUS.md`. `orchestration-files/campaign-status.json` is generated. Never hand-edit it or copy scientific values into `orchestration-files/campaign-status-input.json`.
+The public dashboard contract and exact operator input format are in `orchestration-files/CAMPAIGN_STATUS.md`. `orchestration-files/campaign-status.json` is generated. Never hand-edit it or copy measured metrics into `orchestration-files/campaign-status-input.json`; only the pre-run proposal and post-run assessment fields are allowed.
 
 Publish a validated snapshot at these milestones only:
 
@@ -209,13 +209,11 @@ Do not claim a scientific improvement from a run that did not complete all requi
 
 ### Candidate provenance policy
 
-Every new candidate lesson must record the candidate name, category, full implementation commit, stable mechanism key, changed symbols, exact files and line ranges as they existed in that candidate commit, hot-path rationale, novelty rationale, outcome, and lesson. Use this format:
+Every new candidate lesson must identify the candidate, category, implementation commit, mechanism key, exact changed file ranges, outcome, prediction assessment, and lesson. The immutable measured proposal in `summary.json` owns the hypothesis, falsifier, changed-symbol claim, hot-path claim, novelty claim, source references, and combination provenance. Link to that evidence instead of rewriting it. Use this format:
 
 ```text
-- YYYY-MM-DD | candidate: <name> | classification: <major/minor/combination> | implementation_commit: <full-sha> | mechanism_key: <stable-key> | changed_symbols: <symbols> | files_changed: <path>#L<start>-L<end>[, <path>#L<start>-L<end>] | expected_hot_path: <rationale> | novelty_reason: <rationale> | outcome: <keep/discard/crash> | lesson: <one actionable lesson>
+- YYYY-MM-DD | candidate: <name> | classification: <major/minor/combination> | implementation_commit: <full-sha> | mechanism_key: <stable-key> | files_changed: <path>#L<start>-L<end>[, <path>#L<start>-L<end>] | outcome: <keep/discard/crash> | prediction_assessment: <held/not held/mixed/inconclusive> | lesson: <one actionable lesson>
 ```
-
-For a combination lesson, also append `combination_sources` entries containing each source candidate, mechanism key, and full implementation commit, plus `compatibility_rationale` and `interaction_hypothesis`. The status input stores the same provenance in machine-checkable fields.
 
 Get the file list from the candidate commit with `git diff-tree --no-commit-id
 --name-only -r <commit>`, then inspect line numbers in that commit with

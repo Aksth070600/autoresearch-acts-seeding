@@ -271,6 +271,17 @@ function tooltipValue(row, stageKey, metric) {
   const key = metric.type === 'time' ? stage.time : `${stage.quality}_${metric.suffix}`;
   return formatTooltipValue(row.metrics[key], metric.type);
 }
+function timingEvidenceTooltip(row) {
+  const evidence = row.timing_evidence;
+  if (!evidence) return '';
+  const runs = evidence.runs?.length ? evidence.runs : [evidence];
+  const repetitions = runs.map((run, index) => {
+    const values = run.repetitions.map((item) => `${item.time_per_event_ms.toFixed(2)}`).join(', ');
+    return `${runs.length > 1 ? `run ${index + 1}: ` : ''}[${values}] ms`;
+  }).join('<br>');
+  const claim = row.speed_claim ? `<br>Speed claim&nbsp;&nbsp;${escapeHtml(row.speed_claim.classification)}` : '';
+  return `<br>Repetitions&nbsp;&nbsp;${repetitions}<br>Median/range/MAD&nbsp;&nbsp;${evidence.median_ms.toFixed(2)} / ${evidence.range_ms.toFixed(2)} / ${evidence.median_absolute_deviation_ms.toFixed(2)} ms${claim}`;
+}
 function candidateTooltip(row) {
   const stageKeys = TOOLTIP_STAGES;
   const stageHeading = stageKeys.map((stageKey) => STAGES[stageKey].label).join('&nbsp;&nbsp;→&nbsp;&nbsp;');
@@ -279,7 +290,8 @@ function candidateTooltip(row) {
     return `${metric.label}&nbsp;&nbsp;&nbsp;${values.join('&nbsp;→&nbsp;')}`;
   }).join('<br>');
   const peakRss = formatPeakRss(row.metrics[TIMED_PEAK_RSS_KEY], 'n/a');
-  return `<b>${escapeHtml(row.candidate)}</b><br><span style="font-family:monospace">Stage&nbsp;&nbsp;${stageHeading}<br>${metricLines}<br>Peak RSS&nbsp;&nbsp;${peakRss}</span>`;
+  const hypothesis = row.proposal ? `<br>Hypothesis&nbsp;&nbsp;${escapeHtml(row.proposal.hypothesis)}` : '';
+  return `<b>${escapeHtml(row.candidate)}</b><br><span style="font-family:monospace">Stage&nbsp;&nbsp;${stageHeading}<br>${metricLines}<br>Peak RSS&nbsp;&nbsp;${peakRss}${timingEvidenceTooltip(row)}${hypothesis}</span>`;
 }
 function validCommitUrl(value) {
   return typeof value === 'string'

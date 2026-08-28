@@ -17,12 +17,14 @@ from statistics import median
 from typing import Any
 
 from protocol import PROTOCOL_ID, PROTOCOL_METADATA, current_protocol, protocol_events
+from proposal import ProposalError, bind_proposal, median_absolute_deviation
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 OPTIMIZATION_ROOT = PROJECT_ROOT / "optimization-files"
 RECORDS_ROOT = PROJECT_ROOT / "records"
 HEPP_HELPER = PROJECT_ROOT / "orchestration-files" / "HEPP-files" / "run-hepp-helper.sh"
 EXPORT_OPTIMIZATION = PROJECT_ROOT / "orchestration-files" / "HEPP-files" / "export-optimization-files.sh"
+DEFAULT_CAMPAIGN_INPUT = PROJECT_ROOT / "orchestration-files" / "campaign-status-input.json"
 
 ALLOWED_PATHS = {
     "Core/include/Acts/Seeding2/BroadTripletSeedFilter.hpp",
@@ -138,6 +140,78 @@ def candidate_implementation_commit(
             "could not determine the candidate optimization-files commit"
         )
     return commit
+
+
+def candidate_implementation_files(implementation_commit: str) -> list[str]:
+    output = git_output(
+        "diff-tree",
+        "--root",
+        "--no-commit-id",
+        "--name-only",
+        "-r",
+        implementation_commit,
+        "--",
+        "optimization-files",
+    )
+    return sorted(line for line in output.splitlines() if line)
+
+
+def load_candidate_proposal(
+    campaign_input: Path,
+    candidate_name: str,
+    implementation_commit: str,
+    implementation_files: list[str],
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Load and bind the committed campaign proposal before scientific work."""
+
+    try:
+        state = json.loads(campaign_input.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise EvaluationError(f"cannot read candidate proposal metadata: {error}") from error
+    metadata = state.get("attempt_metadata") if isinstance(state, dict) else None
+    if not isinstance(metadata, list):
+        raise EvaluationError("campaign input has no attempt_metadata array")
+    matches = [
+        item
+        for item in metadata
+        if isinstance(item, dict) and item.get("candidate") == candidate_name
+    ]
+    if len(matches) != 1:
+        raise EvaluationError(
+            "candidate must have exactly one pre-run proposal in campaign input"
+        )
+    item = matches[0]
+    if "proposal" not in item:
+        raise EvaluationError("non-Genesis candidate proposal is required before evaluation")
+    try:
+        binding = bind_proposal(
+            item["proposal"],
+            candidate_name,
+            implementation_commit,
+            implementation_files,
+        )
+    except ProposalError as error:
+        raise EvaluationError(str(error)) from error
+    proposal_provenance = binding["proposal"]["combination_provenance"]
+    metadata_provenance = item.get("combination_provenance")
+    if (item.get("classification") == "combination") != (proposal_provenance is not None):
+        raise EvaluationError("candidate classification and combination provenance disagree")
+    if metadata_provenance != proposal_provenance:
+        raise EvaluationError(
+            "candidate combination provenance does not match the bound proposal"
+        )
+    identity = {
+        "mechanism_key": item.get("mechanism_key"),
+        "mechanism_family": item.get("mechanism_family"),
+        "classification": item.get("classification"),
+        "derives_from": item.get("derives_from"),
+    }
+    if not all(
+        isinstance(identity[name], str) and identity[name]
+        for name in ("mechanism_key", "mechanism_family", "classification")
+    ):
+        raise EvaluationError("candidate identity metadata is incomplete")
+    return binding, identity
 
 
 def validate_candidate_name(candidate_name: str) -> None:
@@ -434,6 +508,31 @@ def median_numeric_tree(values: list[Any]) -> Any:
     return None
 
 
+def dispersion_numeric_tree(values: list[Any], statistic: str) -> Any:
+    """Calculate per-leaf range or unscaled MAD for repeated metrics."""
+
+    if not values:
+        return {}
+    if all(isinstance(value, dict) for value in values):
+        common_keys = set(values[0])
+        for value in values[1:]:
+            common_keys.intersection_update(value)
+        result: dict[str, Any] = {}
+        for key in sorted(common_keys):
+            dispersion = dispersion_numeric_tree([value[key] for value in values], statistic)
+            if dispersion is not None and dispersion != {}:
+                result[key] = dispersion
+        return result
+    if all(isinstance(value, (int, float)) and not isinstance(value, bool) for value in values):
+        numeric = [float(value) for value in values]
+        if statistic == "range":
+            return max(numeric) - min(numeric)
+        if statistic == "median_absolute_deviation":
+            return median_absolute_deviation(numeric)
+        raise ValueError(f"unsupported dispersion statistic: {statistic}")
+    return None
+
+
 def median_resource_metrics(timed: list[dict[str, Any]]) -> dict[str, float]:
     """Aggregate numeric GNU-time values without inventing an elapsed format."""
 
@@ -489,8 +588,13 @@ def build_timed_comparison(stage_results: list[dict[str, Any]]) -> dict[str, Any
         "repetitions": repetitions,
     }
     if complete:
-        comparison["median_run_metrics"] = median_numeric_tree(
-            [stage["run_metrics"] for stage in timed]
+        run_metrics = [stage["run_metrics"] for stage in timed]
+        comparison["median_run_metrics"] = median_numeric_tree(run_metrics)
+        comparison["range_run_metrics"] = dispersion_numeric_tree(
+            run_metrics, "range"
+        )
+        comparison["median_absolute_deviation_run_metrics"] = dispersion_numeric_tree(
+            run_metrics, "median_absolute_deviation"
         )
         comparison["median_resource_metrics"] = median_resource_metrics(timed)
     return comparison
@@ -504,6 +608,12 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="run the 50-event clean and three timed full-chain repetitions",
     )
+    parser.add_argument(
+        "--campaign-input",
+        type=Path,
+        default=DEFAULT_CAMPAIGN_INPUT,
+        help="pre-run candidate proposal metadata",
+    )
     return parser.parse_args()
 
 
@@ -515,6 +625,15 @@ def main() -> int:
     commit = candidate_implementation_commit(
         args.candidate_name, repository_commit
     )
+    proposal_binding = None
+    candidate_identity = None
+    if args.candidate_name != "Genesis":
+        proposal_binding, candidate_identity = load_candidate_proposal(
+            args.campaign_input,
+            args.candidate_name,
+            commit,
+            candidate_implementation_files(commit),
+        )
 
     started = datetime.now(timezone.utc)
     run_id = f"{started.strftime('%Y%m%dT%H%M%SZ')}-{args.candidate_name}"
@@ -695,6 +814,12 @@ def main() -> int:
     }
     if error:
         summary["error"] = error
+    if proposal_binding is not None and candidate_identity is not None:
+        summary["proposal_binding"] = proposal_binding
+        summary["combination_provenance"] = proposal_binding["proposal"][
+            "combination_provenance"
+        ]
+        summary["candidate_identity"] = candidate_identity
 
     if args.candidate_name == "Genesis" and category in {"Development", "Evaluation"}:
         # Keep every successful Genesis run. The timestamp is part of the

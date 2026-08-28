@@ -109,6 +109,16 @@ class PrimaryObjectiveTests(unittest.TestCase):
             comparison["median_run_metrics"]["performance"]["ambiguity_resolution"]["efficiency_particles"],
             1.1,
         )
+        self.assertEqual(
+            comparison["range_run_metrics"]["timing_total"]["time_per_event_ms"],
+            20.0,
+        )
+        self.assertEqual(
+            comparison["median_absolute_deviation_run_metrics"]["timing_total"][
+                "time_per_event_ms"
+            ],
+            10.0,
+        )
 
     def test_latest_complete_genesis_is_the_baseline(self) -> None:
         older = {

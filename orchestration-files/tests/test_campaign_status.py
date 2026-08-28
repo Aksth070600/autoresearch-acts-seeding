@@ -26,6 +26,7 @@ from campaign_status import (  # noqa: E402
     validate_status,
 )
 from protocol import current_protocol  # noqa: E402
+from proposal import bind_proposal  # noqa: E402
 from visualizations.campaign import freshness_state, render, validate_ref  # noqa: E402
 
 
@@ -64,6 +65,51 @@ class CampaignStatusTests(unittest.TestCase):
         )
 
     @staticmethod
+    def proposal(
+        candidate: str,
+        commit: str = "a" * 40,
+        combination_provenance: dict | None = None,
+        *,
+        grounded: bool = False,
+    ) -> dict:
+        reference = {
+            "source_type": "Genesis",
+            "reference": "records/Development/Genesis/summary.json",
+            "relevance": "The controlled baseline identifies the target hot path.",
+            "directly_inspected": True,
+        }
+        if grounded:
+            reference = {
+                "source_type": "inspected source code",
+                "reference": (
+                    "https://github.com/acts-project/acts/blob/"
+                    + "1" * 40
+                    + "/Core/src/Seeding2/TripletSeeder.cpp"
+                ),
+                "relevance": "The upstream traversal exposes the tested mechanism.",
+                "directly_inspected": True,
+                "inspected_scope": "TripletSeeder.cpp traversal and candidate loop.",
+                "acts_mapping": f"Maps to {candidate}::run in the seeding hot path.",
+            }
+        return {
+            "schema_version": "1.0.0",
+            "candidate": candidate,
+            "implementation_commit": commit,
+            "hypothesis": "Removing repeated work should lower seeding time.",
+            "falsifier": "The prediction fails if seeding time does not decrease.",
+            "predicted_directions": {
+                "timed_seeding_time_per_event_ms": "decrease",
+                "timed_ambiguity_particle_efficiency": "unchanged",
+            },
+            "expected_hot_path": "Accepted-candidate traversal in the seeding loop.",
+            "changed_symbols": [f"{candidate}::run"],
+            "intended_files": [f"optimization-files/Core/src/{candidate}.cpp"],
+            "novelty_reason": "This mechanism is distinct from earlier candidates.",
+            "source_references": [reference],
+            "combination_provenance": combination_provenance,
+        }
+
+    @staticmethod
     def candidate_metadata(
         candidate: str,
         classification: str = "major",
@@ -73,6 +119,8 @@ class CampaignStatusTests(unittest.TestCase):
         mechanism_family: str | None = None,
         evidence: bool = True,
         combination_provenance: dict | None = None,
+        grounded: bool = False,
+        derives_from: dict | None = None,
     ) -> dict:
         key = mechanism_key or f"{candidate.lower()}-mechanism"
         item = {
@@ -80,18 +128,26 @@ class CampaignStatusTests(unittest.TestCase):
             "mechanism_key": key,
             "mechanism_family": mechanism_family or key,
             "classification": classification,
+            "proposal": CampaignStatusTests.proposal(
+                candidate,
+                commit,
+                combination_provenance,
+                grounded=grounded,
+            ),
         }
+        if derives_from is not None:
+            item["derives_from"] = derives_from
         if evidence:
             item["evidence"] = {
-                "implementation_commit": commit,
-                "changed_symbols": [f"{candidate}::run"],
                 "files_changed": [
                     f"optimization-files/Core/src/{candidate}.cpp#L10-L20"
                 ],
-                "hot_path_rationale": "Reduce work in the accepted hot path.",
-                "novelty_rationale": "This mechanism is distinct from earlier candidates.",
                 "outcome": "keep",
                 "lesson": "The focused mechanism completed controlled Development.",
+                "prediction_assessment": "held",
+                "prediction_assessment_rationale": (
+                    "The measured objectives followed the pre-run prediction."
+                ),
             }
         if combination_provenance is not None:
             item["combination_provenance"] = combination_provenance
@@ -107,6 +163,7 @@ class CampaignStatusTests(unittest.TestCase):
         *,
         passed: bool = True,
         commit: str = "a" * 40,
+        proposal: dict | None = None,
     ) -> dict:
         started = datetime.fromisoformat(started_at.replace("Z", "+00:00"))
         run_metrics = {
@@ -116,7 +173,7 @@ class CampaignStatusTests(unittest.TestCase):
                 "ambiguity_resolution": {"efficiency_particles": efficiency}
             },
         }
-        return {
+        summary = {
             "candidate_name": candidate,
             "protocol_id": "acts-seeding-v2",
             "protocol": current_protocol(),
@@ -151,6 +208,15 @@ class CampaignStatusTests(unittest.TestCase):
             },
             **({} if passed else {"error": "Candidate failed the controlled stage."}),
         }
+        if candidate != "Genesis":
+            measured_proposal = proposal or CampaignStatusTests.proposal(candidate, commit)
+            summary["proposal_binding"] = bind_proposal(
+                measured_proposal, candidate, commit
+            )
+            summary["combination_provenance"] = measured_proposal[
+                "combination_provenance"
+            ]
+        return summary
 
     def write_summary(self, records: Path, name: str, summary: dict) -> None:
         category = summary["category"]
@@ -207,6 +273,10 @@ class CampaignStatusTests(unittest.TestCase):
             "orchestration-files/campaign-status.json",
         )
         self.assertFalse(schema["additionalProperties"])
+        proposal_schema = schema["$defs"]["candidateProposal"]
+        self.assertIn("hypothesis", proposal_schema["required"])
+        self.assertIn("falsifier", proposal_schema["required"])
+        self.assertIn("source_references", proposal_schema["required"])
         target_variants = schema["$defs"]["campaignTargets"]["oneOf"]
         required_sets = {frozenset(variant["required"]) for variant in target_variants}
         self.assertIn(
@@ -517,6 +587,7 @@ class CampaignStatusTests(unittest.TestCase):
                         90 - index,
                         0.9,
                         commit=commit,
+                        proposal=(combined["proposal"] if candidate == "Combined" else None),
                     ),
                 )
             status = build_status(
@@ -552,6 +623,95 @@ class CampaignStatusTests(unittest.TestCase):
                     ),
                 ]
             )
+
+    def test_rejects_duplicate_exact_mechanism_keys(self) -> None:
+        metadata = [
+            self.candidate_metadata("First", mechanism_key="same-exact-mechanism"),
+            self.candidate_metadata("Renamed", mechanism_key="same-exact-mechanism"),
+        ]
+        with self.assertRaisesRegex(StatusError, "mechanism_key values must be unique"):
+            self.live_state(metadata)
+
+    def test_valid_refinement_lineage_requires_a_new_mechanism_key(self) -> None:
+        source = self.candidate_metadata(
+            "Source", mechanism_key="source-mechanism", commit="a" * 40
+        )
+        lineage = {
+            "candidate": "Source",
+            "mechanism_key": "source-mechanism",
+            "implementation_commit": "a" * 40,
+        }
+        refinement = self.candidate_metadata(
+            "Refinement",
+            mechanism_key="refined-mechanism",
+            commit="b" * 40,
+            derives_from=lineage,
+        )
+        state = self.live_state([source, refinement])
+        self.assertEqual(state["attempt_metadata"][1]["derives_from"], lineage)
+
+        duplicate = copy.deepcopy(refinement)
+        duplicate["mechanism_key"] = "source-mechanism"
+        with self.assertRaisesRegex(StatusError, "mechanism_key"):
+            self.live_state([source, duplicate])
+
+    def test_combination_proposal_and_source_metadata_must_be_consistent(self) -> None:
+        source_a = self.candidate_metadata("SourceA", commit="a" * 40)
+        source_b = self.candidate_metadata("SourceB", commit="b" * 40)
+        provenance = {
+            "sources": [
+                {
+                    "candidate": "SourceA",
+                    "mechanism_key": source_a["mechanism_key"],
+                    "implementation_commit": "a" * 40,
+                    "directly_inspected": True,
+                },
+                {
+                    "candidate": "SourceB",
+                    "mechanism_key": source_b["mechanism_key"],
+                    "implementation_commit": "b" * 40,
+                    "directly_inspected": True,
+                },
+            ],
+            "compatibility_rationale": "The sources affect separate seams.",
+            "interaction_hypothesis": "Their effects should be additive.",
+        }
+        combined = self.candidate_metadata(
+            "Combined", "combination", commit="c" * 40,
+            combination_provenance=provenance,
+        )
+        combined["proposal"]["combination_provenance"] = copy.deepcopy(provenance)
+        combined["proposal"]["combination_provenance"]["sources"][0][
+            "mechanism_key"
+        ] = "wrong-key"
+        with self.assertRaisesRegex(StatusError, "does not match candidate metadata"):
+            self.live_state([source_a, source_b, combined])
+
+    def test_standard_campaign_requires_three_source_grounded_major_proposals(self) -> None:
+        def majors(grounded_count: int) -> list[dict]:
+            return [
+                self.candidate_metadata(
+                    f"Major{index}",
+                    mechanism_family=f"family-{index}",
+                    grounded=index < grounded_count,
+                )
+                for index in range(10)
+            ]
+
+        with self.assertRaisesRegex(StatusError, "at least three of ten major"):
+            self.live_state(majors(2))
+        self.assertEqual(len(self.live_state(majors(3))["attempt_metadata"]), 10)
+
+        special = {
+            "completed_candidates": 10,
+            "major_candidates": 10,
+            "minor_candidates": 0,
+            "combination_candidates": 0,
+        }
+        self.assertEqual(
+            len(self.live_state(majors(0), targets=special)["attempt_metadata"]),
+            10,
+        )
 
     def test_rejects_four_consecutive_candidates_from_one_family(self) -> None:
         metadata = [

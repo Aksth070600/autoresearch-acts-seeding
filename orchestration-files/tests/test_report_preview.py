@@ -12,7 +12,14 @@ REPORT = PROJECT_ROOT / "orchestration-files" / "report.py"
 sys.path.insert(0, str(PROJECT_ROOT / "orchestration-files"))
 
 from protocol import current_protocol  # noqa: E402
-from report import REPOSITORY_URL, build_report, commit_url, load_records  # noqa: E402
+from proposal import bind_proposal  # noqa: E402
+from report import (  # noqa: E402
+    REPOSITORY_URL,
+    build_report,
+    classify_speed_claim,
+    commit_url,
+    load_records,
+)
 from visualizations.pareto import render  # noqa: E402
 
 
@@ -109,6 +116,51 @@ class ReportPreviewTests(unittest.TestCase):
                 ),
             },
         }
+
+    def test_report_reads_hypothesis_from_measured_summary_copy(self) -> None:
+        commit = "a" * 40
+        proposal = {
+            "schema_version": "1.0.0",
+            "candidate": "Candidate",
+            "implementation_commit": commit,
+            "hypothesis": "The measured summary hypothesis is authoritative.",
+            "falsifier": "Seeding time does not decrease.",
+            "predicted_directions": {
+                "timed_seeding_time_per_event_ms": "decrease",
+                "timed_ambiguity_particle_efficiency": "unchanged",
+            },
+            "expected_hot_path": "The triplet traversal hot path.",
+            "changed_symbols": ["Acts::TripletSeeder::run"],
+            "intended_files": [
+                "optimization-files/Core/src/Seeding2/TripletSeeder.cpp"
+            ],
+            "novelty_reason": "This traversal bound has not been tested.",
+            "source_references": [
+                {
+                    "source_type": "Genesis",
+                    "reference": "records/Development/Genesis/summary.json",
+                    "relevance": "Baseline timing evidence.",
+                    "directly_inspected": True,
+                }
+            ],
+            "combination_provenance": None,
+        }
+        with tempfile.TemporaryDirectory() as temporary:
+            records = Path(temporary) / "records" / "Development" / "Candidate"
+            records.mkdir(parents=True)
+            summary = self.summary("Candidate", "Development", 12.0, 0.9)
+            summary["implementation_commit"] = commit
+            summary["proposal_binding"] = bind_proposal(
+                proposal, "Candidate", commit
+            )
+            summary["combination_provenance"] = None
+            (records / "summary.json").write_text(
+                json.dumps(summary), encoding="utf-8"
+            )
+
+            row = load_records(records.parents[1], "development")[0]
+
+        self.assertEqual(row["proposal"]["hypothesis"], proposal["hypothesis"])
 
     def test_timed_peak_rss_is_loaded_from_median_resource_metrics(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -380,6 +432,41 @@ console.log(JSON.stringify({
         self.assertTrue(result["yRss"]["stageHidden"])
         self.assertTrue(result["yRss"]["metricHidden"])
 
+    def test_evaluation_speed_claim_uncertainty_classifications(self) -> None:
+        genesis = {
+            "median_ms": 100.0,
+            "range_ms": 4.0,
+            "median_absolute_deviation_ms": 2.0,
+        }
+        confirmed = classify_speed_claim(
+            {
+                "median_ms": 90.0,
+                "range_ms": 2.0,
+                "median_absolute_deviation_ms": 1.0,
+            },
+            genesis,
+        )
+        directional = classify_speed_claim(
+            {
+                "median_ms": 98.0,
+                "range_ms": 3.0,
+                "median_absolute_deviation_ms": 1.0,
+            },
+            genesis,
+        )
+        inconclusive = classify_speed_claim(
+            {
+                "median_ms": 101.0,
+                "range_ms": 2.0,
+                "median_absolute_deviation_ms": 1.0,
+            },
+            genesis,
+        )
+        self.assertEqual(confirmed["classification"], "confirmed")
+        self.assertEqual(directional["classification"], "directional")
+        self.assertEqual(inconclusive["classification"], "inconclusive")
+        self.assertEqual(confirmed["practical_timing_margin_ms"], 4.0)
+
     def test_interactive_selector_and_candidate_tooltip(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             output = Path(temporary) / "index.html"
@@ -409,6 +496,9 @@ console.log(JSON.stringify({
         self.assertIn("→", tooltip)
         self.assertIn("return 'n/a'", html)
         self.assertIn("escapeHtml(row.candidate)", tooltip)
+        self.assertIn("timingEvidenceTooltip(row)", tooltip)
+        self.assertIn("Median/range/MAD", html)
+        self.assertIn("row.proposal.hypothesis", tooltip)
 
         hover = html[html.index("hovertemplate"): html.index("hovertemplate") + 100]
         for field in ("X:", "Y:", "Category:", "Record:", "Commit:"):

@@ -11,7 +11,13 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from protocol import PROTOCOL_ID, PROTOCOL_METADATA, is_compatible_summary
+from protocol import (
+    EVALUATION_TIMING_REPORTING,
+    PROTOCOL_ID,
+    PROTOCOL_METADATA,
+    is_compatible_summary,
+)
+from proposal import ProposalError, median_absolute_deviation, proposal_from_summary
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_RECORDS = PROJECT_ROOT / "records"
@@ -124,6 +130,74 @@ def add_metrics(metrics: dict[str, float], prefix: str, run_metrics: dict[str, A
         metrics[f"{prefix}_events"] = float(events)
 
 
+def timing_evidence(comparison: dict[str, Any]) -> dict[str, Any] | None:
+    """Retain the three seeding timings and derive robust dispersion evidence."""
+
+    repetitions = comparison.get("repetitions")
+    if not isinstance(repetitions, list):
+        return None
+    values: list[dict[str, float | int]] = []
+    for repetition in repetitions:
+        if not isinstance(repetition, dict):
+            return None
+        value = (
+            repetition.get("run_metrics", {})
+            .get("timing", {})
+            .get("seeding", {})
+            .get("time_per_event_ms")
+        )
+        if not finite_number(value):
+            return None
+        values.append(
+            {
+                "repetition": int(repetition.get("repetition", len(values) + 1)),
+                "time_per_event_ms": float(value),
+            }
+        )
+    if len(values) != int(PROTOCOL_METADATA["timed_repetitions"]):
+        return None
+    timings = [float(item["time_per_event_ms"]) for item in values]
+    return {
+        "repetitions": values,
+        "median_ms": float(sorted(timings)[len(timings) // 2]),
+        "range_ms": max(timings) - min(timings),
+        "median_absolute_deviation_ms": median_absolute_deviation(timings),
+    }
+
+
+def classify_speed_claim(
+    candidate: dict[str, Any], genesis: dict[str, Any]
+) -> dict[str, Any]:
+    """Classify Evaluation speed evidence without changing scientific selection."""
+
+    candidate_median = float(candidate["median_ms"])
+    genesis_median = float(genesis["median_ms"])
+    improvement = genesis_median - candidate_median
+    practical_margin = max(
+        float(genesis["range_ms"]),
+        float(genesis["median_absolute_deviation_ms"]),
+    )
+    comparable_dispersion = max(
+        float(candidate["median_absolute_deviation_ms"]),
+        float(genesis["median_absolute_deviation_ms"]),
+    )
+    threshold = max(practical_margin, comparable_dispersion)
+    if improvement > threshold:
+        classification = "confirmed"
+    elif improvement > 0:
+        classification = "directional"
+    else:
+        classification = "inconclusive"
+    return {
+        "classification": classification,
+        "improvement_vs_genesis_ms": improvement,
+        "practical_timing_margin_ms": practical_margin,
+        "comparable_dispersion_ms": comparable_dispersion,
+        "confirmation_threshold_ms": threshold,
+        "margin_method": EVALUATION_TIMING_REPORTING["practical_margin"],
+    }
+
+
 def flatten_summary(summary: dict[str, Any], path: Path, records_root: Path) -> dict[str, Any] | None:
     if summary.get("status") != "passed" or not is_compatible_summary(summary):
         return None
@@ -174,6 +248,10 @@ def flatten_summary(summary: dict[str, Any], path: Path, records_root: Path) -> 
         category.lower(), category
     )
     commit = str(summary.get("implementation_commit", ""))
+    try:
+        measured_proposal = proposal_from_summary(summary)
+    except ProposalError as error:
+        raise ValueError(f"{path}: {error}") from error
     return {
         "candidate": str(summary.get("candidate_name", path.parent.name)),
         "category": category,
@@ -182,6 +260,8 @@ def flatten_summary(summary: dict[str, Any], path: Path, records_root: Path) -> 
         "record": path.relative_to(records_root).as_posix(),
         "protocol_id": PROTOCOL_ID,
         "metrics": metrics,
+        "timing_evidence": timing_evidence(timed_comparison),
+        "proposal": measured_proposal,
     }
 
 
@@ -275,6 +355,26 @@ def aggregate_genesis(
     aggregate_category = dataset.title()
     commits = {str(row.get("commit", "")) for row in genesis}
     aggregate_commit = next(iter(commits)) if len(commits) == 1 else ""
+    genesis_evidence = [
+        row.get("timing_evidence")
+        for row in genesis
+        if isinstance(row.get("timing_evidence"), dict)
+    ]
+    aggregate_timing_evidence = None
+    if len(genesis_evidence) == len(genesis):
+        aggregate_timing_evidence = {
+            "repetitions": (
+                list(genesis_evidence[0]["repetitions"])
+                if len(genesis_evidence) == 1
+                else []
+            ),
+            "runs": genesis_evidence,
+            "median_ms": metrics.get("timed_seeding_time_per_event_ms"),
+            "range_ms": max(item["range_ms"] for item in genesis_evidence),
+            "median_absolute_deviation_ms": max(
+                item["median_absolute_deviation_ms"] for item in genesis_evidence
+            ),
+        }
     aggregate = {
         "candidate": baseline,
         "category": aggregate_category,
@@ -286,6 +386,8 @@ def aggregate_genesis(
         "sample_count": len(genesis),
         "provenance": provenance,
         "source_categories": categories,
+        "timing_evidence": aggregate_timing_evidence,
+        "proposal": None,
     }
     return [aggregate, *[row for row in scoped_rows if row["candidate"] != baseline]], aggregation
 
@@ -296,6 +398,20 @@ def build_report(
     dataset: str = "development",
 ) -> dict[str, Any]:
     report_rows, genesis_aggregation = aggregate_genesis(rows, baseline, dataset)
+    if dataset == "evaluation":
+        genesis = next(
+            (row for row in report_rows if row["candidate"] == baseline), None
+        )
+        genesis_evidence = genesis.get("timing_evidence") if genesis else None
+        for row in report_rows:
+            evidence = row.get("timing_evidence")
+            row["speed_claim"] = (
+                classify_speed_claim(evidence, genesis_evidence)
+                if row["candidate"] != baseline
+                and isinstance(evidence, dict)
+                and isinstance(genesis_evidence, dict)
+                else None
+            )
     metric_keys = sorted({key for row in report_rows for key in row["metrics"]})
     return {
         "rows": report_rows,
@@ -310,6 +426,10 @@ def build_report(
         "primary_objectives": {
             "minimize": "timed_seeding_time_per_event_ms",
             "maximize": "timed_ambiguity_particle_efficiency",
+        },
+        "evaluation_timing_policy": {
+            **EVALUATION_TIMING_REPORTING,
+            "scope": "reporting and captain selection evidence only",
         },
     }
 

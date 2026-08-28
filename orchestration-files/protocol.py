@@ -31,6 +31,15 @@ CAMPAIGN_COMPOSITION: dict[str, int] = {
     "minor_candidates": 5,
     "combination_candidates": 5,
 }
+SOURCE_GROUNDED_MAJOR_MINIMUM = 3
+
+# Reporting evidence only. This does not alter protocol compatibility,
+# Development selection, or authority to run Evaluation.
+EVALUATION_TIMING_REPORTING: dict[str, Any] = {
+    "dispersion": "unscaled median absolute deviation",
+    "practical_margin": "maximum Genesis repetition range or unscaled MAD",
+    "classifications": ["confirmed", "directional", "inconclusive"],
+}
 
 
 def current_protocol() -> dict[str, Any]:
