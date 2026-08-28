@@ -145,7 +145,7 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
   std::iota(cache().topSpIndexVec.begin(), cache().topSpIndexVec.end(), 0);
   std::ranges::sort(cache().topSpIndexVec, {},
                     [&tripletTopCandidates](const std::size_t t) {
-                      return tripletTopCandidates.curvatures()[t];
+                      return tripletTopCandidates.kinematics(t).curvature;
                     });
 
   // vector containing the radius of all compatible seeds
@@ -166,11 +166,13 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
 
     cache().compatibleSeedR.clear();
 
-    float invHelixDiameter = tripletTopCandidates.curvatures()[topSpIndex];
-    float lowerLimitCurv = invHelixDiameter - config().deltaInvHelixDiameter;
-    float upperLimitCurv = invHelixDiameter + config().deltaInvHelixDiameter;
+    const auto& kinematics = tripletTopCandidates.kinematics(topSpIndex);
+    float lowerLimitCurv =
+        kinematics.curvature - config().deltaInvHelixDiameter;
+    float upperLimitCurv =
+        kinematics.curvature + config().deltaInvHelixDiameter;
     float currentTopR = getTopR(spT);
-    float impact = tripletTopCandidates.impactParameters()[topSpIndex];
+    float impact = kinematics.impactParameter;
 
     float weight = -impact * config().impactWeightFactor;
 
@@ -189,13 +191,13 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
       float otherTopR = getTopR(otherSpT);
 
       // curvature difference within limits?
-      if (tripletTopCandidates.curvatures()[compatibleTopSpIndex] <
+      if (tripletTopCandidates.kinematics(compatibleTopSpIndex).curvature <
           lowerLimitCurv) {
         // the SPs are sorted in curvature so we skip unnecessary iterations
         beginCompTopIndex = variableCompTopIndex + 1;
         continue;
       }
-      if (tripletTopCandidates.curvatures()[compatibleTopSpIndex] >
+      if (tripletTopCandidates.kinematics(compatibleTopSpIndex).curvature >
           upperLimitCurv) {
         // the SPs are sorted in curvature so we skip unnecessary iterations
         break;

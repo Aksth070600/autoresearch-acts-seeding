@@ -26,6 +26,12 @@ class TripletTopCandidates {
   /// Type alias for candidate index type
   using Index = std::uint32_t;
 
+  /// Curvature and impact values produced and consumed together.
+  struct Kinematics {
+    float curvature{};
+    float impactParameter{};
+  };
+
   /// @brief Returns the number of triplet candidates stored
   /// @return Number of triplet candidates in the container
   Index size() const { return static_cast<Index>(m_topSpacePoints.size()); }
@@ -34,16 +40,14 @@ class TripletTopCandidates {
   /// @param size Number of candidates to reserve space for
   void reserve(Index size) {
     m_topSpacePoints.reserve(size);
-    m_curvatures.reserve(size);
-    m_impactParameters.reserve(size);
+    m_kinematics.reserve(size);
   }
 
   /// @brief Clears all stored triplet candidates
   /// Removes all candidates from the container and frees memory
   void clear() {
     m_topSpacePoints.clear();
-    m_curvatures.clear();
-    m_impactParameters.clear();
+    m_kinematics.clear();
   }
 
   /// @brief Adds a new triplet candidate to the container
@@ -53,8 +57,7 @@ class TripletTopCandidates {
   void emplace_back(SpacePointIndex2 spT, float curvature,
                     float impactParameter) {
     m_topSpacePoints.emplace_back(spT);
-    m_curvatures.emplace_back(curvature);
-    m_impactParameters.emplace_back(impactParameter);
+    m_kinematics.push_back({curvature, impactParameter});
   }
 
   /// @brief Returns the vector of top space point indices
@@ -62,14 +65,8 @@ class TripletTopCandidates {
   const std::vector<SpacePointIndex2>& topSpacePoints() const {
     return m_topSpacePoints;
   }
-  /// @brief Returns the vector of track curvature estimations
-  /// @return Const reference to vector containing curvature values for all candidates
-  const std::vector<float>& curvatures() const { return m_curvatures; }
-  /// @brief Returns the vector of impact parameter estimations
-  /// @return Const reference to vector containing impact parameter values for all candidates
-  const std::vector<float>& impactParameters() const {
-    return m_impactParameters;
-  }
+  /// Return the curvature and impact values for one candidate.
+  const Kinematics& kinematics(Index index) const { return m_kinematics[index]; }
 
   /// Proxy providing access to a triplet candidate.
   class Proxy {
@@ -88,12 +85,14 @@ class TripletTopCandidates {
 
     /// Get the curvature estimation
     /// @return The curvature value
-    float curvature() const { return m_container->m_curvatures[m_index]; }
+    float curvature() const {
+      return m_container->m_kinematics[m_index].curvature;
+    }
 
     /// Get the impact parameter estimation
     /// @return The impact parameter value
     float impactParameter() const {
-      return m_container->m_impactParameters[m_index];
+      return m_container->m_kinematics[m_index].impactParameter;
     }
 
    private:
@@ -119,8 +118,7 @@ class TripletTopCandidates {
 
  private:
   std::vector<SpacePointIndex2> m_topSpacePoints;
-  std::vector<float> m_curvatures;
-  std::vector<float> m_impactParameters;
+  std::vector<Kinematics> m_kinematics;
 };
 
 /// Interface and a collection of standard implementations for a triplet seed
