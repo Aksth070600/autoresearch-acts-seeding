@@ -80,7 +80,7 @@ void createSeedsFromGroupsImpl(
       cache.bottomDoublets.clear();
       bottomFinder.createDoublets(middleSp, middleSpInfo, bottomSpGroup,
                                   cache.bottomDoublets);
-      if (cache.bottomDoublets.empty()) [[unlikely]] {
+      if (cache.bottomDoublets.empty()) {
         continue;
       }
       bottomCount += cache.bottomDoublets.size();
