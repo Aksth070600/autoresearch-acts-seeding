@@ -163,11 +163,11 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
     }
 
     radixScratch.resize(bin.size());
-    for (unsigned int shift = 0; shift < 64; shift += 8) {
+    for (unsigned int shift = 0; shift < 32; shift += 8) {
       std::array<std::size_t, 256> offsets{};
       for (Acts::SpacePointIndex2 index : bin) {
-        const auto key = std::bit_cast<std::uint64_t>(
-            static_cast<double>(spacePoints[index].r()));
+        const auto key = std::bit_cast<std::uint32_t>(
+            static_cast<float>(spacePoints[index].r()));
         ++offsets[(key >> shift) & 0xffu];
       }
       std::size_t prefix = 0;
@@ -177,8 +177,8 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
         prefix += count;
       }
       for (Acts::SpacePointIndex2 index : bin) {
-        const auto key = std::bit_cast<std::uint64_t>(
-            static_cast<double>(spacePoints[index].r()));
+        const auto key = std::bit_cast<std::uint32_t>(
+            static_cast<float>(spacePoints[index].r()));
         radixScratch[offsets[(key >> shift) & 0xffu]++] = index;
       }
       bin.swap(radixScratch);
