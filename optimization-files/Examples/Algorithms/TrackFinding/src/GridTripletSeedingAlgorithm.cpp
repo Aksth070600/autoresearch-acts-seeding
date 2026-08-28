@@ -152,6 +152,8 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   }
 
   std::vector<Acts::SpacePointIndex2> radixScratch;
+  float minGridRadius = std::numeric_limits<float>::max();
+  float maxGridRadius = std::numeric_limits<float>::lowest();
   for (std::size_t i = 0; i < grid.numberOfBins(); ++i) {
     auto& bin = grid.at(i);
     if (bin.size() < 64) {
@@ -159,29 +161,35 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
                                  const Acts::SpacePointIndex2& b) {
         return spacePoints[a].r() < spacePoints[b].r();
       });
-      continue;
+    } else {
+      radixScratch.resize(bin.size());
+      for (unsigned int shift = 0; shift < 64; shift += 8) {
+        std::array<std::size_t, 256> offsets{};
+        for (Acts::SpacePointIndex2 index : bin) {
+          const auto key = std::bit_cast<std::uint64_t>(
+              static_cast<double>(spacePoints[index].r()));
+          ++offsets[(key >> shift) & 0xffu];
+        }
+        std::size_t prefix = 0;
+        for (std::size_t& offset : offsets) {
+          const std::size_t count = offset;
+          offset = prefix;
+          prefix += count;
+        }
+        for (Acts::SpacePointIndex2 index : bin) {
+          const auto key = std::bit_cast<std::uint64_t>(
+              static_cast<double>(spacePoints[index].r()));
+          radixScratch[offsets[(key >> shift) & 0xffu]++] = index;
+        }
+        bin.swap(radixScratch);
+      }
     }
 
-    radixScratch.resize(bin.size());
-    for (unsigned int shift = 0; shift < 64; shift += 8) {
-      std::array<std::size_t, 256> offsets{};
-      for (Acts::SpacePointIndex2 index : bin) {
-        const auto key = std::bit_cast<std::uint64_t>(
-            static_cast<double>(spacePoints[index].r()));
-        ++offsets[(key >> shift) & 0xffu];
-      }
-      std::size_t prefix = 0;
-      for (std::size_t& offset : offsets) {
-        const std::size_t count = offset;
-        offset = prefix;
-        prefix += count;
-      }
-      for (Acts::SpacePointIndex2 index : bin) {
-        const auto key = std::bit_cast<std::uint64_t>(
-            static_cast<double>(spacePoints[index].r()));
-        radixScratch[offsets[(key >> shift) & 0xffu]++] = index;
-      }
-      bin.swap(radixScratch);
+    if (!bin.empty()) {
+      minGridRadius = std::min(
+          minGridRadius, static_cast<float>(spacePoints[bin.front()].r()));
+      maxGridRadius = std::max(
+          maxGridRadius, static_cast<float>(spacePoints[bin.back()].r()));
     }
   }
 
@@ -211,22 +219,9 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
     gridSpacePointRanges.emplace_back(begin, end);
   }
 
-  // Compute radius range. We rely on the fact the grid is storing the proxies
-  // with a sorting in the radius
-  const Acts::Range1D<float> rRange = [&]() -> Acts::Range1D<float> {
-    float minRange = std::numeric_limits<float>::max();
-    float maxRange = std::numeric_limits<float>::lowest();
-    for (const Acts::SpacePointIndexRange2& range : gridSpacePointRanges) {
-      if (range.first == range.second) {
-        continue;
-      }
-      auto first = coreSpacePoints[range.first];
-      auto last = coreSpacePoints[range.second - 1];
-      minRange = std::min(first.zr()[1], minRange);
-      maxRange = std::max(last.zr()[1], maxRange);
-    }
-    return {minRange, maxRange};
-  }();
+  // Each bin was already ordered, so its endpoints supplied the event radius
+  // range without a second pass over the materialized core ranges.
+  const Acts::Range1D<float> rRange{minGridRadius, maxGridRadius};
 
   Acts::DoubletSeedFinder::Config bottomDoubletFinderConfig;
   bottomDoubletFinderConfig.spacePointsSortedByRadius = true;
