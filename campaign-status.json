@@ -72,13 +72,31 @@
       "state": "completed",
       "timed_ambiguity_particle_efficiency": 0.972769,
       "timed_seeding_time_per_event_ms": 294.61
+    },
+    {
+      "candidate": "GridBinAdaptiveRadixSort",
+      "classification": "structural",
+      "duration_seconds": 778.632,
+      "finished_at": "2026-08-28T12:08:46.679581Z",
+      "implementation_commit": "0256a37b6cd54a318e57c32935c1b157fc876843",
+      "links": {
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/0256a37b6cd54a318e57c32935c1b157fc876843",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T115548Z-GridBinAdaptiveRadixSort/summary.json"
+      },
+      "mechanism_family": "grid-bin-adaptive-radix-sort",
+      "outcome": "Passed all controlled Development stages.",
+      "record": "records/Development/20260828T115548Z-GridBinAdaptiveRadixSort/summary.json",
+      "started_at": "2026-08-28T11:55:48.047256Z",
+      "state": "completed",
+      "timed_ambiguity_particle_efficiency": 0.972769,
+      "timed_seeding_time_per_event_ms": 294.44
     }
   ],
   "blockers": [],
   "campaign": {
     "branch": "autoresearch-acts-seeding/campaign-v8",
     "name": "ACTS Seeding Development Campaign V8",
-    "phase": "candidate evaluation 4 of 20",
+    "phase": "candidate mechanism selection after 4 of 20",
     "started_at": "2026-08-28T10:50:43Z",
     "targets": {
       "completed_attempts": 20,
@@ -86,29 +104,22 @@
       "structural_attempts": 10
     }
   },
-  "current_attempt": {
-    "candidate": "GridBinAdaptiveRadixSort",
-    "classification": "structural",
-    "controlled_stage": "queued Development run",
-    "mechanism_family": "grid-bin-adaptive-radix-sort",
-    "started_at": "2026-08-28T11:55:45Z",
-    "state": "queued"
-  },
+  "current_attempt": null,
   "failures": [],
-  "generated_at": "2026-08-28T11:55:45.922899Z",
+  "generated_at": "2026-08-28T12:09:02.128465Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/0256a37b6cd54a318e57c32935c1b157fc876843",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/e4711f997c943eed1fbc897da91eb3e55002b89c",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/campaign-v8",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/29"
   },
   "progress": {
-    "completed_attempts": 3,
-    "elapsed_seconds": 3902.922899,
-    "estimated_remaining_seconds": 13837.757101,
-    "eta_basis": "Median of 3 completed attempts; current attempt elapsed time deducted.",
-    "eta_sample_count": 3,
-    "expected_finish_at": "2026-08-28T15:46:23.680000Z",
-    "median_completed_attempt_duration_seconds": 814.04,
+    "completed_attempts": 4,
+    "elapsed_seconds": 4699.128465,
+    "estimated_remaining_seconds": 12875.864,
+    "eta_basis": "Median of 4 completed attempts.",
+    "eta_sample_count": 4,
+    "expected_finish_at": "2026-08-28T15:43:37.992465Z",
+    "median_completed_attempt_duration_seconds": 804.7415,
     "micro_optimizations": 0,
     "structural_attempts": 4
   },
@@ -124,16 +135,16 @@
       "timed_seeding_time_per_event_ms": 294.61
     },
     "best_seeding": {
-      "candidate": "TripletKinematicsPairLayout",
-      "delta_vs_genesis_ms": -3.6399999999999864,
+      "candidate": "GridBinAdaptiveRadixSort",
+      "delta_vs_genesis_ms": -3.8100000000000023,
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/c0fdd671861e00af7c71c710e65787b677b6db38",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T114030Z-TripletKinematicsPairLayout/summary.json"
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/0256a37b6cd54a318e57c32935c1b157fc876843",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T115548Z-GridBinAdaptiveRadixSort/summary.json"
       },
-      "percentage_vs_genesis": -1.2204526404023424,
-      "started_at": "2026-08-28T11:40:30.720321Z",
+      "percentage_vs_genesis": -1.2774518021793806,
+      "started_at": "2026-08-28T11:55:48.047256Z",
       "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 294.61
+      "timed_seeding_time_per_event_ms": 294.44
     },
     "latest_genesis": {
       "candidate": "Genesis",
@@ -147,14 +158,14 @@
     },
     "pareto_front": [
       {
-        "candidate": "TripletKinematicsPairLayout",
+        "candidate": "GridBinAdaptiveRadixSort",
         "links": {
-          "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/c0fdd671861e00af7c71c710e65787b677b6db38",
-          "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T114030Z-TripletKinematicsPairLayout/summary.json"
+          "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/0256a37b6cd54a318e57c32935c1b157fc876843",
+          "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T115548Z-GridBinAdaptiveRadixSort/summary.json"
         },
-        "started_at": "2026-08-28T11:40:30.720321Z",
+        "started_at": "2026-08-28T11:55:48.047256Z",
         "timed_ambiguity_particle_efficiency": 0.972769,
-        "timed_seeding_time_per_event_ms": 294.61
+        "timed_seeding_time_per_event_ms": 294.44
       }
     ]
   },
