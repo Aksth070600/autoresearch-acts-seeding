@@ -48,7 +48,7 @@ help:
 	  '  ITK_METRICS=time adds GNU time RSS and CPU metrics; none runs clean.' \
 	  'make evaluate CANDIDATE=name  Run 10-event development stages for a committed candidate.' \
 	  'make report                 Build the results report and live campaign dashboard.' \
-	  'make campaign-status        Generate campaign-status.json from records and live state.' \
+	  'make campaign-status        Generate orchestration-files/campaign-status.json.' \
 	  'make evolve                 Select a protocol-compatible Pareto candidate.' \
 	  'make record CANDIDATE=name  Print the latest candidate result and failure logs.' \
 	  'make select-evaluation      Show Genesis plus four unique evaluation candidates.' \
@@ -58,7 +58,7 @@ help:
 	  'Override HEPP_HOST, HEPP_STORAGE, or HEPP_TMUX_TARGET for another remote.'
 
 test:
-	/usr/bin/python3 -m unittest discover -s tests -v
+	/usr/bin/python3 -m unittest discover -s orchestration-files/tests -v
 
 setupActs:
 	ACTS_SOURCE='$(ACTS_SOURCE)' ACTS_BUILD_DIR='$(ACTS_BUILD_DIR)' ACTS_VERSION='$(ACTS_VERSION)' ./orchestration-files/HEPP-files/setupActs.sh
@@ -110,7 +110,7 @@ report:
 		--dataset '$(REPORT_DATASET)' \
 		--x-metric '$(REPORT_X_METRIC)' \
 		--y-metric '$(REPORT_Y_METRIC)' \
-		--output reports/site
+		--output build/site
 
 campaign-status:
 	/usr/bin/python3 orchestration-files/campaign_status.py

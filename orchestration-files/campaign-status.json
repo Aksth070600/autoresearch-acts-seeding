@@ -493,7 +493,7 @@
   },
   "protocol_id": "acts-seeding-v2",
   "repository": {
-    "snapshot_path": "campaign-status.json",
+    "snapshot_path": "orchestration-files/campaign-status.json",
     "url": "https://github.com/Aksth070600/autoresearch-acts-seeding"
   },
   "schema_version": "1.0.0",

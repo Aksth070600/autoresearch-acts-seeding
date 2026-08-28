@@ -9,10 +9,13 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 
-PROJECT_ROOT = Path(__file__).parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_ROOT / "orchestration-files"))
 
 from campaign_status import (  # noqa: E402
+    DEFAULT_INPUT,
+    DEFAULT_OUTPUT,
+    SNAPSHOT_PATH,
     STATUS_SCHEMA_VERSION,
     StatusError,
     atomic_write_json,
@@ -134,6 +137,7 @@ class CampaignStatusTests(unittest.TestCase):
 
             written = json.loads(output.read_text(encoding="utf-8"))
             self.assertEqual(written["schema_version"], "1.0.0")
+            self.assertEqual(written["repository"]["snapshot_path"], SNAPSHOT_PATH)
             self.assertFalse(list(output.parent.glob(".campaign-status.json.*.tmp")))
             invalid = copy.deepcopy(status)
             invalid["schema_version"] = "2.0.0"
@@ -147,6 +151,21 @@ class CampaignStatusTests(unittest.TestCase):
         )
         self.assertEqual(schema["properties"]["schema_version"]["const"], "1.0.0")
         self.assertEqual(schema["properties"]["protocol_id"]["const"], "acts-seeding-v2")
+        self.assertEqual(
+            schema["properties"]["repository"]["properties"]["snapshot_path"]["enum"],
+            [
+                "orchestration-files/campaign-status.json",
+                "campaign-status.json",
+            ],
+        )
+        self.assertEqual(
+            DEFAULT_INPUT.relative_to(PROJECT_ROOT).as_posix(),
+            "orchestration-files/campaign-status-input.json",
+        )
+        self.assertEqual(
+            DEFAULT_OUTPUT.relative_to(PROJECT_ROOT).as_posix(),
+            "orchestration-files/campaign-status.json",
+        )
         self.assertFalse(schema["additionalProperties"])
 
     def test_candidate_commit_link_skips_following_status_only_commit(self) -> None:
@@ -182,7 +201,9 @@ class CampaignStatusTests(unittest.TestCase):
                 ["git", "-C", repository, "rev-parse", "HEAD"], text=True
             ).strip()
 
-            (repository / "campaign-status.json").write_text("{}\n", encoding="utf-8")
+            status_path = repository / "orchestration-files" / "campaign-status.json"
+            status_path.parent.mkdir()
+            status_path.write_text("{}\n", encoding="utf-8")
             subprocess.run(["git", "-C", repository, "add", "."], check=True)
             subprocess.run(
                 ["git", "-C", repository, "commit", "-q", "-m", "Queue candidate"],
@@ -432,8 +453,14 @@ class CampaignStatusTests(unittest.TestCase):
         logic = html.split("/* CAMPAIGN_DISCOVERY_LOGIC_START */", 1)[1].split(
             "/* CAMPAIGN_DISCOVERY_LOGIC_END */", 1
         )[0]
+        javascript = (
+            logic
+            + "\n(async () => {\n"
+            + body
+            + "\n})().catch((error) => { console.error(error); process.exitCode = 1; });"
+        )
         result = subprocess.run(
-            ["node", "-e", logic + "\n" + body],
+            ["node", "-e", javascript],
             text=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -529,10 +556,73 @@ class CampaignStatusTests(unittest.TestCase):
         self.assertFalse(result["closed"]["poll"])
         self.assertTrue(result["closed"]["immutable"])
         self.assertIn(
-            "/refs/heads/autoresearch-acts-seeding/running/campaign-status.json",
+            "/refs/heads/autoresearch-acts-seeding/running/orchestration-files/campaign-status.json",
             result["openUrl"],
         )
-        self.assertIn(f"/{7:040x}/campaign-status.json", result["closedUrl"])
+        self.assertIn(
+            f"/{7:040x}/orchestration-files/campaign-status.json",
+            result["closedUrl"],
+        )
+
+    def test_snapshot_fetch_uses_canonical_path_then_legacy_404_fallback(self) -> None:
+        pulls = [
+            self.pull(9, "autoresearch-acts-seeding/running", "2026-08-27T12:00:00Z"),
+            self.pull(
+                8,
+                "autoresearch-acts-seeding/completed",
+                "2026-08-26T12:00:00Z",
+                state="closed",
+            ),
+        ]
+        result = self.run_discovery_javascript(
+            f"const campaigns = sortCampaigns({json.dumps(pulls)});"
+            "const open = campaignFetchSource(campaigns.find((item) => item.state === 'open'));"
+            "const closed = campaignFetchSource(campaigns.find((item) => item.state === 'closed'));"
+            "const oldDeepLink = campaignFetchSource(directCampaign('autoresearch-acts-seeding/old'));"
+            "const requests = [];"
+            "const canonical = await fetchCampaignSnapshot(open, async (url, options) => {"
+            "  requests.push({url, options}); return {ok: true, status: 200};"
+            "}, 123);"
+            "const legacy = await fetchCampaignSnapshot(closed, async (url, options) => {"
+            "  requests.push({url, options});"
+            "  return url.includes('/orchestration-files/') ? {ok: false, status: 404} : {ok: true, status: 200};"
+            "}, 456);"
+            "const deepLink = await fetchCampaignSnapshot(oldDeepLink, async (url, options) => {"
+            "  requests.push({url, options});"
+            "  return url.includes('/orchestration-files/') ? {ok: false, status: 404} : {ok: true, status: 200};"
+            "}, 789);"
+            "console.log(JSON.stringify({canonical, legacy, deepLink, requests}));"
+        )
+        self.assertEqual(
+            result["canonical"]["statusPath"],
+            "orchestration-files/campaign-status.json",
+        )
+        self.assertEqual(result["legacy"]["statusPath"], "campaign-status.json")
+        self.assertEqual(result["deepLink"]["statusPath"], "campaign-status.json")
+        self.assertEqual(len(result["requests"]), 5)
+        self.assertIn("/orchestration-files/campaign-status.json?_=123", result["requests"][0]["url"])
+        self.assertIn(f"/{8:040x}/orchestration-files/campaign-status.json?_=456", result["requests"][1]["url"])
+        self.assertIn(f"/{8:040x}/campaign-status.json?_=456", result["requests"][2]["url"])
+        self.assertIn(
+            "/refs/heads/autoresearch-acts-seeding/old/campaign-status.json?_=789",
+            result["requests"][4]["url"],
+        )
+        self.assertTrue(
+            all(request["options"]["credentials"] == "omit" for request in result["requests"])
+        )
+
+    def test_snapshot_fetch_does_not_mask_non_404_canonical_errors(self) -> None:
+        result = self.run_discovery_javascript(
+            "const source = campaignFetchSource(directCampaign('autoresearch-acts-seeding/old'));"
+            "const requests = [];"
+            "const fetched = await fetchCampaignSnapshot(source, async (url) => {"
+            "  requests.push(url); return {ok: false, status: 500};"
+            "}, 123);"
+            "console.log(JSON.stringify({status: fetched.response.status, requests}));"
+        )
+        self.assertEqual(result["status"], 500)
+        self.assertEqual(len(result["requests"]), 1)
+        self.assertIn("/orchestration-files/campaign-status.json", result["requests"][0])
 
     def test_dashboard_ranks_three_fastest_completed_non_genesis_attempts(self) -> None:
         def attempt(candidate: str, state: str, seeding_ms: float | None) -> dict:

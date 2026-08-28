@@ -52,7 +52,7 @@ recommendation ranking.
 An experiment may change only:
 
 - Files under `optimization-files/` that satisfy the evaluator's ACTS-relative allowlist.
-- Concise entries in `agent-learnings.md`.
+- Concise entries in `orchestration-files/agent-learnings.md`.
 
 Do not modify the evaluator, HEPP helpers, report tooling, workload constants, event counts, seeds, pileup, thread settings, timing collection, metric parsing, or acceptance logic during ordinary candidate experiments.
 Do not change variables outside the ACTS processing implementation to improve a result.
@@ -138,21 +138,21 @@ candidate is structurally distinct when only names, logging, STL spelling,
 For each attempt:
 
 1. Inspect the current branch and commit.
-2. Confirm there are no uncommitted changes outside `records/` and `agent-learnings.md`.
-3. Read `agent-learnings.md` for promising approaches and failed ideas.
+2. Confirm there are no uncommitted changes outside `records/` and `orchestration-files/agent-learnings.md`.
+3. Read `orchestration-files/agent-learnings.md` for promising approaches and failed ideas.
 4. Run `make evolve` to get an inspiration implementation.
 5. Choose one hypothesis based on that implementation, a prior result, an implementation detail, or a documented algorithm idea.
 6. Modify only the permitted experiment files.
 7. Inspect the diff and commit the candidate before running it.
-8. Update the current attempt and its non-scientific classification in `campaign-status-input.json`, run `make campaign-status`, commit the validated state, and push it before starting the run.
+8. Update the current attempt and its non-scientific classification in `orchestration-files/campaign-status-input.json`, run `make campaign-status`, commit the validated state, and push it before starting the run.
 9. Run `make evaluate CANDIDATE=<candidate-name>`.
 10. Run `make record CANDIDATE=<candidate-name>` and judge success, failure, and improvement from its output.
-11. Add a concise lesson to `agent-learnings.md` when the attempt teaches something reusable. Update the phase or current controlled stage, run `make campaign-status` again, and include both status files in the normal evidence commit and push.
+11. Add a concise lesson to `orchestration-files/agent-learnings.md` when the attempt teaches something reusable. Update the phase or current controlled stage, run `make campaign-status` again, and include both status files in the normal evidence commit and push.
 12. Keep a candidate that meets the active-base criteria. Otherwise restore the previous candidate with a safe, non-force operation on the campaign branch.
     Classify each attempt by a stable mechanism key, not only by its candidate name.
     Keep a mixed ambiguity-improvement candidate when a follow-up experiment is explicitly targeting recovery of its seeding time, but do not present it as an overall improvement.
-13. Use the simplification skill to curate `agent-learnings.md` when it reaches 250 lines.
-14. Never allow `agent-learnings.md` to exceed 500 lines.
+13. Use the simplification skill to curate `orchestration-files/agent-learnings.md` when it reaches 250 lines.
+14. Never allow `orchestration-files/agent-learnings.md` to exceed 500 lines.
 
 Each candidate name must be unique.
 Do not overwrite generated results.
@@ -186,7 +186,7 @@ Do not commit failure logs, temporary output, or runtime state.
 
 ### Live campaign status
 
-The public dashboard contract and the exact non-scientific input format are in `orchestration-files/CAMPAIGN_STATUS.md`. Root `campaign-status.json` is generated. Never hand-edit it or copy scientific values into `campaign-status-input.json`.
+The public dashboard contract and the exact non-scientific input format are in `orchestration-files/CAMPAIGN_STATUS.md`. `orchestration-files/campaign-status.json` is generated. Never hand-edit it or copy scientific values into `orchestration-files/campaign-status-input.json`.
 
 Publish a validated snapshot at these milestones only:
 
@@ -204,7 +204,7 @@ After creating the campaign branch, push it and open one draft PR before the fir
 After every candidate attempt, push the branch so the draft PR shows the new implementation and its evidence.
 Keep every candidate implementation commit reachable on the campaign branch, including candidates that are later rejected; restore a rejected candidate with a safe revert commit instead of resetting away its history.
 
-After `make record`, commit the candidate's `summary.json`, the refreshed campaign status, and any concise `agent-learnings.md` lesson in a separate evidence commit.
+After `make record`, commit the candidate's `summary.json`, the refreshed campaign status, and any concise `orchestration-files/agent-learnings.md` lesson in a separate evidence commit.
 Commit successful and failed summaries when they exist, but never commit failure logs, temporary output, or runtime state.
 The canonical Genesis summary replacement is evidence and should be included in the campaign branch when it changes.
 
@@ -219,7 +219,7 @@ Do not delete a campaign branch until its archive PR has merged and its records 
 
 ## Agent learnings
 
-`agent-learnings.md` is a concise memory of reusable experiment lessons.
+`orchestration-files/agent-learnings.md` is a concise memory of reusable experiment lessons.
 Record both useful improvements and failed ideas that should not be repeated.
 Do not claim a scientific improvement from a run that did not complete all required stages.
 

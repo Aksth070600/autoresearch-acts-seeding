@@ -1,6 +1,6 @@
 # Live campaign status format
 
-`campaign-status.json` is the public, generated snapshot consumed by the GitHub Pages campaign dashboard. Version 1.0.0 is defined by [`campaign-status.schema.json`](campaign-status.schema.json).
+`orchestration-files/campaign-status.json` is the public, generated snapshot consumed by the GitHub Pages campaign dashboard. Version 1.0.0 is defined by [`campaign-status.schema.json`](campaign-status.schema.json).
 
 The snapshot contains only protocol-compatible Development evidence. Its scientific fields come from the median timed comparison in generated `summary.json` records:
 
@@ -11,7 +11,7 @@ Full-chain time is not read or published as an objective. The generator also der
 
 ## Campaign input
 
-Campaign workers maintain the small non-scientific `campaign-status-input.json` file at the repository root. Start a campaign with this shape:
+Campaign workers maintain the small non-scientific `orchestration-files/campaign-status-input.json` file. Start a campaign with this shape:
 
 ```json
 {
@@ -68,10 +68,10 @@ Run from the campaign branch:
 
 ```text
 make campaign-status
-/usr/bin/python3 -m unittest tests.test_campaign_status -v
+/usr/bin/python3 -m unittest discover -s orchestration-files/tests -p 'test_campaign_status.py' -v
 ```
 
-The generator scans `records/`, rejects malformed campaign evidence, validates the result, and atomically replaces root `campaign-status.json`. It derives the active commit from the checked-out branch. Commit and push the input and generated snapshot with the normal campaign milestone commit.
+The generator scans `records/`, rejects malformed campaign evidence, validates the result, and atomically replaces `orchestration-files/campaign-status.json`. It derives the active commit from the checked-out branch. Commit and push the input and generated snapshot with the normal campaign milestone commit.
 
 The ETA uses the median duration of complete, passed candidate attempts. It stays unavailable until three durations exist. It subtracts elapsed time for a current attempt and becomes unavailable while a blocker is active. Failed runs do not become ETA samples.
 
@@ -88,10 +88,12 @@ Campaign PRs use the `autoresearch-acts-seeding/` branch prefix. The dropdown so
 A selected open PR reads the live branch snapshot. A selected closed PR reads the immutable final head SHA returned by the PR list:
 
 ```text
-https://raw.githubusercontent.com/Aksth070600/autoresearch-acts-seeding/refs/heads/<branch>/campaign-status.json
-https://raw.githubusercontent.com/Aksth070600/autoresearch-acts-seeding/<final-head-sha>/campaign-status.json
+https://raw.githubusercontent.com/Aksth070600/autoresearch-acts-seeding/refs/heads/<branch>/orchestration-files/campaign-status.json
+https://raw.githubusercontent.com/Aksth070600/autoresearch-acts-seeding/<final-head-sha>/orchestration-files/campaign-status.json
 ```
+
+The dashboard requests the canonical path first. On a 404, it falls back to the legacy root `campaign-status.json` path. This keeps completed immutable campaign heads and old safe `?ref=` deep links available without masking malformed canonical snapshots or other HTTP errors.
 
 Only a selected open campaign refreshes, at most once per minute with cache busting. The pull-request list is not polled. A refresh error is visible and does not replace that campaign's last good snapshot. Older campaigns without snapshots show an explicit unavailable state. An open snapshot becomes stale after 15 minutes unless a future schema version changes `stale_after_seconds`; a closed snapshot is labeled final.
 
-Schema changes must be backward compatible within version 1 or use a new `schema_version`. Keep the old schema available so published campaign branches remain readable. Numeric per-campaign targets are a backward-compatible v1 extension: all existing snapshots with 20/10/5 remain valid, and consumers already read the generated numeric target values.
+Schema changes must be backward compatible within version 1 or use a new `schema_version`. The v1 schema accepts both canonical and legacy `repository.snapshot_path` values so published campaign branches remain valid. Numeric per-campaign targets are a backward-compatible v1 extension: all existing snapshots with 20/10/5 remain valid, and consumers already read the generated numeric target values.

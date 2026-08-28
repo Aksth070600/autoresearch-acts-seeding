@@ -5,6 +5,8 @@ on:
     paths:
       - 'records/**'
       - 'orchestration-files/report.py'
+      - 'orchestration-files/campaign_status.py'
+      - 'orchestration-files/tests/**'
       - 'orchestration-files/visualizations/**'
       - '.github/workflows/reports-preview.yml'
       - 'Makefile'
@@ -19,12 +21,15 @@ jobs:
       - name: Check out pull request
         uses: actions/checkout@v4
 
+      - name: Run repository tests
+        run: python3 -m unittest discover -s orchestration-files/tests -v
+
       - name: Build interactive report
-        run: python3 orchestration-files/report.py --dataset development --output reports/site
+        run: python3 orchestration-files/report.py --dataset development --output build/site
 
       - name: Upload interactive report artifact
         uses: actions/upload-artifact@v4
         with:
           name: acts-report-preview-${{ github.event.pull_request.number }}
-          path: reports/site
+          path: build/site
           if-no-files-found: error

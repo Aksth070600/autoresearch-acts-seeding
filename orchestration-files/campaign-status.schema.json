@@ -33,7 +33,12 @@
       "required": ["url", "snapshot_path"],
       "properties": {
         "url": {"const": "https://github.com/Aksth070600/autoresearch-acts-seeding"},
-        "snapshot_path": {"const": "campaign-status.json"}
+        "snapshot_path": {
+          "enum": [
+            "orchestration-files/campaign-status.json",
+            "campaign-status.json"
+          ]
+        }
       }
     },
     "campaign": {

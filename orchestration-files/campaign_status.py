@@ -24,10 +24,12 @@ from protocol import (
 )
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+ORCHESTRATION_ROOT = Path(__file__).resolve().parent
 DEFAULT_RECORDS = PROJECT_ROOT / "records"
-DEFAULT_INPUT = PROJECT_ROOT / "campaign-status-input.json"
-DEFAULT_OUTPUT = PROJECT_ROOT / "campaign-status.json"
+DEFAULT_INPUT = ORCHESTRATION_ROOT / "campaign-status-input.json"
+DEFAULT_OUTPUT = ORCHESTRATION_ROOT / "campaign-status.json"
 REPOSITORY_URL = "https://github.com/Aksth070600/autoresearch-acts-seeding"
+SNAPSHOT_PATH = "orchestration-files/campaign-status.json"
 STATUS_SCHEMA_VERSION = "1.0.0"
 STATUS_SCHEMA_URL = (
     "https://raw.githubusercontent.com/Aksth070600/autoresearch-acts-seeding/"
@@ -708,7 +710,7 @@ def build_status(
         "stale_after_seconds": STALE_AFTER_SECONDS,
         "repository": {
             "url": REPOSITORY_URL,
-            "snapshot_path": "campaign-status.json",
+            "snapshot_path": SNAPSHOT_PATH,
         },
         "campaign": dict(live_state["campaign"]),
         "current_attempt": current,

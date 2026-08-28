@@ -145,7 +145,10 @@ HTML_TEMPLATE = r"""<!doctype html>
 <script>
 /* CAMPAIGN_DISCOVERY_LOGIC_START */
 const REPOSITORY = '__REPOSITORY__';
-const STATUS_PATH = 'campaign-status.json';
+const STATUS_PATHS = [
+  'orchestration-files/campaign-status.json',
+  'campaign-status.json'
+];
 const CAMPAIGN_BRANCH_PREFIX = 'autoresearch-acts-seeding/';
 
 function safeRef(raw) {
@@ -234,10 +237,30 @@ function campaignFetchSource(campaign) {
     poll: campaign.state !== 'closed'
   };
 }
-function snapshotUrl(source, cacheBuster = Date.now()) {
-  if (!source || !safeRef(source.fetchRef)) return null;
+function snapshotUrl(source, cacheBuster = Date.now(), statusPath = STATUS_PATHS[0]) {
+  if (!source || !safeRef(source.fetchRef) || !STATUS_PATHS.includes(statusPath)) return null;
   const encodedRef = source.fetchRef.split('/').map(encodeURIComponent).join('/');
-  return `https://raw.githubusercontent.com/${REPOSITORY}/${encodedRef}/${STATUS_PATH}?_=${cacheBuster}`;
+  return `https://raw.githubusercontent.com/${REPOSITORY}/${encodedRef}/${statusPath}?_=${cacheBuster}`;
+}
+function snapshotUrls(source, cacheBuster = Date.now()) {
+  return STATUS_PATHS.map((statusPath) => ({
+    statusPath,
+    url: snapshotUrl(source, cacheBuster, statusPath)
+  })).filter((candidate) => candidate.url);
+}
+async function fetchCampaignSnapshot(source, fetcher = fetch, cacheBuster = Date.now()) {
+  const candidates = snapshotUrls(source, cacheBuster);
+  if (!candidates.length) throw new Error('This campaign does not have a safe public source.');
+  for (let index = 0; index < candidates.length; index += 1) {
+    const candidate = candidates[index];
+    const response = await fetcher(candidate.url, {
+      cache: 'no-store', credentials: 'omit', mode: 'cors'
+    });
+    if (response.ok || response.status !== 404 || index === candidates.length - 1) {
+      return { ...candidate, response };
+    }
+  }
+  throw new Error('No campaign snapshot path could be fetched.');
 }
 function topSeedingAttempts(attempts) {
   if (!Array.isArray(attempts)) return [];
@@ -620,7 +643,8 @@ async function loadCampaign(campaign, { automatic = false } = {}) {
   lastFetchStarted.set(key, now);
   fetchError.hidden = true;
   try {
-    const response = await fetch(snapshotUrl(source), { cache: 'no-store', credentials: 'omit', mode: 'cors' });
+    const fetched = await fetchCampaignSnapshot(source);
+    const response = fetched.response;
     if (!response.ok) {
       const message = response.status === 404
         ? 'Status unavailable. This campaign may predate campaign-status v1.'
