@@ -25,7 +25,7 @@ void createAndFilterTriplets(TripletSeeder::Cache& cache,
                              const SpacePointContainer2& spacePoints,
                              DoubletCollections bottomDoublets,
                              const ConstSpacePointProxy2& spM,
-                             DoubletCollections topDoublets) {
+                             DoubletCollections& topDoublets) {
   for (auto bottomDoublet : bottomDoublets) {
     if (topDoublets.empty()) {
       break;
@@ -76,6 +76,7 @@ void createSeedsFromGroupsImpl(
   if (tripletFinder.config().sortedByCotTheta) {
     cache.topDoublets.sortByCotTheta({0, cache.topDoublets.size()},
                                      cache.sortedTops);
+    auto remainingTopDoublets = cache.topDoublets.subset(cache.sortedTops);
     for (auto& bottomSpGroup : bottomSpGroups) {
       cache.bottomDoublets.clear();
       bottomFinder.createDoublets(middleSp, middleSpInfo, bottomSpGroup,
@@ -88,10 +89,10 @@ void createSeedsFromGroupsImpl(
                                           cache.sortedBottoms);
       createAndFilterTriplets(cache, tripletFinder, filter, spacePoints,
                               cache.bottomDoublets.subset(cache.sortedBottoms),
-                              middleSp,
-                              cache.topDoublets.subset(cache.sortedTops));
+                              middleSp, remainingTopDoublets);
     }
   } else {
+    auto remainingTopDoublets = cache.topDoublets.range();
     for (auto& bottomSpGroup : bottomSpGroups) {
       cache.bottomDoublets.clear();
       bottomFinder.createDoublets(middleSp, middleSpInfo, bottomSpGroup,
@@ -102,7 +103,7 @@ void createSeedsFromGroupsImpl(
       bottomCount += cache.bottomDoublets.size();
       createAndFilterTriplets(cache, tripletFinder, filter, spacePoints,
                               cache.bottomDoublets.range(), middleSp,
-                              cache.topDoublets.range());
+                              remainingTopDoublets);
     }
   }
 
