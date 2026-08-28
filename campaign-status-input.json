@@ -3,7 +3,7 @@
   "campaign": {
     "name": "ACTS Seeding Development Campaign V8",
     "branch": "autoresearch-acts-seeding/campaign-v8",
-    "phase": "candidate evaluation 20 of 20",
+    "phase": "Development targets complete; restoring canonical Genesis",
     "started_at": "2026-08-28T10:50:43Z",
     "targets": {
       "completed_attempts": 20,
@@ -11,14 +11,7 @@
       "micro_optimization_cap": 5
     }
   },
-  "current_attempt": {
-    "candidate": "DoubletNaturalOrderFallbackBranchHint",
-    "mechanism_family": "doublet-natural-order-fallback-branch-hint",
-    "classification": "micro",
-    "controlled_stage": "queued Development run",
-    "state": "queued",
-    "started_at": "2026-08-28T16:02:56Z"
-  },
+  "current_attempt": null,
   "attempt_metadata": [
     {
       "candidate": "CorePackedVarianceLayout",
