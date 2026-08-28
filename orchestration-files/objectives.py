@@ -11,10 +11,11 @@ from typing import Any
 
 from proposal import ProposalError, proposal_from_summary
 from protocol import (
+    PROTOCOL_ID,
     PROTOCOL_METADATA,
-    is_compatible_summary,
     is_complete_rss_evidence,
     is_complete_stage_matrix,
+    seeding_objective_protocol,
 )
 
 PRIMARY_TIME_METRIC = "seeding_time_per_event_ms"
@@ -35,7 +36,7 @@ def finite(value: Any) -> bool:
 def add_run_metrics(
     metrics: dict[str, float], prefix: str, run_metrics: dict[str, Any]
 ) -> None:
-    """Flatten only the two v3 primary objectives."""
+    """Flatten only the two shared v2/v3 primary objectives."""
 
     seeding_time = (
         run_metrics.get("timing", {}).get("seeding", {}).get("time_per_event_ms")
@@ -55,11 +56,22 @@ def add_run_metrics(
 def flatten_summary(
     summary: dict[str, Any], path: Path, records_root: Path
 ) -> dict[str, Any] | None:
-    if summary.get("status") != "passed" or not is_compatible_summary(summary):
+    protocol = seeding_objective_protocol(summary)
+    if summary.get("status") != "passed" or protocol is None:
         return None
     stages = summary.get("stages")
-    if not is_complete_stage_matrix(stages) or not is_complete_rss_evidence(
-        summary.get("rss_evidence")
+    if protocol["id"] == PROTOCOL_ID:
+        if not is_complete_stage_matrix(stages) or not is_complete_rss_evidence(
+            summary.get("rss_evidence")
+        ):
+            return None
+    elif (
+        not isinstance(stages, list)
+        or not stages
+        or any(
+            not isinstance(stage, dict) or stage.get("status") != "passed"
+            for stage in stages
+        )
     ):
         return None
 
@@ -69,25 +81,41 @@ def flatten_summary(
         comparison = {}
     repetitions = comparison.get("repetitions")
     median_metrics = comparison.get("median_run_metrics")
-    if (
-        comparison.get("complete") is True
-        and comparison.get("aggregation") == PROTOCOL_METADATA["timed_aggregation"]
-        and comparison.get("events") == PROTOCOL_METADATA["timing_events"]
-        and comparison.get("repetition_count") == PROTOCOL_METADATA["timed_repetitions"]
-        and isinstance(repetitions, list)
-        and len(repetitions) == PROTOCOL_METADATA["timed_repetitions"]
+    expected_repetitions = int(protocol["timed_repetitions"])
+    category = str(summary.get("category", path.parent.parent.name)).lower()
+    if protocol["id"] != PROTOCOL_ID and category not in {"development", "evaluation"}:
+        return None
+    expected_events = (
+        int(PROTOCOL_METADATA["timing_events"])
+        if protocol["id"] == PROTOCOL_ID
+        else int(protocol[f"{category}_events"])
+    )
+    repetitions_complete = (
+        isinstance(repetitions, list)
+        and len(repetitions) == expected_repetitions
         and all(
             isinstance(repetition, dict)
             and repetition.get("status") == "passed"
-            and repetition.get("stage") == PROTOCOL_METADATA["execution_stage"]
-            and repetition.get("metrics_mode")
-            == PROTOCOL_METADATA["timing_instrumentation"]
-            and repetition.get("events") == PROTOCOL_METADATA["timing_events"]
-            and not repetition.get("resource_metrics")
+            and repetition.get("events") == expected_events
             and isinstance(repetition.get("run_metrics"), dict)
             and bool(repetition.get("run_metrics"))
             for repetition in repetitions
         )
+    )
+    if protocol["id"] == PROTOCOL_ID and repetitions_complete:
+        repetitions_complete = all(
+            repetition.get("stage") == PROTOCOL_METADATA["execution_stage"]
+            and repetition.get("metrics_mode")
+            == PROTOCOL_METADATA["timing_instrumentation"]
+            and not repetition.get("resource_metrics")
+            for repetition in repetitions
+        )
+    if (
+        comparison.get("complete") is True
+        and comparison.get("aggregation") == protocol["timed_aggregation"]
+        and comparison.get("events") == expected_events
+        and comparison.get("repetition_count") == expected_repetitions
+        and repetitions_complete
         and isinstance(median_metrics, dict)
     ):
         add_run_metrics(metrics, "timed", median_metrics)
@@ -105,6 +133,8 @@ def flatten_summary(
     return {
         "candidate": candidate,
         "category": str(summary.get("category", path.parent.parent.name)),
+        "protocol_id": str(protocol["id"]),
+        "source_protocol_id": str(protocol["id"]),
         "commit": str(summary.get("implementation_commit", "")),
         "record": path.relative_to(records_root).as_posix(),
         "status": str(summary.get("status", "")),
@@ -118,7 +148,7 @@ def flatten_summary(
 
 
 def load_records(records_root: Path, dataset: str) -> list[dict[str, Any]]:
-    """Load complete protocol-compatible summaries in deterministic path order."""
+    """Load complete seeding-objective-family summaries in path order."""
 
     rows: list[dict[str, Any]] = []
     for path in sorted(records_root.glob("**/summary.json")):
@@ -126,7 +156,7 @@ def load_records(records_root: Path, dataset: str) -> list[dict[str, Any]]:
             summary = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             continue
-        if not is_compatible_summary(summary):
+        if seeding_objective_protocol(summary) is None:
             continue
         category = str(summary.get("category", path.parent.parent.name)).lower()
         if dataset != "all" and category != dataset:
@@ -179,7 +209,7 @@ def choose_baseline(
     ]
     if not matches:
         raise SelectionError(
-            "protocol-compatible Development Genesis baseline required; "
+            "seeding-objective-compatible Development Genesis baseline required; "
             "run `make evaluate CANDIDATE=Genesis` first"
         )
     return max(

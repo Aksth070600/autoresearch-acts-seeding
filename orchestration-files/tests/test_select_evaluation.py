@@ -40,6 +40,7 @@ class SelectEvaluationTests(unittest.TestCase):
             "category": "Development",
             "record": "Development/Genesis/summary.json",
             "commit": "genesis",
+            "protocol_id": "acts-seeding-v3",
             "is_baseline": True,
             "status": "passed",
             "started_at": "2026-08-26T12:00:00+00:00",
@@ -47,6 +48,7 @@ class SelectEvaluationTests(unittest.TestCase):
                 "timed_seeding_time_per_event_ms": 100.0,
                 "timed_total_time_per_event_ms": 300.0,
                 "timed_seeding_particle_efficiency": 0.95,
+                "rss_genesis_offset_peak_rss_kb": 1024.0,
             },
         }
         faster_full_chain = {
@@ -59,6 +61,7 @@ class SelectEvaluationTests(unittest.TestCase):
                 "timed_seeding_time_per_event_ms": 110.0,
                 "timed_total_time_per_event_ms": 250.0,
                 "timed_seeding_particle_efficiency": 0.95,
+                "rss_genesis_offset_peak_rss_kb": 512.0,
             },
         }
         slower_full_chain = {
@@ -66,11 +69,13 @@ class SelectEvaluationTests(unittest.TestCase):
             "candidate": "FasterSeeding",
             "record": "Development/FasterSeeding/summary.json",
             "commit": "faster-seeding",
+            "protocol_id": "acts-seeding-v2",
             "is_baseline": False,
             "metrics": {
                 "timed_seeding_time_per_event_ms": 90.0,
                 "timed_total_time_per_event_ms": 350.0,
                 "timed_seeding_particle_efficiency": 0.95,
+                "rss_genesis_offset_peak_rss_kb": 4096.0,
             },
         }
 
@@ -82,6 +87,7 @@ class SelectEvaluationTests(unittest.TestCase):
         selected = select_evaluation.choose([baseline, *candidates], "Genesis", 1)
 
         self.assertEqual([row["candidate"] for row in selected], ["Genesis", "FasterSeeding"])
+        self.assertEqual(selected[1]["protocol_id"], "acts-seeding-v2")
         self.assertEqual(
             selected[1]["selection_reason"], "highest timed seeding particle efficiency"
         )

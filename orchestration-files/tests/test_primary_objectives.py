@@ -1,4 +1,6 @@
+import json
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -16,9 +18,12 @@ from objectives import (  # noqa: E402
     add_run_metrics,
     choose_baseline,
     improved_over_baseline,
+    load_records,
     pareto_front,
     time_first_key,
 )
+from proposal import bind_proposal  # noqa: E402
+from protocol import V2_PROTOCOL_METADATA, current_protocol  # noqa: E402
 
 
 class PrimaryObjectiveTests(unittest.TestCase):
@@ -32,8 +37,250 @@ class PrimaryObjectiveTests(unittest.TestCase):
                 "timed_ambiguity_particle_efficiency": 0.95,
                 "timed_seeding_particle_efficiency": 0.80,
                 "timed_ckf_particle_efficiency": 0.80,
+                "rss_genesis_offset_peak_rss_kb": 1000.0,
             },
         }
+
+    @staticmethod
+    def protocol_summary(
+        protocol_id: str,
+        candidate: str,
+        time: float,
+        efficiency: float,
+        *,
+        category: str = "Development",
+        started_at: str = "2026-08-26T12:00:00+00:00",
+        bind_candidate_proposal: bool = False,
+    ) -> dict:
+        events = 10 if category == "Development" else 50
+        run_metrics = {
+            "timing": {"seeding": {"time_per_event_ms": time}},
+            "performance": {
+                "seeding": {"efficiency_particles": efficiency},
+                "ambiguity_resolution": {"efficiency_particles": 0.01},
+            },
+        }
+        if protocol_id == "acts-seeding-v3":
+            repetitions = [
+                {
+                    "repetition": number,
+                    "events": 10,
+                    "stage": "seeding",
+                    "metrics_mode": "none",
+                    "status": "passed",
+                    "run_metrics": run_metrics,
+                }
+                for number in (1, 2, 3)
+            ]
+            stages = [
+                {
+                    "comparison": "smoke",
+                    "events": 1,
+                    "stage": "seeding",
+                    "metrics_mode": "none",
+                    "status": "passed",
+                },
+                *[
+                    {
+                        **repetition,
+                        "comparison": "timed",
+                    }
+                    for repetition in repetitions
+                ],
+                {
+                    "comparison": "rss",
+                    "events": 10,
+                    "stage": "seeding",
+                    "metrics_mode": "time",
+                    "status": "passed",
+                },
+            ]
+            protocol = current_protocol()
+            rss_evidence = {
+                "complete": True,
+                "events": 10,
+                "stage": "seeding",
+                "metrics_mode": "time",
+                "status": "passed",
+                "resource_metrics": {"peak_rss_kb": 1024.0},
+            }
+        else:
+            repetitions = [
+                {
+                    "repetition": number,
+                    "events": events,
+                    "status": "passed",
+                    "run_metrics": run_metrics,
+                }
+                for number in (1, 2, 3)
+            ]
+            stages = [
+                {
+                    "name": "full_clean",
+                    "comparison": "clean",
+                    "events": events,
+                    "metrics_mode": "none",
+                    "status": "passed",
+                    "run_metrics": run_metrics,
+                },
+                *[
+                    {
+                        "name": f"full_timed_{number}",
+                        "comparison": "timed",
+                        "repetition": number,
+                        "events": events,
+                        "metrics_mode": "time",
+                        "status": "passed",
+                        "run_metrics": run_metrics,
+                    }
+                    for number in (1, 2, 3)
+                ],
+            ]
+            protocol = dict(V2_PROTOCOL_METADATA)
+            rss_evidence = None
+        commit = "a" * 40 if candidate != "Genesis" else "b" * 40
+        summary = {
+            "candidate_name": candidate,
+            "category": category,
+            "status": "passed",
+            "baseline": candidate == "Genesis",
+            "protocol_id": protocol_id,
+            "protocol": protocol,
+            "implementation_commit": commit,
+            "started_at": started_at,
+            "stages": stages,
+            "timed_comparison": {
+                "aggregation": "median",
+                "repetition_count": 3,
+                "required_repetitions": 3,
+                "events": 10 if protocol_id == "acts-seeding-v3" else events,
+                "complete": True,
+                "repetitions": repetitions,
+                "median_run_metrics": run_metrics,
+            },
+        }
+        if rss_evidence is not None:
+            summary["rss_evidence"] = rss_evidence
+        if bind_candidate_proposal:
+            proposal = {
+                "schema_version": "1.0.0",
+                "candidate": candidate,
+                "implementation_commit": commit,
+                "hypothesis": "Use the archived implementation under the shared objectives.",
+                "falsifier": "Seeding time and efficiency do not improve.",
+                "predicted_directions": {
+                    "timed_seeding_time_per_event_ms": "decrease",
+                    "timed_seeding_particle_efficiency": "increase",
+                },
+                "expected_hot_path": "The seeding candidate loop.",
+                "changed_symbols": ["Acts::SeedFinder::createSeedsForGroup"],
+                "intended_files": [
+                    "optimization-files/Core/src/Seeding/SeedFinder.cpp"
+                ],
+                "novelty_reason": "The archived mechanism remains distinct.",
+                "source_references": [
+                    {
+                        "source_type": "Genesis",
+                        "reference": "records/Development/Genesis/summary.json",
+                        "relevance": "Baseline objective evidence.",
+                        "directly_inspected": True,
+                    }
+                ],
+                "combination_provenance": None,
+            }
+            summary["proposal_binding"] = bind_proposal(
+                proposal, candidate, commit
+            )
+            summary["combination_provenance"] = None
+            summary["candidate_identity"] = {
+                "mechanism_key": "archived-mechanism",
+                "mechanism_family": "seed-loop",
+                "classification": "major",
+            }
+        return summary
+
+    def test_shared_protocol_family_drives_safe_evaluation_selection(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            records = Path(temporary) / "records"
+            summaries = (
+                (
+                    "Development/V2Genesis",
+                    self.protocol_summary(
+                        "acts-seeding-v2", "Genesis", 12.0, 0.89
+                    ),
+                ),
+                (
+                    "Development/V3Genesis",
+                    self.protocol_summary(
+                        "acts-seeding-v3",
+                        "Genesis",
+                        10.0,
+                        0.90,
+                        started_at="2026-08-26T13:00:00+00:00",
+                    ),
+                ),
+                (
+                    "Development/V2Candidate",
+                    self.protocol_summary(
+                        "acts-seeding-v2",
+                        "ArchivedCandidate",
+                        8.0,
+                        0.91,
+                        bind_candidate_proposal=True,
+                    ),
+                ),
+                (
+                    "Development/UnboundV2Candidate",
+                    self.protocol_summary(
+                        "acts-seeding-v2", "Unbound", 7.0, 0.92
+                    ),
+                ),
+                (
+                    "Evaluation/V2Evaluated",
+                    self.protocol_summary(
+                        "acts-seeding-v2",
+                        "Evaluated",
+                        6.0,
+                        0.93,
+                        category="Evaluation",
+                        bind_candidate_proposal=True,
+                    ),
+                ),
+            )
+            for relative, summary in summaries:
+                folder = records / relative
+                folder.mkdir(parents=True)
+                (folder / "summary.json").write_text(
+                    json.dumps(summary), encoding="utf-8"
+                )
+
+            rows = load_records(records, "development")
+            baseline = choose_baseline(rows, "Genesis")
+            candidates = [row for row in rows if row["candidate"] != "Genesis"]
+            front = pareto_front([baseline, *candidates])
+
+        self.assertEqual(
+            [(row["candidate"], row["protocol_id"]) for row in rows],
+            [
+                ("ArchivedCandidate", "acts-seeding-v2"),
+                ("Genesis", "acts-seeding-v2"),
+                ("Genesis", "acts-seeding-v3"),
+            ],
+        )
+        self.assertEqual(baseline["protocol_id"], "acts-seeding-v3")
+        self.assertEqual(candidates[0]["metrics"], {
+            "timed_seeding_time_per_event_ms": 8.0,
+            "timed_seeding_particle_efficiency": 0.91,
+        })
+        self.assertNotEqual(
+            candidates[0]["metrics"]["timed_seeding_particle_efficiency"], 0.01
+        )
+        self.assertEqual(
+            {row["candidate"] for row in front},
+            {"ArchivedCandidate"},
+        )
+        self.assertIsNotNone(candidates[0]["proposal"])
+        self.assertIsNotNone(candidates[0]["candidate_identity"])
 
     def test_total_time_winner_with_slower_seeding_is_not_recommended(self) -> None:
         diagnostic_winner = {
@@ -227,6 +474,7 @@ class PrimaryObjectiveTests(unittest.TestCase):
                 "timed_seeding_time_per_event_ms": 90.0,
                 "timed_total_time_per_event_ms": 290.0,
                 "timed_seeding_particle_efficiency": 0.79,
+                "rss_genesis_offset_peak_rss_kb": 100000.0,
             },
         }
         more_efficient = {
@@ -236,6 +484,7 @@ class PrimaryObjectiveTests(unittest.TestCase):
                 "timed_seeding_time_per_event_ms": 110.0,
                 "timed_total_time_per_event_ms": 310.0,
                 "timed_seeding_particle_efficiency": 0.81,
+                "rss_genesis_offset_peak_rss_kb": 1.0,
             },
         }
 

@@ -9,8 +9,8 @@ PROTOCOL_ID = "acts-seeding-v3"
 
 # Changing any controlled value requires a new protocol identity.  Keep this
 # object JSON-compatible because it is embedded verbatim in every summary.
-PROTOCOL_METADATA: dict[str, Any] = {
-    "id": PROTOCOL_ID,
+V3_PROTOCOL_METADATA: dict[str, Any] = {
+    "id": "acts-seeding-v3",
     "acts_version": "v46.5.0",
     "dataset": "ttbar_pu200",
     "execution_target": "HEPP02",
@@ -29,25 +29,31 @@ PROTOCOL_METADATA: dict[str, Any] = {
     "rss_instrumentation": "GNU time -v",
     "expected_unmasked_fpe_handling": "accept only after every requested event completed",
 }
+PROTOCOL_METADATA: dict[str, Any] = V3_PROTOCOL_METADATA
 
-# Known historical protocols remain available only for isolated read-only reports.
-# Keep newest first so an empty active report can choose the newest archive with data.
-HISTORICAL_PROTOCOLS: tuple[dict[str, Any], ...] = (
-    {
-        "id": "acts-seeding-v2",
-        "acts_version": "v46.5.0",
-        "dataset": "ttbar_pu200",
-        "execution_target": "HEPP02",
-        "threads": 1,
-        "seed": 42,
-        "pileup": 200,
-        "development_events": 10,
-        "evaluation_events": 50,
-        "timed_repetitions": 3,
-        "timed_aggregation": "median",
-        "expected_unmasked_fpe_handling": "accept only after every requested event completed",
-    },
+V2_PROTOCOL_METADATA: dict[str, Any] = {
+    "id": "acts-seeding-v2",
+    "acts_version": "v46.5.0",
+    "dataset": "ttbar_pu200",
+    "execution_target": "HEPP02",
+    "threads": 1,
+    "seed": 42,
+    "pileup": 200,
+    "development_events": 10,
+    "evaluation_events": 50,
+    "timed_repetitions": 3,
+    "timed_aggregation": "median",
+    "expected_unmasked_fpe_handling": "accept only after every requested event completed",
+}
+
+# Captain-approved scientific interpretation. Only these two recorded seeding-stage
+# objective metrics cross the otherwise incompatible v2/v3 protocol boundary.
+SEEDING_OBJECTIVE_FAMILY_ID = "acts-seeding-v2-v3-seeding-objectives"
+SEEDING_OBJECTIVE_METRICS = (
+    "timed_seeding_time_per_event_ms",
+    "timed_seeding_particle_efficiency",
 )
+SEEDING_OBJECTIVE_PROTOCOLS = (V2_PROTOCOL_METADATA, V3_PROTOCOL_METADATA)
 
 # Campaign composition does not change scientific protocol compatibility.
 # CAMPAIGN_COMPOSITION remains the owner of archived fixed-20 evidence.
@@ -92,6 +98,18 @@ def is_compatible_summary(summary: dict[str, Any]) -> bool:
         summary.get("protocol_id") == PROTOCOL_ID
         and summary.get("protocol") == PROTOCOL_METADATA
     )
+
+
+def seeding_objective_protocol(summary: dict[str, Any]) -> dict[str, Any] | None:
+    """Return the exact source protocol admitted to the shared objective family."""
+
+    for protocol in SEEDING_OBJECTIVE_PROTOCOLS:
+        if (
+            summary.get("protocol_id") == protocol["id"]
+            and summary.get("protocol") == protocol
+        ):
+            return protocol
+    return None
 
 
 def is_complete_stage_matrix(stages: Any) -> bool:

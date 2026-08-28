@@ -147,6 +147,7 @@ def main() -> int:
                 "candidate": row["candidate"],
                 "record": row["record"],
                 "implementation_commit": row["commit"],
+                "source_protocol_id": row.get("source_protocol_id", row.get("protocol_id")),
                 "selection_reason": row["selection_reason"],
                 "timed_seeding_particle_efficiency": row["metrics"].get("timed_seeding_particle_efficiency"),
                 "timed_seeding_time_per_event_ms": row["metrics"].get("timed_seeding_time_per_event_ms"),
