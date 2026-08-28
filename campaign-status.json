@@ -402,7 +402,7 @@
   "campaign": {
     "branch": "autoresearch-acts-seeding/campaign-v8",
     "name": "ACTS Seeding Development Campaign V8",
-    "phase": "Development targets complete; restoring canonical Genesis",
+    "phase": "completed Development campaign; canonical Genesis restored",
     "started_at": "2026-08-28T10:50:43Z",
     "targets": {
       "completed_attempts": 20,
@@ -418,19 +418,19 @@
       "record_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Failed/20260828T125743Z-CorePackedXYZRLayout/summary.json"
     }
   ],
-  "generated_at": "2026-08-28T16:17:09.829165Z",
+  "generated_at": "2026-08-28T16:18:03.098392Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/6cf50613f9450a98da2ff3e5532856cd279e48a9",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/951c660107089ca9a3a9cc6234c4b5801b555832",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/campaign-v8",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/29"
   },
   "progress": {
     "completed_attempts": 20,
-    "elapsed_seconds": 19586.829165,
+    "elapsed_seconds": 19640.098392,
     "estimated_remaining_seconds": 0.0,
     "eta_basis": "Campaign attempt targets are complete.",
     "eta_sample_count": 20,
-    "expected_finish_at": "2026-08-28T16:17:09.829165Z",
+    "expected_finish_at": "2026-08-28T16:18:03.098392Z",
     "median_completed_attempt_duration_seconds": 808.1705,
     "micro_optimizations": 3,
     "structural_attempts": 17

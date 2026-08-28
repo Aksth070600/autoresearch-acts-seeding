@@ -3,7 +3,7 @@
   "campaign": {
     "name": "ACTS Seeding Development Campaign V8",
     "branch": "autoresearch-acts-seeding/campaign-v8",
-    "phase": "Development targets complete; restoring canonical Genesis",
+    "phase": "completed Development campaign; canonical Genesis restored",
     "started_at": "2026-08-28T10:50:43Z",
     "targets": {
       "completed_attempts": 20,
