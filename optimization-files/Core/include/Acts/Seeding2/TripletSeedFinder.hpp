@@ -13,8 +13,6 @@
 #include "Acts/Seeding2/DoubletSeedFinder.hpp"
 #include "Acts/Utilities/detail/ContainerIterator.hpp"
 
-#include <boost/container/small_vector.hpp>
-
 #include <vector>
 
 namespace Acts {
@@ -27,10 +25,6 @@ class TripletTopCandidates {
  public:
   /// Type alias for candidate index type
   using Index = std::uint32_t;
-  /// Inline-backed candidate columns with overflow storage.
-  using TopSpacePointColumn =
-      boost::container::small_vector<SpacePointIndex2, 64>;
-  using ScalarColumn = boost::container::small_vector<float, 64>;
 
   /// @brief Returns the number of triplet candidates stored
   /// @return Number of triplet candidates in the container
@@ -65,15 +59,17 @@ class TripletTopCandidates {
 
   /// @brief Returns the vector of top space point indices
   /// @return Const reference to vector containing all top space point indices
-  const TopSpacePointColumn& topSpacePoints() const {
+  const std::vector<SpacePointIndex2>& topSpacePoints() const {
     return m_topSpacePoints;
   }
   /// @brief Returns the vector of track curvature estimations
   /// @return Const reference to vector containing curvature values for all candidates
-  const ScalarColumn& curvatures() const { return m_curvatures; }
+  const std::vector<float>& curvatures() const { return m_curvatures; }
   /// @brief Returns the vector of impact parameter estimations
   /// @return Const reference to vector containing impact parameter values for all candidates
-  const ScalarColumn& impactParameters() const { return m_impactParameters; }
+  const std::vector<float>& impactParameters() const {
+    return m_impactParameters;
+  }
 
   /// Proxy providing access to a triplet candidate.
   class Proxy {
@@ -122,9 +118,9 @@ class TripletTopCandidates {
   const_iterator end() const { return const_iterator(*this, size()); }
 
  private:
-  TopSpacePointColumn m_topSpacePoints;
-  ScalarColumn m_curvatures;
-  ScalarColumn m_impactParameters;
+  std::vector<SpacePointIndex2> m_topSpacePoints;
+  std::vector<float> m_curvatures;
+  std::vector<float> m_impactParameters;
 };
 
 /// Interface and a collection of standard implementations for a triplet seed
