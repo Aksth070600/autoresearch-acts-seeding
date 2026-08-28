@@ -34,7 +34,7 @@ UTC = timezone.utc
 
 class CampaignStatusTests(unittest.TestCase):
     def live_state(
-        self, metadata=None, current=None, blockers=None, targets=None
+        self, metadata=None, current=None, blockers=None, targets=None, *, legacy=False
     ) -> dict:
         campaign = {
             "name": "Campaign test",
@@ -44,6 +44,12 @@ class CampaignStatusTests(unittest.TestCase):
         }
         if targets is not None:
             campaign["targets"] = targets
+        elif legacy:
+            campaign["targets"] = {
+                "completed_attempts": 20,
+                "structural_attempts": 10,
+                "micro_optimization_cap": 5,
+            }
         return validate_live_state(
             {
                 "schema_version": STATUS_SCHEMA_VERSION,
@@ -56,6 +62,40 @@ class CampaignStatusTests(unittest.TestCase):
                 ),
             }
         )
+
+    @staticmethod
+    def candidate_metadata(
+        candidate: str,
+        classification: str = "major",
+        *,
+        commit: str = "a" * 40,
+        mechanism_key: str | None = None,
+        mechanism_family: str | None = None,
+        evidence: bool = True,
+        combination_provenance: dict | None = None,
+    ) -> dict:
+        key = mechanism_key or f"{candidate.lower()}-mechanism"
+        item = {
+            "candidate": candidate,
+            "mechanism_key": key,
+            "mechanism_family": mechanism_family or key,
+            "classification": classification,
+        }
+        if evidence:
+            item["evidence"] = {
+                "implementation_commit": commit,
+                "changed_symbols": [f"{candidate}::run"],
+                "files_changed": [
+                    f"optimization-files/Core/src/{candidate}.cpp#L10-L20"
+                ],
+                "hot_path_rationale": "Reduce work in the accepted hot path.",
+                "novelty_rationale": "This mechanism is distinct from earlier candidates.",
+                "outcome": "keep",
+                "lesson": "The focused mechanism completed controlled Development.",
+            }
+        if combination_provenance is not None:
+            item["combination_provenance"] = combination_provenance
+        return item
 
     @staticmethod
     def summary(
@@ -167,6 +207,25 @@ class CampaignStatusTests(unittest.TestCase):
             "orchestration-files/campaign-status.json",
         )
         self.assertFalse(schema["additionalProperties"])
+        target_variants = schema["$defs"]["campaignTargets"]["oneOf"]
+        required_sets = {frozenset(variant["required"]) for variant in target_variants}
+        self.assertIn(
+            frozenset(
+                {
+                    "completed_candidates",
+                    "major_candidates",
+                    "minor_candidates",
+                    "combination_candidates",
+                }
+            ),
+            required_sets,
+        )
+        historical = json.loads(
+            (PROJECT_ROOT / "orchestration-files" / "campaign-status.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        validate_status(historical)
 
     def test_candidate_commit_link_skips_following_status_only_commit(self) -> None:
         state = self.live_state(
@@ -176,7 +235,8 @@ class CampaignStatusTests(unittest.TestCase):
                     "mechanism_family": "candidate-mechanism",
                     "classification": "structural",
                 }
-            ]
+            ],
+            legacy=True,
         )
         with tempfile.TemporaryDirectory() as temporary:
             repository = Path(temporary)
@@ -258,16 +318,17 @@ class CampaignStatusTests(unittest.TestCase):
 
     def test_derives_latest_genesis_promising_results_and_pareto_front(self) -> None:
         metadata = [
-            {
-                "candidate": candidate,
-                "mechanism_family": mechanism,
-                "classification": classification,
-            }
+            self.candidate_metadata(
+                candidate,
+                classification,
+                mechanism_key=mechanism,
+                mechanism_family=mechanism,
+            )
             for candidate, mechanism, classification in (
-                ("Fast", "bounds", "structural"),
-                ("Efficient", "filter", "structural"),
-                ("Dominated", "hint", "micro"),
-                ("Broken", "layout", "structural"),
+                ("Fast", "bounds", "major"),
+                ("Efficient", "filter", "major"),
+                ("Dominated", "hint", "minor"),
+                ("Broken", "layout", "major"),
             )
         ]
         state = self.live_state(metadata)
@@ -308,9 +369,10 @@ class CampaignStatusTests(unittest.TestCase):
             {point["candidate"] for point in promising["pareto_front"]},
             {"Genesis", "Fast", "Efficient"},
         )
-        self.assertEqual(status["progress"]["completed_attempts"], 3)
-        self.assertEqual(status["progress"]["structural_attempts"], 3)
-        self.assertEqual(status["progress"]["micro_optimizations"], 1)
+        self.assertEqual(status["progress"]["completed_candidates"], 3)
+        self.assertEqual(status["progress"]["major_candidates"], 2)
+        self.assertEqual(status["progress"]["minor_candidates"], 1)
+        self.assertEqual(status["progress"]["combination_candidates"], 0)
         self.assertEqual(status["progress"]["median_completed_attempt_duration_seconds"], 180)
         self.assertEqual([failure["candidate"] for failure in status["failures"]], ["Broken"])
         serialized = json.dumps(status)
@@ -319,18 +381,13 @@ class CampaignStatusTests(unittest.TestCase):
 
     def test_explicit_campaign_targets_override_defaults_and_drive_progress(self) -> None:
         special_targets = {
-            "completed_attempts": 1,
-            "structural_attempts": 1,
-            "micro_optimization_cap": 0,
+            "completed_candidates": 1,
+            "major_candidates": 1,
+            "minor_candidates": 0,
+            "combination_candidates": 0,
         }
         state = self.live_state(
-            metadata=[
-                {
-                    "candidate": "Composite",
-                    "mechanism_family": "composite-positive-v1",
-                    "classification": "structural",
-                }
-            ],
+            metadata=[self.candidate_metadata("MajorCandidate")],
             targets=special_targets,
         )
         with tempfile.TemporaryDirectory() as temporary:
@@ -340,7 +397,7 @@ class CampaignStatusTests(unittest.TestCase):
                 records,
                 "composite",
                 self.summary(
-                    "Composite",
+                    "MajorCandidate",
                     "2026-08-27T10:00:00Z",
                     100,
                     90,
@@ -355,26 +412,158 @@ class CampaignStatusTests(unittest.TestCase):
             )
 
         self.assertEqual(status["campaign"]["targets"], special_targets)
-        self.assertEqual(status["progress"]["completed_attempts"], 1)
-        self.assertEqual(status["progress"]["structural_attempts"], 1)
+        self.assertEqual(status["progress"]["completed_candidates"], 1)
+        self.assertEqual(status["progress"]["major_candidates"], 1)
         self.assertEqual(status["progress"]["estimated_remaining_seconds"], 0)
         self.assertEqual(
             self.live_state()["campaign"]["targets"],
             {
-                "completed_attempts": 20,
-                "structural_attempts": 10,
-                "micro_optimization_cap": 5,
+                "completed_candidates": 20,
+                "major_candidates": 10,
+                "minor_candidates": 5,
+                "combination_candidates": 5,
             },
         )
 
         for invalid in (
-            {**special_targets, "completed_attempts": 0},
-            {**special_targets, "structural_attempts": 2},
-            {**special_targets, "micro_optimization_cap": 2},
-            {**special_targets, "micro_optimization_cap": True},
+            {**special_targets, "completed_candidates": 0},
+            {**special_targets, "major_candidates": 2},
+            {**special_targets, "minor_candidates": 1},
+            {**special_targets, "combination_candidates": True},
         ):
             with self.subTest(targets=invalid), self.assertRaises(StatusError):
                 self.live_state(targets=invalid)
+
+    def test_status_rejects_completed_category_overrun_and_missing_evidence(self) -> None:
+        targets = {
+            "completed_candidates": 1,
+            "major_candidates": 1,
+            "minor_candidates": 0,
+            "combination_candidates": 0,
+        }
+        with tempfile.TemporaryDirectory() as temporary:
+            records = Path(temporary) / "records"
+            records.mkdir()
+            self.write_summary(
+                records,
+                "first",
+                self.summary("First", "2026-08-27T10:00:00Z", 100, 90, 0.9),
+            )
+            missing_evidence = self.live_state(
+                [self.candidate_metadata("First", evidence=False)], targets=targets
+            )
+            with self.assertRaisesRegex(StatusError, "no completed evidence"):
+                load_attempts(records, missing_evidence)
+
+            self.write_summary(
+                records,
+                "second",
+                self.summary("Second", "2026-08-27T10:05:00Z", 100, 89, 0.9),
+            )
+            overrun = self.live_state(
+                [self.candidate_metadata("First"), self.candidate_metadata("Second")],
+                targets=targets,
+            )
+            with self.assertRaisesRegex(StatusError, "exceed the campaign target"):
+                build_status(
+                    overrun,
+                    load_attempts(records, overrun),
+                    datetime(2026, 8, 27, 11, tzinfo=UTC),
+                    "d" * 40,
+                )
+
+    def test_combination_provenance_names_inspected_earlier_sources(self) -> None:
+        source_a = self.candidate_metadata("SourceA", commit="a" * 40)
+        source_b = self.candidate_metadata("SourceB", commit="b" * 40)
+        provenance = {
+            "sources": [
+                {
+                    "candidate": "SourceA",
+                    "mechanism_key": source_a["mechanism_key"],
+                    "implementation_commit": "a" * 40,
+                    "directly_inspected": True,
+                },
+                {
+                    "candidate": "SourceB",
+                    "mechanism_key": source_b["mechanism_key"],
+                    "implementation_commit": "b" * 40,
+                    "directly_inspected": True,
+                },
+            ],
+            "compatibility_rationale": "The sources change separate seams.",
+            "interaction_hypothesis": "Their effects should be additive.",
+        }
+        combined = self.candidate_metadata(
+            "Combined",
+            "combination",
+            commit="c" * 40,
+            combination_provenance=provenance,
+        )
+        state = self.live_state([source_a, source_b, combined])
+
+        with tempfile.TemporaryDirectory() as temporary:
+            records = Path(temporary) / "records"
+            records.mkdir()
+            for index, (candidate, commit) in enumerate(
+                (("SourceA", "a" * 40), ("SourceB", "b" * 40), ("Combined", "c" * 40))
+            ):
+                self.write_summary(
+                    records,
+                    candidate,
+                    self.summary(
+                        candidate,
+                        f"2026-08-27T10:0{index}:00Z",
+                        100,
+                        90 - index,
+                        0.9,
+                        commit=commit,
+                    ),
+                )
+            status = build_status(
+                state,
+                load_attempts(records, state),
+                datetime(2026, 8, 27, 11, tzinfo=UTC),
+                "d" * 40,
+            )
+
+        combined_attempt = next(
+            attempt for attempt in status["attempts"] if attempt["candidate"] == "Combined"
+        )
+        self.assertEqual(combined_attempt["combination_provenance"], provenance)
+        self.assertEqual(
+            combined_attempt["links"]["commit"],
+            "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/" + "c" * 40,
+        )
+        self.assertEqual(status["progress"]["major_candidates"], 2)
+        self.assertEqual(status["progress"]["combination_candidates"], 1)
+
+        invalid = copy.deepcopy(provenance)
+        invalid["sources"][0]["directly_inspected"] = False
+        with self.assertRaisesRegex(StatusError, "directly_inspected"):
+            self.live_state(
+                [
+                    source_a,
+                    source_b,
+                    self.candidate_metadata(
+                        "InvalidCombined",
+                        "combination",
+                        commit="e" * 40,
+                        combination_provenance=invalid,
+                    ),
+                ]
+            )
+
+    def test_rejects_four_consecutive_candidates_from_one_family(self) -> None:
+        metadata = [
+            self.candidate_metadata(
+                f"Candidate{index}",
+                "minor",
+                mechanism_family="same-family",
+            )
+            for index in range(4)
+        ]
+        with self.assertRaisesRegex(StatusError, "three consecutive"):
+            self.live_state(metadata)
 
     def test_eta_requires_samples_uses_median_and_deducts_current_elapsed(self) -> None:
         now = datetime(2026, 8, 27, 12, tzinfo=UTC)
@@ -416,6 +605,18 @@ class CampaignStatusTests(unittest.TestCase):
         }
         self.assertEqual(validate_live_state(raw)["campaign"]["branch"], "safe/team-campaign.v1")
         self.assertEqual(validate_ref("safe/team-campaign.v1"), "safe/team-campaign.v1")
+        current = self.live_state(
+            current={
+                "candidate": "Genesis",
+                "mechanism_key": "fresh-genesis-baseline",
+                "mechanism_family": "fresh Genesis baseline",
+                "classification": "baseline",
+                "controlled_stage": "queued Development run",
+                "state": "queued",
+                "started_at": "2026-08-27T09:05:00Z",
+            }
+        )["current_attempt"]
+        self.assertEqual(current["mechanism_key"], "fresh-genesis-baseline")
 
         for unsafe in ("../main", "team//campaign", "team/@{main", "-branch", ".hidden/x", "branch lock"):
             with self.subTest(unsafe=unsafe), self.assertRaises(StatusError):
@@ -485,6 +686,128 @@ class CampaignStatusTests(unittest.TestCase):
                 "repo": {"full_name": "Aksth070600/autoresearch-acts-seeding"},
             },
         }
+
+    def test_dashboard_maps_historical_and_new_progress_snapshots(self) -> None:
+        historical = {
+            "campaign": {
+                "targets": {
+                    "completed_attempts": 20,
+                    "structural_attempts": 10,
+                    "micro_optimization_cap": 5,
+                }
+            },
+            "progress": {
+                "completed_attempts": 20,
+                "structural_attempts": 17,
+                "micro_optimizations": 3,
+            },
+        }
+        current = {
+            "campaign": {
+                "targets": {
+                    "completed_candidates": 20,
+                    "major_candidates": 10,
+                    "minor_candidates": 5,
+                    "combination_candidates": 5,
+                }
+            },
+            "progress": {
+                "completed_candidates": 8,
+                "major_candidates": 5,
+                "minor_candidates": 2,
+                "combination_candidates": 1,
+            },
+        }
+        result = self.run_discovery_javascript(
+            f"const historical = campaignProgressModel({json.dumps(historical)});"
+            f"const current = campaignProgressModel({json.dumps(current)});"
+            "console.log(JSON.stringify({historical, current}));"
+        )
+
+        self.assertEqual(result["historical"]["format"], "legacy-attempts")
+        self.assertEqual(
+            [card[0] for card in result["historical"]["cards"]],
+            ["Completed attempts", "Structural attempts", "Micro-optimizations"],
+        )
+        self.assertEqual(result["current"]["format"], "candidate-composition")
+        self.assertEqual(
+            [card[0] for card in result["current"]["cards"]],
+            [
+                "Completed candidates",
+                "Major candidates",
+                "Minor candidates",
+                "Combination candidates",
+            ],
+        )
+
+    def test_historical_and_new_snapshot_fixtures_render_progress_cards(self) -> None:
+        if shutil.which("node") is None:
+            self.skipTest("node is required for dashboard JavaScript tests")
+        html = self.dashboard_html()
+        logic = html.split("/* CAMPAIGN_DISCOVERY_LOGIC_START */", 1)[1].split(
+            "/* CAMPAIGN_DISCOVERY_LOGIC_END */", 1
+        )[0]
+        renderer = "function renderCampaignProgress" + html.split(
+            "function renderCampaignProgress", 1
+        )[1].split("function renderSeedingLeaders", 1)[0]
+        historical = {
+            "campaign": {
+                "targets": {
+                    "completed_attempts": 20,
+                    "structural_attempts": 10,
+                    "micro_optimization_cap": 5,
+                }
+            },
+            "progress": {
+                "completed_attempts": 20,
+                "structural_attempts": 17,
+                "micro_optimizations": 3,
+            },
+        }
+        current = {
+            "campaign": {
+                "targets": {
+                    "completed_candidates": 20,
+                    "major_candidates": 10,
+                    "minor_candidates": 5,
+                    "combination_candidates": 5,
+                }
+            },
+            "progress": {
+                "completed_candidates": 8,
+                "major_candidates": 5,
+                "minor_candidates": 2,
+                "combination_candidates": 1,
+            },
+        }
+        javascript = (
+            logic
+            + "\nconst text = {}; const bars = {}; const combinationCard = {};"
+            + "\nfunction setText(id, value) { text[id] = value; }"
+            + "\nfunction setProgress(valueId, barId, current, target, cap) { bars[barId] = {current, target, cap}; }"
+            + "\nconst document = {getElementById: () => combinationCard};\n"
+            + renderer
+            + f"\nrenderCampaignProgress({json.dumps(historical)});"
+            + "\nconst historicalResult = {text: {...text}, bars: {...bars}, hidden: combinationCard.hidden};"
+            + "\nObject.keys(text).forEach((key) => delete text[key]); Object.keys(bars).forEach((key) => delete bars[key]);"
+            + f"\nrenderCampaignProgress({json.dumps(current)});"
+            + "\nconsole.log(JSON.stringify({historical: historicalResult, current: {text, bars, hidden: combinationCard.hidden}}));"
+        )
+        result = subprocess.run(
+            ["node", "-e", javascript],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        rendered = json.loads(result.stdout)
+        self.assertEqual(rendered["historical"]["text"]["major-label"], "Structural attempts")
+        self.assertTrue(rendered["historical"]["hidden"])
+        self.assertEqual(rendered["current"]["text"]["major-label"], "Major candidates")
+        self.assertEqual(
+            rendered["current"]["text"]["combination-label"], "Combination candidates"
+        )
+        self.assertFalse(rendered["current"]["hidden"])
 
     def test_campaign_discovery_orders_newest_first_and_defaults_to_newest(self) -> None:
         unsafe_url = self.pull(
@@ -744,6 +1067,11 @@ class CampaignStatusTests(unittest.TestCase):
             "function campaignFetchSource(campaign)",
             "function safeRef(raw)",
             "function freshnessState(snapshot)",
+            "function campaignProgressModel(snapshot)",
+            "function renderCampaignProgress(snapshot)",
+            "Major candidates",
+            "Minor candidates",
+            "Combination candidates",
             "Status unavailable. This campaign may predate campaign-status v1.",
             "if (source?.poll",
         ):

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://raw.githubusercontent.com/Aksth070600/autoresearch-acts-seeding/main/orchestration-files/campaign-status.schema.json",
   "title": "ACTS Seeding live campaign status",
-  "description": "Version 1.0.0 public snapshot for one controlled ACTS Seeding autoresearch campaign.",
+  "description": "Backward-compatible version 1.0.0 snapshot for controlled ACTS Seeding campaigns.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -50,71 +50,21 @@
         "branch": {"type": "string", "minLength": 1, "maxLength": 200},
         "phase": {"$ref": "#/$defs/label"},
         "started_at": {"$ref": "#/$defs/timestamp"},
-        "targets": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["completed_attempts", "structural_attempts", "micro_optimization_cap"],
-          "properties": {
-            "completed_attempts": {"type": "integer", "minimum": 1},
-            "structural_attempts": {"type": "integer", "minimum": 0},
-            "micro_optimization_cap": {"type": "integer", "minimum": 0}
-          }
-        }
+        "targets": {"$ref": "#/$defs/campaignTargets"}
       }
     },
     "current_attempt": {
       "oneOf": [
         {"type": "null"},
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["candidate", "mechanism_family", "classification", "controlled_stage", "state", "started_at"],
-          "properties": {
-            "candidate": {"$ref": "#/$defs/candidate"},
-            "mechanism_family": {"$ref": "#/$defs/label"},
-            "classification": {"enum": ["baseline", "structural", "micro"]},
-            "controlled_stage": {"$ref": "#/$defs/label"},
-            "state": {"enum": ["queued", "running", "recording", "blocked"]},
-            "started_at": {
-              "oneOf": [
-                {"type": "null"},
-                {"$ref": "#/$defs/timestamp"}
-              ]
-            }
-          }
-        }
+        {"$ref": "#/$defs/legacyCurrentAttempt"},
+        {"$ref": "#/$defs/currentCandidate"}
       ]
     },
     "progress": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "completed_attempts",
-        "structural_attempts",
-        "micro_optimizations",
-        "elapsed_seconds",
-        "median_completed_attempt_duration_seconds",
-        "estimated_remaining_seconds",
-        "expected_finish_at",
-        "eta_sample_count",
-        "eta_basis"
-      ],
-      "properties": {
-        "completed_attempts": {"$ref": "#/$defs/nonnegativeInteger"},
-        "structural_attempts": {"$ref": "#/$defs/nonnegativeInteger"},
-        "micro_optimizations": {"$ref": "#/$defs/nonnegativeInteger"},
-        "elapsed_seconds": {"$ref": "#/$defs/nonnegativeNumber"},
-        "median_completed_attempt_duration_seconds": {"$ref": "#/$defs/nullableNonnegativeNumber"},
-        "estimated_remaining_seconds": {"$ref": "#/$defs/nullableNonnegativeNumber"},
-        "expected_finish_at": {
-          "oneOf": [
-            {"type": "null"},
-            {"$ref": "#/$defs/timestamp"}
-          ]
-        },
-        "eta_sample_count": {"$ref": "#/$defs/nonnegativeInteger"},
-        "eta_basis": {"type": "string", "minLength": 1, "maxLength": 300}
-      }
+      "oneOf": [
+        {"$ref": "#/$defs/legacyProgress"},
+        {"$ref": "#/$defs/candidateProgress"}
+      ]
     },
     "promising_results": {
       "type": "object",
@@ -137,7 +87,12 @@
     },
     "attempts": {
       "type": "array",
-      "items": {"$ref": "#/$defs/attempt"}
+      "items": {
+        "oneOf": [
+          {"$ref": "#/$defs/legacyAttempt"},
+          {"$ref": "#/$defs/candidateAttempt"}
+        ]
+      }
     },
     "blockers": {
       "type": "array",
@@ -176,6 +131,12 @@
     "timestamp": {"type": "string", "format": "date-time"},
     "label": {"type": "string", "minLength": 1, "maxLength": 120},
     "candidate": {"type": "string", "pattern": "^[A-Za-z0-9._-]+$", "maxLength": 80},
+    "fullCommit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "fileLineRange": {
+      "type": "string",
+      "pattern": "^optimization-files/[^#]+#L[1-9][0-9]*-L[1-9][0-9]*$",
+      "maxLength": 300
+    },
     "number": {"type": "number"},
     "nonnegativeNumber": {"type": "number", "minimum": 0},
     "nonnegativeInteger": {"type": "integer", "minimum": 0},
@@ -186,6 +147,112 @@
         {"type": "null"},
         {"type": "string", "format": "uri"}
       ]
+    },
+    "campaignTargets": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["completed_attempts", "structural_attempts", "micro_optimization_cap"],
+          "properties": {
+            "completed_attempts": {"type": "integer", "minimum": 1},
+            "structural_attempts": {"type": "integer", "minimum": 0},
+            "micro_optimization_cap": {"type": "integer", "minimum": 0}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["completed_candidates", "major_candidates", "minor_candidates", "combination_candidates"],
+          "properties": {
+            "completed_candidates": {"type": "integer", "minimum": 1},
+            "major_candidates": {"type": "integer", "minimum": 0},
+            "minor_candidates": {"type": "integer", "minimum": 0},
+            "combination_candidates": {"type": "integer", "minimum": 0}
+          }
+        }
+      ]
+    },
+    "legacyCurrentAttempt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["candidate", "mechanism_family", "classification", "controlled_stage", "state", "started_at"],
+      "properties": {
+        "candidate": {"$ref": "#/$defs/candidate"},
+        "mechanism_family": {"$ref": "#/$defs/label"},
+        "classification": {"enum": ["baseline", "structural", "micro"]},
+        "controlled_stage": {"$ref": "#/$defs/label"},
+        "state": {"enum": ["queued", "running", "recording", "blocked"]},
+        "started_at": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/timestamp"}]}
+      }
+    },
+    "currentCandidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["candidate", "mechanism_key", "mechanism_family", "classification", "controlled_stage", "state", "started_at"],
+      "properties": {
+        "candidate": {"$ref": "#/$defs/candidate"},
+        "mechanism_key": {"$ref": "#/$defs/label"},
+        "mechanism_family": {"$ref": "#/$defs/label"},
+        "classification": {"enum": ["baseline", "major", "minor", "combination"]},
+        "controlled_stage": {"$ref": "#/$defs/label"},
+        "state": {"enum": ["queued", "running", "recording", "blocked"]},
+        "started_at": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/timestamp"}]}
+      }
+    },
+    "legacyProgress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "completed_attempts",
+        "structural_attempts",
+        "micro_optimizations",
+        "elapsed_seconds",
+        "median_completed_attempt_duration_seconds",
+        "estimated_remaining_seconds",
+        "expected_finish_at",
+        "eta_sample_count",
+        "eta_basis"
+      ],
+      "properties": {
+        "completed_attempts": {"$ref": "#/$defs/nonnegativeInteger"},
+        "structural_attempts": {"$ref": "#/$defs/nonnegativeInteger"},
+        "micro_optimizations": {"$ref": "#/$defs/nonnegativeInteger"},
+        "elapsed_seconds": {"$ref": "#/$defs/nonnegativeNumber"},
+        "median_completed_attempt_duration_seconds": {"$ref": "#/$defs/nullableNonnegativeNumber"},
+        "estimated_remaining_seconds": {"$ref": "#/$defs/nullableNonnegativeNumber"},
+        "expected_finish_at": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/timestamp"}]},
+        "eta_sample_count": {"$ref": "#/$defs/nonnegativeInteger"},
+        "eta_basis": {"type": "string", "minLength": 1, "maxLength": 300}
+      }
+    },
+    "candidateProgress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "completed_candidates",
+        "major_candidates",
+        "minor_candidates",
+        "combination_candidates",
+        "elapsed_seconds",
+        "median_completed_attempt_duration_seconds",
+        "estimated_remaining_seconds",
+        "expected_finish_at",
+        "eta_sample_count",
+        "eta_basis"
+      ],
+      "properties": {
+        "completed_candidates": {"$ref": "#/$defs/nonnegativeInteger"},
+        "major_candidates": {"$ref": "#/$defs/nonnegativeInteger"},
+        "minor_candidates": {"$ref": "#/$defs/nonnegativeInteger"},
+        "combination_candidates": {"$ref": "#/$defs/nonnegativeInteger"},
+        "elapsed_seconds": {"$ref": "#/$defs/nonnegativeNumber"},
+        "median_completed_attempt_duration_seconds": {"$ref": "#/$defs/nullableNonnegativeNumber"},
+        "estimated_remaining_seconds": {"$ref": "#/$defs/nullableNonnegativeNumber"},
+        "expected_finish_at": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/timestamp"}]},
+        "eta_sample_count": {"$ref": "#/$defs/nonnegativeInteger"},
+        "eta_basis": {"type": "string", "minLength": 1, "maxLength": 300}
+      }
     },
     "links": {
       "type": "object",
@@ -199,13 +266,7 @@
     "result": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "candidate",
-        "timed_seeding_time_per_event_ms",
-        "timed_ambiguity_particle_efficiency",
-        "started_at",
-        "links"
-      ],
+      "required": ["candidate", "timed_seeding_time_per_event_ms", "timed_ambiguity_particle_efficiency", "started_at", "links"],
       "properties": {
         "candidate": {"$ref": "#/$defs/candidate"},
         "timed_seeding_time_per_event_ms": {"$ref": "#/$defs/nonnegativeNumber"},
@@ -214,24 +275,11 @@
         "links": {"$ref": "#/$defs/links"}
       }
     },
-    "nullableResult": {
-      "oneOf": [
-        {"type": "null"},
-        {"$ref": "#/$defs/result"}
-      ]
-    },
+    "nullableResult": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/result"}]},
     "bestSeedingResult": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "candidate",
-        "timed_seeding_time_per_event_ms",
-        "timed_ambiguity_particle_efficiency",
-        "started_at",
-        "links",
-        "delta_vs_genesis_ms",
-        "percentage_vs_genesis"
-      ],
+      "required": ["candidate", "timed_seeding_time_per_event_ms", "timed_ambiguity_particle_efficiency", "started_at", "links", "delta_vs_genesis_ms", "percentage_vs_genesis"],
       "properties": {
         "candidate": {"$ref": "#/$defs/candidate"},
         "timed_seeding_time_per_event_ms": {"$ref": "#/$defs/nonnegativeNumber"},
@@ -242,24 +290,10 @@
         "percentage_vs_genesis": {"$ref": "#/$defs/nullableNumber"}
       }
     },
-    "attempt": {
+    "legacyAttempt": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "candidate",
-        "mechanism_family",
-        "classification",
-        "state",
-        "outcome",
-        "started_at",
-        "finished_at",
-        "duration_seconds",
-        "timed_seeding_time_per_event_ms",
-        "timed_ambiguity_particle_efficiency",
-        "implementation_commit",
-        "links",
-        "record"
-      ],
+      "required": ["candidate", "mechanism_family", "classification", "state", "outcome", "started_at", "finished_at", "duration_seconds", "timed_seeding_time_per_event_ms", "timed_ambiguity_particle_efficiency", "implementation_commit", "links", "record"],
       "properties": {
         "candidate": {"$ref": "#/$defs/candidate"},
         "mechanism_family": {"$ref": "#/$defs/label"},
@@ -267,29 +301,102 @@
         "state": {"enum": ["completed", "failed"]},
         "outcome": {"type": "string", "minLength": 1, "maxLength": 500},
         "started_at": {"$ref": "#/$defs/timestamp"},
-        "finished_at": {
-          "oneOf": [
-            {"type": "null"},
-            {"$ref": "#/$defs/timestamp"}
-          ]
-        },
+        "finished_at": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/timestamp"}]},
         "duration_seconds": {"$ref": "#/$defs/nullableNonnegativeNumber"},
         "timed_seeding_time_per_event_ms": {"$ref": "#/$defs/nullableNonnegativeNumber"},
-        "timed_ambiguity_particle_efficiency": {
-          "oneOf": [
-            {"type": "null"},
-            {"type": "number", "minimum": 0, "maximum": 1}
-          ]
-        },
-        "implementation_commit": {
-          "oneOf": [
-            {"type": "null"},
-            {"type": "string", "pattern": "^[0-9a-f]{40}$"}
-          ]
-        },
+        "timed_ambiguity_particle_efficiency": {"oneOf": [{"type": "null"}, {"type": "number", "minimum": 0, "maximum": 1}]},
+        "implementation_commit": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/fullCommit"}]},
         "links": {"$ref": "#/$defs/links"},
         "record": {"type": "string", "minLength": 1}
       }
+    },
+    "combinationSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["candidate", "mechanism_key", "implementation_commit", "directly_inspected"],
+      "properties": {
+        "candidate": {"$ref": "#/$defs/candidate"},
+        "mechanism_key": {"$ref": "#/$defs/label"},
+        "implementation_commit": {"$ref": "#/$defs/fullCommit"},
+        "directly_inspected": {"const": true}
+      }
+    },
+    "combinationProvenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sources", "compatibility_rationale", "interaction_hypothesis"],
+      "properties": {
+        "sources": {
+          "type": "array",
+          "minItems": 2,
+          "items": {"$ref": "#/$defs/combinationSource"}
+        },
+        "compatibility_rationale": {"type": "string", "minLength": 1, "maxLength": 500},
+        "interaction_hypothesis": {"type": "string", "minLength": 1, "maxLength": 500}
+      }
+    },
+    "candidateAttempt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "candidate",
+        "mechanism_key",
+        "mechanism_family",
+        "classification",
+        "state",
+        "run_result",
+        "outcome",
+        "started_at",
+        "finished_at",
+        "duration_seconds",
+        "timed_seeding_time_per_event_ms",
+        "timed_ambiguity_particle_efficiency",
+        "implementation_commit",
+        "changed_symbols",
+        "files_changed",
+        "hot_path_rationale",
+        "novelty_rationale",
+        "lesson",
+        "combination_provenance",
+        "links",
+        "record"
+      ],
+      "properties": {
+        "candidate": {"$ref": "#/$defs/candidate"},
+        "mechanism_key": {"$ref": "#/$defs/label"},
+        "mechanism_family": {"$ref": "#/$defs/label"},
+        "classification": {"enum": ["major", "minor", "combination"]},
+        "state": {"enum": ["completed", "failed"]},
+        "run_result": {"type": "string", "minLength": 1, "maxLength": 500},
+        "outcome": {"enum": ["keep", "discard", "crash"]},
+        "started_at": {"$ref": "#/$defs/timestamp"},
+        "finished_at": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/timestamp"}]},
+        "duration_seconds": {"$ref": "#/$defs/nullableNonnegativeNumber"},
+        "timed_seeding_time_per_event_ms": {"$ref": "#/$defs/nullableNonnegativeNumber"},
+        "timed_ambiguity_particle_efficiency": {"oneOf": [{"type": "null"}, {"type": "number", "minimum": 0, "maximum": 1}]},
+        "implementation_commit": {"$ref": "#/$defs/fullCommit"},
+        "changed_symbols": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1, "maxLength": 160}},
+        "files_changed": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/fileLineRange"}},
+        "hot_path_rationale": {"type": "string", "minLength": 1, "maxLength": 500},
+        "novelty_rationale": {"type": "string", "minLength": 1, "maxLength": 500},
+        "lesson": {"type": "string", "minLength": 1, "maxLength": 500},
+        "combination_provenance": {
+          "oneOf": [{"type": "null"}, {"$ref": "#/$defs/combinationProvenance"}]
+        },
+        "links": {"$ref": "#/$defs/links"},
+        "record": {"type": "string", "minLength": 1}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"classification": {"const": "combination"}}},
+          "then": {
+            "properties": {
+              "combination_provenance": {"$ref": "#/$defs/combinationProvenance"}
+            }
+          },
+          "else": {"properties": {"combination_provenance": {"type": "null"}}}
+        }
+      ]
     }
   }
 }

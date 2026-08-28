@@ -49,7 +49,8 @@ HTML_TEMPLATE = r"""<!doctype html>
     .chip.warn { color: #fde68a; border-color: #a16207; background: rgba(113,63,18,0.35); }
     .chip.bad { color: #fecaca; border-color: #b91c1c; background: rgba(127,29,29,0.35); }
     .grid { display: grid; gap: 12px; }
-    .progress-grid, .timing-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 12px; }
+    .progress-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 12px; }
+    .timing-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 12px; }
     .results-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .card { min-width: 0; min-height: 82px; padding: 12px 14px; background: #111827;
       border: 1px solid #334155; border-radius: 12px; }
@@ -115,9 +116,10 @@ HTML_TEMPLATE = r"""<!doctype html>
     </div>
 
     <section class="grid progress-grid" aria-label="Campaign progress">
-      <div class="card"><span class="card-label">Completed attempts</span><strong id="completed-progress" class="card-value"></strong><div class="progress-track"><span id="completed-bar" class="progress-fill"></span></div></div>
-      <div class="card"><span class="card-label">Structural attempts</span><strong id="structural-progress" class="card-value"></strong><div class="progress-track"><span id="structural-bar" class="progress-fill"></span></div></div>
-      <div class="card"><span class="card-label">Micro-optimizations</span><strong id="micro-progress" class="card-value"></strong><div class="progress-track"><span id="micro-bar" class="progress-fill warn"></span></div></div>
+      <div class="card"><span id="completed-label" class="card-label">Completed candidates</span><strong id="completed-progress" class="card-value"></strong><div class="progress-track"><span id="completed-bar" class="progress-fill"></span></div></div>
+      <div class="card"><span id="major-label" class="card-label">Major candidates</span><strong id="major-progress" class="card-value"></strong><div class="progress-track"><span id="major-bar" class="progress-fill"></span></div></div>
+      <div class="card"><span id="minor-label" class="card-label">Minor candidates</span><strong id="minor-progress" class="card-value"></strong><div class="progress-track"><span id="minor-bar" class="progress-fill"></span></div></div>
+      <div id="combination-card" class="card"><span id="combination-label" class="card-label">Combination candidates</span><strong id="combination-progress" class="card-value"></strong><div class="progress-track"><span id="combination-bar" class="progress-fill"></span></div></div>
     </section>
 
     <section class="grid timing-grid" aria-label="Campaign timing">
@@ -287,6 +289,45 @@ function humanizeCandidateName(value) {
     .replace(/\s+/g, ' ')
     .trim();
 }
+function validCount(value) {
+  return Number.isInteger(value) && value >= 0;
+}
+function campaignProgressModel(snapshot) {
+  const targets = snapshot?.campaign?.targets;
+  const progress = snapshot?.progress;
+  if (!targets || !progress) return null;
+  const candidateFields = ['completed_candidates', 'major_candidates', 'minor_candidates', 'combination_candidates'];
+  if (candidateFields.every((field) => validCount(targets[field]) && validCount(progress[field]))) {
+    if (targets.completed_candidates < 1
+        || targets.major_candidates + targets.minor_candidates + targets.combination_candidates !== targets.completed_candidates
+        || progress.major_candidates + progress.minor_candidates + progress.combination_candidates !== progress.completed_candidates
+        || candidateFields.some((field) => progress[field] > targets[field])) return null;
+    return {
+      format: 'candidate-composition',
+      cards: [
+        ['Completed candidates', progress.completed_candidates, targets.completed_candidates, false],
+        ['Major candidates', progress.major_candidates, targets.major_candidates, false],
+        ['Minor candidates', progress.minor_candidates, targets.minor_candidates, false],
+        ['Combination candidates', progress.combination_candidates, targets.combination_candidates, false]
+      ]
+    };
+  }
+  const legacyFields = ['completed_attempts', 'structural_attempts', 'micro_optimization_cap'];
+  if (legacyFields.every((field) => validCount(targets[field]))
+      && validCount(progress.completed_attempts)
+      && validCount(progress.structural_attempts)
+      && validCount(progress.micro_optimizations)) {
+    return {
+      format: 'legacy-attempts',
+      cards: [
+        ['Completed attempts', progress.completed_attempts, targets.completed_attempts, false],
+        ['Structural attempts', progress.structural_attempts, targets.structural_attempts, false],
+        ['Micro-optimizations', progress.micro_optimizations, targets.micro_optimization_cap, true]
+      ]
+    };
+  }
+  return null;
+}
 /* CAMPAIGN_DISCOVERY_LOGIC_END */
 
 const POLL_INTERVAL_MS = __POLL_INTERVAL_MS__;
@@ -312,14 +353,16 @@ function validateSnapshot(value, expectedBranch) {
       || !Number.isFinite(Date.parse(value.generated_at))) {
     throw new Error('The fetched file is not a compatible campaign-status v1 snapshot.');
   }
-  const target = value.campaign.targets;
-  if (!target || !finite(target.completed_attempts) || !finite(target.structural_attempts)
-      || !finite(target.micro_optimization_cap)) {
-    throw new Error('The campaign snapshot has invalid targets.');
+  const progressModel = campaignProgressModel(value);
+  if (!progressModel) {
+    throw new Error('The campaign snapshot has invalid targets or progress.');
   }
+  const classifications = progressModel.format === 'candidate-composition'
+    ? ['baseline', 'major', 'minor', 'combination']
+    : ['baseline', 'structural', 'micro'];
   for (const attempt of value.attempts) {
     if (!attempt || typeof attempt.candidate !== 'string'
-        || !['baseline', 'structural', 'micro'].includes(attempt.classification)
+        || !classifications.includes(attempt.classification)
         || !validObjective(attempt.timed_seeding_time_per_event_ms)
         || !validObjective(attempt.timed_ambiguity_particle_efficiency)) {
       throw new Error('The campaign snapshot has invalid attempt evidence.');
@@ -402,6 +445,15 @@ function setProgress(valueId, barId, current, target, cap = false) {
   bar.style.width = `${percentage}%`;
   bar.classList.toggle('good', !cap && current >= target);
   bar.classList.toggle('bad', cap && current > target);
+}
+function renderCampaignProgress(snapshot) {
+  const progressModel = campaignProgressModel(snapshot);
+  const cardIds = ['completed', 'major', 'minor', 'combination'];
+  progressModel.cards.forEach(([label, current, target, cap], index) => {
+    setText(`${cardIds[index]}-label`, label);
+    setProgress(`${cardIds[index]}-progress`, `${cardIds[index]}-bar`, current, target, cap);
+  });
+  document.getElementById('combination-card').hidden = progressModel.cards.length < 4;
 }
 function renderSeedingLeaders(snapshot) {
   const container = document.getElementById('seeding-leaders');
@@ -562,10 +614,7 @@ function renderSnapshot(snapshot, campaign) {
   lifecycle.textContent = campaign?.state === 'closed' ? 'Completed' : campaign?.state === 'open' ? 'Running' : 'Direct ref';
   lifecycle.className = `chip ${campaign?.state === 'open' ? 'good' : ''}`.trim();
   const progress = snapshot.progress;
-  const targets = snapshot.campaign.targets;
-  setProgress('completed-progress', 'completed-bar', progress.completed_attempts, targets.completed_attempts);
-  setProgress('structural-progress', 'structural-bar', progress.structural_attempts, targets.structural_attempts);
-  setProgress('micro-progress', 'micro-bar', progress.micro_optimizations, targets.micro_optimization_cap, true);
+  renderCampaignProgress(snapshot);
   setText('elapsed', formatDuration(progress.elapsed_seconds));
   setText('remaining', formatDuration(progress.estimated_remaining_seconds));
   setText('expected-finish', formatInstant(progress.expected_finish_at));

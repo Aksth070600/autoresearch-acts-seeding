@@ -8,13 +8,15 @@ import json
 from pathlib import Path
 from typing import Any
 
-from evolution import (
-    EvolutionError,
+from objectives import (
     PRIMARY_EFFICIENCY_METRIC,
     PRIMARY_TIME_METRIC,
+    SelectionError,
     choose_baseline,
     improved_over_baseline,
     load_records,
+    pareto_front,
+    time_first_key,
 )
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -49,15 +51,29 @@ def deduplicate(rows: list[dict[str, Any]], baseline: dict[str, Any]) -> list[di
 def rank_ambiguity(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return sorted(
         rows,
-        key=lambda row: (-row["metrics"]["timed_ambiguity_particle_efficiency"], row["candidate"]),
+        key=lambda row: (
+            -row["metrics"][f"timed_{PRIMARY_EFFICIENCY_METRIC}"],
+            *time_first_key(row),
+        ),
     )
 
 
 def rank_seeding_time(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    return sorted(
-        rows,
-        key=lambda row: (row["metrics"][f"timed_{PRIMARY_TIME_METRIC}"], row["candidate"]),
+    return sorted(rows, key=time_first_key)
+
+
+def eligible_candidates(
+    rows: list[dict[str, Any]], baseline: dict[str, Any]
+) -> list[dict[str, Any]]:
+    required = tuple(
+        f"timed_{metric}" for metric in (PRIMARY_EFFICIENCY_METRIC, PRIMARY_TIME_METRIC)
     )
+    return [
+        row
+        for row in deduplicate(rows, baseline)
+        if all(key in row["metrics"] for key in required)
+        and improved_over_baseline(row, baseline, "timed")
+    ]
 
 
 def choose(rows: list[dict[str, Any]], baseline_name: str, count: int) -> list[dict[str, Any]]:
@@ -65,18 +81,9 @@ def choose(rows: list[dict[str, Any]], baseline_name: str, count: int) -> list[d
         raise ValueError("count must be positive")
     try:
         baseline = choose_baseline(rows, baseline_name)
-    except EvolutionError as error:
+    except SelectionError as error:
         raise ValueError(str(error)) from error
-    candidates = deduplicate(rows, baseline)
-    required = tuple(
-        f"timed_{metric}" for metric in (PRIMARY_EFFICIENCY_METRIC, PRIMARY_TIME_METRIC)
-    )
-    candidates = [
-        row
-        for row in candidates
-        if all(key in row["metrics"] for key in required)
-        and improved_over_baseline(row, baseline, "timed")
-    ]
+    candidates = eligible_candidates(rows, baseline)
     ambiguity = rank_ambiguity(candidates)
     seeding_time = rank_seeding_time(candidates)
 
@@ -116,11 +123,11 @@ def choose(rows: list[dict[str, Any]], baseline_name: str, count: int) -> list[d
 
 def main() -> int:
     args = parse_args()
-    rows = load_records(args.records.resolve(), "development", "particles")
+    rows = load_records(args.records.resolve(), "development")
     try:
-        choose_baseline(rows, args.baseline)
+        baseline = choose_baseline(rows, args.baseline)
         selected = choose(rows, args.baseline, args.count)
-    except (EvolutionError, ValueError) as error:
+    except (SelectionError, ValueError) as error:
         raise SystemExit(f"evaluation selection failed: {error}") from error
 
     if args.names:
@@ -131,6 +138,10 @@ def main() -> int:
     result = {
         "baseline": args.baseline,
         "count": len(selected),
+        "pareto_front": [
+            row["candidate"]
+            for row in pareto_front([baseline, *eligible_candidates(rows, baseline)])
+        ],
         "candidates": [
             {
                 "candidate": row["candidate"],

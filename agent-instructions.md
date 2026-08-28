@@ -23,9 +23,9 @@ The goal is to find faster or more efficient ACTS Seeding2 implementations while
 
 The Genesis run is required even when an older Genesis record exists.
 It anchors the campaign against current infrastructure drift.
-Successful Genesis runs are preserved as timestamped records. `make evolve`
-selects the latest complete protocol-compatible Development Genesis record.
-Failed or incomplete Genesis runs are never baselines. Do not start mutation
+Successful Genesis runs are preserved as timestamped records. Deterministic
+Evaluation selection uses the latest complete protocol-compatible Development
+Genesis record. Failed or incomplete Genesis runs are never baselines. Do not start candidate
 experiments until the baseline completes or its failure is understood.
 
 ## Controlled campaign protocol
@@ -39,6 +39,7 @@ The experiment agent must use protocol `acts-seeding-v2` without overrides:
 - Clean full-chain stages may run once. Timed full-chain stages run three repetitions;
   compare their median and retain each repetition for auditability.
 - Accept expected unmasked FPEs only when every requested event completed.
+- Keep every ACTS build at exactly `ACTS_BUILD_JOBS=8`. Do not raise the build job cap.
 
 The only primary objectives are median timed seeding time per event (minimize)
 and median timed particle ambiguity-resolution efficiency (maximize). Keep them
@@ -80,14 +81,7 @@ make record CANDIDATE=<candidate-name>
 `make record` returns the latest summary and, for a failed run, the relevant failure-log tails.
 It is read-only.
 
-Use the historical population selector for an inspiration implementation:
-
-```text
-make evolve
-```
-
-It returns a candidate implementation commit selected from successful results.
-If it returns Genesis because no distinct candidate is eligible, inspect the current Genesis implementation and form one focused hypothesis from it, a prior result, an implementation detail, or a documented algorithm idea.
+Use `make record` for a named candidate and read the curated lessons before choosing a hypothesis. When a prior mechanism is relevant, inspect its full implementation commit with `git show <commit> -- <file>`. Form one focused hypothesis from Genesis, a directly inspected prior result, an implementation detail, or a documented algorithm idea.
 
 ## Candidate objective
 
@@ -108,51 +102,41 @@ If primary performance is equal, prefer the simpler implementation.
 ## Experiment loop
 
 Once setup is confirmed, continue until the captain stops the campaign or a real blocker needs a decision.
-Do not pause after every candidate to ask whether to continue. A campaign must
-have at least 20 completed candidate attempts, counting only attempts whose
-development run completes all requested stages, and at least 10 structurally
-distinct attempts. It may contain no more than 5 micro-optimization attempts in
-total, and no more than 3 consecutive attempts may come from one mechanism
-family. Do not stop after one attempt or a routine progress update. Change
-mechanism families before exceeding any of those limits.
+Do not pause after every candidate to ask whether to continue. A standard campaign must complete exactly 20 unique candidate experiments whose Development runs complete every requested stage. The categories are disjoint and exact:
 
-Structural work changes algorithm or data flow, traversal or control flow, data
-layout or allocation behavior, pruning or search bounds, or an equivalent
-non-trivial implementation mechanism. A renamed or mechanically equivalent
-cache, logging change, STL spelling, `reserve`, or branch variant is not
-structurally distinct. A micro-optimization is a change limited to that kind of
-local spelling, hint, reserve, cache, logging, or similarly small rewrite.
+- 10 `major` candidates. Each makes a new substantive algorithm, traversal, allocation, data-layout, pruning, search-bound, or data-flow change.
+- 5 `minor` candidates. Each makes a new bounded local optimization, such as a focused hint, reserve, cache-placement, or similarly small rewrite.
+- 5 `combination` candidates. Each combines at least two earlier candidate mechanisms and tests a specific additive or interaction hypothesis.
 
-Before each candidate run, state all four fields below in the candidate
-proposal and evidence:
+Combination candidates do not count as major or minor. The category targets must sum to the completed-candidate target. No more than 3 consecutive candidates may come from one `mechanism_family`. Do not stop after one candidate or a routine progress update. Change mechanism families before exceeding the streak limit.
 
-- `mechanism_key`: a stable key for the mechanism family and idea.
+A renamed or mechanically equivalent cache, logging change, STL spelling, `reserve`, or branch variant is not a new major mechanism. Every candidate must be novel. Before each candidate run, state these fields in the proposal:
+
+- `mechanism_key`: a stable key for the exact mechanism.
+- `mechanism_family`: the family used for the three-consecutive-candidate limit.
 - `changed_symbols`: the functions, classes, data members, or other symbols changed.
 - `expected_hot_path`: the hot path expected to change and the direction of change.
 - `novelty_reason`: why the mechanism is not a semantic duplicate of earlier work.
 
-Use the mechanism key to count families and structural attempts. Do not claim a
-candidate is structurally distinct when only names, logging, STL spelling,
-`reserve`, cache placement, or branch hints changed.
+Before implementing a combination, run `git show <full-source-implementation-commit> -- <file>` for every source. Record at least two distinct source candidate names, source mechanism keys, and full source implementation commits. Also record that each source was directly inspected, why the mechanisms are compatible, and one specific additive or interaction hypothesis. The combination candidate's commit and dashboard link must identify the new combined implementation, not a source commit.
 
 For each attempt:
 
 1. Inspect the current branch and commit.
 2. Confirm there are no uncommitted changes outside `records/` and `orchestration-files/agent-learnings.md`.
 3. Read `orchestration-files/agent-learnings.md` for promising approaches and failed ideas.
-4. Run `make evolve` to get an inspiration implementation.
-5. Choose one hypothesis based on that implementation, a prior result, an implementation detail, or a documented algorithm idea.
+4. Choose one hypothesis from Genesis, a directly inspected prior implementation, a prior result, an implementation detail, or a documented algorithm idea.
+5. For a combination, inspect every source commit and write the required provenance and interaction hypothesis before editing.
 6. Modify only the permitted experiment files.
 7. Inspect the diff and commit the candidate before running it.
-8. Update the current attempt and its non-scientific classification in `orchestration-files/campaign-status-input.json`, run `make campaign-status`, commit the validated state, and push it before starting the run.
+8. Add its category, mechanism key, mechanism family, and any combination provenance to `orchestration-files/campaign-status-input.json`. Update `current_attempt`, run `make campaign-status`, commit the validated state, and push it before starting the run.
 9. Run `make evaluate CANDIDATE=<candidate-name>`.
 10. Run `make record CANDIDATE=<candidate-name>` and judge success, failure, and improvement from its output.
-11. Add a concise lesson to `orchestration-files/agent-learnings.md` when the attempt teaches something reusable. Update the phase or current controlled stage, run `make campaign-status` again, and include both status files in the normal evidence commit and push.
-12. Keep a candidate that meets the active-base criteria. Otherwise restore the previous candidate with a safe, non-force operation on the campaign branch.
-    Classify each attempt by a stable mechanism key, not only by its candidate name.
-    Keep a mixed ambiguity-improvement candidate when a follow-up experiment is explicitly targeting recovery of its seeding time, but do not present it as an overall improvement.
+11. Record the full candidate evidence in `orchestration-files/agent-learnings.md` and in the status input metadata: implementation commit, changed symbols, exact files and line ranges, hot-path rationale, novelty rationale, outcome, and lesson. Update the phase or current controlled stage, run `make campaign-status` again, and include both status files in the normal evidence commit and push.
+12. Keep a candidate that meets the active-base criteria. Otherwise restore the previous candidate with a safe, non-force operation on the campaign branch. Keep a mixed ambiguity-improvement candidate when a follow-up experiment explicitly targets recovery of its seeding time, but do not present it as an overall improvement.
 13. Use the simplification skill to curate `orchestration-files/agent-learnings.md` when it reaches 250 lines.
 14. Never allow `orchestration-files/agent-learnings.md` to exceed 500 lines.
+15. After all 20 completed candidates and before campaign closure, restore the canonical Genesis implementation with a safe revert commit. Keep every candidate implementation commit reachable.
 
 Each candidate name must be unique.
 Do not overwrite generated results.
@@ -171,7 +155,7 @@ Do not hide other errors or reduce event counts.
 ## Records and reports
 
 Do not inspect or edit generated summaries and logs directly during the ordinary loop.
-Use `make record` for run output and `make evolve` for historical selection.
+Use `make record` for run output and inspect named historical commits directly when they inform a new candidate.
 Use `make report` for interactive comparison when the captain requests a broader visual review.
 
 A successful Genesis development run writes a unique timestamped record under
@@ -214,7 +198,7 @@ Never merge the campaign PR autonomously; leave that decision to the captain.
 
 The `main` branch must always contain the Genesis implementation.
 Before a campaign archive PR is merged, revert candidate implementation changes in a final commit while keeping the candidate commits, summaries, lessons, and report in the PR history.
-Merge archive PRs with a regular merge commit, never squash, so each candidate implementation commit remains reachable to future `make evolve` runs.
+Merge archive PRs with a regular merge commit, never squash, so each candidate implementation commit remains reachable to future campaigns.
 Do not delete a campaign branch until its archive PR has merged and its records are present on `main`.
 
 ## Agent learnings
@@ -225,14 +209,13 @@ Do not claim a scientific improvement from a run that did not complete all requi
 
 ### Candidate provenance policy
 
-Every new candidate lesson must record the candidate name, its full implementation
-commit, the exact files changed, and line ranges as they existed in that candidate
-commit. It must also include a stable `mechanism_key` so renamed duplicates can
-be detected. Use this format:
+Every new candidate lesson must record the candidate name, category, full implementation commit, stable mechanism key, changed symbols, exact files and line ranges as they existed in that candidate commit, hot-path rationale, novelty rationale, outcome, and lesson. Use this format:
 
 ```text
-- YYYY-MM-DD | candidate: <name> | implementation_commit: <full-sha> | mechanism_key: <stable-family-key> | files_changed: <path>#L<start>-L<end>[, <path>#L<start>-L<end>] | outcome: <keep/discard/crash> | lesson: <one actionable lesson>
+- YYYY-MM-DD | candidate: <name> | classification: <major/minor/combination> | implementation_commit: <full-sha> | mechanism_key: <stable-key> | changed_symbols: <symbols> | files_changed: <path>#L<start>-L<end>[, <path>#L<start>-L<end>] | expected_hot_path: <rationale> | novelty_reason: <rationale> | outcome: <keep/discard/crash> | lesson: <one actionable lesson>
 ```
+
+For a combination lesson, also append `combination_sources` entries containing each source candidate, mechanism key, and full implementation commit, plus `compatibility_rationale` and `interaction_hypothesis`. The status input stores the same provenance in machine-checkable fields.
 
 Get the file list from the candidate commit with `git diff-tree --no-commit-id
 --name-only -r <commit>`, then inspect line numbers in that commit with
