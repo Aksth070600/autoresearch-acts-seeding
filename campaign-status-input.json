@@ -1,224 +1,25 @@
 {
   "schema_version": "1.0.0",
   "campaign": {
-    "name": "ACTS Seeding Development Campaign V7",
-    "branch": "autoresearch-acts-seeding/campaign-v7",
-    "phase": "Captain ended campaign early after restart at 41 attempts",
-    "started_at": "2026-08-27T18:23:05Z",
+    "name": "ACTS Seeding Development Campaign V8",
+    "branch": "autoresearch-acts-seeding/campaign-v8",
+    "phase": "fresh Genesis baseline",
+    "started_at": "2026-08-28T10:50:43Z",
     "targets": {
-      "completed_attempts": 41,
-      "structural_attempts": 35,
-      "micro_optimization_cap": 6
+      "completed_attempts": 20,
+      "structural_attempts": 10,
+      "micro_optimization_cap": 5
     }
   },
-  "current_attempt": null,
-  "attempt_metadata": [
-    {
-      "candidate": "GridBinHeapSort",
-      "mechanism_family": "grid-bin-heap-sort",
-      "classification": "structural"
-    },
-    {
-      "candidate": "DoubletCotThetaHeapSort",
-      "mechanism_family": "doublet-cottheta-heap-sort",
-      "classification": "structural"
-    },
-    {
-      "candidate": "FilterCurvatureHeapSort",
-      "mechanism_family": "filter-curvature-heap-sort",
-      "classification": "structural"
-    },
-    {
-      "candidate": "CandidateBalancedTreeRetention",
-      "mechanism_family": "candidate-balanced-tree-retention",
-      "classification": "structural"
-    },
-    {
-      "candidate": "TripletUnsortedDoubletTraversal",
-      "mechanism_family": "triplet-unsorted-doublet-traversal",
-      "classification": "structural"
-    },
-    {
-      "candidate": "DoubletInteractionPointPruning",
-      "mechanism_family": "doublet-interaction-point-pruning",
-      "classification": "micro"
-    },
-    {
-      "candidate": "GridBinBottomUpMergeSort",
-      "mechanism_family": "grid-bin-bottom-up-merge-sort",
-      "classification": "structural"
-    },
-    {
-      "candidate": "DoubletCotThetaBottomUpMergeSort",
-      "mechanism_family": "doublet-cottheta-bottom-up-merge-sort",
-      "classification": "structural"
-    },
-    {
-      "candidate": "FilterCurvatureBottomUpMergeSort",
-      "mechanism_family": "filter-curvature-bottom-up-merge-sort",
-      "classification": "structural"
-    },
-    {
-      "candidate": "GridMiddleOccupancyScheduling",
-      "mechanism_family": "grid-middle-occupancy-scheduling",
-      "classification": "structural"
-    },
-    {
-      "candidate": "TripletPerBottomTopWindowReset",
-      "mechanism_family": "triplet-per-bottom-top-window-reset",
-      "classification": "structural"
-    },
-    {
-      "candidate": "TripletCandidateSegmentedSoA",
-      "mechanism_family": "triplet-candidate-segmented-soa",
-      "classification": "structural"
-    },
-    {
-      "candidate": "DoubletSegmentedSoA",
-      "mechanism_family": "doublet-segmented-soa",
-      "classification": "structural"
-    },
-    {
-      "candidate": "CandidateSegmentedCanonicalStorage",
-      "mechanism_family": "candidate-segmented-canonical-storage",
-      "classification": "structural"
-    },
-    {
-      "candidate": "GridBinCountCache",
-      "mechanism_family": "grid-bin-count-cache",
-      "classification": "micro"
-    },
-    {
-      "candidate": "GridBinSelectionSort",
-      "mechanism_family": "grid-bin-selection-sort",
-      "classification": "structural"
-    },
-    {
-      "candidate": "DoubletCotThetaSelectionSort",
-      "mechanism_family": "doublet-cottheta-selection-sort",
-      "classification": "structural"
-    },
-    {
-      "candidate": "FilterCurvatureSelectionSort",
-      "mechanism_family": "filter-curvature-selection-sort",
-      "classification": "structural"
-    },
-    {
-      "candidate": "FilterPairCompatibilityGraph",
-      "mechanism_family": "filter-pair-compatibility-graph",
-      "classification": "structural"
-    },
-    {
-      "candidate": "DoubletPrefilterStaging",
-      "mechanism_family": "doublet-prefilter-staging",
-      "classification": "structural"
-    },
-    {
-      "candidate": "TripletSlopePrefilterStaging",
-      "mechanism_family": "triplet-slope-prefilter-staging",
-      "classification": "structural"
-    },
-    {
-      "candidate": "GridCorePrefixOffsetLayout",
-      "mechanism_family": "grid-core-prefix-offset-layout",
-      "classification": "structural"
-    },
-    {
-      "candidate": "FilterCompatibilityConfigCache",
-      "mechanism_family": "filter-compatibility-config-cache",
-      "classification": "micro"
-    },
-    {
-      "candidate": "CandidateSmallBufferStorage",
-      "mechanism_family": "candidate-small-buffer-storage",
-      "classification": "structural"
-    },
-    {
-      "candidate": "DoubletDerivedSmallBufferColumns",
-      "mechanism_family": "doublet-derived-small-buffer-columns",
-      "classification": "structural"
-    },
-    {
-      "candidate": "TripletCandidateSmallBufferSoA",
-      "mechanism_family": "triplet-candidate-small-buffer-soa",
-      "classification": "structural"
-    },
-    {
-      "candidate": "GridBinSmallBufferStorage",
-      "mechanism_family": "grid-bin-small-buffer-storage",
-      "classification": "structural"
-    },
-    {
-      "candidate": "DoubletDistanceConfigCache",
-      "mechanism_family": "doublet-distance-config-cache",
-      "classification": "micro"
-    },
-    {
-      "candidate": "SeederUnifiedSortedDoubletArena",
-      "mechanism_family": "seeder-unified-sorted-doublet-arena",
-      "classification": "structural"
-    },
-    {
-      "candidate": "SeederInterleavedDoubletFlow",
-      "mechanism_family": "seeder-interleaved-doublet-flow",
-      "classification": "structural"
-    },
-    {
-      "candidate": "TripletPixelConfigCache",
-      "mechanism_family": "triplet-pixel-config-cache",
-      "classification": "micro"
-    },
-    {
-      "candidate": "GridNeighborRangeSmallBuffer",
-      "mechanism_family": "grid-neighbor-range-small-buffer",
-      "classification": "structural"
-    },
-    {
-      "candidate": "FilterCompatibleRadiusTree",
-      "mechanism_family": "filter-compatible-radius-tree",
-      "classification": "structural"
-    },
-    {
-      "candidate": "SeederNeighborOccupancyOrder",
-      "mechanism_family": "seeder-neighbor-occupancy-order",
-      "classification": "structural"
-    },
-    {
-      "candidate": "DoubletGallopingRadiusBound",
-      "mechanism_family": "doublet-galloping-radius-bound",
-      "classification": "structural"
-    },
-    {
-      "candidate": "FilterCurvatureGallopingBound",
-      "mechanism_family": "filter-curvature-galloping-bound",
-      "classification": "structural"
-    },
-    {
-      "candidate": "DoubletCollisionRegionBranchHint",
-      "mechanism_family": "doublet-collision-region-branch-hint",
-      "classification": "micro"
-    },
-    {
-      "candidate": "CandidatePreconstructedSlotArena",
-      "mechanism_family": "candidate-preconstructed-slot-arena",
-      "classification": "structural"
-    },
-    {
-      "candidate": "GridBinShellSort",
-      "mechanism_family": "grid-bin-shell-sort",
-      "classification": "structural"
-    },
-    {
-      "candidate": "DoubletCotThetaShellSort",
-      "mechanism_family": "doublet-cottheta-shell-sort",
-      "classification": "structural"
-    },
-    {
-      "candidate": "FilterCurvatureShellSort",
-      "mechanism_family": "filter-curvature-shell-sort",
-      "classification": "structural"
-    }
-  ],
+  "current_attempt": {
+    "candidate": "Genesis",
+    "mechanism_family": "fresh Genesis baseline",
+    "classification": "baseline",
+    "controlled_stage": "queued Development run",
+    "state": "queued",
+    "started_at": "2026-08-28T10:50:43Z"
+  },
+  "attempt_metadata": [],
   "blockers": [],
-  "pull_request_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/28"
+  "pull_request_url": null
 }
