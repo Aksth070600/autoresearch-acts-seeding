@@ -463,7 +463,11 @@ def load_attempts(
                 "timed_ambiguity_particle_efficiency": efficiency,
                 "implementation_commit": implementation_commit,
                 "links": {
-                    "commit": commit_url(implementation_commit),
+                    "commit": (
+                        REPOSITORY_URL
+                        if candidate == "Genesis"
+                        else commit_url(implementation_commit)
+                    ),
                     "record": repository_file_url(
                         live_state["campaign"]["branch"],
                         f"records/{relative}",

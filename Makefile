@@ -3,7 +3,7 @@
 ACTS_SOURCE ?= /storage/thomaaks/acts-v46.5.0
 ACTS_BUILD_DIR ?= $(ACTS_SOURCE)/build
 ACTS_VERSION ?= v46.5.0
-ACTS_BUILD_JOBS ?= $(shell nproc 2>/dev/null || printf '1')
+ACTS_BUILD_JOBS ?= 8
 ITK_EVENTS ?= 10
 ITK_WORKLOAD ?= ttbar_pu200
 ITK_THREADS ?= 1
@@ -103,7 +103,7 @@ hepp02-setup-and-build: export-hepp-files hepp02-tmux-create
 
 evaluate:
 	@if [ -z "$(CANDIDATE)" ]; then echo 'usage: make evaluate CANDIDATE=name [EVALUATION=1]' >&2; exit 2; fi
-	python3 orchestration-files/evaluate.py "$(CANDIDATE)" $(if $(filter 1 true yes,$(EVALUATION)),--evaluation,)
+	ACTS_BUILD_JOBS='$(ACTS_BUILD_JOBS)' python3 orchestration-files/evaluate.py "$(CANDIDATE)" $(if $(filter 1 true yes,$(EVALUATION)),--evaluation,)
 
 report:
 	python3 orchestration-files/report.py \

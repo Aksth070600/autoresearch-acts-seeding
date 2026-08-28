@@ -232,7 +232,7 @@ class CampaignStatusTests(unittest.TestCase):
         )
         self.assertEqual(
             by_candidate["Genesis"]["links"]["commit"],
-            f"https://github.com/Aksth070600/autoresearch-acts-seeding/commit/{status_commit}",
+            "https://github.com/Aksth070600/autoresearch-acts-seeding",
         )
 
     def test_derives_latest_genesis_promising_results_and_pareto_front(self) -> None:

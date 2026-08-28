@@ -2,7 +2,8 @@ import unittest
 from pathlib import Path
 
 
-POLICY = Path(__file__).parents[1] / "agent-instructions.md"
+PROJECT_ROOT = Path(__file__).parents[1]
+POLICY = PROJECT_ROOT / "agent-instructions.md"
 
 
 class ExperimentPolicyTests(unittest.TestCase):
@@ -31,6 +32,29 @@ class ExperimentPolicyTests(unittest.TestCase):
             self.assertIn(phrase, lowered)
         self.assertIn("make evaluate candidate=<candidate-name>", lowered)
         self.assertNotIn("evaluation=1", lowered)
+
+    def test_build_jobs_are_capped_and_forwarded_to_hepp02(self) -> None:
+        makefile = (PROJECT_ROOT / "Makefile").read_text(encoding="utf-8")
+        helper = (
+            PROJECT_ROOT / "orchestration-files/HEPP-files/run-hepp-helper.sh"
+        ).read_text(encoding="utf-8")
+        build = (
+            PROJECT_ROOT / "orchestration-files/HEPP-files/build.sh"
+        ).read_text(encoding="utf-8")
+        evaluator = (
+            PROJECT_ROOT / "orchestration-files/evaluate.py"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("ACTS_BUILD_JOBS ?= 8", makefile)
+        self.assertIn("ACTS_BUILD_JOBS='$(ACTS_BUILD_JOBS)' python3", makefile)
+        self.assertIn('ACTS_BUILD_JOBS="${ACTS_BUILD_JOBS:-8}"', helper)
+        self.assertIn("ACTS_BUILD_JOBS=$(printf '%q'", helper)
+        self.assertIn('ACTS_BUILD_JOBS="${ACTS_BUILD_JOBS:-8}"', build)
+        self.assertIn('echo "ACTS build parallel jobs: $ACTS_BUILD_JOBS"', build)
+        self.assertNotIn("nproc", build)
+        self.assertIn("require_capped_build_log(build)", evaluator)
+        self.assertIn("require_capped_build_log(rebuild)", evaluator)
+        self.assertIn('build_jobs != "8"', evaluator)
 
 
 if __name__ == "__main__":
