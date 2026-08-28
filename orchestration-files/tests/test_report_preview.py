@@ -147,6 +147,76 @@ class ReportPreviewTests(unittest.TestCase):
             },
         }
 
+    @staticmethod
+    def v2_summary(candidate: str = "Genesis") -> dict:
+        run_metrics = {
+            "timing": {"seeding": {"time_per_event_ms": 12.0}},
+            "performance": {"seeding": {"efficiency_particles": 0.9}},
+        }
+        repetitions = [
+            {
+                "repetition": number,
+                "events": 10,
+                "status": "passed",
+                "run_metrics": run_metrics,
+            }
+            for number in (1, 2, 3)
+        ]
+        return {
+            "candidate_name": candidate,
+            "category": "Development",
+            "status": "passed",
+            "baseline": candidate == "Genesis",
+            "protocol_id": "acts-seeding-v2",
+            "protocol": {
+                "id": "acts-seeding-v2",
+                "acts_version": "v46.5.0",
+                "dataset": "ttbar_pu200",
+                "execution_target": "HEPP02",
+                "threads": 1,
+                "seed": 42,
+                "pileup": 200,
+                "development_events": 10,
+                "evaluation_events": 50,
+                "timed_repetitions": 3,
+                "timed_aggregation": "median",
+                "expected_unmasked_fpe_handling": "accept only after every requested event completed",
+            },
+            "started_at": "2026-08-26T12:00:00+00:00",
+            "stages": [
+                {
+                    "name": "ten_event_full_clean",
+                    "comparison": "clean",
+                    "metrics_mode": "none",
+                    "events": 10,
+                    "status": "passed",
+                    "run_metrics": run_metrics,
+                },
+                *[
+                    {
+                        "name": f"ten_event_full_timed_repetition_{number}",
+                        "comparison": "timed",
+                        "repetition": number,
+                        "metrics_mode": "time",
+                        "events": 10,
+                        "status": "passed",
+                        "run_metrics": run_metrics,
+                    }
+                    for number in (1, 2, 3)
+                ],
+            ],
+            "timed_comparison": {
+                "aggregation": "median",
+                "repetition_count": 3,
+                "required_repetitions": 3,
+                "events": 10,
+                "complete": True,
+                "repetitions": repetitions,
+                "median_run_metrics": run_metrics,
+                "median_resource_metrics": {"peak_rss_kb": 1024.0},
+            },
+        }
+
     def test_report_reads_hypothesis_from_measured_summary_copy(self) -> None:
         commit = "a" * 40
         proposal = {
@@ -575,36 +645,13 @@ console.log(JSON.stringify({
         report = build_report([row, second], "Genesis", "development")
         self.assertEqual(report["rows"][0]["commit_url"], REPOSITORY_URL)
 
-    def test_v2_summary_is_readable_but_not_compared_under_v3_report(self) -> None:
+    def test_v2_archive_is_the_labeled_fallback_when_v3_has_no_records(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             records = root / "records" / "Development" / "Genesis"
             records.mkdir(parents=True)
             (records / "summary.json").write_text(
-                json.dumps(
-                    {
-                        "candidate_name": "Genesis",
-                        "category": "Development",
-                        "status": "passed",
-                        "protocol_id": "acts-seeding-v2",
-                        "protocol": {
-                            "id": "acts-seeding-v2",
-                            "acts_version": "v46.5.0",
-                            "dataset": "ttbar_pu200",
-                            "execution_target": "HEPP02",
-                            "threads": 1,
-                            "seed": 42,
-                            "pileup": 200,
-                            "development_events": 10,
-                            "evaluation_events": 50,
-                            "timed_repetitions": 3,
-                            "timed_aggregation": "median",
-                            "expected_unmasked_fpe_handling": "accept only after every requested event completed",
-                        },
-                        "stages": [],
-                    }
-                ),
-                encoding="utf-8",
+                json.dumps(self.v2_summary()), encoding="utf-8"
             )
             output = root / "site"
 
@@ -613,7 +660,62 @@ console.log(JSON.stringify({
 
             self.assertEqual(result.returncode, 0, result.stderr)
             index = (output / "index.html").read_text(encoding="utf-8")
-            self.assertIn("No protocol-compatible summaries yet", index)
+            self.assertNotIn('"rows":[]', index)
+            self.assertIn('"protocol_id":"acts-seeding-v2"', index)
+            self.assertIn('"active_protocol_id":"acts-seeding-v3"', index)
+            self.assertIn('"maximize":"timed_ambiguity_particle_efficiency"', index)
+            self.assertIn('"evaluation_timing_policy":null', index)
+            self.assertIn("Historical protocol acts-seeding-v2", index)
+            self.assertIn("not combined", index)
+
+    def test_active_v3_records_take_precedence_without_mixing_v2(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            records = root / "records" / "Development"
+            v2 = records / "Historical"
+            v3 = records / "Current"
+            v2.mkdir(parents=True)
+            v3.mkdir(parents=True)
+            (v2 / "summary.json").write_text(
+                json.dumps(self.v2_summary("Historical")), encoding="utf-8"
+            )
+            (v3 / "summary.json").write_text(
+                json.dumps(self.summary("Current", "Development", 12.0, 0.9)),
+                encoding="utf-8",
+            )
+
+            output = root / "site"
+            result = self.run_report(records.parents[1], output)
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            index = (output / "index.html").read_text(encoding="utf-8")
+            payload = json.loads(
+                index.split("const REPORT = ", 1)[1].split(";", 1)[0]
+            )
+            self.assertEqual(payload["protocol_id"], "acts-seeding-v3")
+            self.assertFalse(payload["historical_fallback"])
+            self.assertEqual(
+                [(row["candidate"], row["protocol_id"]) for row in payload["rows"]],
+                [("Current", "acts-seeding-v3")],
+            )
+
+    def test_changed_v2_metadata_is_not_compared_with_the_archive(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            records = root / "records" / "Development" / "Genesis"
+            records.mkdir(parents=True)
+            summary = self.v2_summary()
+            summary["protocol"]["threads"] = 2
+            (records / "summary.json").write_text(
+                json.dumps(summary), encoding="utf-8"
+            )
+
+            output = root / "site"
+            result = self.run_report(records.parents[1], output)
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            index = (output / "index.html").read_text(encoding="utf-8")
+            self.assertIn('"protocol_id":"acts-seeding-v3"', index)
             self.assertIn('"rows":[]', index)
 
     def test_malformed_v3_summary_keeps_strict_metric_validation(self) -> None:

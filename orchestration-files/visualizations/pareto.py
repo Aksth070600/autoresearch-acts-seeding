@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import html
 import json
 from pathlib import Path
 from typing import Any
@@ -21,6 +22,7 @@ HTML_TEMPLATE = r"""<!doctype html>
     h1 { margin: 0 0 8px; }
     .topline { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
     .campaign-link { color: #a5b4fc; font-size: 0.9rem; font-weight: 650; white-space: nowrap; text-underline-offset: 3px; }
+    .protocol-context { color: #c4b5fd; margin: 0 0 8px; font-size: 0.9rem; font-weight: 650; }
     .lede { color: #a5b4fc; margin: 0 0 20px; }
     .controls { display: grid; grid-template-columns: repeat(2, minmax(230px, 1fr)); gap: 14px; align-items: end;
       background: #111827; border: 1px solid #334155; border-radius: 10px; padding: 16px; }
@@ -62,6 +64,7 @@ HTML_TEMPLATE = r"""<!doctype html>
     <h1>ACTS Seeding Autoresearch</h1>
     <a class="campaign-link" href="campaign/">Open live campaign</a>
   </div>
+  <p id="protocol-context" class="protocol-context">__PROTOCOL_CONTEXT__</p>
   <p id="axis-guidance" class="lede">Lower X is better. Higher Y is better. The reference lines show the selected baseline.</p>
   <section class="controls" aria-label="Chart controls">
     <label>Dataset<select id="dataset"></select></label>
@@ -136,7 +139,7 @@ const TOOLTIP_ROWS = [
   { label: 'D', type: 'quality', suffix: 'particle_duplicate_ratio' }
 ];
 const TOOLTIP_STAGES = ['seeding'];
-const RSS_PEAK_KEY = 'rss_peak_rss_kb';
+const RSS_PEAK_KEY = REPORT.rss_metric_key || 'rss_peak_rss_kb';
 const AXES = ['x', 'y'];
 
 function option(select, value, label) {
@@ -455,8 +458,22 @@ render();
 def render(report: dict[str, Any], output: Path, *, defaults: dict[str, str]) -> None:
     payload = json.dumps(report, sort_keys=True, separators=(",", ":")).replace("</", "<\\/")
     default_json = json.dumps(defaults, sort_keys=True)
+    selected_protocol = str(report.get("protocol_id", ""))
+    active_protocol = str(report.get("active_protocol_id", selected_protocol))
+    if report.get("historical_fallback"):
+        dataset = str(report.get("dataset", "")).title()
+        protocol_context = (
+            f"Historical protocol {selected_protocol}. Active protocol {active_protocol} "
+            f"has no {dataset} records. Evidence from different protocols is not combined."
+        )
+    elif selected_protocol:
+        protocol_context = f"Protocol {selected_protocol}."
+    else:
+        protocol_context = ""
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(
-        HTML_TEMPLATE.replace("__REPORT_JSON__", payload).replace("__DEFAULTS_JSON__", default_json),
+        HTML_TEMPLATE.replace("__REPORT_JSON__", payload)
+        .replace("__DEFAULTS_JSON__", default_json)
+        .replace("__PROTOCOL_CONTEXT__", html.escape(protocol_context)),
         encoding="utf-8",
     )

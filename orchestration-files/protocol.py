@@ -30,6 +30,25 @@ PROTOCOL_METADATA: dict[str, Any] = {
     "expected_unmasked_fpe_handling": "accept only after every requested event completed",
 }
 
+# Known historical protocols remain available only for isolated read-only reports.
+# Keep newest first so an empty active report can choose the newest archive with data.
+HISTORICAL_PROTOCOLS: tuple[dict[str, Any], ...] = (
+    {
+        "id": "acts-seeding-v2",
+        "acts_version": "v46.5.0",
+        "dataset": "ttbar_pu200",
+        "execution_target": "HEPP02",
+        "threads": 1,
+        "seed": 42,
+        "pileup": 200,
+        "development_events": 10,
+        "evaluation_events": 50,
+        "timed_repetitions": 3,
+        "timed_aggregation": "median",
+        "expected_unmasked_fpe_handling": "accept only after every requested event completed",
+    },
+)
+
 # Campaign composition does not change scientific protocol compatibility.
 # CAMPAIGN_COMPOSITION remains the owner of archived fixed-20 evidence.
 CAMPAIGN_COMPOSITION: dict[str, int] = {
