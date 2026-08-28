@@ -71,24 +71,25 @@ class Impl final : public DoubletSeedFinder {
     };
 
     if constexpr (sortedByR) {
-      const float firstRadius = isBottomCandidate
-                                    ? rM - m_cfg.deltaRMax
-                                    : rM + m_cfg.deltaRMin;
-      const auto begin = candidateSps.begin();
-      const std::size_t size = candidateSps.size();
-      std::size_t lower = 0;
-      std::size_t upper = std::min<std::size_t>(1, size);
-      while (upper < size && (*(begin + upper)).zr()[1] < firstRadius) {
-        lower = upper;
-        upper = std::min(size, upper * 2);
+      // find the first SP inside the radius region of interest and update
+      // the iterator so we don't need to look at the other SPs again
+      std::uint32_t offset = 0;
+      for (ConstSpacePointProxy2 otherSp : candidateSps) {
+        if constexpr (isBottomCandidate) {
+          // if r-distance is too big, try next SP in bin
+          if (rM - otherSp.zr()[1] <= m_cfg.deltaRMax) {
+            break;
+          }
+        } else {
+          // if r-distance is too small, try next SP in bin
+          if (otherSp.zr()[1] - rM >= m_cfg.deltaRMin) {
+            break;
+          }
+        }
+
+        ++offset;
       }
-      const std::size_t searchEnd =
-          upper < size ? upper + 1 : size;
-      const auto first = std::ranges::lower_bound(
-          begin + lower, begin + searchEnd, firstRadius, {},
-          [](const ConstSpacePointProxy2& sp) { return sp.zr()[1]; });
-      candidateSps = candidateSps.subrange(
-          static_cast<std::uint32_t>(first - begin));
+      candidateSps = candidateSps.subrange(offset);
     }
 
     const SpacePointContainer2& container = candidateSps.container();
