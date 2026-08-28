@@ -3,7 +3,7 @@
   "campaign": {
     "name": "ACTS Seeding continuous aug29",
     "branch": "autoresearch-acts-seeding/aug29",
-    "phase": "fresh Genesis baseline",
+    "phase": "continuous Development",
     "started_at": "2026-08-28T23:32:45Z",
     "mode": "continuous",
     "campaign_id": "acts-seeding-aug29-20260829",
@@ -15,16 +15,7 @@
       "combination_percentage": 25
     }
   },
-  "current_attempt": {
-    "candidate": "Genesis",
-    "mechanism_key": "fresh-genesis-baseline",
-    "mechanism_family": "fresh Genesis baseline",
-    "classification": "baseline",
-    "controlled_stage": "queued Development run",
-    "state": "queued",
-    "started_at": "2026-08-28T23:33:50Z",
-    "scheduling": "ordinary"
-  },
+  "current_attempt": null,
   "attempt_metadata": [],
   "blockers": [],
   "pull_request_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/36",
