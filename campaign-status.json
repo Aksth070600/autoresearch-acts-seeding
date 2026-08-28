@@ -114,7 +114,7 @@
   "campaign": {
     "branch": "autoresearch-acts-seeding/campaign-v8",
     "name": "ACTS Seeding Development Campaign V8",
-    "phase": "candidate mechanism selection after 5 of 20",
+    "phase": "candidate evaluation 6 of 20",
     "started_at": "2026-08-28T10:50:43Z",
     "targets": {
       "completed_attempts": 20,
@@ -122,24 +122,31 @@
       "structural_attempts": 10
     }
   },
-  "current_attempt": null,
+  "current_attempt": {
+    "candidate": "DoubletCotThetaIDeltaRMaterialization",
+    "classification": "structural",
+    "controlled_stage": "queued Development run",
+    "mechanism_family": "doublet-cottheta-ideltar-materialization",
+    "started_at": "2026-08-28T12:26:19Z",
+    "state": "queued"
+  },
   "failures": [],
-  "generated_at": "2026-08-28T12:24:14.685241Z",
+  "generated_at": "2026-08-28T12:26:19.993475Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/6f9c2686ddee9cffa56777b93320e92496d80f37",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/c1e8be71f49b443e2010da94461896a25fdeb00e",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/campaign-v8",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/29"
   },
   "progress": {
     "completed_attempts": 5,
-    "elapsed_seconds": 5611.685241,
-    "estimated_remaining_seconds": 12132.42,
-    "eta_basis": "Median of 5 completed attempts.",
+    "elapsed_seconds": 5736.993475,
+    "estimated_remaining_seconds": 12131.426525,
+    "eta_basis": "Median of 5 completed attempts; current attempt elapsed time deducted.",
     "eta_sample_count": 5,
-    "expected_finish_at": "2026-08-28T15:46:27.105241Z",
+    "expected_finish_at": "2026-08-28T15:48:31.420000Z",
     "median_completed_attempt_duration_seconds": 808.828,
     "micro_optimizations": 0,
-    "structural_attempts": 5
+    "structural_attempts": 6
   },
   "promising_results": {
     "best_ambiguity_efficiency": {
