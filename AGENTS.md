@@ -12,4 +12,4 @@ Prefer rewriting or pruning existing entries over appending new ones.
 When updating this file, preserve this bar for all agents and keep entries concise.
 
 - The controlled campaign identity, run constants, and standard candidate composition are authoritative in `orchestration-files/protocol.py`; evaluator, report, status, and record consumers must use that protocol.
-- For live campaign status creation or publishing, follow `orchestration-files/CAMPAIGN_STATUS.md`.
+- For candidate proposal binding or live campaign status creation and publishing, follow `orchestration-files/CAMPAIGN_STATUS.md`; proposal normalization and hashing are authoritative in `orchestration-files/proposal.py`.

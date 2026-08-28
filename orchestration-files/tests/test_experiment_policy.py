@@ -12,8 +12,11 @@ class ExperimentPolicyTests(unittest.TestCase):
         lowered = " ".join(text.lower().split())
 
         self.assertIn("captain-controlled", lowered)
-        self.assertIn("evaluation workloads are captain-controlled", lowered)
-        self.assertIn("experiment candidates use the 10-event development workload only", lowered)
+        self.assertIn("evaluation remains captain-controlled", lowered)
+        self.assertIn("development and captain-authorized evaluation use the same seeding-only matrix", lowered)
+        self.assertIn("one uninstrumented 1-event seeding smoke stage", lowered)
+        self.assertIn("three uninstrumented 10-event seeding timing repetitions", lowered)
+        self.assertIn("one separate 10-event seeding stage", lowered)
         self.assertIn("exactly 20 unique candidate experiments", lowered)
         self.assertIn("10 `major` candidates", lowered)
         self.assertIn("5 `minor` candidates", lowered)
@@ -44,8 +47,16 @@ class ExperimentPolicyTests(unittest.TestCase):
         import sys
 
         sys.path.insert(0, str(PROJECT_ROOT / "orchestration-files"))
-        from protocol import CAMPAIGN_COMPOSITION
+        from protocol import CAMPAIGN_COMPOSITION, PROTOCOL_ID, PROTOCOL_METADATA
 
+        self.assertEqual(PROTOCOL_ID, "acts-seeding-v3")
+        self.assertEqual(PROTOCOL_METADATA["execution_stage"], "seeding")
+        self.assertEqual(PROTOCOL_METADATA["smoke_events"], 1)
+        self.assertEqual(PROTOCOL_METADATA["timing_events"], 10)
+        self.assertEqual(PROTOCOL_METADATA["rss_events"], 10)
+        self.assertEqual(PROTOCOL_METADATA["timing_instrumentation"], "none")
+        self.assertEqual(PROTOCOL_METADATA["rss_metrics_mode"], "time")
+        self.assertNotIn("evaluation_events", PROTOCOL_METADATA)
         self.assertEqual(
             CAMPAIGN_COMPOSITION,
             {
@@ -55,6 +66,16 @@ class ExperimentPolicyTests(unittest.TestCase):
                 "combination_candidates": 5,
             },
         )
+
+    def test_report_workflow_defaults_to_seeding_efficiency(self) -> None:
+        workflow = (
+            PROJECT_ROOT / ".github" / "workflows" / "reports.yml"
+        ).read_text(encoding="utf-8")
+        self.assertIn("default: timed_seeding_particle_efficiency", workflow)
+        self.assertIn("Y_METRIC: ${{ inputs.y_metric || 'timed_seeding_particle_efficiency' }}", workflow)
+        self.assertNotIn("default: timed_ambiguity_particle_efficiency", workflow)
+        self.assertNotIn("timed_peak_rss_kb", workflow)
+        self.assertIn("rss_peak_rss_kb", workflow)
 
     def test_build_jobs_are_capped_and_forwarded_to_hepp02(self) -> None:
         makefile = (PROJECT_ROOT / "Makefile").read_text(encoding="utf-8")

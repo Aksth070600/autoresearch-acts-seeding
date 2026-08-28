@@ -343,10 +343,15 @@ let activeCampaign = null;
 
 function finite(value) { return typeof value === 'number' && Number.isFinite(value); }
 function validObjective(value) { return value === null || finite(value); }
+function efficiencyValue(value) {
+  return value && Object.prototype.hasOwnProperty.call(value, 'timed_seeding_particle_efficiency')
+    ? value.timed_seeding_particle_efficiency
+    : value?.timed_ambiguity_particle_efficiency;
+}
 function validateSnapshot(value, expectedBranch) {
   const snapshotBranch = safeRef(value?.campaign?.branch);
   if (!value || typeof value !== 'object' || value.schema_version !== '1.0.0'
-      || value.protocol_id !== 'acts-seeding-v2' || !snapshotBranch
+      || !['acts-seeding-v2', 'acts-seeding-v3'].includes(value.protocol_id) || !snapshotBranch
       || (expectedBranch && snapshotBranch !== expectedBranch)
       || !value.progress || !value.promising_results || !Array.isArray(value.attempts)
       || !Array.isArray(value.blockers) || !Array.isArray(value.failures)
@@ -364,7 +369,7 @@ function validateSnapshot(value, expectedBranch) {
     if (!attempt || typeof attempt.candidate !== 'string'
         || !classifications.includes(attempt.classification)
         || !validObjective(attempt.timed_seeding_time_per_event_ms)
-        || !validObjective(attempt.timed_ambiguity_particle_efficiency)) {
+        || !validObjective(efficiencyValue(attempt))) {
       throw new Error('The campaign snapshot has invalid attempt evidence.');
     }
   }
@@ -502,14 +507,15 @@ function comparisonPoints(snapshot) {
     attempt.candidate !== 'Genesis'
     && attempt.state === 'completed'
     && finite(attempt.timed_seeding_time_per_event_ms)
-    && finite(attempt.timed_ambiguity_particle_efficiency)
-  );
+    && finite(efficiencyValue(attempt))
+  ).map((attempt) => ({ ...attempt, objective_efficiency: efficiencyValue(attempt) }));
   if (baseline
       && finite(baseline.timed_seeding_time_per_event_ms)
-      && finite(baseline.timed_ambiguity_particle_efficiency)) {
+      && finite(efficiencyValue(baseline))) {
     points.push({
       ...baseline,
       candidate: 'Genesis',
+      objective_efficiency: efficiencyValue(baseline),
       links: { ...baseline.links, commit: `https://github.com/${REPOSITORY}` }
     });
   }
@@ -526,7 +532,7 @@ function chartCandidateColor(point, baseline) {
   if (!baseline) return '#94a3b8';
   if (point.candidate === 'Genesis') return '#fbbf24';
   const faster = point.timed_seeding_time_per_event_ms <= baseline.timed_seeding_time_per_event_ms;
-  const moreEfficient = point.timed_ambiguity_particle_efficiency >= baseline.timed_ambiguity_particle_efficiency;
+  const moreEfficient = point.objective_efficiency >= baseline.objective_efficiency;
   if (faster && moreEfficient) return '#22c55e';
   if (!faster && !moreEfficient) return '#ef4444';
   return '#eab308';
@@ -565,11 +571,11 @@ function renderComparisonChart(snapshot) {
     return;
   }
   const xRange = paddedRange(points, 'timed_seeding_time_per_event_ms');
-  const yRange = paddedRange(points, 'timed_ambiguity_particle_efficiency');
+  const yRange = paddedRange(points, 'objective_efficiency');
   const shapes = [];
   if (baseline) {
     const bx = baseline.timed_seeding_time_per_event_ms;
-    const by = baseline.timed_ambiguity_particle_efficiency;
+    const by = baseline.objective_efficiency;
     [
       [xRange[0], bx, by, yRange[1], true, true],
       [bx, xRange[1], by, yRange[1], false, true],
@@ -583,8 +589,8 @@ function renderComparisonChart(snapshot) {
   }
   const trace = {
     x: points.map((point) => point.timed_seeding_time_per_event_ms),
-    y: points.map((point) => point.timed_ambiguity_particle_efficiency),
-    text: points.map((point) => `<b>${escapeHtml(humanizeCandidateName(point.candidate))}</b><br>${formatMs(point.timed_seeding_time_per_event_ms)}<br>${formatEfficiency(point.timed_ambiguity_particle_efficiency)}`),
+    y: points.map((point) => point.objective_efficiency),
+    text: points.map((point) => `<b>${escapeHtml(humanizeCandidateName(point.candidate))}</b><br>${formatMs(point.timed_seeding_time_per_event_ms)}<br>${formatEfficiency(point.objective_efficiency)}`),
     customdata: points.map((point) => safeLink(point.links?.commit) || ''),
     mode: 'markers', type: 'scatter', name: 'Candidates',
     marker: {

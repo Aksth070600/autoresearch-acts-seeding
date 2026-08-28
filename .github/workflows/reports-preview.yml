@@ -8,6 +8,7 @@ on:
       - 'orchestration-files/campaign_status.py'
       - 'orchestration-files/campaign-status.schema.json'
       - 'orchestration-files/objectives.py'
+      - 'orchestration-files/proposal.py'
       - 'orchestration-files/protocol.py'
       - 'orchestration-files/select-evaluation.py'
       - 'orchestration-files/tests/**'

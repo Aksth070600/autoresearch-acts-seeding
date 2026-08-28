@@ -28,7 +28,7 @@ class RecordLookupTests(unittest.TestCase):
                         {
                             "candidate_name": "Genesis",
                             "status": "passed",
-                            "protocol_id": "acts-seeding-v2",
+                            "protocol_id": "acts-seeding-v3",
                             "protocol": current_protocol(),
                             "started_at": started_at,
                         }
@@ -43,6 +43,27 @@ class RecordLookupTests(unittest.TestCase):
                 "Development/20260826T140000000000Z-Genesis",
             )
             self.assertEqual(len(directories), 3)
+
+    def test_v2_historical_record_remains_readable(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            records = Path(temporary) / "records"
+            folder = records / "Development" / "Genesis"
+            folder.mkdir(parents=True)
+            (folder / "summary.json").write_text(
+                json.dumps(
+                    {
+                        "candidate_name": "Genesis",
+                        "status": "passed",
+                        "protocol_id": "acts-seeding-v2",
+                        "protocol": {"id": "acts-seeding-v2"},
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            directories = candidate_directories("Genesis", False, records)
+
+        self.assertEqual(len(directories), 1)
 
 
 if __name__ == "__main__":

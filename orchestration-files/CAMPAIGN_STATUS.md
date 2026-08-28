@@ -5,9 +5,9 @@
 The snapshot contains only protocol-compatible Development evidence. Its scientific fields come from the median timed comparison in generated `summary.json` records:
 
 - Timed seeding time per event, minimized.
-- Timed particle ambiguity-resolution efficiency, maximized.
+- Timed seeding-stage particle efficiency, maximized.
 
-Full-chain time is not an objective. The generator derives record durations, progress, failures, the latest campaign Genesis baseline, objective leaders, and the current Pareto front. Do not hand-edit generated fields.
+Peak RSS is a separate diagnostic. Ambiguity-resolution, CKF, and full-chain values are not v3 objectives. Development and captain-authorized Evaluation both use one uninstrumented 1-event seeding smoke run, three uninstrumented 10-event seeding timing repetitions, and one separate instrumented 10-event seeding Peak RSS run. The generator derives record durations, progress, failures, the latest campaign Genesis baseline, objective leaders, and the current Pareto front. Do not hand-edit generated fields.
 
 ## Standard composition
 
@@ -22,7 +22,7 @@ The three disjoint category targets must sum to the completed-candidate target. 
 
 ## Campaign input
 
-Campaign workers maintain the small non-scientific `orchestration-files/campaign-status-input.json` file. Start a campaign with this shape:
+Campaign workers maintain the small operator input `orchestration-files/campaign-status-input.json`. It contains campaign state, pre-run proposals, and post-run assessments, but no measured metrics. Start a campaign with this shape:
 
 ```json
 {
@@ -59,38 +59,64 @@ Omitting `campaign.targets` uses the standard composition. A captain-authorized 
 }
 ```
 
-Before a non-Genesis run, append metadata with no `evidence` block yet:
+Before a non-Genesis run, append metadata with no `evidence` block yet. The proposal must already identify the candidate's optimization implementation commit:
 
 ```json
 {
   "candidate": "CandidateName",
-  "mechanism_key": "stable-mechanism-key",
+  "mechanism_key": "stable-exact-mechanism-key",
   "mechanism_family": "bounded-family-name",
-  "classification": "major"
+  "classification": "major",
+  "proposal": {
+    "schema_version": "1.0.0",
+    "candidate": "CandidateName",
+    "implementation_commit": "0123456789abcdef0123456789abcdef01234567",
+    "hypothesis": "Removing the repeated lookup will reduce seeding time.",
+    "falsifier": "The prediction fails if median seeding time does not decrease.",
+    "predicted_directions": {
+      "timed_seeding_time_per_event_ms": "decrease",
+      "timed_seeding_particle_efficiency": "unchanged"
+    },
+    "expected_hot_path": "Acts::Example::run accepted-item traversal.",
+    "changed_symbols": ["Acts::Example::run"],
+    "intended_files": ["optimization-files/Core/src/Example.cpp"],
+    "novelty_reason": "Earlier candidates did not remove this lookup.",
+    "source_references": [
+      {
+        "source_type": "Genesis",
+        "reference": "records/Development/<run>-Genesis/summary.json",
+        "relevance": "The baseline identifies the timed hot path.",
+        "directly_inspected": true
+      }
+    ],
+    "combination_provenance": null
+  }
 }
 ```
 
-`classification` is `major`, `minor`, or `combination`. Current Genesis alone uses `baseline`. No more than three consecutive metadata entries may use one `mechanism_family`. `current_attempt.state` is `queued`, `running`, `recording`, or `blocked`. Set `current_attempt` to `null` when no candidate is active. The pull request URL is either this repository's PR URL or `null`.
+The proposal is the only pre-run scientific-claim contract. Source types are exactly `Genesis`, `prior record/commit`, `inspected source code`, or `external primary source`. The last two types also require a permanent HTTPS `reference`, `directly_inspected: true`, `inspected_scope`, and `acts_mapping`. A standard 10/5/5 campaign requires at least three of its first ten major proposals to contain one of those directly inspected primary-source references. Their falsifier, predicted directions, ACTS symbols, and hot-path mapping make the later prediction assessment possible.
+
+At evaluation start, the evaluator normalizes this proposal, verifies its candidate, implementation commit, and exact intended file set, and hashes the normalized proposal with that commit. It copies the binding and combination provenance into `summary.json`. Later status generation rejects proposal changes and reads claims from that measured copy. Genesis is exempt.
+
+`classification` is `major`, `minor`, or `combination`. Current Genesis alone uses `baseline`. Every new-format non-Genesis `mechanism_key` must be globally unique, regardless of name or category. A refinement may add `derives_from` with the earlier candidate, mechanism key, and implementation commit, but the refinement still needs a new exact mechanism key. No more than three consecutive metadata entries may use one `mechanism_family`. `current_attempt.state` is `queued`, `running`, `recording`, or `blocked`. Set `current_attempt` to `null` when no candidate is active. The pull request URL is either this repository's PR URL or `null`.
 
 After `make record`, add the candidate evidence before regenerating status:
 
 ```json
 "evidence": {
-  "implementation_commit": "0123456789abcdef0123456789abcdef01234567",
-  "changed_symbols": ["Acts::Example::run"],
   "files_changed": ["optimization-files/Core/src/Example.cpp#L20-L38"],
-  "hot_path_rationale": "Remove one allocation from each accepted traversal.",
-  "novelty_rationale": "Earlier candidates did not change this ownership boundary.",
   "outcome": "keep",
-  "lesson": "The bounded arena reduced timed seeding without changing efficiency."
+  "lesson": "The bounded arena reduced timed seeding without changing efficiency.",
+  "prediction_assessment": "held",
+  "prediction_assessment_rationale": "Both primary objectives moved as predicted."
 }
 ```
 
-Evidence is required for every candidate record included in a new-format snapshot. The implementation commit must match the candidate record. Exact file ranges use `path#L<start>-L<end>`. Outcomes are `keep`, `discard`, or `crash`.
+Evidence is required for every candidate record included in a new-format snapshot. Exact file ranges use `path#L<start>-L<end>`. Outcomes are `keep`, `discard`, or `crash`. Prediction assessments are `held`, `not held`, `mixed`, or `inconclusive`. The implementation commit, changed symbols, hot-path claim, novelty claim, source references, and combination provenance come only from the immutable measured proposal copy.
 
 ### Combination provenance
 
-A combination must include `combination_provenance` before its run. Each source must name an earlier metadata entry with completed evidence. The source mechanism key and full implementation commit must match that entry. At least two distinct sources are required.
+A combination must include `combination_provenance` before its run. Copy the same normalized object into the proposal's `combination_provenance`; the validator rejects any difference. Each source must name an earlier metadata entry with completed evidence. The source mechanism key and full implementation commit must match that entry. At least two distinct sources are required.
 
 ```json
 "combination_provenance": {
@@ -115,7 +141,7 @@ A combination must include `combination_provenance` before its run. Each source 
 
 Before setting `directly_inspected`, inspect each source with `git show <full-commit> -- <file>`. Candidate and chart links continue to point to the new combined implementation commit.
 
-The generator rejects unknown input fields. This prevents scientific metrics from entering the hand-maintained file.
+The generator rejects unknown input fields. This prevents measured metrics and unbound scientific claims from entering the hand-maintained file.
 
 ## Generate and publish
 
@@ -155,4 +181,4 @@ Only a selected open campaign refreshes, at most once per minute with cache bust
 
 The 10/5/5 composition is a backward-compatible campaign-status v1 extension. New snapshots use candidate target and progress fields and the `major`, `minor`, and `combination` classifications. The schema and dashboard also accept immutable historical v1 snapshots that contain the former `completed_attempts`, `structural_attempts`, and `micro_optimization_cap` targets, matching progress fields, and `structural` or `micro` classifications. Historical snapshots render their original labels. Do not rewrite archived snapshots or records.
 
-Version 1 also accepts both canonical and legacy `repository.snapshot_path` values. Any future incompatible change requires a new `schema_version`.
+Version 1 also accepts both canonical and legacy `repository.snapshot_path` values. Historical v2 snapshots retain ambiguity-efficiency fields. New v3 snapshots use seeding-efficiency fields. The dashboard maps each protocol to its matching field without comparing protocols. Any future incompatible status shape requires a new `schema_version`.
