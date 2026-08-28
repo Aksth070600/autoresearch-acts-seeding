@@ -26,11 +26,11 @@
   },
   "current_attempt": null,
   "failures": [],
-  "generated_at": "2026-08-28T23:32:45.922074Z",
+  "generated_at": "2026-08-28T23:33:16.849112Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/f8e809e118e41889850cf9cf3c46988e7c583625",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/7acabbeef3aa1539224ae412868295abd44b72c4",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/aug29",
-    "pull_request": null
+    "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/36"
   },
   "progress": {
     "combination_candidates": 0,
@@ -55,7 +55,7 @@
         "target_percentage": 25.0
       }
     },
-    "elapsed_seconds": 0.922074,
+    "elapsed_seconds": 31.849112,
     "estimated_remaining_seconds": null,
     "eta_basis": "Unavailable until a stop request fixes the exact final candidate target.",
     "eta_sample_count": 0,
