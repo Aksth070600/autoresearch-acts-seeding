@@ -17,17 +17,13 @@ CandidatesForMiddleSp2::CandidatesForMiddleSp2()
 
 CandidatesForMiddleSp2::CandidatesForMiddleSp2(Size nLow, Size nHigh)
     : m_maxSizeLow(nLow), m_maxSizeHigh(nHigh) {
-  m_fixedStorage = nLow != kNoSize && nHigh != kNoSize;
-  if (m_fixedStorage) {
-    m_storage.resize(nLow + nHigh);
-  }
+  // Reserve enough memory for all collections
+  m_storage.reserve((nLow != kNoSize ? nLow : 0) +
+                    (nHigh != kNoSize ? nHigh : 0));
 }
 
 void CandidatesForMiddleSp2::clear() {
-  if (!m_fixedStorage) {
-    m_storage.clear();
-  }
-  m_nextSlot = 0;
+  m_storage.clear();
   m_indicesLow.clear();
   m_indicesHigh.clear();
 }
@@ -54,16 +50,9 @@ bool CandidatesForMiddleSp2::push(Container& container, Size nMax,
   }
 
   if (container.size() < nMax) {
-    Index slot = 0;
-    if (m_fixedStorage) {
-      slot = m_nextSlot++;
-      m_storage[slot] =
-          TripletCandidate2(spB, spM, spT, weight, zOrigin, isQuality);
-    } else {
-      m_storage.emplace_back(spB, spM, spT, weight, zOrigin, isQuality);
-      slot = static_cast<Index>(m_storage.size() - 1);
-    }
-    container.emplace_back(weight, slot);
+    // If there is still space, add anything
+    m_storage.emplace_back(spB, spM, spT, weight, zOrigin, isQuality);
+    container.emplace_back(weight, m_storage.size() - 1);
     std::ranges::push_heap(container, comparator);
     return true;
   }
