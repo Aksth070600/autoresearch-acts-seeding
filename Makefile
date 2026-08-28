@@ -25,7 +25,7 @@ HEPP_APPTAINER ?= /cvmfs/atlas.cern.ch/repo/containers/sw/apptainer/x86_64-el9/c
 HEPP_CONTAINER_IMAGE ?= /cvmfs/atlas.cern.ch/repo/containers/images/singularity/x86_64-almalinux9.img
 HEPP_CONTAINER_BINDS ?= -B /cvmfs -B /storage -B /home/aksth
 
-.PHONY: help test setupActs setup build export-hepp-files hepp02-tmux-create hepp02-tmux-attach hepp02-tmux hepp02-tmux-status hepp02-setupActs hepp02-build hepp02-setup hepp02-setup-and-build hepp02-full-chain-itk evaluate report campaign-status record select-evaluation evaluate-selected
+.PHONY: help test setupActs setup build export-hepp-files hepp02-tmux-create hepp02-tmux-attach hepp02-tmux hepp02-tmux-status hepp02-setupActs hepp02-build hepp02-setup hepp02-setup-and-build hepp02-full-chain-itk evaluate report campaign-status campaign-check-stop campaign-consume-stop campaign-finalize record select-evaluation evaluate-selected
 
 help:
 	@printf '%s\n' \
@@ -49,6 +49,9 @@ help:
 	  'make evaluate CANDIDATE=name  Run the controlled seeding-only 1 + 3 + 1 matrix.' \
 	  'make report                 Build the results report and live campaign dashboard.' \
 	  'make campaign-status        Generate orchestration-files/campaign-status.json.' \
+	  'make campaign-check-stop    Observe an authenticated continuous stop request.' \
+	  'make campaign-consume-stop  Persist exact final targets at a safe boundary.' \
+	  'make campaign-finalize      Verify Genesis/evidence and mark graceful completion.' \
 	  'make record CANDIDATE=name  Print the latest candidate result and failure logs.' \
 	  'make select-evaluation      Show Genesis plus four unique evaluation candidates.' \
 	  'make evaluate-selected      Evaluate the selected candidates and rebuild the report.' \
@@ -113,6 +116,15 @@ report:
 
 campaign-status:
 	/usr/bin/python3 orchestration-files/campaign_status.py
+
+campaign-check-stop:
+	/usr/bin/python3 orchestration-files/campaign_control.py check-stop
+
+campaign-consume-stop:
+	/usr/bin/python3 orchestration-files/campaign_control.py consume-stop
+
+campaign-finalize:
+	/usr/bin/python3 orchestration-files/campaign_control.py finalize
 
 record:
 	@if [ -z "$(CANDIDATE)" ]; then echo 'usage: make record CANDIDATE=name [EVALUATION=1]' >&2; exit 2; fi

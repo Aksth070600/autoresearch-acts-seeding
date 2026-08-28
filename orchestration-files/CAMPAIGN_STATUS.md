@@ -1,6 +1,6 @@
 # Live campaign status format
 
-`orchestration-files/campaign-status.json` is the generated public snapshot consumed by the GitHub Pages campaign dashboard. Version 1.0.0 is defined by [`campaign-status.schema.json`](campaign-status.schema.json).
+`orchestration-files/campaign-status.json` is the generated public snapshot consumed by the GitHub Pages campaign dashboard. [`campaign-status.schema.json`](campaign-status.schema.json) defines fixed and historical version 1.0.0 snapshots plus continuous version 1.1.0 snapshots. Existing 1.0.0 snapshots and fixed-20 evidence stay immutable.
 
 The snapshot contains only protocol-compatible Development evidence. Its scientific fields come from the median timed comparison in generated `summary.json` records:
 
@@ -9,9 +9,9 @@ The snapshot contains only protocol-compatible Development evidence. Its scienti
 
 Peak RSS is a separate diagnostic. Ambiguity-resolution, CKF, and full-chain values are not v3 objectives. Development and captain-authorized Evaluation both use one uninstrumented 1-event seeding smoke run, three uninstrumented 10-event seeding timing repetitions, and one separate instrumented 10-event seeding Peak RSS run. The generator derives record durations, progress, failures, the latest campaign Genesis baseline, objective leaders, and the current Pareto front. Do not hand-edit generated fields.
 
-## Standard composition
+## Campaign modes and composition
 
-`orchestration-files/protocol.py` is the single owner of the standard campaign composition:
+`orchestration-files/protocol.py` is the single owner of both composition contracts. Archived fixed campaigns use:
 
 - Exactly 20 completed candidates.
 - Exactly 10 major candidates.
@@ -19,6 +19,10 @@ Peak RSS is a separate diagnostic. Ambiguity-resolution, CKF, and full-chain val
 - Exactly 5 combination candidates.
 
 The three disjoint category targets must sum to the completed-candidate target. Category progress counts only unique candidates that passed every controlled Development stage. Failed runs do not count toward completion. The generator rejects completed counts above any category target and rejects a queued candidate in a category that is already complete.
+
+Continuous campaigns have no fixed total while their control state is `open`. They use the authoritative 50% major, 25% minor, and 25% combination ratio. `campaign_scheduler.py` owns deterministic deficit selection and the category-order tie-break. A combination slot is skipped unless `scheduler.combination_readiness` contains at least two earlier candidates with completed measured evidence and fully validated provenance. Quota pressure never overrides this check.
+
+At each snapshot, continuous progress reports retained counts, actual percentages, target percentages, and signed candidate deficits. After a stop is consumed, the scheduler persists the smallest positive exact 2:1:1 target that contains all completed candidates. Final totals are therefore positive multiples of four.
 
 ## Campaign input
 
@@ -58,6 +62,50 @@ Omitting `campaign.targets` uses the standard composition. A captain-authorized 
   "combination_candidates": 1
 }
 ```
+
+### Continuous campaign input
+
+A new continuous campaign uses schema version 1.1.0. Give it a globally unique campaign ID, a random 64-hex-character control ID, and the full Genesis commit whose `optimization-files/` tree must be restored. The control ID is a public replay-resistant identifier, not a credential. Generate it locally with `python3 -c 'import secrets; print(secrets.token_hex(32))'` and publish this initial state:
+
+```json
+{
+  "schema_version": "1.1.0",
+  "campaign": {
+    "name": "ACTS Seeding continuous sep01",
+    "branch": "autoresearch-acts-seeding/sep01",
+    "phase": "continuous Development",
+    "started_at": "2026-09-01T09:00:00Z",
+    "mode": "continuous",
+    "campaign_id": "acts-seeding-sep01-20260901",
+    "control_id": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    "genesis_commit": "0123456789abcdef0123456789abcdef01234567",
+    "targets": {
+      "major_percentage": 50,
+      "minor_percentage": 25,
+      "combination_percentage": 25
+    }
+  },
+  "current_attempt": null,
+  "attempt_metadata": [],
+  "blockers": [],
+  "pull_request_url": null,
+  "control": {
+    "state": "open",
+    "request": null,
+    "observed_at": null,
+    "consumed_at": null,
+    "completed_at": null
+  },
+  "scheduler": {
+    "state": "running",
+    "combination_readiness": null,
+    "final_targets": null,
+    "blocker": null
+  }
+}
+```
+
+A continuous `current_attempt` also has `"scheduling": "ordinary"` or `"scheduling": "finalization"`. Persist one active attempt at a time. Before selecting a combination category, set `combination_readiness` to the same validated shape described under Combination provenance. Every source must already have measured completed evidence. Clear readiness when the proposed combination consumes it.
 
 Before a non-Genesis run, append metadata with no `evidence` block yet. The proposal must already identify the candidate's optimization implementation commit:
 
@@ -156,6 +204,28 @@ The generator scans `records/`, rejects malformed campaign evidence, validates t
 
 The ETA uses the median duration of complete, passed candidates. It stays unavailable until three durations exist. It subtracts elapsed time for a current candidate and becomes unavailable while a blocker is active. It reaches zero only when every category target is complete.
 
+## Authenticated finish control
+
+GitHub Pages stays static. It only links the selected open continuous campaign to `.github/workflows/finish-campaign.yml` on `main`. The captain signs in to GitHub, copies the branch, campaign ID, and control ID shown on the page into the `workflow_dispatch` form, and confirms the run. The page sends no credential and makes no privileged request.
+
+The workflow has only `contents: read` and `issues: write`. It validates the exact branch snapshot, continuous identity, matching open PR, lifecycle state, and trusted `main` workflow ref. It then creates one `campaign-control` issue authored by `github-actions[bot]`. The issue contains a strict machine-readable request with the campaign identity, GitHub actor, workflow run, and server-side request time. A matching issue is idempotent. A malformed issue, reused campaign ID with another control ID, unknown branch, closed PR, fixed campaign, or completed campaign is refused.
+
+At every safe candidate boundary, run:
+
+```text
+make campaign-check-stop
+```
+
+This authenticated GitHub read is the only network-dependent operator check. Tests inject a fake forge and never use the network. If a request arrives during an evaluator transaction, record that transaction and its restoration first. If it arrives before a queued ordinary candidate starts, cancel that queued attempt. Then set `current_attempt` to `null` and run:
+
+```text
+make campaign-consume-stop
+```
+
+Consumption persists the smallest exact final target once and is restart-safe. From then on, schedule only categories with a positive persisted deficit. If a combination deficit remains without validated readiness, set `scheduler.state` to `blocked`, record the concrete provenance blocker, publish status, and stop safely.
+
+After all deficits reach zero, restore `optimization-files/` exactly to `campaign.genesis_commit`, build the ignored archive report with `make report`, and run `make campaign-finalize`. Finalization rejects a missing consumed request, incomplete ratio, active candidate, missing retained evidence, unauthorized Evaluation or 50-event records, unreachable candidate commits, and a Genesis tree mismatch. Publish the terminal snapshot and archive PR. The input and generated snapshot preserve the request, final targets, and terminal timestamps across process or machine restart.
+
 ## Dashboard fetch contract
 
 At page load, the dashboard makes one unauthenticated request for public pull requests:
@@ -177,8 +247,10 @@ The dashboard requests the canonical path first. On a 404, it falls back to the 
 
 Only a selected open campaign refreshes, at most once per minute with cache busting. The pull-request list is not polled. A refresh error is visible and does not replace that campaign's last good snapshot. Older campaigns without snapshots show an explicit unavailable state. An open snapshot becomes stale after 15 minutes; a closed snapshot is final.
 
-## Version 1 compatibility
+The Finish campaign area is enabled only for a discovered open continuous snapshot whose branch and public control identity match the selected PR. It shows explicit unavailable states for fixed, direct-ref, requested, finalizing, malformed, and completed selections. Navigation opens GitHub's authenticated workflow page. Browser code never contains an API credential, authorization header, workflow dispatch POST, or issue mutation.
 
-The 10/5/5 composition is a backward-compatible campaign-status v1 extension. New snapshots use candidate target and progress fields and the `major`, `minor`, and `combination` classifications. The schema and dashboard also accept immutable historical v1 snapshots that contain the former `completed_attempts`, `structural_attempts`, and `micro_optimization_cap` targets, matching progress fields, and `structural` or `micro` classifications. Historical snapshots render their original labels. Do not rewrite archived snapshots or records.
+## Version compatibility
+
+Version 1.1.0 adds continuous ratio progress plus durable scheduler and control state. Version 1.0.0 remains the fixed and historical format. The 10/5/5 composition is a backward-compatible campaign-status v1 extension. New snapshots use candidate target and progress fields and the `major`, `minor`, and `combination` classifications. The schema and dashboard also accept immutable historical v1 snapshots that contain the former `completed_attempts`, `structural_attempts`, and `micro_optimization_cap` targets, matching progress fields, and `structural` or `micro` classifications. Historical snapshots render their original labels. Do not rewrite archived snapshots or records.
 
 Version 1 also accepts both canonical and legacy `repository.snapshot_path` values. Historical v2 snapshots retain ambiguity-efficiency fields. New v3 snapshots use seeding-efficiency fields. The dashboard maps each protocol to its matching field without comparing protocols. Any future incompatible status shape requires a new `schema_version`.

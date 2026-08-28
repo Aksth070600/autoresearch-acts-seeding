@@ -1,0 +1,57 @@
+name: Finish continuous ACTS campaign
+
+on:
+  workflow_dispatch:
+    inputs:
+      campaign_branch:
+        description: Exact open campaign branch shown on the live dashboard
+        required: true
+        type: string
+      campaign_id:
+        description: Exact campaign ID shown on the live dashboard
+        required: true
+        type: string
+      control_id:
+        description: Exact one-time control ID shown on the live dashboard
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: finish-campaign-${{ inputs.campaign_id }}
+  cancel-in-progress: false
+
+jobs:
+  reject-non-main-dispatch:
+    if: github.ref != 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Refuse an untrusted workflow ref
+        run: |
+          echo 'error: run this control workflow from the main branch' >&2
+          exit 1
+
+  request-stop:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out trusted control implementation
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+
+      - name: Validate campaign and create durable request
+        env:
+          CAMPAIGN_BRANCH: ${{ inputs.campaign_branch }}
+          CAMPAIGN_ID: ${{ inputs.campaign_id }}
+          CONTROL_ID: ${{ inputs.control_id }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          python3 orchestration-files/campaign_control.py request-stop \
+            --branch "$CAMPAIGN_BRANCH" \
+            --campaign-id "$CAMPAIGN_ID" \
+            --control-id "$CONTROL_ID"

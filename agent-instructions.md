@@ -96,14 +96,25 @@ If primary performance is equal, prefer the simpler implementation.
 
 ## Experiment loop
 
-Once setup is confirmed, continue until the captain stops the campaign or a real blocker needs a decision.
-Do not pause after every candidate to ask whether to continue. A standard campaign must complete exactly 20 unique candidate experiments whose Development runs complete every requested stage. The categories are disjoint and exact:
+Once setup is confirmed, follow the campaign mode recorded in `campaign-status-input.json`. Do not pause after every candidate to ask whether to continue.
+
+A fixed standard campaign must complete exactly 20 unique candidate experiments whose Development runs complete every requested stage. The categories are disjoint and exact:
 
 - 10 `major` candidates. Each makes a new substantive algorithm, traversal, allocation, data-layout, pruning, search-bound, or data-flow change.
 - 5 `minor` candidates. Each makes a new bounded local optimization, such as a focused hint, reserve, cache-placement, or similarly small rewrite.
 - 5 `combination` candidates. Each combines at least two earlier candidate mechanisms and tests a specific additive or interaction hypothesis.
 
 Combination candidates do not count as major or minor. The category targets must sum to the completed-candidate target. No more than 3 consecutive candidates may come from one `mechanism_family`. Do not stop after one candidate or a routine progress update. Change mechanism families before exceeding the streak limit.
+
+### Continuous Development mode
+
+A continuous campaign runs only Development and has no fixed total before its authenticated stop request. Use schema 1.1.0 and the exact state contract in `orchestration-files/CAMPAIGN_STATUS.md`. `orchestration-files/campaign_scheduler.py` deterministically selects the largest 50/25/25 category deficit, with major, minor, then combination as the tie-break order. Run one evaluator transaction at a time. The evaluator lock covers application, scientific stages, restoration, and evidence recording against the shared ACTS tree.
+
+A combination is eligible only when `scheduler.combination_readiness` validates at least two compatible earlier sources with completed measured evidence and all normal provenance. Skip an ineligible combination slot and choose the next eligible deficit. Quota pressure never permits invented or incomplete provenance.
+
+At each safe boundary before queuing an ordinary candidate, run `make campaign-check-stop`, then publish any changed control snapshot. A request observed during an active run records `requested` state without interrupting the evaluator. Finish that candidate, restoration, `make record`, and evidence commit. Cancel an ordinary candidate that is only queued when the request is first observed. With no active attempt, run `make campaign-consume-stop`. This persists the smallest positive exact 2:1:1 final target. Schedule only its remaining category deficits with `scheduling: finalization`. If a required combination is ineligible, publish the concrete blocker and stop safely.
+
+State input, generated snapshots, measured summaries, and the GitHub control issue are the restart contract. After restart, validate them before acting. Never rerun a completed candidate or lose a persisted stop request. The evaluator itself refuses Evaluation, repeated completed candidates, and ordinary starts after stop observation in continuous mode.
 
 A renamed or mechanically equivalent cache, logging change, STL spelling, `reserve`, or branch variant is not a new major mechanism. Every candidate must be novel. Before each candidate run, commit one proposal in the candidate's campaign metadata. Follow the authoritative shape in `orchestration-files/CAMPAIGN_STATUS.md`. It includes the candidate and implementation commit, hypothesis and falsifier, predicted direction for both primary objectives, `expected_hot_path`, `changed_symbols`, exact intended files, `novelty_reason`, typed source references, and nullable combination provenance.
 
@@ -129,7 +140,7 @@ For each attempt:
 12. Keep a candidate that meets the active-base criteria. Otherwise restore the previous candidate with a safe, non-force operation on the campaign branch. Keep a mixed seeding-efficiency candidate when a follow-up explicitly targets recovery of its seeding time, but do not present it as an overall improvement.
 13. Use the simplification skill to curate `orchestration-files/agent-learnings.md` when it reaches 250 lines.
 14. Never allow `orchestration-files/agent-learnings.md` to exceed 500 lines.
-15. After all 20 completed candidates and before campaign closure, restore the canonical Genesis implementation with a safe revert commit. Keep every candidate implementation commit reachable.
+15. After all 20 fixed-campaign candidates, or after all persisted continuous finalization deficits, restore the canonical Genesis implementation with a safe revert commit. Keep every candidate implementation commit reachable.
 
 Each candidate name must be unique.
 Do not overwrite generated results.
@@ -166,6 +177,7 @@ Publish a validated snapshot at these milestones only:
 - Before the fresh Genesis run and before every candidate attempt starts.
 - After `make record` has produced the attempt evidence.
 - When a blocker starts or clears.
+- When a continuous stop request is observed, consumed, blocked, or completed.
 - At campaign closure, with `current_attempt` set to `null`.
 
 Run `make campaign-status`, commit the input and snapshot with the corresponding normal campaign milestone, and push them together. Keep updates sparse. Do not create cosmetic refresh commits for elapsed time or stage wording. The generator reads protocol-compatible Development summaries only. It does not run a workload and does not authorize Evaluation. Experiment agents must preserve the captain-only Evaluation boundary.
@@ -183,12 +195,14 @@ The canonical Genesis summary replacement is evidence and should be included in 
 
 Create or update the draft PR with `gh-axi` and keep its body current with the campaign tag, candidate name, hypothesis, changed files, development result, and whether the candidate is the active base.
 Use PR comments for additional candidate results when rewriting the body would hide history.
-Never merge the campaign PR autonomously; leave that decision to the captain.
+The campaign worker never merges its own PR. For future continuous archive PRs only, firstmate may use the captain's standing authority after every gate below passes. This authority excludes implementation and platform PRs, Evaluation, red CI, security-sensitive findings, destructive choices, and unresolved decisions.
 
 The `main` branch must always contain the Genesis implementation.
 Before a campaign archive PR is merged, revert candidate implementation changes in a final commit while keeping the candidate commits, summaries, lessons, and report in the PR history.
 Merge archive PRs with a regular merge commit, never squash, so each candidate implementation commit remains reachable to future campaigns.
 Do not delete a campaign branch until its archive PR has merged and its records are present on `main`.
+
+Before firstmate merges a continuous archive, `make campaign-finalize` must have passed and the terminal snapshot must prove a consumed valid request, exact 2:1:1 retained counts, complete implementation/proposal/mechanism/provenance/measured evidence, Development-only protocol use, exact Genesis restoration, and reachable candidate commits. The PR must be cleanly mergeable with green CI. Any unresolved scientific, product, security, destructive, or irreversible decision blocks autonomous merge. The campaign worker prepares the ignored `build/site/` archive report and direct archive PR, then leaves merge execution to firstmate.
 
 ## Agent learnings
 

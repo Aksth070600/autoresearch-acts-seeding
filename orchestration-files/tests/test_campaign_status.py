@@ -286,7 +286,10 @@ class CampaignStatusTests(unittest.TestCase):
                 encoding="utf-8"
             )
         )
-        self.assertEqual(schema["properties"]["schema_version"]["const"], "1.0.0")
+        self.assertEqual(
+            schema["properties"]["schema_version"]["enum"],
+            ["1.0.0", "1.1.0"],
+        )
         self.assertEqual(
             schema["properties"]["protocol_id"]["enum"],
             ["acts-seeding-v2", "acts-seeding-v3"],
@@ -312,7 +315,11 @@ class CampaignStatusTests(unittest.TestCase):
         self.assertIn("falsifier", proposal_schema["required"])
         self.assertIn("source_references", proposal_schema["required"])
         target_variants = schema["$defs"]["campaignTargets"]["oneOf"]
-        required_sets = {frozenset(variant["required"]) for variant in target_variants}
+        required_sets = {
+            frozenset(variant["required"])
+            for variant in target_variants
+            if "required" in variant
+        }
         self.assertIn(
             frozenset(
                 {
@@ -323,6 +330,10 @@ class CampaignStatusTests(unittest.TestCase):
                 }
             ),
             required_sets,
+        )
+        self.assertIn(
+            {"$ref": "#/$defs/continuousTargets"},
+            target_variants,
         )
         historical = json.loads(
             (PROJECT_ROOT / "orchestration-files" / "campaign-status.json").read_text(
