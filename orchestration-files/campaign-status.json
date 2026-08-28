@@ -20,11 +20,7 @@
       "timed_seeding_time_per_event_ms": 289.9
     }
   ],
-  "blockers": [
-    {
-      "message": "GITHUB_TOKEN is unavailable, so the required authenticated campaign-check-stop cannot run before the first ordinary candidate."
-    }
-  ],
+  "blockers": [],
   "campaign": {
     "branch": "autoresearch-acts-seeding/aug29",
     "campaign_id": "acts-seeding-aug29-20260829",
@@ -32,7 +28,7 @@
     "genesis_commit": "f8e809e118e41889850cf9cf3c46988e7c583625",
     "mode": "continuous",
     "name": "ACTS Seeding continuous aug29",
-    "phase": "blocked: authenticated stop check unavailable",
+    "phase": "continuous Development",
     "started_at": "2026-08-28T23:32:45Z",
     "targets": {
       "combination_percentage": 25,
@@ -49,9 +45,9 @@
   },
   "current_attempt": null,
   "failures": [],
-  "generated_at": "2026-08-28T23:43:09.509433Z",
+  "generated_at": "2026-08-28T23:44:46.801887Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/f60190667bd388a16e9cdb23bf7817f79d56c6ac",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/762819270d720fe28d601da4e47d36210a0ed80c",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/aug29",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/36"
   },
@@ -78,7 +74,7 @@
         "target_percentage": 25.0
       }
     },
-    "elapsed_seconds": 624.509433,
+    "elapsed_seconds": 721.801887,
     "estimated_remaining_seconds": null,
     "eta_basis": "Unavailable until a stop request fixes the exact final candidate target.",
     "eta_sample_count": 0,
