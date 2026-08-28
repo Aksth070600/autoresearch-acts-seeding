@@ -3,7 +3,7 @@
   "campaign": {
     "name": "ACTS Seeding continuous aug29",
     "branch": "autoresearch-acts-seeding/aug29",
-    "phase": "continuous Development",
+    "phase": "quality-map elision queued Development",
     "started_at": "2026-08-28T23:32:45Z",
     "mode": "continuous",
     "campaign_id": "acts-seeding-aug29-20260829",
@@ -15,8 +15,60 @@
       "combination_percentage": 25
     }
   },
-  "current_attempt": null,
-  "attempt_metadata": [],
+  "current_attempt": {
+    "candidate": "FilterDisabledConfirmationQualityMapElision",
+    "mechanism_key": "filter-disabled-confirmation-quality-map-elision",
+    "mechanism_family": "filter-confirmation-state-pruning",
+    "classification": "major",
+    "controlled_stage": "queued Development run",
+    "state": "queued",
+    "started_at": "2026-08-28T23:48:57Z",
+    "scheduling": "ordinary"
+  },
+  "attempt_metadata": [
+    {
+      "candidate": "FilterDisabledConfirmationQualityMapElision",
+      "mechanism_key": "filter-disabled-confirmation-quality-map-elision",
+      "mechanism_family": "filter-confirmation-state-pruning",
+      "classification": "major",
+      "proposal": {
+        "schema_version": "1.0.0",
+        "candidate": "FilterDisabledConfirmationQualityMapElision",
+        "implementation_commit": "0bf182617d283e73cc711a1d9fbe98a3a780b991",
+        "hypothesis": "Moving best-seed-quality map updates inside the seed-confirmation branch will remove three unordered-map operations from every emitted seed in the Development configuration and reduce median seeding time without changing selected seeds.",
+        "falsifier": "The prediction fails if median seeding time does not decrease from fresh Genesis or timed seeding particle efficiency changes.",
+        "predicted_directions": {
+          "timed_seeding_time_per_event_ms": "decrease",
+          "timed_seeding_particle_efficiency": "unchanged"
+        },
+        "expected_hot_path": "Acts::BroadTripletSeedFilter::filterTripletsMiddleFixed emitted-seed state updates with seedConfirmation disabled.",
+        "changed_symbols": [
+          "Acts::BroadTripletSeedFilter::filterTripletsMiddleFixed"
+        ],
+        "intended_files": [
+          "optimization-files/Core/src/Seeding2/BroadTripletSeedFilter.cpp"
+        ],
+        "novelty_reason": "Prior map work reduced duplicate lookup cost, while this candidate removes the entire inactive map data flow under the existing configuration invariant and does not alter candidate ordering or selection.",
+        "source_references": [
+          {
+            "source_type": "inspected source code",
+            "reference": "https://github.com/acts-project/acts/blob/941a3c7cfe3bc413647d351a83b4b025d9213903/Core/src/Seeding/BroadTripletSeedFilter.cpp",
+            "relevance": "The permanent upstream implementation shows best-seed-quality state helpers and the filter output path that maintains this state even though reads are guarded by seed confirmation.",
+            "directly_inspected": true,
+            "inspected_scope": "BroadTripletSeedFilter getBestSeedQuality/setBestSeedQuality helpers and filterTripletsMiddleFixed seed-confirmation and emitted-seed quality-state flow.",
+            "acts_mapping": "Upstream Acts::BroadTripletSeedFilter::filterTripletsMiddleFixed maps directly to optimization-files/Core/src/Seeding2/BroadTripletSeedFilter.cpp; the Development example leaves Config::seedConfirmation false."
+          },
+          {
+            "source_type": "prior record/commit",
+            "reference": "0155cb01d2f69992290d8870acc7ab23c7af6866",
+            "relevance": "The directly inspected prior implementation showed map lookup cost was measurable, but optimized each update rather than pruning disabled confirmation state.",
+            "directly_inspected": true
+          }
+        ],
+        "combination_provenance": null
+      }
+    }
+  ],
   "blockers": [],
   "pull_request_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/36",
   "control": {
