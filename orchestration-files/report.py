@@ -15,7 +15,7 @@ from protocol import PROTOCOL_ID, PROTOCOL_METADATA, is_compatible_summary
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_RECORDS = PROJECT_ROOT / "records"
-DEFAULT_OUTPUT = PROJECT_ROOT / "reports" / "site"
+DEFAULT_OUTPUT = PROJECT_ROOT / "build" / "site"
 REPOSITORY_URL = "https://github.com/Aksth070600/autoresearch-acts-seeding"
 FULL_COMMIT_SHA = re.compile(r"[0-9a-fA-F]{40}")
 

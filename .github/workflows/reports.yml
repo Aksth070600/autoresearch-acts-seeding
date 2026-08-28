@@ -65,6 +65,10 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+      - name: Install test dependencies
+        run: python3 -m pip install -r orchestration-files/requirements.txt
+      - name: Run repository tests
+        run: python3 -m unittest discover -s orchestration-files/tests -v
       - name: Build interactive report
         run: |
           python3 orchestration-files/report.py \
@@ -72,13 +76,13 @@ jobs:
             --x-metric "$X_METRIC" \
             --y-metric "$Y_METRIC" \
             --baseline "$BASELINE" \
-            --output reports/site
+            --output build/site
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: reports/site
+          path: build/site
 
   deploy:
     needs: build

@@ -20,7 +20,7 @@ flowchart LR
     E --> F[records/]
     F --> B
     F --> G[make report]
-    H[agent-learnings.md] --> A
+    H[orchestration-files/agent-learnings.md] --> A
 ```
 
 - `optimization-files/` contains the ACTS implementation files an experiment may change.
@@ -32,7 +32,7 @@ flowchart LR
 - `make campaign-status` builds the live snapshot. See [`orchestration-files/CAMPAIGN_STATUS.md`](orchestration-files/CAMPAIGN_STATUS.md).
 - `make evaluate-selected` evaluates Genesis, the two strongest particle ambiguity-efficiency candidates, and two lowest-seeding-time candidates, filling overlaps with the next unique candidates.
 - `records/` stores reproducible summaries used by evolution and reports.
-- `agent-learnings.md` stores short lessons so agents do not repeat failed ideas.
+- `orchestration-files/agent-learnings.md` stores short lessons so agents do not repeat failed ideas.
 - `Genesis` is the starting point for every campaign. Successful development baselines use timestamped `records/Development/*-Genesis/` directories; the legacy canonical Genesis summary remains readable for compatibility. Evolution selects the latest complete protocol-compatible Development Genesis record.
 - Reports show one Genesis point as the arithmetic mean of all protocol-compatible Genesis runs in the selected dataset, with sample count and source records. Candidate records remain individual points. The interactive report lets you switch between Development and Evaluation; each view stays within its selected category.
 
@@ -60,12 +60,13 @@ make report
 make campaign-status
 ```
 
+`make report` writes the historical report and live campaign page to the ignored `build/site/` directory.
 `make evaluate` runs 10-event development stages. `EVALUATION=1` runs the 50-event evaluation stages for captain/operator-controlled review. Timed stages run three repetitions and store every repetition plus their median in each summary.
 
 Focused protocol and objective tests run with:
 
 ```text
-/usr/bin/python3 -m unittest discover -s tests -v
+/usr/bin/python3 -m unittest discover -s orchestration-files/tests -v
 ```
 
 The pinned Python dependency is installed with:

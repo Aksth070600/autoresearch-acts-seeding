@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 
 
-sys.path.insert(0, str(Path(__file__).parents[1] / "orchestration-files"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "orchestration-files"))
 
 from evaluate import build_timed_comparison  # noqa: E402
 from evolution import (  # noqa: E402

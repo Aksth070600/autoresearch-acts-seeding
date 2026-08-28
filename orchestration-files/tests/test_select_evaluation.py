@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 
 
-PROJECT_ROOT = Path(__file__).parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 ORCHESTRATION = PROJECT_ROOT / "orchestration-files"
 spec = importlib.util.spec_from_file_location(
     "select_evaluation", ORCHESTRATION / "select-evaluation.py"

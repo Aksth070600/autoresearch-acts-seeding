@@ -2,7 +2,7 @@ import unittest
 from pathlib import Path
 
 
-PROJECT_ROOT = Path(__file__).parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 POLICY = PROJECT_ROOT / "agent-instructions.md"
 
 
