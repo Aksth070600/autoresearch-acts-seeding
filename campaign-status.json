@@ -1,11 +1,30 @@
 {
   "$schema": "https://raw.githubusercontent.com/Aksth070600/autoresearch-acts-seeding/main/orchestration-files/campaign-status.schema.json",
-  "attempts": [],
+  "attempts": [
+    {
+      "candidate": "Genesis",
+      "classification": "baseline",
+      "duration_seconds": 800.15,
+      "finished_at": "2026-08-28T11:04:42.448899Z",
+      "implementation_commit": "dd252d3164414f88396fa56f8b1bd012e694bfa6",
+      "links": {
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T105122298587Z-Genesis/summary.json"
+      },
+      "mechanism_family": "fresh Genesis baseline",
+      "outcome": "Passed all controlled Development stages.",
+      "record": "records/Development/20260828T105122298587Z-Genesis/summary.json",
+      "started_at": "2026-08-28T10:51:22.298587Z",
+      "state": "completed",
+      "timed_ambiguity_particle_efficiency": 0.972769,
+      "timed_seeding_time_per_event_ms": 298.25
+    }
+  ],
   "blockers": [],
   "campaign": {
     "branch": "autoresearch-acts-seeding/campaign-v8",
     "name": "ACTS Seeding Development Campaign V8",
-    "phase": "fresh Genesis baseline",
+    "phase": "candidate mechanism selection",
     "started_at": "2026-08-28T10:50:43Z",
     "targets": {
       "completed_attempts": 20,
@@ -13,24 +32,17 @@
       "structural_attempts": 10
     }
   },
-  "current_attempt": {
-    "candidate": "Genesis",
-    "classification": "baseline",
-    "controlled_stage": "queued Development run",
-    "mechanism_family": "fresh Genesis baseline",
-    "started_at": "2026-08-28T10:50:43Z",
-    "state": "queued"
-  },
+  "current_attempt": null,
   "failures": [],
-  "generated_at": "2026-08-28T10:51:08.526989Z",
+  "generated_at": "2026-08-28T11:04:56.315724Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/05e5ae250ab066db707ed7719b6ba0f56b160a92",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/dd252d3164414f88396fa56f8b1bd012e694bfa6",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/campaign-v8",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/29"
   },
   "progress": {
     "completed_attempts": 0,
-    "elapsed_seconds": 25.526989,
+    "elapsed_seconds": 853.315724,
     "estimated_remaining_seconds": null,
     "eta_basis": "Unavailable until 3 completed attempt durations exist (0 available).",
     "eta_sample_count": 0,
@@ -40,10 +52,50 @@
     "structural_attempts": 0
   },
   "promising_results": {
-    "best_ambiguity_efficiency": null,
-    "best_seeding": null,
-    "latest_genesis": null,
-    "pareto_front": []
+    "best_ambiguity_efficiency": {
+      "candidate": "Genesis",
+      "links": {
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T105122298587Z-Genesis/summary.json"
+      },
+      "started_at": "2026-08-28T10:51:22.298587Z",
+      "timed_ambiguity_particle_efficiency": 0.972769,
+      "timed_seeding_time_per_event_ms": 298.25
+    },
+    "best_seeding": {
+      "candidate": "Genesis",
+      "delta_vs_genesis_ms": 0.0,
+      "links": {
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T105122298587Z-Genesis/summary.json"
+      },
+      "percentage_vs_genesis": 0.0,
+      "started_at": "2026-08-28T10:51:22.298587Z",
+      "timed_ambiguity_particle_efficiency": 0.972769,
+      "timed_seeding_time_per_event_ms": 298.25
+    },
+    "latest_genesis": {
+      "candidate": "Genesis",
+      "links": {
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T105122298587Z-Genesis/summary.json"
+      },
+      "started_at": "2026-08-28T10:51:22.298587Z",
+      "timed_ambiguity_particle_efficiency": 0.972769,
+      "timed_seeding_time_per_event_ms": 298.25
+    },
+    "pareto_front": [
+      {
+        "candidate": "Genesis",
+        "links": {
+          "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding",
+          "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T105122298587Z-Genesis/summary.json"
+        },
+        "started_at": "2026-08-28T10:51:22.298587Z",
+        "timed_ambiguity_particle_efficiency": 0.972769,
+        "timed_seeding_time_per_event_ms": 298.25
+      }
+    ]
   },
   "protocol_id": "acts-seeding-v2",
   "repository": {
