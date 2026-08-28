@@ -10,8 +10,6 @@
 
 #include "Acts/EventData/Types.hpp"
 
-#include <boost/container/small_vector.hpp>
-
 #include <limits>
 #include <vector>
 
@@ -90,7 +88,7 @@ class CandidatesForMiddleSp2 {
 
  private:
   using WeightIndex = std::pair<float, Index>;
-  using Container = boost::container::small_vector<WeightIndex, 8>;
+  using Container = std::vector<WeightIndex>;
 
   static constexpr bool comparator(const WeightIndex& a, const WeightIndex& b) {
     return a.first > b.first;
@@ -103,7 +101,7 @@ class CandidatesForMiddleSp2 {
   Size m_maxSizeHigh{kNoSize};
 
   // storage contains the collection of the candidates
-  boost::container::small_vector<TripletCandidate2, 16> m_storage;
+  std::vector<TripletCandidate2> m_storage;
 
   Container m_indicesLow;
   Container m_indicesHigh;
