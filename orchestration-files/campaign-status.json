@@ -160,11 +160,7 @@
       "timed_seeding_time_per_event_ms": null
     }
   ],
-  "blockers": [
-    {
-      "message": "Two independent candidates built successfully and then segfaulted in the one-event Development smoke stage; the shared controlled ACTS runtime needs inspection before another candidate."
-    }
-  ],
+  "blockers": [],
   "campaign": {
     "branch": "autoresearch-acts-seeding/aug29",
     "campaign_id": "acts-seeding-aug29-20260829",
@@ -172,7 +168,7 @@
     "genesis_commit": "f8e809e118e41889850cf9cf3c46988e7c583625",
     "mode": "continuous",
     "name": "ACTS Seeding continuous aug29",
-    "phase": "blocked: repeated candidate smoke segfaults",
+    "phase": "continuous Development",
     "started_at": "2026-08-28T23:32:45Z",
     "targets": {
       "combination_percentage": 25,
@@ -200,9 +196,9 @@
       "record_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug29/records/Failed/20260828T235354Z-DoubletDisabledIPExperimentCuts/summary.json"
     }
   ],
-  "generated_at": "2026-08-28T23:56:20.402885Z",
+  "generated_at": "2026-08-28T23:58:17.747084Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/2bd9d6be27ef9216e0cf26c746c16e42c7b62651",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/c1d9511a2c839df20ade965cd844b8c4c46b2e0c",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/aug29",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/36"
   },
@@ -229,7 +225,7 @@
         "target_percentage": 25.0
       }
     },
-    "elapsed_seconds": 1415.402885,
+    "elapsed_seconds": 1532.747084,
     "estimated_remaining_seconds": null,
     "eta_basis": "Unavailable until a stop request fixes the exact final candidate target.",
     "eta_sample_count": 0,

@@ -3,7 +3,7 @@
   "campaign": {
     "name": "ACTS Seeding continuous aug29",
     "branch": "autoresearch-acts-seeding/aug29",
-    "phase": "blocked: repeated candidate smoke segfaults",
+    "phase": "continuous Development",
     "started_at": "2026-08-28T23:32:45Z",
     "mode": "continuous",
     "campaign_id": "acts-seeding-aug29-20260829",
@@ -120,9 +120,7 @@
       }
     }
   ],
-  "blockers": [
-    "Two independent candidates built successfully and then segfaulted in the one-event Development smoke stage; the shared controlled ACTS runtime needs inspection before another candidate."
-  ],
+  "blockers": [],
   "pull_request_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/36",
   "control": {
     "state": "open",
