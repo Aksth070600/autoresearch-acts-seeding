@@ -6,6 +6,8 @@ on:
       - 'records/**'
       - 'orchestration-files/report.py'
       - 'orchestration-files/campaign_status.py'
+      - 'orchestration-files/campaign_control.py'
+      - 'orchestration-files/campaign_scheduler.py'
       - 'orchestration-files/campaign-status.schema.json'
       - 'orchestration-files/objectives.py'
       - 'orchestration-files/proposal.py'
@@ -14,6 +16,7 @@ on:
       - 'orchestration-files/tests/**'
       - 'orchestration-files/visualizations/**'
       - '.github/workflows/reports-preview.yml'
+      - '.github/workflows/finish-campaign.yml'
       - 'Makefile'
 
 permissions:

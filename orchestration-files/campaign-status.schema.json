@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://raw.githubusercontent.com/Aksth070600/autoresearch-acts-seeding/main/orchestration-files/campaign-status.schema.json",
   "title": "ACTS Seeding live campaign status",
-  "description": "Backward-compatible version 1.0.0 snapshot for controlled ACTS Seeding campaigns.",
+  "description": "Backward-compatible snapshots for fixed and continuous controlled ACTS Seeding campaigns.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -23,7 +23,7 @@
   ],
   "properties": {
     "$schema": {"type": "string", "format": "uri"},
-    "schema_version": {"const": "1.0.0"},
+    "schema_version": {"enum": ["1.0.0", "1.1.0"]},
     "protocol_id": {"enum": ["acts-seeding-v2", "acts-seeding-v3"]},
     "generated_at": {"$ref": "#/$defs/timestamp"},
     "stale_after_seconds": {"type": "integer", "minimum": 60},
@@ -50,7 +50,11 @@
         "branch": {"type": "string", "minLength": 1, "maxLength": 200},
         "phase": {"$ref": "#/$defs/label"},
         "started_at": {"$ref": "#/$defs/timestamp"},
-        "targets": {"$ref": "#/$defs/campaignTargets"}
+        "targets": {"$ref": "#/$defs/campaignTargets"},
+        "mode": {"enum": ["fixed", "continuous"]},
+        "campaign_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$"},
+        "control_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "genesis_commit": {"$ref": "#/$defs/fullCommit"}
       }
     },
     "current_attempt": {
@@ -130,8 +134,40 @@
         "pull_request": {"$ref": "#/$defs/nullableUri"},
         "active_commit": {"$ref": "#/$defs/nullableUri"}
       }
-    }
+    },
+    "control": {"$ref": "#/$defs/campaignControl"},
+    "scheduler": {"$ref": "#/$defs/schedulerSnapshot"}
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "campaign": {
+            "required": ["mode"],
+            "properties": {"mode": {"const": "continuous"}}
+          }
+        }
+      },
+      "then": {
+        "required": ["control", "scheduler"],
+        "properties": {
+          "schema_version": {"const": "1.1.0"},
+          "campaign": {
+            "required": ["mode", "campaign_id", "control_id", "genesis_commit"],
+            "properties": {"targets": {"$ref": "#/$defs/continuousTargets"}}
+          },
+          "current_attempt": {
+            "oneOf": [
+              {"type": "null"},
+              {"allOf": [{"$ref": "#/$defs/currentCandidate"}, {"required": ["scheduling"]}]}
+            ]
+          },
+          "progress": {"required": ["composition"]}
+        }
+      },
+      "else": {"properties": {"schema_version": {"const": "1.0.0"}}}
+    }
+  ],
   "$defs": {
     "timestamp": {"type": "string", "format": "date-time"},
     "label": {"type": "string", "minLength": 1, "maxLength": 120},
@@ -152,6 +188,16 @@
         {"type": "null"},
         {"type": "string", "format": "uri"}
       ]
+    },
+    "continuousTargets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["major_percentage", "minor_percentage", "combination_percentage"],
+      "properties": {
+        "major_percentage": {"const": 50},
+        "minor_percentage": {"const": 25},
+        "combination_percentage": {"const": 25}
+      }
     },
     "campaignTargets": {
       "oneOf": [
@@ -175,7 +221,8 @@
             "minor_candidates": {"type": "integer", "minimum": 0},
             "combination_candidates": {"type": "integer", "minimum": 0}
           }
-        }
+        },
+        {"$ref": "#/$defs/continuousTargets"}
       ]
     },
     "legacyCurrentAttempt": {
@@ -202,7 +249,8 @@
         "classification": {"enum": ["baseline", "major", "minor", "combination"]},
         "controlled_stage": {"$ref": "#/$defs/label"},
         "state": {"enum": ["queued", "running", "recording", "blocked"]},
-        "started_at": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/timestamp"}]}
+        "started_at": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/timestamp"}]},
+        "scheduling": {"enum": ["ordinary", "finalization"]}
       }
     },
     "legacyProgress": {
@@ -256,7 +304,104 @@
         "estimated_remaining_seconds": {"$ref": "#/$defs/nullableNonnegativeNumber"},
         "expected_finish_at": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/timestamp"}]},
         "eta_sample_count": {"$ref": "#/$defs/nonnegativeInteger"},
-        "eta_basis": {"type": "string", "minLength": 1, "maxLength": 300}
+        "eta_basis": {"type": "string", "minLength": 1, "maxLength": 300},
+        "composition": {"$ref": "#/$defs/candidateComposition"}
+      }
+    },
+    "candidateComposition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["major", "minor", "combination"],
+      "properties": {
+        "major": {"$ref": "#/$defs/compositionCategory"},
+        "minor": {"$ref": "#/$defs/compositionCategory"},
+        "combination": {"$ref": "#/$defs/compositionCategory"}
+      }
+    },
+    "compositionCategory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["completed", "target_percentage", "completed_percentage", "deficit_candidates"],
+      "properties": {
+        "completed": {"$ref": "#/$defs/nonnegativeInteger"},
+        "target_percentage": {"type": "number", "minimum": 0, "maximum": 100},
+        "completed_percentage": {"type": "number", "minimum": 0, "maximum": 100},
+        "deficit_candidates": {"type": "number"}
+      }
+    },
+    "stopRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["campaign_id", "campaign_branch", "control_id", "issue_number", "issue_url", "requested_at", "requested_by", "workflow_run_id", "workflow_run_attempt", "workflow_run_url"],
+      "properties": {
+        "campaign_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$"},
+        "campaign_branch": {"type": "string", "minLength": 1, "maxLength": 200},
+        "control_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "issue_number": {"type": "integer", "minimum": 1},
+        "issue_url": {"type": "string", "format": "uri"},
+        "requested_at": {"$ref": "#/$defs/timestamp"},
+        "requested_by": {"type": "string", "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$"},
+        "workflow_run_id": {"type": "integer", "minimum": 1},
+        "workflow_run_attempt": {"type": "integer", "minimum": 1},
+        "workflow_run_url": {"type": "string", "format": "uri"}
+      }
+    },
+    "campaignControl": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "request", "observed_at", "consumed_at", "completed_at"],
+      "properties": {
+        "state": {"enum": ["open", "requested", "consumed", "completed"]},
+        "request": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/stopRequest"}]},
+        "observed_at": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/timestamp"}]},
+        "consumed_at": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/timestamp"}]},
+        "completed_at": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/timestamp"}]}
+      }
+    },
+    "finalTargets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["completed_candidates", "major_candidates", "minor_candidates", "combination_candidates"],
+      "properties": {
+        "completed_candidates": {"type": "integer", "minimum": 4},
+        "major_candidates": {"type": "integer", "minimum": 2},
+        "minor_candidates": {"type": "integer", "minimum": 1},
+        "combination_candidates": {"type": "integer", "minimum": 1}
+      }
+    },
+    "categoryDeficits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["major", "minor", "combination"],
+      "properties": {
+        "major": {"$ref": "#/$defs/nonnegativeInteger"},
+        "minor": {"$ref": "#/$defs/nonnegativeInteger"},
+        "combination": {"$ref": "#/$defs/nonnegativeInteger"}
+      }
+    },
+    "schedulerDecision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action", "category", "reason"],
+      "properties": {
+        "action": {"enum": ["schedule", "cancel-queued", "finish-active", "consume-stop", "schedule-finalization", "blocked", "finalize", "complete"]},
+        "category": {"oneOf": [{"type": "null"}, {"enum": ["baseline", "major", "minor", "combination"]}]},
+        "reason": {"type": "string", "minLength": 1, "maxLength": 500},
+        "final_targets": {"$ref": "#/$defs/finalTargets"},
+        "deficits": {"$ref": "#/$defs/categoryDeficits"}
+      }
+    },
+    "schedulerSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "strategy", "combination_eligible", "final_targets", "blocker", "decision"],
+      "properties": {
+        "state": {"enum": ["running", "finishing", "completed", "blocked"]},
+        "strategy": {"const": "deterministic-deficit-2:1:1-v1"},
+        "combination_eligible": {"type": "boolean"},
+        "final_targets": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/finalTargets"}]},
+        "blocker": {"oneOf": [{"type": "null"}, {"type": "string", "minLength": 1, "maxLength": 500}]},
+        "decision": {"$ref": "#/$defs/schedulerDecision"}
       }
     },
     "links": {

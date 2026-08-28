@@ -7,20 +7,22 @@ POLICY = PROJECT_ROOT / "agent-instructions.md"
 
 
 class ExperimentPolicyTests(unittest.TestCase):
-    def test_policy_requires_exact_composition_and_development_only_runs(self) -> None:
+    def test_policy_requires_continuous_composition_and_development_only_runs(self) -> None:
         text = POLICY.read_text(encoding="utf-8")
         lowered = " ".join(text.lower().split())
 
         self.assertIn("captain-controlled", lowered)
         self.assertIn("evaluation remains captain-controlled", lowered)
-        self.assertIn("development and captain-authorized evaluation use the same seeding-only matrix", lowered)
-        self.assertIn("one uninstrumented 1-event seeding smoke stage", lowered)
-        self.assertIn("three uninstrumented 10-event seeding timing repetitions", lowered)
-        self.assertIn("one separate 10-event seeding stage", lowered)
-        self.assertIn("exactly 20 unique candidate experiments", lowered)
-        self.assertIn("10 `major` candidates", lowered)
-        self.assertIn("5 `minor` candidates", lowered)
-        self.assertIn("5 `combination` candidates", lowered)
+        self.assertIn("experiment agents run development only", lowered)
+        self.assertIn("protocol.py` owns the controlled evaluator contract", lowered)
+        self.assertIn("use it without overrides", lowered)
+        self.assertIn("judge complete development results by the two primary objectives", lowered)
+        self.assertIn("accept expected unmasked fpes only when every requested event completed", lowered)
+        self.assertIn("run a continuous development campaign", lowered)
+        self.assertIn("no fixed total before its authenticated stop request", lowered)
+        self.assertIn("largest 50/25/25 category deficit", lowered)
+        self.assertIn("the candidate categories are disjoint", lowered)
+        self.assertNotIn("a fixed standard campaign", lowered)
         self.assertIn("combination candidates do not count as major or minor", lowered)
         self.assertIn("no more than 3 consecutive", lowered)
         self.assertIn("restore the canonical genesis implementation", lowered)
@@ -36,7 +38,7 @@ class ExperimentPolicyTests(unittest.TestCase):
             "source mechanism keys",
             "full source implementation commits",
             "directly inspected",
-            "compatibility",
+            "compatible",
             "interaction hypothesis",
         ):
             self.assertIn(phrase, lowered)

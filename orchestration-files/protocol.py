@@ -31,11 +31,23 @@ PROTOCOL_METADATA: dict[str, Any] = {
 }
 
 # Campaign composition does not change scientific protocol compatibility.
+# CAMPAIGN_COMPOSITION remains the owner of archived fixed-20 evidence.
 CAMPAIGN_COMPOSITION: dict[str, int] = {
     "completed_candidates": 20,
     "major_candidates": 10,
     "minor_candidates": 5,
     "combination_candidates": 5,
+}
+# Continuous campaigns use this ratio without a fixed candidate total. Their
+# graceful final count is any positive integer multiple of these values.
+CONTINUOUS_CAMPAIGN_RATIO: dict[str, int] = {
+    "major": 2,
+    "minor": 1,
+    "combination": 1,
+}
+CONTINUOUS_CAMPAIGN_PERCENTAGES: dict[str, int] = {
+    category: value * 100 // sum(CONTINUOUS_CAMPAIGN_RATIO.values())
+    for category, value in CONTINUOUS_CAMPAIGN_RATIO.items()
 }
 SOURCE_GROUNDED_MAJOR_MINIMUM = 3
 

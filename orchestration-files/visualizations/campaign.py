@@ -33,6 +33,15 @@ HTML_TEMPLATE = r"""<!doctype html>
     label { display: grid; gap: 5px; font-size: 0.9rem; font-weight: 650; }
     select { min-width: 0; width: 100%; padding: 8px 10px; border: 1px solid #475569; border-radius: 6px;
       background: #1e293b; color: #e5e7eb; font: inherit; }
+    .finish-control { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px;
+      margin-top: 12px; padding: 13px 14px; border: 1px solid #475569; border-radius: 8px; background: #111827; }
+    .finish-control p { margin: 0; color: #cbd5e1; font-size: 0.86rem; }
+    .finish-button { display: inline-flex; align-items: center; justify-content: center; padding: 8px 12px;
+      border: 1px solid #dc2626; border-radius: 7px; color: #fee2e2; background: #991b1b; font-weight: 750;
+      text-decoration: none; }
+    .finish-button:hover { color: #fff; background: #b91c1c; }
+    .control-identity { margin-top: 6px !important; color: #94a3b8 !important; overflow-wrap: anywhere; }
+    .control-identity code { color: #e2e8f0; }
     .notice { margin-top: 12px; padding: 11px 13px; border: 1px solid #475569; border-radius: 8px; background: #111827; }
     .notice.error { border-color: #b45309; color: #fed7aa; background: rgba(120,53,15,0.18); }
     [hidden] { display: none !important; }
@@ -100,6 +109,14 @@ HTML_TEMPLATE = r"""<!doctype html>
         <option>Discovering public campaigns…</option>
       </select>
     </label>
+    <section id="finish-control" class="finish-control" aria-label="Continuous campaign finish control">
+      <div>
+        <strong id="finish-heading">Finish campaign</strong>
+        <p id="finish-status">Select an open continuous campaign to make the authenticated finish control available.</p>
+        <p id="finish-identity" class="control-identity" hidden></p>
+      </div>
+      <a id="finish-button" class="finish-button" href="https://github.com/Aksth070600/autoresearch-acts-seeding/actions/workflows/finish-campaign.yml?query=branch%3Amain" target="_blank" rel="noopener noreferrer" hidden>Finish campaign</a>
+    </section>
   </section>
   <div id="fetch-error" class="notice error" role="alert" hidden></div>
   <div id="empty-state">
@@ -292,11 +309,53 @@ function humanizeCandidateName(value) {
 function validCount(value) {
   return Number.isInteger(value) && value >= 0;
 }
+function validContinuousComposition(progress) {
+  const composition = progress?.composition;
+  if (!composition) return false;
+  return ['major', 'minor', 'combination'].every((category) => {
+    const item = composition[category];
+    return item && validCount(item.completed)
+      && Number.isFinite(item.target_percentage)
+      && Number.isFinite(item.completed_percentage)
+      && Number.isFinite(item.deficit_candidates);
+  });
+}
 function campaignProgressModel(snapshot) {
   const targets = snapshot?.campaign?.targets;
   const progress = snapshot?.progress;
   if (!targets || !progress) return null;
   const candidateFields = ['completed_candidates', 'major_candidates', 'minor_candidates', 'combination_candidates'];
+  const continuousTargets = targets.major_percentage === 50
+    && targets.minor_percentage === 25 && targets.combination_percentage === 25;
+  if (continuousTargets && candidateFields.every((field) => validCount(progress[field]))
+      && validContinuousComposition(progress)) {
+    if (progress.major_candidates + progress.minor_candidates + progress.combination_candidates
+        !== progress.completed_candidates) return null;
+    const categories = ['major', 'minor', 'combination'];
+    const counts = [progress.major_candidates, progress.minor_candidates, progress.combination_candidates];
+    const targetPercentages = [50, 25, 25];
+    const labels = ['Major candidates', 'Minor candidates', 'Combination candidates'];
+    const total = progress.completed_candidates;
+    const compositionMatches = categories.every((category, index) => {
+      const item = progress.composition[category];
+      const expectedPercentage = total ? counts[index] / total * 100 : 0;
+      const expectedDeficit = total * targetPercentages[index] / 100 - counts[index];
+      return item.completed === counts[index]
+        && item.target_percentage === targetPercentages[index]
+        && Math.abs(item.completed_percentage - expectedPercentage) < 1e-9
+        && Math.abs(item.deficit_candidates - expectedDeficit) < 1e-9;
+    });
+    if (!compositionMatches) return null;
+    return {
+      format: 'continuous-ratio',
+      cards: [
+        {label: 'Completed candidates', completed: progress.completed_candidates},
+        ...categories.map((category, index) => ({
+          label: labels[index], completed: counts[index], ...progress.composition[category]
+        }))
+      ]
+    };
+  }
   if (candidateFields.every((field) => validCount(targets[field]) && validCount(progress[field]))) {
     if (targets.completed_candidates < 1
         || targets.major_candidates + targets.minor_candidates + targets.combination_candidates !== targets.completed_candidates
@@ -328,6 +387,48 @@ function campaignProgressModel(snapshot) {
   }
   return null;
 }
+const FINISH_WORKFLOW_URL = `https://github.com/${REPOSITORY}/actions/workflows/finish-campaign.yml?query=branch%3Amain`;
+function finishControlModel(snapshot, campaign) {
+  if (campaign?.state === 'closed') {
+    return {available: false, status: 'This completed campaign is immutable.'};
+  }
+  if (campaign?.state !== 'open') {
+    return {available: false, status: 'Finish control is unavailable for a direct or undiscovered ref.'};
+  }
+  const identity = snapshot?.campaign;
+  if (identity?.mode !== 'continuous') {
+    return {available: false, status: 'This campaign uses the fixed archive format, not continuous mode.'};
+  }
+  if (identity.branch !== campaign.ref
+      || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/.test(identity.campaign_id)
+      || !/^[0-9a-f]{64}$/.test(identity.control_id)) {
+    return {available: false, status: 'Continuous campaign control identity is unavailable or malformed.'};
+  }
+  const controlState = snapshot?.control?.state;
+  const base = {
+    branch: identity.branch,
+    campaignId: identity.campaign_id,
+    controlId: identity.control_id
+  };
+  if (controlState === 'open') {
+    return {
+      ...base,
+      available: true,
+      workflowUrl: FINISH_WORKFLOW_URL,
+      status: 'Open the authenticated GitHub workflow, choose main, enter the exact identity below, then confirm Run workflow.'
+    };
+  }
+  if (controlState === 'requested') {
+    return {...base, available: false, status: 'An authenticated finish request is recorded. The active candidate will finish safely.'};
+  }
+  if (controlState === 'consumed') {
+    return {...base, available: false, status: 'Finish request consumed. Only exact-ratio deficit candidates may run.'};
+  }
+  if (controlState === 'completed') {
+    return {...base, available: false, status: 'This completed campaign is immutable.'};
+  }
+  return {...base, available: false, status: 'Continuous campaign finish state is unavailable or malformed.'};
+}
 /* CAMPAIGN_DISCOVERY_LOGIC_END */
 
 const POLL_INTERVAL_MS = __POLL_INTERVAL_MS__;
@@ -350,7 +451,7 @@ function efficiencyValue(value) {
 }
 function validateSnapshot(value, expectedBranch) {
   const snapshotBranch = safeRef(value?.campaign?.branch);
-  if (!value || typeof value !== 'object' || value.schema_version !== '1.0.0'
+  if (!value || typeof value !== 'object' || !['1.0.0', '1.1.0'].includes(value.schema_version)
       || !['acts-seeding-v2', 'acts-seeding-v3'].includes(value.protocol_id) || !snapshotBranch
       || (expectedBranch && snapshotBranch !== expectedBranch)
       || !value.progress || !value.promising_results || !Array.isArray(value.attempts)
@@ -362,7 +463,11 @@ function validateSnapshot(value, expectedBranch) {
   if (!progressModel) {
     throw new Error('The campaign snapshot has invalid targets or progress.');
   }
-  const classifications = progressModel.format === 'candidate-composition'
+  if (progressModel.format === 'continuous-ratio'
+      && (value.schema_version !== '1.1.0' || !value.control || !value.scheduler)) {
+    throw new Error('The continuous campaign snapshot has no durable control state.');
+  }
+  const classifications = ['candidate-composition', 'continuous-ratio'].includes(progressModel.format)
     ? ['baseline', 'major', 'minor', 'combination']
     : ['baseline', 'structural', 'micro'];
   for (const attempt of value.attempts) {
@@ -454,10 +559,31 @@ function setProgress(valueId, barId, current, target, cap = false) {
 function renderCampaignProgress(snapshot) {
   const progressModel = campaignProgressModel(snapshot);
   const cardIds = ['completed', 'major', 'minor', 'combination'];
-  progressModel.cards.forEach(([label, current, target, cap], index) => {
-    setText(`${cardIds[index]}-label`, label);
-    setProgress(`${cardIds[index]}-progress`, `${cardIds[index]}-bar`, current, target, cap);
-  });
+  if (progressModel.format === 'continuous-ratio') {
+    progressModel.cards.forEach((card, index) => {
+      const id = cardIds[index];
+      setText(`${id}-label`, card.label);
+      if (index === 0) {
+        setText(`${id}-progress`, `${card.completed} retained`);
+        document.getElementById(`${id}-bar`).style.width = '0%';
+        return;
+      }
+      const deficit = Math.abs(card.deficit_candidates) < 0.005 ? 0 : card.deficit_candidates;
+      const sign = deficit > 0 ? '+' : '';
+      setText(
+        `${id}-progress`,
+        `${card.completed} · ${card.completed_percentage.toFixed(1)}% · deficit ${sign}${deficit.toFixed(2)}`
+      );
+      const bar = document.getElementById(`${id}-bar`);
+      bar.style.width = `${Math.min(card.completed_percentage / card.target_percentage * 100, 100)}%`;
+      bar.classList.toggle('good', deficit === 0);
+    });
+  } else {
+    progressModel.cards.forEach(([label, current, target, cap], index) => {
+      setText(`${cardIds[index]}-label`, label);
+      setProgress(`${cardIds[index]}-progress`, `${cardIds[index]}-bar`, current, target, cap);
+    });
+  }
   document.getElementById('combination-card').hidden = progressModel.cards.length < 4;
 }
 function renderSeedingLeaders(snapshot) {
@@ -615,6 +741,22 @@ function renderComparisonChart(snapshot) {
 function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
 }
+function renderFinishControl(snapshot, campaign) {
+  const model = finishControlModel(snapshot, campaign);
+  const button = document.getElementById('finish-button');
+  const status = document.getElementById('finish-status');
+  const identity = document.getElementById('finish-identity');
+  status.textContent = model.status;
+  button.hidden = !model.available;
+  button.href = model.available ? model.workflowUrl : FINISH_WORKFLOW_URL;
+  if (model.branch && model.campaignId && model.controlId) {
+    identity.textContent = `Branch: ${model.branch} · Campaign ID: ${model.campaignId} · Control ID: ${model.controlId}`;
+    identity.hidden = false;
+  } else {
+    identity.textContent = '';
+    identity.hidden = true;
+  }
+}
 function renderSnapshot(snapshot, campaign) {
   const lifecycle = document.getElementById('campaign-lifecycle');
   lifecycle.textContent = campaign?.state === 'closed' ? 'Completed' : campaign?.state === 'open' ? 'Running' : 'Direct ref';
@@ -625,6 +767,7 @@ function renderSnapshot(snapshot, campaign) {
   setText('remaining', formatDuration(progress.estimated_remaining_seconds));
   setText('expected-finish', formatInstant(progress.expected_finish_at));
   renderFreshness(snapshot, campaign);
+  renderFinishControl(snapshot, campaign);
   renderSeedingLeaders(snapshot);
   renderComparisonChart(snapshot);
   emptyState.hidden = true;

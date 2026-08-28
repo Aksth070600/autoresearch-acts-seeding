@@ -4,20 +4,23 @@
 from __future__ import annotations
 
 import argparse
+import fcntl
 import hashlib
 import json
 import os
 import re
 import subprocess
 import sys
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from statistics import median
 from typing import Any
 
-from protocol import PROTOCOL_ID, PROTOCOL_METADATA, current_protocol, protocol_events
+from campaign_status import StatusError, parse_instant, validate_live_state
 from proposal import ProposalError, bind_proposal, median_absolute_deviation
+from protocol import PROTOCOL_ID, PROTOCOL_METADATA, current_protocol, protocol_events
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 OPTIMIZATION_ROOT = PROJECT_ROOT / "optimization-files"
@@ -25,6 +28,7 @@ RECORDS_ROOT = PROJECT_ROOT / "records"
 HEPP_HELPER = PROJECT_ROOT / "orchestration-files" / "HEPP-files" / "run-hepp-helper.sh"
 EXPORT_OPTIMIZATION = PROJECT_ROOT / "orchestration-files" / "HEPP-files" / "export-optimization-files.sh"
 DEFAULT_CAMPAIGN_INPUT = PROJECT_ROOT / "orchestration-files" / "campaign-status-input.json"
+DEFAULT_EVALUATOR_LOCK = Path("/tmp/acts-seeding-hepp02-evaluator.lock")
 
 ALLOWED_PATHS = {
     "Core/include/Acts/Seeding2/BroadTripletSeedFilter.hpp",
@@ -649,6 +653,106 @@ def controlled_stage_plan() -> list[dict[str, Any]]:
     return plan
 
 
+def load_continuous_campaign(path: Path) -> dict[str, Any] | None:
+    """Load strict continuous state without changing fixed campaign behavior."""
+
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise EvaluationError(f"cannot read campaign state: {error}") from error
+    campaign = raw.get("campaign") if isinstance(raw, dict) else None
+    if not isinstance(campaign, dict) or campaign.get("mode") != "continuous":
+        return None
+    try:
+        return validate_live_state(raw)
+    except StatusError as error:
+        raise EvaluationError(f"continuous campaign state is invalid: {error}") from error
+
+
+def reject_repeated_continuous_candidate(
+    state: dict[str, Any], candidate_name: str, records_root: Path = RECORDS_ROOT
+) -> None:
+    campaign_start = parse_instant(
+        state["campaign"]["started_at"], "campaign.started_at"
+    )
+    for path in sorted(records_root.glob("**/summary.json")):
+        try:
+            summary = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if (
+            summary.get("candidate_name") == candidate_name
+            and summary.get("status") == "passed"
+            and str(summary.get("mode", "development")).lower() == "development"
+        ):
+            try:
+                started = parse_instant(summary.get("started_at"), f"{path}: started_at")
+            except StatusError:
+                continue
+            if started >= campaign_start:
+                raise EvaluationError(
+                    "continuous campaign refuses to repeat a completed candidate"
+                )
+
+
+def enforce_continuous_development_run(
+    campaign_input: Path,
+    candidate_name: str,
+    evaluation: bool,
+    records_root: Path = RECORDS_ROOT,
+) -> None:
+    """Prevent Evaluation and post-stop ordinary starts in continuous mode."""
+
+    state = load_continuous_campaign(campaign_input)
+    if state is None:
+        return
+    if evaluation:
+        raise EvaluationError(
+            "continuous campaigns are Development-only; Evaluation remains captain-controlled"
+        )
+    current = state["current_attempt"]
+    if current is None or current.get("candidate") != candidate_name:
+        raise EvaluationError(
+            "continuous evaluation requires this candidate as the durable current_attempt"
+        )
+    control_state = state["control"]["state"]
+    scheduling = current.get("scheduling")
+    if control_state == "open" and scheduling != "ordinary":
+        raise EvaluationError("ordinary campaign phase requires ordinary scheduling")
+    if control_state == "consumed" and scheduling != "finalization":
+        raise EvaluationError(
+            "after stop consumption only persisted category-deficit candidates may start"
+        )
+    if control_state in {"requested", "completed"}:
+        raise EvaluationError(
+            "a new evaluator transaction cannot start after a stop request is observed"
+        )
+    reject_repeated_continuous_candidate(state, candidate_name, records_root)
+
+
+@contextmanager
+def evaluator_transaction_lock(path: Path | None = None):
+    """Serialize the complete apply, run, restore, and evidence transaction."""
+
+    lock_path = path or Path(
+        os.environ.get("ACTS_EVALUATOR_LOCK", str(DEFAULT_EVALUATOR_LOCK))
+    )
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    with lock_path.open("a+", encoding="utf-8") as stream:
+        fcntl.flock(stream.fileno(), fcntl.LOCK_EX)
+        stream.seek(0)
+        stream.truncate()
+        stream.write(f"pid={os.getpid()} candidate-transaction\n")
+        stream.flush()
+        try:
+            yield
+        finally:
+            stream.seek(0)
+            stream.truncate()
+            stream.flush()
+            fcntl.flock(stream.fileno(), fcntl.LOCK_UN)
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("candidate_name")
@@ -666,9 +770,11 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def main() -> int:
-    args = parse_args()
+def run_evaluation(args: argparse.Namespace) -> int:
     validate_candidate_name(args.candidate_name)
+    enforce_continuous_development_run(
+        args.campaign_input, args.candidate_name, args.evaluation
+    )
     relative_files = validate_optimization_files()
     repository_commit = require_clean_repository()
     commit = candidate_implementation_commit(
@@ -858,6 +964,12 @@ def main() -> int:
 
     print(json.dumps(summary, indent=2, sort_keys=True))
     return 0 if category in {"Development", "Evaluation"} else 1
+
+
+def main() -> int:
+    args = parse_args()
+    with evaluator_transaction_lock():
+        return run_evaluation(args)
 
 
 if __name__ == "__main__":

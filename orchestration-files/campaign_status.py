@@ -16,8 +16,16 @@ from statistics import median
 from typing import Any
 from urllib.parse import quote
 
+from campaign_scheduler import (
+    CATEGORY_COUNT_FIELDS,
+    SchedulerError,
+    composition_state,
+    finalization_deficits,
+    schedule_decision,
+)
 from protocol import (
     CAMPAIGN_COMPOSITION,
+    CONTINUOUS_CAMPAIGN_PERCENTAGES,
     PROTOCOL_ID,
     PROTOCOL_METADATA,
     SOURCE_GROUNDED_MAJOR_MINIMUM,
@@ -41,12 +49,24 @@ DEFAULT_OUTPUT = ORCHESTRATION_ROOT / "campaign-status.json"
 REPOSITORY_URL = "https://github.com/Aksth070600/autoresearch-acts-seeding"
 SNAPSHOT_PATH = "orchestration-files/campaign-status.json"
 STATUS_SCHEMA_VERSION = "1.0.0"
+CONTINUOUS_STATUS_SCHEMA_VERSION = "1.1.0"
+SUPPORTED_STATUS_SCHEMA_VERSIONS = {
+    STATUS_SCHEMA_VERSION,
+    CONTINUOUS_STATUS_SCHEMA_VERSION,
+}
 STATUS_SCHEMA_URL = (
     "https://raw.githubusercontent.com/Aksth070600/autoresearch-acts-seeding/"
     "main/orchestration-files/campaign-status.schema.json"
 )
 DEFAULT_CAMPAIGN_TARGETS = dict(CAMPAIGN_COMPOSITION)
 NEW_TARGET_FIELDS = frozenset(DEFAULT_CAMPAIGN_TARGETS)
+CONTINUOUS_TARGET_FIELDS = frozenset(
+    {"major_percentage", "minor_percentage", "combination_percentage"}
+)
+DEFAULT_CONTINUOUS_TARGETS = {
+    f"{category}_percentage": percentage
+    for category, percentage in CONTINUOUS_CAMPAIGN_PERCENTAGES.items()
+}
 LEGACY_TARGET_FIELDS = frozenset(
     {"completed_attempts", "structural_attempts", "micro_optimization_cap"}
 )
@@ -65,6 +85,11 @@ LEGACY_CLASSIFICATIONS = {"structural", "micro"}
 CURRENT_STATES = {"queued", "running", "recording", "blocked"}
 CANDIDATE_OUTCOMES = {"keep", "discard", "crash"}
 PREDICTION_ASSESSMENTS = {"held", "not held", "mixed", "inconclusive"}
+CAMPAIGN_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,79}")
+CONTROL_ID = re.compile(r"[0-9a-f]{64}")
+GITHUB_LOGIN = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?")
+CONTROL_STATES = {"open", "requested", "consumed", "completed"}
+SCHEDULER_STATES = {"running", "finishing", "completed", "blocked"}
 
 
 class StatusError(ValueError):
@@ -148,20 +173,28 @@ def campaign_format(targets: dict[str, int]) -> str:
     fields = frozenset(targets)
     if fields == NEW_TARGET_FIELDS:
         return "candidate-composition"
+    if fields == CONTINUOUS_TARGET_FIELDS:
+        return "continuous-ratio"
     if fields == LEGACY_TARGET_FIELDS:
         return "legacy-attempts"
-    raise StatusError("campaign targets do not match a supported v1 format")
+    raise StatusError("campaign targets do not match a supported status format")
 
 
 def validate_campaign_targets(value: Any, field: str) -> dict[str, int]:
     if not isinstance(value, dict):
         raise StatusError(f"{field} must be an object")
     fields = frozenset(value)
-    if fields not in {NEW_TARGET_FIELDS, LEGACY_TARGET_FIELDS}:
-        raise StatusError(f"{field} fields do not match a supported v1 format")
+    if fields not in {
+        NEW_TARGET_FIELDS,
+        CONTINUOUS_TARGET_FIELDS,
+        LEGACY_TARGET_FIELDS,
+    }:
+        raise StatusError(f"{field} fields do not match a supported status format")
     targets: dict[str, int] = {}
     completed_field = (
-        "completed_candidates" if fields == NEW_TARGET_FIELDS else "completed_attempts"
+        "completed_candidates"
+        if fields == NEW_TARGET_FIELDS
+        else "completed_attempts" if fields == LEGACY_TARGET_FIELDS else None
     )
     for name in value:
         target = value[name]
@@ -177,6 +210,11 @@ def validate_campaign_targets(value: Any, field: str) -> dict[str, int]:
         if category_total != targets["completed_candidates"]:
             raise StatusError(
                 f"{field} category targets must sum to completed_candidates"
+            )
+    elif fields == CONTINUOUS_TARGET_FIELDS:
+        if targets != DEFAULT_CONTINUOUS_TARGETS:
+            raise StatusError(
+                f"{field} must use the authoritative 50/25/25 continuous composition"
             )
     else:
         for name in ("structural_attempts", "micro_optimization_cap"):
@@ -416,12 +454,164 @@ def validate_attempt_metadata(
     return normalized
 
 
+def validate_stop_request(value: Any, field: str) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        raise StatusError(f"{field} must be an object")
+    fields = {
+        "campaign_id",
+        "campaign_branch",
+        "control_id",
+        "issue_number",
+        "issue_url",
+        "requested_at",
+        "requested_by",
+        "workflow_run_id",
+        "workflow_run_attempt",
+        "workflow_run_url",
+    }
+    require_keys(value, field, fields, fields)
+    campaign_id = value["campaign_id"]
+    if not isinstance(campaign_id, str) or not CAMPAIGN_ID.fullmatch(campaign_id):
+        raise StatusError(f"{field}.campaign_id is invalid")
+    control_id = value["control_id"]
+    if not isinstance(control_id, str) or not CONTROL_ID.fullmatch(control_id):
+        raise StatusError(f"{field}.control_id is invalid")
+    issue_number = value["issue_number"]
+    if not isinstance(issue_number, int) or isinstance(issue_number, bool) or issue_number < 1:
+        raise StatusError(f"{field}.issue_number must be a positive integer")
+    issue_url = value["issue_url"]
+    expected_issue_url = f"{REPOSITORY_URL}/issues/{issue_number}"
+    if issue_url != expected_issue_url:
+        raise StatusError(f"{field}.issue_url is invalid")
+    run_id = value["workflow_run_id"]
+    run_attempt = value["workflow_run_attempt"]
+    if not isinstance(run_id, int) or isinstance(run_id, bool) or run_id < 1:
+        raise StatusError(f"{field}.workflow_run_id must be a positive integer")
+    if not isinstance(run_attempt, int) or isinstance(run_attempt, bool) or run_attempt < 1:
+        raise StatusError(f"{field}.workflow_run_attempt must be a positive integer")
+    run_url = value["workflow_run_url"]
+    if run_url != f"{REPOSITORY_URL}/actions/runs/{run_id}":
+        raise StatusError(f"{field}.workflow_run_url is invalid")
+    requested_by = value["requested_by"]
+    if not isinstance(requested_by, str) or not GITHUB_LOGIN.fullmatch(requested_by):
+        raise StatusError(f"{field}.requested_by is invalid")
+    return {
+        "campaign_id": campaign_id,
+        "campaign_branch": validate_ref(value["campaign_branch"]),
+        "control_id": control_id,
+        "issue_number": issue_number,
+        "issue_url": issue_url,
+        "requested_at": isoformat(parse_instant(value["requested_at"], f"{field}.requested_at")),
+        "requested_by": requested_by,
+        "workflow_run_id": run_id,
+        "workflow_run_attempt": run_attempt,
+        "workflow_run_url": run_url,
+    }
+
+
+def validate_campaign_control(value: Any, field: str) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        raise StatusError(f"{field} must be an object")
+    fields = {"state", "request", "observed_at", "consumed_at", "completed_at"}
+    require_keys(value, field, fields, fields)
+    state = value["state"]
+    if state not in CONTROL_STATES:
+        raise StatusError(f"{field}.state is invalid")
+    request = (
+        None
+        if value["request"] is None
+        else validate_stop_request(value["request"], f"{field}.request")
+    )
+    instants = {
+        name: (
+            None
+            if value[name] is None
+            else isoformat(parse_instant(value[name], f"{field}.{name}"))
+        )
+        for name in ("observed_at", "consumed_at", "completed_at")
+    }
+    if state == "open" and (request is not None or any(instants.values())):
+        raise StatusError(f"{field} open state cannot contain a stop request")
+    if state != "open" and (request is None or instants["observed_at"] is None):
+        raise StatusError(f"{field} {state} state requires an observed stop request")
+    if state in {"consumed", "completed"} and instants["consumed_at"] is None:
+        raise StatusError(f"{field} {state} state requires consumed_at")
+    if state == "requested" and (
+        instants["consumed_at"] is not None or instants["completed_at"] is not None
+    ):
+        raise StatusError(f"{field} requested state cannot be consumed or completed")
+    if state != "completed" and instants["completed_at"] is not None:
+        raise StatusError(f"{field}.completed_at is only valid for completed state")
+    if state == "completed" and instants["completed_at"] is None:
+        raise StatusError(f"{field} completed state requires completed_at")
+    ordered = [instants[name] for name in ("observed_at", "consumed_at", "completed_at")]
+    parsed = [parse_instant(item, field) for item in ordered if item is not None]
+    if parsed != sorted(parsed):
+        raise StatusError(f"{field} lifecycle timestamps are out of order")
+    if request is not None and parsed and parse_instant(
+        request["requested_at"], f"{field}.request.requested_at"
+    ) > parsed[0]:
+        raise StatusError(f"{field}.observed_at cannot predate the request")
+    return {"state": state, "request": request, **instants}
+
+
+def validate_scheduler_state(
+    value: Any,
+    field: str,
+    earlier_metadata: dict[str, dict[str, Any]],
+) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        raise StatusError(f"{field} must be an object")
+    fields = {"state", "combination_readiness", "final_targets", "blocker"}
+    require_keys(value, field, fields, fields)
+    state = value["state"]
+    if state not in SCHEDULER_STATES:
+        raise StatusError(f"{field}.state is invalid")
+    readiness = (
+        None
+        if value["combination_readiness"] is None
+        else validate_combination_provenance(
+            value["combination_readiness"],
+            f"{field}.combination_readiness",
+            earlier_metadata,
+        )
+    )
+    final_targets = value["final_targets"]
+    if final_targets is not None:
+        final_targets = validate_campaign_targets(final_targets, f"{field}.final_targets")
+        if frozenset(final_targets) != NEW_TARGET_FIELDS:
+            raise StatusError(f"{field}.final_targets must contain exact candidate counts")
+        try:
+            finalization_deficits(
+                {category: 0 for category in CATEGORY_COUNT_FIELDS}, final_targets
+            )
+        except SchedulerError as error:
+            raise StatusError(f"{field}.final_targets: {error}") from error
+    blocker = value["blocker"]
+    if blocker is not None:
+        blocker = validate_label(blocker, f"{field}.blocker", maximum=500)
+    if state == "running" and (final_targets is not None or blocker is not None):
+        raise StatusError(f"{field} running state cannot have final targets or a blocker")
+    if state == "finishing" and (final_targets is None or blocker is not None):
+        raise StatusError(f"{field} finishing state requires only final targets")
+    if state == "blocked" and (final_targets is None or blocker is None):
+        raise StatusError(f"{field} blocked state requires final targets and a blocker")
+    if state == "completed" and (final_targets is None or blocker is not None):
+        raise StatusError(f"{field} completed state requires only final targets")
+    return {
+        "state": state,
+        "combination_readiness": readiness,
+        "final_targets": final_targets,
+        "blocker": blocker,
+    }
+
+
 def validate_live_state(value: Any) -> dict[str, Any]:
     """Validate and normalize the small hand-maintained campaign state input."""
 
     if not isinstance(value, dict):
         raise StatusError("campaign status input must be an object")
-    allowed = {
+    base_fields = {
         "schema_version",
         "campaign",
         "current_attempt",
@@ -429,26 +619,69 @@ def validate_live_state(value: Any) -> dict[str, Any]:
         "blockers",
         "pull_request_url",
     }
-    require_keys(value, "input", allowed, allowed)
-    if value["schema_version"] != STATUS_SCHEMA_VERSION:
-        raise StatusError(f"input.schema_version must be {STATUS_SCHEMA_VERSION}")
+    allowed = base_fields | {"control", "scheduler"}
+    require_keys(value, "input", allowed, base_fields)
+    schema_version = value["schema_version"]
+    if schema_version not in SUPPORTED_STATUS_SCHEMA_VERSIONS:
+        raise StatusError("input.schema_version is unsupported")
 
     campaign = value["campaign"]
     if not isinstance(campaign, dict):
         raise StatusError("input.campaign must be an object")
     campaign_required = {"name", "branch", "phase", "started_at"}
-    campaign_fields = campaign_required | {"targets"}
+    continuous_fields = {"mode", "campaign_id", "control_id", "genesis_commit"}
+    campaign_fields = campaign_required | {"targets"} | continuous_fields
     require_keys(campaign, "input.campaign", campaign_fields, campaign_required)
+    mode = campaign.get("mode", "fixed")
+    if mode not in {"fixed", "continuous"}:
+        raise StatusError("input.campaign.mode must be fixed or continuous")
+    if mode == "continuous":
+        missing = continuous_fields - set(campaign)
+        if missing:
+            raise StatusError(
+                "input.campaign is missing: " + ", ".join(sorted(missing))
+            )
+        if schema_version != CONTINUOUS_STATUS_SCHEMA_VERSION:
+            raise StatusError(
+                f"continuous campaigns require schema_version {CONTINUOUS_STATUS_SCHEMA_VERSION}"
+            )
+    elif set(campaign) & (continuous_fields - {"mode"}):
+        raise StatusError("fixed campaigns cannot contain continuous campaign identity")
+
+    targets = validate_campaign_targets(
+        campaign.get(
+            "targets",
+            DEFAULT_CONTINUOUS_TARGETS if mode == "continuous" else DEFAULT_CAMPAIGN_TARGETS,
+        ),
+        "input.campaign.targets",
+    )
+    if (mode == "continuous") != (campaign_format(targets) == "continuous-ratio"):
+        raise StatusError("campaign mode and targets disagree")
     normalized_campaign = {
         "name": validate_label(campaign["name"], "input.campaign.name"),
         "branch": validate_ref(campaign["branch"]),
         "phase": validate_label(campaign["phase"], "input.campaign.phase", maximum=60),
         "started_at": isoformat(parse_instant(campaign["started_at"], "input.campaign.started_at")),
-        "targets": validate_campaign_targets(
-            campaign.get("targets", DEFAULT_CAMPAIGN_TARGETS),
-            "input.campaign.targets",
-        ),
+        "targets": targets,
     }
+    if mode == "continuous":
+        campaign_id = campaign["campaign_id"]
+        control_id = campaign["control_id"]
+        genesis_commit = campaign["genesis_commit"]
+        if not isinstance(campaign_id, str) or not CAMPAIGN_ID.fullmatch(campaign_id):
+            raise StatusError("input.campaign.campaign_id is invalid")
+        if not isinstance(control_id, str) or not CONTROL_ID.fullmatch(control_id):
+            raise StatusError("input.campaign.control_id is invalid")
+        if not isinstance(genesis_commit, str) or not FULL_COMMIT_SHA.fullmatch(genesis_commit):
+            raise StatusError("input.campaign.genesis_commit must be a full Git SHA")
+        normalized_campaign.update(
+            {
+                "mode": "continuous",
+                "campaign_id": campaign_id,
+                "control_id": control_id,
+                "genesis_commit": genesis_commit,
+            }
+        )
 
     policy_format = campaign_format(normalized_campaign["targets"])
     metadata_input = value["attempt_metadata"]
@@ -469,7 +702,7 @@ def validate_live_state(value: Any) -> dict[str, Any]:
             raise StatusError("input.attempt_metadata candidate names must be unique")
         if candidate == "Genesis":
             raise StatusError("Genesis metadata is derived and must not be listed")
-        if policy_format == "candidate-composition":
+        if policy_format in {"candidate-composition", "continuous-ratio"}:
             mechanism_key = normalized_item["mechanism_key"]
             if mechanism_key in mechanism_keys:
                 raise StatusError(
@@ -485,9 +718,9 @@ def validate_live_state(value: Any) -> dict[str, Any]:
                 "input.attempt_metadata exceeds three consecutive candidates from one mechanism family"
             )
 
-    if (
-        policy_format == "candidate-composition"
-        and normalized_campaign["targets"] == DEFAULT_CAMPAIGN_TARGETS
+    if policy_format in {"candidate-composition", "continuous-ratio"} and (
+        normalized_campaign["targets"] == DEFAULT_CAMPAIGN_TARGETS
+        or policy_format == "continuous-ratio"
     ):
         major_proposals = [
             item["proposal"]
@@ -518,8 +751,10 @@ def validate_live_state(value: Any) -> dict[str, Any]:
             "state",
             "started_at",
         }
-        if policy_format == "candidate-composition":
+        if policy_format in {"candidate-composition", "continuous-ratio"}:
             fields.add("mechanism_key")
+        if policy_format == "continuous-ratio":
+            fields.add("scheduling")
         require_keys(current_input, "input.current_attempt", fields, fields)
         candidate = validate_label(
             current_input["candidate"], "input.current_attempt.candidate", maximum=80
@@ -528,7 +763,9 @@ def validate_live_state(value: Any) -> dict[str, Any]:
             raise StatusError("input.current_attempt.candidate has unsupported characters")
         classification = current_input["classification"]
         allowed_classifications = (
-            NEW_CLASSIFICATIONS if policy_format == "candidate-composition" else LEGACY_CLASSIFICATIONS
+            NEW_CLASSIFICATIONS
+            if policy_format in {"candidate-composition", "continuous-ratio"}
+            else LEGACY_CLASSIFICATIONS
         )
         if classification != "baseline" and classification not in allowed_classifications:
             raise StatusError("input.current_attempt.classification is invalid")
@@ -560,16 +797,21 @@ def validate_live_state(value: Any) -> dict[str, Any]:
             "state": current_input["state"],
             "started_at": started_at,
         }
-        if policy_format == "candidate-composition":
+        if policy_format in {"candidate-composition", "continuous-ratio"}:
             current["mechanism_key"] = validate_label(
                 current_input["mechanism_key"], "input.current_attempt.mechanism_key"
             )
+        if policy_format == "continuous-ratio":
+            scheduling = current_input["scheduling"]
+            if scheduling not in {"ordinary", "finalization"}:
+                raise StatusError("input.current_attempt.scheduling is invalid")
+            current["scheduling"] = scheduling
         if candidate != "Genesis":
             matching = earlier_metadata.get(candidate)
             if matching is None:
                 raise StatusError("current non-Genesis candidate must be in attempt_metadata")
             matching_fields = {"mechanism_family", "classification"}
-            if policy_format == "candidate-composition":
+            if policy_format in {"candidate-composition", "continuous-ratio"}:
                 matching_fields.add("mechanism_key")
             if any(matching[field] != current[field] for field in matching_fields):
                 raise StatusError("current attempt does not match its attempt_metadata")
@@ -589,14 +831,56 @@ def validate_live_state(value: Any) -> dict[str, Any]:
     ):
         raise StatusError("input.pull_request_url must be this repository's pull request URL or null")
 
-    return {
-        "schema_version": STATUS_SCHEMA_VERSION,
+    control = None
+    scheduler = None
+    if policy_format == "continuous-ratio":
+        if "control" not in value or "scheduler" not in value:
+            raise StatusError("continuous campaigns require control and scheduler state")
+        control = validate_campaign_control(value["control"], "input.control")
+        scheduler = validate_scheduler_state(
+            value["scheduler"], "input.scheduler", earlier_metadata
+        )
+        request = control["request"]
+        if request is not None:
+            if (
+                request["campaign_id"] != normalized_campaign["campaign_id"]
+                or request["campaign_branch"] != normalized_campaign["branch"]
+                or request["control_id"] != normalized_campaign["control_id"]
+            ):
+                raise StatusError("input.control.request does not match the campaign identity")
+            if parse_instant(request["requested_at"], "request.requested_at") < parse_instant(
+                normalized_campaign["started_at"], "campaign.started_at"
+            ):
+                raise StatusError("stop request cannot predate the campaign")
+        allowed_scheduler_states = {
+            "open": {"running"},
+            "requested": {"running"},
+            "consumed": {"finishing", "blocked"},
+            "completed": {"completed"},
+        }[control["state"]]
+        if scheduler["state"] not in allowed_scheduler_states:
+            raise StatusError("control and scheduler lifecycle states disagree")
+        if current is not None:
+            if current.get("scheduling") == "finalization" and control["state"] != "consumed":
+                raise StatusError("a finalization candidate requires a consumed stop request")
+            if current.get("scheduling") == "ordinary" and control["state"] == "consumed":
+                raise StatusError("a consumed stop request permits only finalization candidates")
+        if control["state"] == "completed" and current is not None:
+            raise StatusError("a completed campaign cannot have a current attempt")
+    elif "control" in value or "scheduler" in value:
+        raise StatusError("control and scheduler state are only valid for continuous campaigns")
+
+    normalized = {
+        "schema_version": schema_version,
         "campaign": normalized_campaign,
         "current_attempt": current,
         "attempt_metadata": metadata,
         "blockers": blockers,
         "pull_request_url": pull_request_url,
     }
+    if control is not None and scheduler is not None:
+        normalized.update({"control": control, "scheduler": scheduler})
+    return normalized
 
 
 def objective_metrics(summary: dict[str, Any]) -> tuple[float, float]:
@@ -781,7 +1065,10 @@ def load_attempts(
             },
             "record": f"records/{relative}",
         }
-        if candidate != "Genesis" and policy_format == "candidate-composition":
+        if candidate != "Genesis" and policy_format in {
+            "candidate-composition",
+            "continuous-ratio",
+        }:
             evidence = item.get("evidence")
             if not isinstance(evidence, dict):
                 raise StatusError(f"{path}: candidate metadata has no completed evidence")
@@ -904,7 +1191,7 @@ def promising_results(attempts: list[dict[str, Any]]) -> dict[str, Any]:
 
 def calculate_eta(
     completed_durations: list[float],
-    attempts_remaining: int,
+    attempts_remaining: int | None,
     now: datetime,
     *,
     current_started_at: datetime | None = None,
@@ -916,6 +1203,14 @@ def calculate_eta(
     valid_durations = [
         float(value) for value in completed_durations if finite_number(value) and value >= 0
     ]
+    if attempts_remaining is None:
+        return {
+            "median_seconds": median(valid_durations) if valid_durations else None,
+            "sample_count": len(valid_durations),
+            "remaining_seconds": None,
+            "expected_finish_at": None,
+            "basis": "Unavailable until a stop request fixes the exact final candidate target.",
+        }
     if attempts_remaining <= 0:
         return {
             "median_seconds": median(valid_durations) if valid_durations else None,
@@ -986,35 +1281,84 @@ def build_status(
     current = live_state["current_attempt"]
     targets = live_state["campaign"]["targets"]
     policy_format = campaign_format(targets)
-    if policy_format == "candidate-composition":
+    if policy_format in {"candidate-composition", "continuous-ratio"}:
         category_counts = {
             classification: sum(
                 attempt["classification"] == classification for attempt in completed
             )
             for classification in ("major", "minor", "combination")
         }
-        target_for_category = {
-            "major": targets["major_candidates"],
-            "minor": targets["minor_candidates"],
-            "combination": targets["combination_candidates"],
-        }
-        for classification, count in category_counts.items():
-            if count > target_for_category[classification]:
-                raise StatusError(
-                    f"completed {classification} candidates exceed the campaign target"
-                )
-        if len(completed) > targets["completed_candidates"]:
-            raise StatusError("completed candidates exceed the campaign target")
-        candidates_remaining = sum(
-            target_for_category[classification] - count
-            for classification, count in category_counts.items()
-        )
         progress = {
             "completed_candidates": len(completed),
             "major_candidates": category_counts["major"],
             "minor_candidates": category_counts["minor"],
             "combination_candidates": category_counts["combination"],
         }
+        if policy_format == "candidate-composition":
+            target_for_category = {
+                "major": targets["major_candidates"],
+                "minor": targets["minor_candidates"],
+                "combination": targets["combination_candidates"],
+            }
+            for classification, count in category_counts.items():
+                if count > target_for_category[classification]:
+                    raise StatusError(
+                        f"completed {classification} candidates exceed the campaign target"
+                    )
+            if len(completed) > targets["completed_candidates"]:
+                raise StatusError("completed candidates exceed the campaign target")
+            candidates_remaining: int | None = sum(
+                target_for_category[classification] - count
+                for classification, count in category_counts.items()
+            )
+        else:
+            progress["composition"] = composition_state(category_counts)
+            scheduler = live_state["scheduler"]
+            control = live_state["control"]
+            readiness = scheduler["combination_readiness"]
+            if readiness is not None:
+                incomplete_sources = [
+                    source["candidate"]
+                    for source in readiness["sources"]
+                    if source["candidate"] not in completed_by_candidate
+                ]
+                if incomplete_sources:
+                    raise StatusError(
+                        "combination readiness sources lack completed measured evidence: "
+                        + ", ".join(incomplete_sources)
+                    )
+            final_targets = scheduler["final_targets"]
+            if final_targets is None:
+                candidates_remaining = None
+            else:
+                try:
+                    deficits = finalization_deficits(category_counts, final_targets)
+                except SchedulerError as error:
+                    raise StatusError(str(error)) from error
+                candidates_remaining = sum(deficits.values())
+            try:
+                scheduler_decision = schedule_decision(
+                    category_counts,
+                    control_state=control["state"],
+                    current_attempt=current,
+                    combination_eligible=scheduler["combination_readiness"] is not None,
+                    final_targets=final_targets,
+                )
+            except SchedulerError as error:
+                raise StatusError(str(error)) from error
+            if scheduler_decision["action"] == "blocked":
+                if scheduler["state"] != "blocked":
+                    raise StatusError(
+                        "persist the scheduler finalization blocker: "
+                        + scheduler_decision["reason"]
+                    )
+                if scheduler["blocker"] != scheduler_decision["reason"]:
+                    raise StatusError("scheduler blocker must match the deterministic blocker")
+            elif scheduler["state"] == "blocked":
+                raise StatusError("blocked scheduler state no longer matches scheduler eligibility")
+            if scheduler["state"] == "completed":
+                if candidates_remaining != 0 or control["state"] != "completed":
+                    raise StatusError("completed scheduler has not reached its exact final target")
     else:
         attempted_candidates = {attempt["candidate"] for attempt in non_baseline}
         if current is not None and current["classification"] != "baseline":
@@ -1077,7 +1421,11 @@ def build_status(
         current_started_at=current_started_at,
         current_is_pending=current_is_pending,
         blocked=bool(live_state["blockers"])
-        or bool(current and current["state"] == "blocked"),
+        or bool(current and current["state"] == "blocked")
+        or bool(
+            policy_format == "continuous-ratio"
+            and live_state["scheduler"]["state"] == "blocked"
+        ),
     )
 
     failures = [
@@ -1090,9 +1438,16 @@ def build_status(
         if attempt["state"] == "failed"
     ]
     branch = live_state["campaign"]["branch"]
+    blocker_messages = list(live_state["blockers"])
+    if (
+        policy_format == "continuous-ratio"
+        and live_state["scheduler"]["blocker"] is not None
+        and live_state["scheduler"]["blocker"] not in blocker_messages
+    ):
+        blocker_messages.append(live_state["scheduler"]["blocker"])
     status = {
         "$schema": STATUS_SCHEMA_URL,
-        "schema_version": STATUS_SCHEMA_VERSION,
+        "schema_version": live_state["schema_version"],
         "protocol_id": PROTOCOL_ID,
         "generated_at": isoformat(generated_at),
         "stale_after_seconds": STALE_AFTER_SECONDS,
@@ -1113,7 +1468,7 @@ def build_status(
         },
         "promising_results": promising_results(attempts),
         "attempts": attempts,
-        "blockers": [{"message": message} for message in live_state["blockers"]],
+        "blockers": [{"message": message} for message in blocker_messages],
         "failures": failures,
         "links": {
             "campaign_branch": f"{REPOSITORY_URL}/tree/{quote(branch, safe='/')}",
@@ -1121,6 +1476,17 @@ def build_status(
             "active_commit": commit_url(active_commit),
         },
     }
+    if policy_format == "continuous-ratio":
+        status["control"] = dict(live_state["control"])
+        status["scheduler"] = {
+            "state": live_state["scheduler"]["state"],
+            "strategy": "deterministic-deficit-2:1:1-v1",
+            "combination_eligible": live_state["scheduler"]["combination_readiness"]
+            is not None,
+            "final_targets": live_state["scheduler"]["final_targets"],
+            "blocker": live_state["scheduler"]["blocker"],
+            "decision": scheduler_decision,
+        }
     validate_status(status)
     return status
 
@@ -1179,10 +1545,16 @@ def validate_status(value: Any) -> None:
         "failures",
         "links",
     }
-    if set(value) != required:
-        raise StatusError("campaign status fields do not match schema v1")
-    if value["schema_version"] != STATUS_SCHEMA_VERSION:
+    schema_version = value.get("schema_version")
+    if schema_version not in SUPPORTED_STATUS_SCHEMA_VERSIONS:
         raise StatusError("campaign status schema version is unsupported")
+    expected_fields = (
+        required | {"control", "scheduler"}
+        if schema_version == CONTINUOUS_STATUS_SCHEMA_VERSION
+        else required
+    )
+    if set(value) != expected_fields:
+        raise StatusError("campaign status fields do not match its schema version")
     if value["protocol_id"] not in {"acts-seeding-v2", PROTOCOL_ID}:
         raise StatusError("campaign status protocol is incompatible")
     legacy_protocol = value["protocol_id"] == "acts-seeding-v2"
@@ -1204,6 +1576,22 @@ def validate_status(value: Any) -> None:
     parse_instant(campaign.get("started_at"), "campaign.started_at")
     targets = validate_campaign_targets(campaign["targets"], "campaign.targets")
     policy_format = campaign_format(targets)
+    if (schema_version == CONTINUOUS_STATUS_SCHEMA_VERSION) != (
+        policy_format == "continuous-ratio"
+    ):
+        raise StatusError("campaign schema version and target format disagree")
+    if policy_format == "continuous-ratio":
+        campaign_id = campaign.get("campaign_id")
+        control_id = campaign.get("control_id")
+        genesis_commit = campaign.get("genesis_commit")
+        if campaign.get("mode") != "continuous":
+            raise StatusError("continuous snapshot campaign mode is invalid")
+        if not isinstance(campaign_id, str) or not CAMPAIGN_ID.fullmatch(campaign_id):
+            raise StatusError("continuous snapshot campaign_id is invalid")
+        if not isinstance(control_id, str) or not CONTROL_ID.fullmatch(control_id):
+            raise StatusError("continuous snapshot control_id is invalid")
+        if not isinstance(genesis_commit, str) or not FULL_COMMIT_SHA.fullmatch(genesis_commit):
+            raise StatusError("continuous snapshot genesis_commit is invalid")
     progress = value["progress"]
     if not isinstance(progress, dict):
         raise StatusError("progress must be an object")
@@ -1222,20 +1610,27 @@ def validate_status(value: Any) -> None:
             "minor_candidates",
             "combination_candidates",
         }
-        if policy_format == "candidate-composition"
+        if policy_format in {"candidate-composition", "continuous-ratio"}
         else {"completed_attempts", "structural_attempts", "micro_optimizations"}
     )
+    if policy_format == "continuous-ratio":
+        category_progress.add("composition")
     if set(progress) != common_progress | category_progress:
         raise StatusError("progress fields do not match campaign targets")
-    for key in category_progress | {"elapsed_seconds", "eta_sample_count"}:
+    numeric_progress = (category_progress - {"composition"}) | {
+        "elapsed_seconds",
+        "eta_sample_count",
+    }
+    for key in numeric_progress:
         if not finite_number(progress.get(key)) or progress[key] < 0:
             raise StatusError(f"progress.{key} is invalid")
-    if policy_format == "candidate-composition":
+    if policy_format in {"candidate-composition", "continuous-ratio"}:
         if progress["completed_candidates"] != sum(
             progress[name]
             for name in ("major_candidates", "minor_candidates", "combination_candidates")
         ):
             raise StatusError("progress category counts do not sum to completed_candidates")
+    if policy_format == "candidate-composition":
         for name in (
             "completed_candidates",
             "major_candidates",
@@ -1244,6 +1639,16 @@ def validate_status(value: Any) -> None:
         ):
             if progress[name] > targets[name]:
                 raise StatusError(f"progress.{name} exceeds its target")
+    elif policy_format == "continuous-ratio":
+        expected_composition = composition_state(
+            {
+                "major": progress["major_candidates"],
+                "minor": progress["minor_candidates"],
+                "combination": progress["combination_candidates"],
+            }
+        )
+        if progress["composition"] != expected_composition:
+            raise StatusError("progress.composition does not match completed counts")
     for key in (
         "median_completed_attempt_duration_seconds",
         "estimated_remaining_seconds",
@@ -1295,7 +1700,9 @@ def validate_status(value: Any) -> None:
             raise StatusError(f"attempts[{index}] must be an object")
         classification = attempt.get("classification")
         allowed_classifications = (
-            NEW_CLASSIFICATIONS if policy_format == "candidate-composition" else LEGACY_CLASSIFICATIONS
+            NEW_CLASSIFICATIONS
+            if policy_format in {"candidate-composition", "continuous-ratio"}
+            else LEGACY_CLASSIFICATIONS
         )
         if classification != "baseline" and classification not in allowed_classifications:
             raise StatusError(f"attempts[{index}].classification is invalid")
@@ -1311,7 +1718,7 @@ def validate_status(value: Any) -> None:
                 raise StatusError(f"attempts[{index}].{objective} is invalid")
         if (
             not legacy_protocol
-            and policy_format == "candidate-composition"
+            and policy_format in {"candidate-composition", "continuous-ratio"}
             and classification != "baseline"
         ):
             evidence_fields = {
@@ -1359,6 +1766,114 @@ def validate_status(value: Any) -> None:
                 raise StatusError(f"attempts[{index}].mechanism_key is invalid")
             if not isinstance(attempt.get("run_result"), str):
                 raise StatusError(f"attempts[{index}].run_result is invalid")
+    if policy_format == "continuous-ratio":
+        control = validate_campaign_control(value["control"], "control")
+        request = control["request"]
+        if request is not None and (
+            request["campaign_id"] != campaign["campaign_id"]
+            or request["campaign_branch"] != campaign["branch"]
+            or request["control_id"] != campaign["control_id"]
+        ):
+            raise StatusError("control request does not match campaign identity")
+        current = value["current_attempt"]
+        if current is not None:
+            current_fields = {
+                "candidate",
+                "mechanism_key",
+                "mechanism_family",
+                "classification",
+                "controlled_stage",
+                "state",
+                "started_at",
+                "scheduling",
+            }
+            if not isinstance(current, dict) or set(current) != current_fields:
+                raise StatusError("continuous current attempt fields are invalid")
+            candidate = current["candidate"]
+            if not isinstance(candidate, str) or not CANDIDATE_NAME.fullmatch(candidate):
+                raise StatusError("continuous current candidate is invalid")
+            if current["classification"] not in NEW_CLASSIFICATIONS | {"baseline"}:
+                raise StatusError("continuous current classification is invalid")
+            if (candidate == "Genesis") != (current["classification"] == "baseline"):
+                raise StatusError("only Genesis may be the continuous baseline")
+            if current["state"] not in CURRENT_STATES:
+                raise StatusError("continuous current state is invalid")
+            if current["scheduling"] not in {"ordinary", "finalization"}:
+                raise StatusError("continuous current scheduling is invalid")
+            if current["started_at"] is not None:
+                parse_instant(current["started_at"], "current_attempt.started_at")
+            for name in ("mechanism_key", "mechanism_family", "controlled_stage"):
+                validate_label(current[name], f"current_attempt.{name}")
+            if current["scheduling"] == "finalization" and control["state"] != "consumed":
+                raise StatusError("finalization current attempt requires consumed control")
+            if current["scheduling"] == "ordinary" and control["state"] == "consumed":
+                raise StatusError("consumed control permits only finalization attempts")
+            if control["state"] == "completed":
+                raise StatusError("completed control cannot have a current attempt")
+        scheduler = value["scheduler"]
+        scheduler_fields = {
+            "state",
+            "strategy",
+            "combination_eligible",
+            "final_targets",
+            "blocker",
+            "decision",
+        }
+        if not isinstance(scheduler, dict) or set(scheduler) != scheduler_fields:
+            raise StatusError("scheduler snapshot fields are invalid")
+        if scheduler["strategy"] != "deterministic-deficit-2:1:1-v1":
+            raise StatusError("scheduler strategy is unsupported")
+        if not isinstance(scheduler["combination_eligible"], bool):
+            raise StatusError("scheduler combination eligibility is invalid")
+        final_targets = scheduler["final_targets"]
+        if final_targets is not None:
+            final_targets = validate_campaign_targets(
+                final_targets, "scheduler.final_targets"
+            )
+            if frozenset(final_targets) != NEW_TARGET_FIELDS:
+                raise StatusError("scheduler final targets are invalid")
+        blocker = scheduler["blocker"]
+        if blocker is not None:
+            blocker = validate_label(blocker, "scheduler.blocker", maximum=500)
+        allowed_scheduler_states = {
+            "open": {"running"},
+            "requested": {"running"},
+            "consumed": {"finishing", "blocked"},
+            "completed": {"completed"},
+        }[control["state"]]
+        if scheduler["state"] not in allowed_scheduler_states:
+            raise StatusError("control and scheduler snapshot states disagree")
+        if (scheduler["state"] == "blocked") != (blocker is not None):
+            raise StatusError("scheduler blocker does not match scheduler state")
+        counts = {
+            "major": progress["major_candidates"],
+            "minor": progress["minor_candidates"],
+            "combination": progress["combination_candidates"],
+        }
+        try:
+            expected_decision = schedule_decision(
+                counts,
+                control_state=control["state"],
+                current_attempt=value["current_attempt"],
+                combination_eligible=scheduler["combination_eligible"],
+                final_targets=final_targets,
+            )
+        except SchedulerError as error:
+            raise StatusError(str(error)) from error
+        if scheduler["decision"] != expected_decision:
+            raise StatusError("scheduler decision does not match durable campaign state")
+        if expected_decision["action"] == "blocked":
+            if scheduler["state"] != "blocked" or blocker != expected_decision["reason"]:
+                raise StatusError("scheduler finalization blocker is not durably recorded")
+        elif scheduler["state"] == "blocked":
+            raise StatusError("scheduler blocker is stale")
+        if scheduler["state"] == "completed":
+            try:
+                deficits = finalization_deficits(counts, final_targets)
+            except SchedulerError as error:
+                raise StatusError(str(error)) from error
+            if any(deficits.values()) or value["current_attempt"] is not None:
+                raise StatusError("completed campaign has unfinished candidate deficits")
     for field in ("blockers", "failures"):
         if not isinstance(value[field], list):
             raise StatusError(f"{field} must be an array")
