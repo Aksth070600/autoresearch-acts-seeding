@@ -148,6 +148,9 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
                       return tripletTopCandidates.curvatures()[t];
                     });
 
+  // vector containing the radius of all compatible seeds
+  cache().compatibleSeedR.reserve(config().compatSeedLimit);
+
   const auto getTopR = [&](ConstSpacePointProxy2 spT) {
     if (config().useDeltaRinsteadOfTopRadius) {
       return fastHypot(spT.zr()[1] - spM.zr()[1], spT.zr()[0] - spM.zr()[0]);
@@ -203,20 +206,18 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
         continue;
       }
       bool newCompSeed = true;
-      const auto next = cache().compatibleSeedR.lower_bound(otherTopR);
-      if (next != cache().compatibleSeedR.end() &&
-          std::abs(*next - otherTopR) < config().deltaRMin) {
-        newCompSeed = false;
-      }
-      if (next != cache().compatibleSeedR.begin()) {
-        auto previous = next;
-        --previous;
-        if (std::abs(*previous - otherTopR) < config().deltaRMin) {
+      for (const float previousDiameter : cache().compatibleSeedR) {
+        // original ATLAS code uses higher min distance for 2nd found compatible
+        // seed (20mm instead of 5mm)
+        // add new compatible seed only if distance larger than rmin to all
+        // other compatible seeds
+        if (std::abs(previousDiameter - otherTopR) < config().deltaRMin) {
           newCompSeed = false;
+          break;
         }
       }
       if (newCompSeed) {
-        cache().compatibleSeedR.insert(otherTopR);
+        cache().compatibleSeedR.push_back(otherTopR);
         weight += config().compatSeedWeight;
       }
       if (cache().compatibleSeedR.size() >= config().compatSeedLimit) {

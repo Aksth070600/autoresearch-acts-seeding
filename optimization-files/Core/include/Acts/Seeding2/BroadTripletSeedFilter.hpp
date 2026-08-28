@@ -18,7 +18,6 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
-#include <set>
 #include <unordered_map>
 #include <vector>
 
@@ -170,7 +169,7 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
     /// Cache for top space point indices during compatibility search
     std::vector<std::uint32_t> topSpIndexVec;
     /// Cache for compatible seed radii during score calculation
-    std::set<float> compatibleSeedR;
+    std::vector<float> compatibleSeedR;
     /// Cache for sorted triplet candidates during selection
     std::vector<TripletCandidate2> sortedCandidates;
   };
