@@ -5,8 +5,11 @@ on:
     paths:
       - 'records/**'
       - 'orchestration-files/report.py'
-      - 'orchestration-files/requirements.txt'
       - 'orchestration-files/campaign_status.py'
+      - 'orchestration-files/campaign-status.schema.json'
+      - 'orchestration-files/objectives.py'
+      - 'orchestration-files/protocol.py'
+      - 'orchestration-files/select-evaluation.py'
       - 'orchestration-files/tests/**'
       - 'orchestration-files/visualizations/**'
       - '.github/workflows/reports-preview.yml'
@@ -21,9 +24,6 @@ jobs:
     steps:
       - name: Check out pull request
         uses: actions/checkout@v4
-
-      - name: Install test dependencies
-        run: python3 -m pip install -r orchestration-files/requirements.txt
 
       - name: Run repository tests
         run: python3 -m unittest discover -s orchestration-files/tests -v

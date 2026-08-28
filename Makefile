@@ -11,7 +11,7 @@ ITK_SEED ?= 42
 ITK_PILEUP ?= 200
 ITK_STAGE ?= full
 ITK_METRICS ?= none
-EVOLUTION_PYTHON ?= /usr/bin/python3
+ORCHESTRATION_PYTHON ?= /usr/bin/python3
 REPORT_DATASET ?= development
 REPORT_X_METRIC ?= timed_seeding_time_per_event_ms
 REPORT_Y_METRIC ?= timed_ambiguity_particle_efficiency
@@ -25,11 +25,11 @@ HEPP_APPTAINER ?= /cvmfs/atlas.cern.ch/repo/containers/sw/apptainer/x86_64-el9/c
 HEPP_CONTAINER_IMAGE ?= /cvmfs/atlas.cern.ch/repo/containers/images/singularity/x86_64-almalinux9.img
 HEPP_CONTAINER_BINDS ?= -B /cvmfs -B /storage -B /home/aksth
 
-.PHONY: help test setupActs setup build export-hepp-files hepp02-tmux-create hepp02-tmux-attach hepp02-tmux hepp02-tmux-status hepp02-setupActs hepp02-build hepp02-setup hepp02-setup-and-build hepp02-full-chain-itk evaluate report campaign-status evolve record select-evaluation evaluate-selected
+.PHONY: help test setupActs setup build export-hepp-files hepp02-tmux-create hepp02-tmux-attach hepp02-tmux hepp02-tmux-status hepp02-setupActs hepp02-build hepp02-setup hepp02-setup-and-build hepp02-full-chain-itk evaluate report campaign-status record select-evaluation evaluate-selected
 
 help:
 	@printf '%s\n' \
-	  'make test      Run focused protocol and primary-objective tests.' \
+	  'make test      Run the full repository test suite.' \
 	  'make setupActs  Configure ACTS v46.5.0 and its Python/example bindings.' \
 	  'make build      Build the configured ACTS tree.' \
 	  'make setup                    Verify the ACTS Python environment in this shell.' \
@@ -49,7 +49,6 @@ help:
 	  'make evaluate CANDIDATE=name  Run 10-event development stages for a committed candidate.' \
 	  'make report                 Build the results report and live campaign dashboard.' \
 	  'make campaign-status        Generate orchestration-files/campaign-status.json.' \
-	  'make evolve                 Select a protocol-compatible Pareto candidate.' \
 	  'make record CANDIDATE=name  Print the latest candidate result and failure logs.' \
 	  'make select-evaluation      Show Genesis plus four unique evaluation candidates.' \
 	  'make evaluate-selected      Evaluate the selected candidates and rebuild the report.' \
@@ -115,18 +114,15 @@ report:
 campaign-status:
 	/usr/bin/python3 orchestration-files/campaign_status.py
 
-evolve:
-	$(EVOLUTION_PYTHON) orchestration-files/evolution.py --dataset development
-
 record:
 	@if [ -z "$(CANDIDATE)" ]; then echo 'usage: make record CANDIDATE=name [EVALUATION=1]' >&2; exit 2; fi
-	$(EVOLUTION_PYTHON) orchestration-files/record.py "$(CANDIDATE)" $(if $(filter 1 true yes,$(EVALUATION)),--evaluation,)
+	$(ORCHESTRATION_PYTHON) orchestration-files/record.py "$(CANDIDATE)" $(if $(filter 1 true yes,$(EVALUATION)),--evaluation,)
 
 select-evaluation:
-	$(EVOLUTION_PYTHON) orchestration-files/select-evaluation.py --json
+	$(ORCHESTRATION_PYTHON) orchestration-files/select-evaluation.py --json
 
 evaluate-selected:
-	$(EVOLUTION_PYTHON) orchestration-files/evaluate-selected.py
+	$(ORCHESTRATION_PYTHON) orchestration-files/evaluate-selected.py
 	$(MAKE) report
 
 hepp02-full-chain-itk: export-hepp-files hepp02-tmux-create

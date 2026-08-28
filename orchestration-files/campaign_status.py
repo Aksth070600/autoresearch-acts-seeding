@@ -17,7 +17,7 @@ from typing import Any
 from urllib.parse import quote
 
 from protocol import (
-    CAMPAIGN_ATTEMPT_POLICY,
+    CAMPAIGN_COMPOSITION,
     PROTOCOL_ID,
     PROTOCOL_METADATA,
     is_compatible_summary,
@@ -35,23 +35,25 @@ STATUS_SCHEMA_URL = (
     "https://raw.githubusercontent.com/Aksth070600/autoresearch-acts-seeding/"
     "main/orchestration-files/campaign-status.schema.json"
 )
-COMPLETED_ATTEMPT_TARGET = CAMPAIGN_ATTEMPT_POLICY["completed_attempt_target"]
-STRUCTURAL_ATTEMPT_TARGET = CAMPAIGN_ATTEMPT_POLICY["structural_attempt_target"]
-MICRO_OPTIMIZATION_CAP = CAMPAIGN_ATTEMPT_POLICY["micro_optimization_cap"]
-DEFAULT_CAMPAIGN_TARGETS = {
-    "completed_attempts": COMPLETED_ATTEMPT_TARGET,
-    "structural_attempts": STRUCTURAL_ATTEMPT_TARGET,
-    "micro_optimization_cap": MICRO_OPTIMIZATION_CAP,
-}
+DEFAULT_CAMPAIGN_TARGETS = dict(CAMPAIGN_COMPOSITION)
+NEW_TARGET_FIELDS = frozenset(DEFAULT_CAMPAIGN_TARGETS)
+LEGACY_TARGET_FIELDS = frozenset(
+    {"completed_attempts", "structural_attempts", "micro_optimization_cap"}
+)
 ETA_MINIMUM_SAMPLES = 3
 STALE_AFTER_SECONDS = 15 * 60
 FULL_COMMIT_SHA = re.compile(r"[0-9a-f]{40}")
 CANDIDATE_NAME = re.compile(r"[A-Za-z0-9._-]+")
+FILE_LINE_RANGE = re.compile(
+    r"(optimization-files/[^#,\x00-\x1f]+)#L([1-9][0-9]*)-L([1-9][0-9]*)"
+)
 PULL_REQUEST_URL = re.compile(
     re.escape(REPOSITORY_URL) + r"/pull/[1-9][0-9]*"
 )
-CLASSIFICATIONS = {"baseline", "structural", "micro"}
+NEW_CLASSIFICATIONS = {"major", "minor", "combination"}
+LEGACY_CLASSIFICATIONS = {"structural", "micro"}
 CURRENT_STATES = {"queued", "running", "recording", "blocked"}
+CANDIDATE_OUTCOMES = {"keep", "discard", "crash"}
 
 
 class StatusError(ValueError):
@@ -131,41 +133,231 @@ def require_keys(value: dict[str, Any], field: str, allowed: set[str], required:
         raise StatusError(f"{field} has unsupported fields: {', '.join(sorted(unknown))}")
 
 
+def campaign_format(targets: dict[str, int]) -> str:
+    fields = frozenset(targets)
+    if fields == NEW_TARGET_FIELDS:
+        return "candidate-composition"
+    if fields == LEGACY_TARGET_FIELDS:
+        return "legacy-attempts"
+    raise StatusError("campaign targets do not match a supported v1 format")
+
+
 def validate_campaign_targets(value: Any, field: str) -> dict[str, int]:
     if not isinstance(value, dict):
         raise StatusError(f"{field} must be an object")
-    require_keys(value, field, set(DEFAULT_CAMPAIGN_TARGETS), set(DEFAULT_CAMPAIGN_TARGETS))
+    fields = frozenset(value)
+    if fields not in {NEW_TARGET_FIELDS, LEGACY_TARGET_FIELDS}:
+        raise StatusError(f"{field} fields do not match a supported v1 format")
     targets: dict[str, int] = {}
-    for name in DEFAULT_CAMPAIGN_TARGETS:
+    completed_field = (
+        "completed_candidates" if fields == NEW_TARGET_FIELDS else "completed_attempts"
+    )
+    for name in value:
         target = value[name]
-        minimum = 1 if name == "completed_attempts" else 0
+        minimum = 1 if name == completed_field else 0
         if not isinstance(target, int) or isinstance(target, bool) or target < minimum:
             raise StatusError(f"{field}.{name} must be an integer of at least {minimum}")
         targets[name] = target
-    if targets["structural_attempts"] > targets["completed_attempts"]:
-        raise StatusError(f"{field}.structural_attempts cannot exceed completed_attempts")
-    if targets["micro_optimization_cap"] > targets["completed_attempts"]:
-        raise StatusError(f"{field}.micro_optimization_cap cannot exceed completed_attempts")
+    if fields == NEW_TARGET_FIELDS:
+        category_total = sum(
+            targets[name]
+            for name in ("major_candidates", "minor_candidates", "combination_candidates")
+        )
+        if category_total != targets["completed_candidates"]:
+            raise StatusError(
+                f"{field} category targets must sum to completed_candidates"
+            )
+    else:
+        for name in ("structural_attempts", "micro_optimization_cap"):
+            if targets[name] > targets["completed_attempts"]:
+                raise StatusError(f"{field}.{name} cannot exceed completed_attempts")
     return targets
 
 
-def validate_attempt_metadata(value: Any, field: str) -> dict[str, str]:
+def validate_evidence(value: Any, field: str) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise StatusError(f"{field} must be an object")
-    allowed = {"candidate", "mechanism_family", "classification"}
-    require_keys(value, field, allowed, allowed)
+    fields = {
+        "implementation_commit",
+        "changed_symbols",
+        "files_changed",
+        "hot_path_rationale",
+        "novelty_rationale",
+        "outcome",
+        "lesson",
+    }
+    require_keys(value, field, fields, fields)
+    commit = value["implementation_commit"]
+    if not isinstance(commit, str) or not FULL_COMMIT_SHA.fullmatch(commit.lower()):
+        raise StatusError(f"{field}.implementation_commit must be a full Git SHA")
+    changed_symbols = value["changed_symbols"]
+    if not isinstance(changed_symbols, list) or not changed_symbols:
+        raise StatusError(f"{field}.changed_symbols must be a non-empty array")
+    changed_symbols = [
+        validate_label(item, f"{field}.changed_symbols[{index}]", maximum=160)
+        for index, item in enumerate(changed_symbols)
+    ]
+    files_changed = value["files_changed"]
+    if not isinstance(files_changed, list) or not files_changed:
+        raise StatusError(f"{field}.files_changed must be a non-empty array")
+    normalized_files = []
+    for index, item in enumerate(files_changed):
+        item = validate_label(item, f"{field}.files_changed[{index}]", maximum=300)
+        match = FILE_LINE_RANGE.fullmatch(item)
+        if match is None or int(match.group(3)) < int(match.group(2)):
+            raise StatusError(
+                f"{field}.files_changed[{index}] must contain an exact file and line range"
+            )
+        normalized_files.append(item)
+    if value["outcome"] not in CANDIDATE_OUTCOMES:
+        raise StatusError(f"{field}.outcome is invalid")
+    return {
+        "implementation_commit": commit.lower(),
+        "changed_symbols": changed_symbols,
+        "files_changed": normalized_files,
+        "hot_path_rationale": validate_label(
+            value["hot_path_rationale"], f"{field}.hot_path_rationale", maximum=500
+        ),
+        "novelty_rationale": validate_label(
+            value["novelty_rationale"], f"{field}.novelty_rationale", maximum=500
+        ),
+        "outcome": value["outcome"],
+        "lesson": validate_label(value["lesson"], f"{field}.lesson", maximum=500),
+    }
+
+
+def validate_combination_provenance(
+    value: Any,
+    field: str,
+    earlier_metadata: dict[str, dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        raise StatusError(f"{field} must be an object")
+    fields = {"sources", "compatibility_rationale", "interaction_hypothesis"}
+    require_keys(value, field, fields, fields)
+    sources = value["sources"]
+    if not isinstance(sources, list) or len(sources) < 2:
+        raise StatusError(f"{field}.sources must contain at least two sources")
+    normalized_sources = []
+    source_candidates: set[str] = set()
+    source_fields = {
+        "candidate",
+        "mechanism_key",
+        "implementation_commit",
+        "directly_inspected",
+    }
+    for index, source in enumerate(sources):
+        source_field = f"{field}.sources[{index}]"
+        if not isinstance(source, dict):
+            raise StatusError(f"{source_field} must be an object")
+        require_keys(source, source_field, source_fields, source_fields)
+        candidate = validate_label(source["candidate"], f"{source_field}.candidate", maximum=80)
+        if not CANDIDATE_NAME.fullmatch(candidate):
+            raise StatusError(f"{source_field}.candidate has unsupported characters")
+        if candidate in source_candidates:
+            raise StatusError(f"{field}.sources must name distinct candidates")
+        source_candidates.add(candidate)
+        earlier = (
+            earlier_metadata.get(candidate) if earlier_metadata is not None else None
+        )
+        if earlier_metadata is not None and earlier is None:
+            raise StatusError(f"{source_field}.candidate must name an earlier candidate")
+        mechanism_key = validate_label(
+            source["mechanism_key"], f"{source_field}.mechanism_key"
+        )
+        commit = source["implementation_commit"]
+        if not isinstance(commit, str) or not FULL_COMMIT_SHA.fullmatch(commit.lower()):
+            raise StatusError(f"{source_field}.implementation_commit must be a full Git SHA")
+        if earlier is not None:
+            evidence = earlier.get("evidence")
+            if not isinstance(evidence, dict):
+                raise StatusError(f"{source_field}.candidate has no completed evidence")
+            if mechanism_key != earlier["mechanism_key"]:
+                raise StatusError(f"{source_field}.mechanism_key does not match its source")
+            if commit.lower() != evidence["implementation_commit"]:
+                raise StatusError(
+                    f"{source_field}.implementation_commit does not match its source"
+                )
+        if source["directly_inspected"] is not True:
+            raise StatusError(f"{source_field}.directly_inspected must be true")
+        normalized_sources.append(
+            {
+                "candidate": candidate,
+                "mechanism_key": mechanism_key,
+                "implementation_commit": commit.lower(),
+                "directly_inspected": True,
+            }
+        )
+    return {
+        "sources": normalized_sources,
+        "compatibility_rationale": validate_label(
+            value["compatibility_rationale"],
+            f"{field}.compatibility_rationale",
+            maximum=500,
+        ),
+        "interaction_hypothesis": validate_label(
+            value["interaction_hypothesis"],
+            f"{field}.interaction_hypothesis",
+            maximum=500,
+        ),
+    }
+
+
+def validate_attempt_metadata(
+    value: Any,
+    field: str,
+    policy_format: str,
+    earlier_metadata: dict[str, dict[str, Any]],
+) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        raise StatusError(f"{field} must be an object")
+    if policy_format == "legacy-attempts":
+        fields = {"candidate", "mechanism_family", "classification"}
+        require_keys(value, field, fields, fields)
+        classification = value["classification"]
+        if classification not in LEGACY_CLASSIFICATIONS:
+            raise StatusError(f"{field}.classification is invalid for a legacy campaign")
+        candidate = validate_label(value["candidate"], f"{field}.candidate", maximum=80)
+        if not CANDIDATE_NAME.fullmatch(candidate):
+            raise StatusError(f"{field}.candidate has unsupported characters")
+        return {
+            "candidate": candidate,
+            "mechanism_family": validate_label(
+                value["mechanism_family"], f"{field}.mechanism_family"
+            ),
+            "classification": classification,
+        }
+
+    required = {"candidate", "mechanism_key", "mechanism_family", "classification"}
+    allowed = required | {"evidence", "combination_provenance"}
+    require_keys(value, field, allowed, required)
     candidate = validate_label(value["candidate"], f"{field}.candidate", maximum=80)
     if not CANDIDATE_NAME.fullmatch(candidate):
         raise StatusError(f"{field}.candidate has unsupported characters")
-    mechanism = validate_label(value["mechanism_family"], f"{field}.mechanism_family")
     classification = value["classification"]
-    if classification not in {"structural", "micro"}:
-        raise StatusError(f"{field}.classification must be structural or micro")
-    return {
+    if classification not in NEW_CLASSIFICATIONS:
+        raise StatusError(f"{field}.classification must be major, minor, or combination")
+    normalized: dict[str, Any] = {
         "candidate": candidate,
-        "mechanism_family": mechanism,
+        "mechanism_key": validate_label(value["mechanism_key"], f"{field}.mechanism_key"),
+        "mechanism_family": validate_label(
+            value["mechanism_family"], f"{field}.mechanism_family"
+        ),
         "classification": classification,
     }
+    if "evidence" in value:
+        normalized["evidence"] = validate_evidence(value["evidence"], f"{field}.evidence")
+    if classification == "combination":
+        if "combination_provenance" not in value:
+            raise StatusError(f"{field}.combination_provenance is required")
+        normalized["combination_provenance"] = validate_combination_provenance(
+            value["combination_provenance"],
+            f"{field}.combination_provenance",
+            earlier_metadata,
+        )
+    elif "combination_provenance" in value:
+        raise StatusError(f"{field}.combination_provenance is only valid for combinations")
+    return normalized
 
 
 def validate_live_state(value: Any) -> dict[str, Any]:
@@ -202,18 +394,32 @@ def validate_live_state(value: Any) -> dict[str, Any]:
         ),
     }
 
+    policy_format = campaign_format(normalized_campaign["targets"])
     metadata_input = value["attempt_metadata"]
     if not isinstance(metadata_input, list):
         raise StatusError("input.attempt_metadata must be an array")
-    metadata = [
-        validate_attempt_metadata(item, f"input.attempt_metadata[{index}]")
-        for index, item in enumerate(metadata_input)
-    ]
-    candidates = [item["candidate"] for item in metadata]
-    if len(candidates) != len(set(candidates)):
-        raise StatusError("input.attempt_metadata candidate names must be unique")
-    if "Genesis" in candidates:
-        raise StatusError("Genesis metadata is derived and must not be listed")
+    metadata: list[dict[str, Any]] = []
+    earlier_metadata: dict[str, dict[str, Any]] = {}
+    for index, item in enumerate(metadata_input):
+        normalized_item = validate_attempt_metadata(
+            item,
+            f"input.attempt_metadata[{index}]",
+            policy_format,
+            earlier_metadata,
+        )
+        candidate = normalized_item["candidate"]
+        if candidate in earlier_metadata:
+            raise StatusError("input.attempt_metadata candidate names must be unique")
+        if candidate == "Genesis":
+            raise StatusError("Genesis metadata is derived and must not be listed")
+        metadata.append(normalized_item)
+        earlier_metadata[candidate] = normalized_item
+    for index in range(3, len(metadata)):
+        family = metadata[index]["mechanism_family"]
+        if all(metadata[prior]["mechanism_family"] == family for prior in range(index - 3, index)):
+            raise StatusError(
+                "input.attempt_metadata exceeds three consecutive candidates from one mechanism family"
+            )
 
     current_input = value["current_attempt"]
     current: dict[str, Any] | None = None
@@ -228,6 +434,8 @@ def validate_live_state(value: Any) -> dict[str, Any]:
             "state",
             "started_at",
         }
+        if policy_format == "candidate-composition":
+            fields.add("mechanism_key")
         require_keys(current_input, "input.current_attempt", fields, fields)
         candidate = validate_label(
             current_input["candidate"], "input.current_attempt.candidate", maximum=80
@@ -235,7 +443,10 @@ def validate_live_state(value: Any) -> dict[str, Any]:
         if not CANDIDATE_NAME.fullmatch(candidate):
             raise StatusError("input.current_attempt.candidate has unsupported characters")
         classification = current_input["classification"]
-        if classification not in CLASSIFICATIONS:
+        allowed_classifications = (
+            NEW_CLASSIFICATIONS if policy_format == "candidate-composition" else LEGACY_CLASSIFICATIONS
+        )
+        if classification != "baseline" and classification not in allowed_classifications:
             raise StatusError("input.current_attempt.classification is invalid")
         if (candidate == "Genesis") != (classification == "baseline"):
             raise StatusError("only Genesis may use the baseline classification")
@@ -265,15 +476,18 @@ def validate_live_state(value: Any) -> dict[str, Any]:
             "state": current_input["state"],
             "started_at": started_at,
         }
+        if policy_format == "candidate-composition":
+            current["mechanism_key"] = validate_label(
+                current_input["mechanism_key"], "input.current_attempt.mechanism_key"
+            )
         if candidate != "Genesis":
-            matching = [item for item in metadata if item["candidate"] == candidate]
-            if not matching:
+            matching = earlier_metadata.get(candidate)
+            if matching is None:
                 raise StatusError("current non-Genesis candidate must be in attempt_metadata")
-            if any(
-                item["mechanism_family"] != current["mechanism_family"]
-                or item["classification"] != current["classification"]
-                for item in matching
-            ):
+            matching_fields = {"mechanism_family", "classification"}
+            if policy_format == "candidate-composition":
+                matching_fields.add("mechanism_key")
+            if any(matching[field] != current[field] for field in matching_fields):
                 raise StatusError("current attempt does not match its attempt_metadata")
 
     blockers_input = value["blockers"]
@@ -382,13 +596,7 @@ def load_attempts(
     metadata = {
         item["candidate"]: item for item in live_state["attempt_metadata"]
     }
-    current = live_state["current_attempt"]
-    if current is not None and current["candidate"] != "Genesis":
-        metadata[current["candidate"]] = {
-            "candidate": current["candidate"],
-            "mechanism_family": current["mechanism_family"],
-            "classification": current["classification"],
-        }
+    policy_format = campaign_format(live_state["campaign"]["targets"])
 
     attempts: list[dict[str, Any]] = []
     if not records_root.is_dir():
@@ -448,36 +656,58 @@ def load_attempts(
             if isinstance(error, str) and error.strip()
             else "Controlled Development attempt did not pass."
         )
-        implementation_commit = resolve_implementation_commit(
-            summary, repository_root
-        )
-        attempts.append(
-            {
-                "candidate": candidate,
-                "mechanism_family": mechanism_family,
-                "classification": classification,
-                "state": "completed" if passed else "failed",
-                "outcome": "Passed all controlled Development stages." if passed else failure_message,
-                "started_at": isoformat(started),
-                "finished_at": isoformat(finished) if finished is not None else None,
-                "duration_seconds": duration_seconds,
-                "timed_seeding_time_per_event_ms": seeding,
-                "timed_ambiguity_particle_efficiency": efficiency,
-                "implementation_commit": implementation_commit,
-                "links": {
-                    "commit": (
-                        REPOSITORY_URL
-                        if candidate == "Genesis"
-                        else commit_url(implementation_commit)
+        implementation_commit = resolve_implementation_commit(summary, repository_root)
+        attempt = {
+            "candidate": candidate,
+            "mechanism_family": mechanism_family,
+            "classification": classification,
+            "state": "completed" if passed else "failed",
+            "outcome": "Passed all controlled Development stages." if passed else failure_message,
+            "started_at": isoformat(started),
+            "finished_at": isoformat(finished) if finished is not None else None,
+            "duration_seconds": duration_seconds,
+            "timed_seeding_time_per_event_ms": seeding,
+            "timed_ambiguity_particle_efficiency": efficiency,
+            "implementation_commit": implementation_commit,
+            "links": {
+                "commit": (
+                    REPOSITORY_URL
+                    if candidate == "Genesis"
+                    else commit_url(implementation_commit)
+                ),
+                "record": repository_file_url(
+                    live_state["campaign"]["branch"],
+                    f"records/{relative}",
+                ),
+            },
+            "record": f"records/{relative}",
+        }
+        if candidate != "Genesis" and policy_format == "candidate-composition":
+            evidence = item.get("evidence")
+            if not isinstance(evidence, dict):
+                raise StatusError(f"{path}: candidate metadata has no completed evidence")
+            if evidence["implementation_commit"] != implementation_commit:
+                raise StatusError(
+                    f"{path}: evidence implementation commit does not match the record"
+                )
+            attempt.update(
+                {
+                    "mechanism_key": item["mechanism_key"],
+                    "changed_symbols": list(evidence["changed_symbols"]),
+                    "files_changed": list(evidence["files_changed"]),
+                    "hot_path_rationale": evidence["hot_path_rationale"],
+                    "novelty_rationale": evidence["novelty_rationale"],
+                    "outcome": evidence["outcome"],
+                    "lesson": evidence["lesson"],
+                    "run_result": (
+                        "Passed all controlled Development stages."
+                        if passed
+                        else failure_message
                     ),
-                    "record": repository_file_url(
-                        live_state["campaign"]["branch"],
-                        f"records/{relative}",
-                    ),
-                },
-                "record": f"records/{relative}",
-            }
-        )
+                    "combination_provenance": item.get("combination_provenance"),
+                }
+            )
+        attempts.append(attempt)
     attempts.sort(key=lambda item: (item["started_at"], item["record"]))
     return attempts
 
@@ -619,11 +849,6 @@ def calculate_eta(
     }
 
 
-def latest_candidate_state(attempts: list[dict[str, Any]], candidate: str) -> str | None:
-    matches = [attempt for attempt in attempts if attempt["candidate"] == candidate]
-    return matches[-1]["state"] if matches else None
-
-
 def build_status(
     live_state: dict[str, Any],
     attempts: list[dict[str, Any]],
@@ -638,30 +863,69 @@ def build_status(
         raise StatusError("active commit must be a full Git SHA")
 
     non_baseline = [attempt for attempt in attempts if attempt["classification"] != "baseline"]
-    completed = [attempt for attempt in non_baseline if attempt["state"] == "completed"]
-    attempted_candidates = {attempt["candidate"] for attempt in non_baseline}
-    current = live_state["current_attempt"]
-    if current is not None and current["classification"] != "baseline":
-        attempted_candidates.add(current["candidate"])
-    metadata = {
-        item["candidate"]: item for item in live_state["attempt_metadata"]
+    completed_by_candidate = {
+        attempt["candidate"]: attempt
+        for attempt in non_baseline
+        if attempt["state"] == "completed"
     }
-    if current is not None and current["candidate"] != "Genesis":
-        metadata[current["candidate"]] = current
-    structural_attempts = sum(
-        1
-        for candidate in attempted_candidates
-        if metadata.get(candidate, {}).get("classification") == "structural"
-    )
-    micro_attempts = sum(
-        1
-        for candidate in attempted_candidates
-        if metadata.get(candidate, {}).get("classification") == "micro"
-    )
+    completed = list(completed_by_candidate.values())
+    current = live_state["current_attempt"]
     targets = live_state["campaign"]["targets"]
-    completed_remaining = max(targets["completed_attempts"] - len(completed), 0)
-    structural_remaining = max(targets["structural_attempts"] - structural_attempts, 0)
-    attempts_remaining = max(completed_remaining, structural_remaining)
+    policy_format = campaign_format(targets)
+    if policy_format == "candidate-composition":
+        category_counts = {
+            classification: sum(
+                attempt["classification"] == classification for attempt in completed
+            )
+            for classification in ("major", "minor", "combination")
+        }
+        target_for_category = {
+            "major": targets["major_candidates"],
+            "minor": targets["minor_candidates"],
+            "combination": targets["combination_candidates"],
+        }
+        for classification, count in category_counts.items():
+            if count > target_for_category[classification]:
+                raise StatusError(
+                    f"completed {classification} candidates exceed the campaign target"
+                )
+        if len(completed) > targets["completed_candidates"]:
+            raise StatusError("completed candidates exceed the campaign target")
+        candidates_remaining = sum(
+            target_for_category[classification] - count
+            for classification, count in category_counts.items()
+        )
+        progress = {
+            "completed_candidates": len(completed),
+            "major_candidates": category_counts["major"],
+            "minor_candidates": category_counts["minor"],
+            "combination_candidates": category_counts["combination"],
+        }
+    else:
+        attempted_candidates = {attempt["candidate"] for attempt in non_baseline}
+        if current is not None and current["classification"] != "baseline":
+            attempted_candidates.add(current["candidate"])
+        metadata = {
+            item["candidate"]: item for item in live_state["attempt_metadata"]
+        }
+        structural_attempts = sum(
+            metadata.get(candidate, {}).get("classification") == "structural"
+            for candidate in attempted_candidates
+        )
+        micro_attempts = sum(
+            metadata.get(candidate, {}).get("classification") == "micro"
+            for candidate in attempted_candidates
+        )
+        completed_remaining = max(targets["completed_attempts"] - len(completed), 0)
+        structural_remaining = max(
+            targets["structural_attempts"] - structural_attempts, 0
+        )
+        candidates_remaining = max(completed_remaining, structural_remaining)
+        progress = {
+            "completed_attempts": len(completed),
+            "structural_attempts": structural_attempts,
+            "micro_optimizations": micro_attempts,
+        }
 
     current_is_pending = False
     current_started_at = None
@@ -682,9 +946,19 @@ def build_status(
         current_is_pending = (
             current["state"] in {"queued", "running"} and not current_has_evidence
         )
+        if (
+            policy_format == "candidate-composition"
+            and current_is_pending
+            and current["classification"] != "baseline"
+            and category_counts[current["classification"]]
+            >= target_for_category[current["classification"]]
+        ):
+            raise StatusError(
+                f"current {current['classification']} candidate exceeds its category target"
+            )
     eta = calculate_eta(
         [attempt["duration_seconds"] for attempt in completed if attempt["duration_seconds"] is not None],
-        attempts_remaining,
+        candidates_remaining,
         generated_at,
         current_started_at=current_started_at,
         current_is_pending=current_is_pending,
@@ -695,7 +969,7 @@ def build_status(
     failures = [
         {
             "candidate": attempt["candidate"],
-            "message": attempt["outcome"],
+            "message": attempt.get("run_result", attempt["outcome"]),
             "record_url": attempt["links"]["record"],
         }
         for attempt in attempts
@@ -715,9 +989,7 @@ def build_status(
         "campaign": dict(live_state["campaign"]),
         "current_attempt": current,
         "progress": {
-            "completed_attempts": len(completed),
-            "structural_attempts": structural_attempts,
-            "micro_optimizations": micro_attempts,
+            **progress,
             "elapsed_seconds": (generated_at - campaign_start).total_seconds(),
             "median_completed_attempt_duration_seconds": eta["median_seconds"],
             "estimated_remaining_seconds": eta["remaining_seconds"],
@@ -801,19 +1073,48 @@ def validate_status(value: Any) -> None:
         raise StatusError("campaign is invalid")
     validate_ref(campaign.get("branch"))
     parse_instant(campaign.get("started_at"), "campaign.started_at")
-    validate_campaign_targets(campaign["targets"], "campaign.targets")
+    targets = validate_campaign_targets(campaign["targets"], "campaign.targets")
+    policy_format = campaign_format(targets)
     progress = value["progress"]
     if not isinstance(progress, dict):
         raise StatusError("progress must be an object")
-    for key in (
-        "completed_attempts",
-        "structural_attempts",
-        "micro_optimizations",
+    common_progress = {
         "elapsed_seconds",
+        "median_completed_attempt_duration_seconds",
+        "estimated_remaining_seconds",
+        "expected_finish_at",
         "eta_sample_count",
-    ):
+        "eta_basis",
+    }
+    category_progress = (
+        {
+            "completed_candidates",
+            "major_candidates",
+            "minor_candidates",
+            "combination_candidates",
+        }
+        if policy_format == "candidate-composition"
+        else {"completed_attempts", "structural_attempts", "micro_optimizations"}
+    )
+    if set(progress) != common_progress | category_progress:
+        raise StatusError("progress fields do not match campaign targets")
+    for key in category_progress | {"elapsed_seconds", "eta_sample_count"}:
         if not finite_number(progress.get(key)) or progress[key] < 0:
             raise StatusError(f"progress.{key} is invalid")
+    if policy_format == "candidate-composition":
+        if progress["completed_candidates"] != sum(
+            progress[name]
+            for name in ("major_candidates", "minor_candidates", "combination_candidates")
+        ):
+            raise StatusError("progress category counts do not sum to completed_candidates")
+        for name in (
+            "completed_candidates",
+            "major_candidates",
+            "minor_candidates",
+            "combination_candidates",
+        ):
+            if progress[name] > targets[name]:
+                raise StatusError(f"progress.{name} exceeds its target")
     for key in (
         "median_completed_attempt_duration_seconds",
         "estimated_remaining_seconds",
@@ -853,7 +1154,11 @@ def validate_status(value: Any) -> None:
     for index, attempt in enumerate(value["attempts"]):
         if not isinstance(attempt, dict):
             raise StatusError(f"attempts[{index}] must be an object")
-        if attempt.get("classification") not in CLASSIFICATIONS:
+        classification = attempt.get("classification")
+        allowed_classifications = (
+            NEW_CLASSIFICATIONS if policy_format == "candidate-composition" else LEGACY_CLASSIFICATIONS
+        )
+        if classification != "baseline" and classification not in allowed_classifications:
             raise StatusError(f"attempts[{index}].classification is invalid")
         if attempt.get("state") not in {"completed", "failed"}:
             raise StatusError(f"attempts[{index}].state is invalid")
@@ -868,6 +1173,33 @@ def validate_status(value: Any) -> None:
         ):
             if attempt.get(objective) is not None and not finite_number(attempt[objective]):
                 raise StatusError(f"attempts[{index}].{objective} is invalid")
+        if policy_format == "candidate-composition" and classification != "baseline":
+            evidence_fields = {
+                "implementation_commit",
+                "changed_symbols",
+                "files_changed",
+                "hot_path_rationale",
+                "novelty_rationale",
+                "outcome",
+                "lesson",
+            }
+            if not evidence_fields.issubset(attempt):
+                raise StatusError(f"attempts[{index}] is missing candidate evidence")
+            validate_evidence(
+                {name: attempt[name] for name in evidence_fields},
+                f"attempts[{index}]",
+            )
+            provenance = attempt.get("combination_provenance")
+            if (classification == "combination") != (provenance is not None):
+                raise StatusError(f"attempts[{index}].combination_provenance is invalid")
+            if provenance is not None:
+                validate_combination_provenance(
+                    provenance, f"attempts[{index}].combination_provenance"
+                )
+            if not isinstance(attempt.get("mechanism_key"), str):
+                raise StatusError(f"attempts[{index}].mechanism_key is invalid")
+            if not isinstance(attempt.get("run_result"), str):
+                raise StatusError(f"attempts[{index}].run_result is invalid")
     for field in ("blockers", "failures"):
         if not isinstance(value[field], list):
             raise StatusError(f"{field} must be an array")

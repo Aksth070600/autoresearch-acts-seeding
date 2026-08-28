@@ -7,31 +7,54 @@ POLICY = PROJECT_ROOT / "agent-instructions.md"
 
 
 class ExperimentPolicyTests(unittest.TestCase):
-    def test_policy_requires_structural_search_and_development_only_runs(self) -> None:
+    def test_policy_requires_exact_composition_and_development_only_runs(self) -> None:
         text = POLICY.read_text(encoding="utf-8")
         lowered = " ".join(text.lower().split())
 
         self.assertIn("captain-controlled", lowered)
         self.assertIn("evaluation workloads are captain-controlled", lowered)
         self.assertIn("experiment candidates use the 10-event development workload only", lowered)
-        self.assertIn("at least 20 completed candidate attempts", lowered)
-        self.assertIn("at least 10 structurally distinct", lowered)
-        self.assertIn("no more than 5 micro-optimization", lowered)
+        self.assertIn("exactly 20 unique candidate experiments", lowered)
+        self.assertIn("10 `major` candidates", lowered)
+        self.assertIn("5 `minor` candidates", lowered)
+        self.assertIn("5 `combination` candidates", lowered)
+        self.assertIn("combination candidates do not count as major or minor", lowered)
         self.assertIn("no more than 3 consecutive", lowered)
+        self.assertIn("restore the canonical genesis implementation", lowered)
         for phrase in (
-            "algorithm or data flow",
-            "traversal or control flow",
-            "data layout or allocation behavior",
-            "pruning or search bounds",
+            "algorithm, traversal, allocation, data-layout, pruning, search-bound, or data-flow",
             "mechanism_key",
+            "mechanism_family",
             "changed_symbols",
             "expected_hot_path",
             "novelty_reason",
             "semantic duplicate",
+            "source candidate names",
+            "source mechanism keys",
+            "full source implementation commits",
+            "directly inspected",
+            "compatibility",
+            "interaction hypothesis",
         ):
             self.assertIn(phrase, lowered)
         self.assertIn("make evaluate candidate=<candidate-name>", lowered)
         self.assertNotIn("evaluation=1", lowered)
+
+    def test_protocol_owns_the_standard_composition(self) -> None:
+        import sys
+
+        sys.path.insert(0, str(PROJECT_ROOT / "orchestration-files"))
+        from protocol import CAMPAIGN_COMPOSITION
+
+        self.assertEqual(
+            CAMPAIGN_COMPOSITION,
+            {
+                "completed_candidates": 20,
+                "major_candidates": 10,
+                "minor_candidates": 5,
+                "combination_candidates": 5,
+            },
+        )
 
     def test_build_jobs_are_capped_and_forwarded_to_hepp02(self) -> None:
         makefile = (PROJECT_ROOT / "Makefile").read_text(encoding="utf-8")

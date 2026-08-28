@@ -6,16 +6,14 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "orchestration-files"))
 
 from evaluate import build_timed_comparison  # noqa: E402
-from evolution import (  # noqa: E402
+from objectives import (  # noqa: E402
     PRIMARY_EFFICIENCY_METRIC,
     PRIMARY_TIME_METRIC,
     add_run_metrics,
-    candidate_pool,
     choose_baseline,
     improved_over_baseline,
-    objective_vector,
     pareto_front,
-    recommendation,
+    time_first_key,
 )
 
 
@@ -47,24 +45,14 @@ class PrimaryObjectiveTests(unittest.TestCase):
         }
 
         self.assertFalse(improved_over_baseline(diagnostic_winner, self.baseline, "timed"))
-        pool = candidate_pool([diagnostic_winner], self.baseline, "timed")
-        self.assertEqual(len(pool), 1)
-        self.assertEqual(pool[0]["candidate"], "Genesis")
-        self.assertIs(
-            recommendation([self.baseline, diagnostic_winner], self.baseline, "timed"),
-            self.baseline,
-        )
 
     def test_objectives_are_only_the_two_primary_metrics(self) -> None:
-        vector = objective_vector(self.baseline, "timed")
-        self.assertEqual(vector, [100.0, -0.95])
-        self.assertEqual(len(vector), 2)
         self.assertEqual(
             {PRIMARY_TIME_METRIC, PRIMARY_EFFICIENCY_METRIC},
             {"seeding_time_per_event_ms", "ambiguity_particle_efficiency"},
         )
 
-    def test_evolution_keeps_full_chain_as_diagnostic(self) -> None:
+    def test_record_loading_keeps_full_chain_as_diagnostic(self) -> None:
         metrics = {}
         add_run_metrics(
             metrics,
@@ -153,22 +141,6 @@ class PrimaryObjectiveTests(unittest.TestCase):
 
         self.assertIs(selected, newer)
 
-    def test_candidate_pool_does_not_reintroduce_older_genesis_records(self) -> None:
-        older = {**self.baseline, "record": "Development/older-Genesis/summary.json"}
-        candidate = {
-            "candidate": "Faster",
-            "record": "Development/Faster/summary.json",
-            "metrics": {
-                "timed_seeding_time_per_event_ms": 90.0,
-                "timed_total_time_per_event_ms": 290.0,
-                "timed_ambiguity_particle_efficiency": 0.95,
-            },
-        }
-
-        pool = candidate_pool([older, candidate], self.baseline, "timed")
-
-        self.assertEqual([row["candidate"] for row in pool], ["Genesis", "Faster"])
-
     def test_primary_tradeoffs_remain_on_the_pareto_front(self) -> None:
         faster = {
             "candidate": "Faster",
@@ -194,6 +166,7 @@ class PrimaryObjectiveTests(unittest.TestCase):
             {row["candidate"] for row in front},
             {"Genesis", "Faster", "MoreEfficient"},
         )
+        self.assertEqual(front, sorted(front, key=time_first_key))
 
 
 if __name__ == "__main__":

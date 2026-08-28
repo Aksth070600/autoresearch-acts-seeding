@@ -1,4 +1,6 @@
 import importlib.util
+import json
+import subprocess
 import sys
 import unittest
 from pathlib import Path
@@ -16,6 +18,26 @@ spec.loader.exec_module(select_evaluation)
 
 
 class SelectEvaluationTests(unittest.TestCase):
+    def test_cli_runs_without_site_packages(self) -> None:
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-S",
+                str(ORCHESTRATION / "select-evaluation.py"),
+                "--records",
+                str(PROJECT_ROOT / "records"),
+                "--json",
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["candidates"][0]["candidate"], "Genesis")
+        self.assertEqual(payload["count"], 5)
+
     def test_selection_uses_seeding_time_not_full_chain_time(self) -> None:
         baseline = {
             "candidate": "Genesis",
