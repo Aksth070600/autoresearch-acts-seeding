@@ -104,7 +104,7 @@ class DoubletsForMiddleSp {
       }
       indexAndCotTheta.emplace_back(i, cotTheta);
     }
-    if (!naturallySorted) {
+    if (!naturallySorted) [[likely]] {
       std::ranges::sort(indexAndCotTheta, {},
                         [](const IndexAndCotTheta& item) {
                           return item.cotTheta;
