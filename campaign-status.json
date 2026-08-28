@@ -4,858 +4,490 @@
     {
       "candidate": "Genesis",
       "classification": "baseline",
-      "duration_seconds": 780.206,
-      "finished_at": "2026-08-27T18:36:29.608201Z",
-      "implementation_commit": "37703e9855ca78019fd09c6412637da847af417a",
+      "duration_seconds": 800.15,
+      "finished_at": "2026-08-28T11:04:42.448899Z",
+      "implementation_commit": "dd252d3164414f88396fa56f8b1bd012e694bfa6",
       "links": {
         "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260827T182329402303Z-Genesis/summary.json"
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T105122298587Z-Genesis/summary.json"
       },
       "mechanism_family": "fresh Genesis baseline",
       "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260827T182329402303Z-Genesis/summary.json",
-      "started_at": "2026-08-27T18:23:29.402303Z",
+      "record": "records/Development/20260828T105122298587Z-Genesis/summary.json",
+      "started_at": "2026-08-28T10:51:22.298587Z",
       "state": "completed",
       "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 297.99
+      "timed_seeding_time_per_event_ms": 298.25
     },
     {
-      "candidate": "GridBinHeapSort",
+      "candidate": "CorePackedVarianceLayout",
       "classification": "structural",
-      "duration_seconds": 790.803,
-      "finished_at": "2026-08-27T18:54:17.389850Z",
-      "implementation_commit": "2b8f404def2078b5b54b0af4958fc44a6ace6aa8",
+      "duration_seconds": 795.443,
+      "finished_at": "2026-08-28T11:23:08.912395Z",
+      "implementation_commit": "f2b67d563534d56c59d4a39be432a5c36a917b51",
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/2b8f404def2078b5b54b0af4958fc44a6ace6aa8",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260827T184106Z-GridBinHeapSort/summary.json"
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/f2b67d563534d56c59d4a39be432a5c36a917b51",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T110953Z-CorePackedVarianceLayout/summary.json"
       },
-      "mechanism_family": "grid-bin-heap-sort",
+      "mechanism_family": "core-packed-variance-layout",
       "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260827T184106Z-GridBinHeapSort/summary.json",
-      "started_at": "2026-08-27T18:41:06.587300Z",
+      "record": "records/Development/20260828T110953Z-CorePackedVarianceLayout/summary.json",
+      "started_at": "2026-08-28T11:09:53.469158Z",
       "state": "completed",
       "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 299.82
+      "timed_seeding_time_per_event_ms": 295.35
     },
     {
-      "candidate": "DoubletCotThetaHeapSort",
+      "candidate": "CandidateCachedMinimumRetention",
       "classification": "structural",
-      "duration_seconds": 832.783,
-      "finished_at": "2026-08-27T19:08:53.565322Z",
-      "implementation_commit": "7e8dbb6c65727456713578307d6819b7f1935dd7",
+      "duration_seconds": 814.959,
+      "finished_at": "2026-08-28T11:38:41.059043Z",
+      "implementation_commit": "8e874f98ab80353de2dd3b153f2f095afb31a7b6",
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/7e8dbb6c65727456713578307d6819b7f1935dd7",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260827T185500Z-DoubletCotThetaHeapSort/summary.json"
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/8e874f98ab80353de2dd3b153f2f095afb31a7b6",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T112506Z-CandidateCachedMinimumRetention/summary.json"
       },
-      "mechanism_family": "doublet-cottheta-heap-sort",
+      "mechanism_family": "candidate-cached-minimum-retention",
       "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260827T185500Z-DoubletCotThetaHeapSort/summary.json",
-      "started_at": "2026-08-27T18:55:00.781842Z",
+      "record": "records/Development/20260828T112506Z-CandidateCachedMinimumRetention/summary.json",
+      "started_at": "2026-08-28T11:25:06.100047Z",
       "state": "completed",
       "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 328.02
+      "timed_seeding_time_per_event_ms": 295.54
     },
     {
-      "candidate": "FilterCurvatureHeapSort",
+      "candidate": "TripletKinematicsPairLayout",
       "classification": "structural",
-      "duration_seconds": 800.108,
-      "finished_at": "2026-08-27T19:22:52.079618Z",
-      "implementation_commit": "8f0f4b93addfa859a7695c721ece98266712e24e",
+      "duration_seconds": 814.04,
+      "finished_at": "2026-08-28T11:54:04.760346Z",
+      "implementation_commit": "c0fdd671861e00af7c71c710e65787b677b6db38",
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/8f0f4b93addfa859a7695c721ece98266712e24e",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260827T190931Z-FilterCurvatureHeapSort/summary.json"
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/c0fdd671861e00af7c71c710e65787b677b6db38",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T114030Z-TripletKinematicsPairLayout/summary.json"
       },
-      "mechanism_family": "filter-curvature-heap-sort",
+      "mechanism_family": "triplet-kinematics-pair-layout",
       "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260827T190931Z-FilterCurvatureHeapSort/summary.json",
-      "started_at": "2026-08-27T19:09:31.972049Z",
+      "record": "records/Development/20260828T114030Z-TripletKinematicsPairLayout/summary.json",
+      "started_at": "2026-08-28T11:40:30.720321Z",
       "state": "completed",
       "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 298.06
+      "timed_seeding_time_per_event_ms": 294.61
     },
     {
-      "candidate": "CandidateBalancedTreeRetention",
+      "candidate": "GridBinAdaptiveRadixSort",
       "classification": "structural",
-      "duration_seconds": 802.42,
-      "finished_at": "2026-08-27T19:37:06.265420Z",
-      "implementation_commit": "dbeafd7878a3c3d8cb52504efbe6fa6fca243485",
+      "duration_seconds": 778.632,
+      "finished_at": "2026-08-28T12:08:46.679581Z",
+      "implementation_commit": "0256a37b6cd54a318e57c32935c1b157fc876843",
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/dbeafd7878a3c3d8cb52504efbe6fa6fca243485",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260827T192343Z-CandidateBalancedTreeRetention/summary.json"
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/0256a37b6cd54a318e57c32935c1b157fc876843",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T115548Z-GridBinAdaptiveRadixSort/summary.json"
       },
-      "mechanism_family": "candidate-balanced-tree-retention",
+      "mechanism_family": "grid-bin-adaptive-radix-sort",
       "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260827T192343Z-CandidateBalancedTreeRetention/summary.json",
-      "started_at": "2026-08-27T19:23:43.844930Z",
+      "record": "records/Development/20260828T115548Z-GridBinAdaptiveRadixSort/summary.json",
+      "started_at": "2026-08-28T11:55:48.047256Z",
       "state": "completed",
       "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 300.45
+      "timed_seeding_time_per_event_ms": 294.44
     },
     {
-      "candidate": "TripletUnsortedDoubletTraversal",
+      "candidate": "DoubletSlopeErrorPairLayout",
       "classification": "structural",
-      "duration_seconds": 814.98,
-      "finished_at": "2026-08-27T19:51:19.469835Z",
-      "implementation_commit": "46844f5c5303529c0c221c5bfad20e2c88ab0a33",
+      "duration_seconds": 808.828,
+      "finished_at": "2026-08-28T12:23:53.051581Z",
+      "implementation_commit": "08250bbb8cef262cd3cc80bf98b8979976ae207f",
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/46844f5c5303529c0c221c5bfad20e2c88ab0a33",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260827T193744Z-TripletUnsortedDoubletTraversal/summary.json"
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/08250bbb8cef262cd3cc80bf98b8979976ae207f",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T121024Z-DoubletSlopeErrorPairLayout/summary.json"
       },
-      "mechanism_family": "triplet-unsorted-doublet-traversal",
+      "mechanism_family": "doublet-slope-error-pair-layout",
       "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260827T193744Z-TripletUnsortedDoubletTraversal/summary.json",
-      "started_at": "2026-08-27T19:37:44.489995Z",
+      "record": "records/Development/20260828T121024Z-DoubletSlopeErrorPairLayout/summary.json",
+      "started_at": "2026-08-28T12:10:24.223747Z",
       "state": "completed",
       "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 296.44
+      "timed_seeding_time_per_event_ms": 296.66
     },
     {
-      "candidate": "DoubletInteractionPointPruning",
-      "classification": "micro",
-      "duration_seconds": 797.755,
-      "finished_at": "2026-08-27T20:05:10.653452Z",
-      "implementation_commit": "188fe967a2f2968ffe92845cfa608fa85ab6d13c",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/188fe967a2f2968ffe92845cfa608fa85ab6d13c",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260827T195152Z-DoubletInteractionPointPruning/summary.json"
-      },
-      "mechanism_family": "doublet-interaction-point-pruning",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260827T195152Z-DoubletInteractionPointPruning/summary.json",
-      "started_at": "2026-08-27T19:51:52.898174Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 296.76
-    },
-    {
-      "candidate": "GridBinBottomUpMergeSort",
+      "candidate": "DoubletCotThetaIDeltaRMaterialization",
       "classification": "structural",
-      "duration_seconds": 793.92,
-      "finished_at": "2026-08-27T20:19:35.214166Z",
-      "implementation_commit": "a9c7868cc03619c3c7816c670d2b3dddb19b215b",
+      "duration_seconds": 815.444,
+      "finished_at": "2026-08-28T12:40:00.543926Z",
+      "implementation_commit": "c1e8be71f49b443e2010da94461896a25fdeb00e",
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/a9c7868cc03619c3c7816c670d2b3dddb19b215b",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260827T200621Z-GridBinBottomUpMergeSort/summary.json"
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/c1e8be71f49b443e2010da94461896a25fdeb00e",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T122625Z-DoubletCotThetaIDeltaRMaterialization/summary.json"
       },
-      "mechanism_family": "grid-bin-bottom-up-merge-sort",
+      "mechanism_family": "doublet-cottheta-ideltar-materialization",
       "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260827T200621Z-GridBinBottomUpMergeSort/summary.json",
-      "started_at": "2026-08-27T20:06:21.294090Z",
+      "record": "records/Development/20260828T122625Z-DoubletCotThetaIDeltaRMaterialization/summary.json",
+      "started_at": "2026-08-28T12:26:25.099454Z",
       "state": "completed",
       "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 297.19
+      "timed_seeding_time_per_event_ms": 302.74
     },
     {
-      "candidate": "DoubletCotThetaBottomUpMergeSort",
+      "candidate": "FilterRadiusOrderedCompatibility",
       "classification": "structural",
-      "duration_seconds": 805.926,
-      "finished_at": "2026-08-27T20:33:38.067263Z",
-      "implementation_commit": "7a0b4b64eb011f407d20efd5d94362bb6a3bffac",
+      "duration_seconds": 802.31,
+      "finished_at": "2026-08-28T12:55:13.960458Z",
+      "implementation_commit": "835193fbeaf086710acc5833eb6c6aa987758fa6",
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/7a0b4b64eb011f407d20efd5d94362bb6a3bffac",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260827T202012Z-DoubletCotThetaBottomUpMergeSort/summary.json"
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/835193fbeaf086710acc5833eb6c6aa987758fa6",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T124151Z-FilterRadiusOrderedCompatibility/summary.json"
       },
-      "mechanism_family": "doublet-cottheta-bottom-up-merge-sort",
+      "mechanism_family": "filter-radius-ordered-compatibility-selection",
       "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260827T202012Z-DoubletCotThetaBottomUpMergeSort/summary.json",
-      "started_at": "2026-08-27T20:20:12.141430Z",
+      "record": "records/Development/20260828T124151Z-FilterRadiusOrderedCompatibility/summary.json",
+      "started_at": "2026-08-28T12:41:51.650904Z",
       "state": "completed",
       "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 315.51
+      "timed_seeding_time_per_event_ms": 300.35
     },
     {
-      "candidate": "FilterCurvatureBottomUpMergeSort",
+      "candidate": "CorePackedXYZRLayout",
       "classification": "structural",
-      "duration_seconds": 807.75,
-      "finished_at": "2026-08-27T20:47:35.235520Z",
-      "implementation_commit": "8bff176bc954fa43a1caaa7502bfc8903d8f056c",
+      "duration_seconds": 154.203,
+      "finished_at": "2026-08-28T13:00:17.504467Z",
+      "implementation_commit": "86b78fad06516e99372f8951349032ce0af8c52d",
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/8bff176bc954fa43a1caaa7502bfc8903d8f056c",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260827T203407Z-FilterCurvatureBottomUpMergeSort/summary.json"
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/86b78fad06516e99372f8951349032ce0af8c52d",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Failed/20260828T125743Z-CorePackedXYZRLayout/summary.json"
       },
-      "mechanism_family": "filter-curvature-bottom-up-merge-sort",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260827T203407Z-FilterCurvatureBottomUpMergeSort/summary.json",
-      "started_at": "2026-08-27T20:34:07.485236Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 301.64
-    },
-    {
-      "candidate": "GridMiddleOccupancyScheduling",
-      "classification": "structural",
-      "duration_seconds": 793.569,
-      "finished_at": "2026-08-27T21:01:53.854231Z",
-      "implementation_commit": "f77dfc61f50e4dec124b0b687ec733033f635165",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/f77dfc61f50e4dec124b0b687ec733033f635165",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260827T204840Z-GridMiddleOccupancyScheduling/summary.json"
-      },
-      "mechanism_family": "grid-middle-occupancy-scheduling",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260827T204840Z-GridMiddleOccupancyScheduling/summary.json",
-      "started_at": "2026-08-27T20:48:40.284947Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972332,
-      "timed_seeding_time_per_event_ms": 297.23
-    },
-    {
-      "candidate": "TripletPerBottomTopWindowReset",
-      "classification": "structural",
-      "duration_seconds": 796.305,
-      "finished_at": "2026-08-27T21:15:45.886616Z",
-      "implementation_commit": "3ca1843427cd2b679341c7a89f27e22c52ca271b",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/3ca1843427cd2b679341c7a89f27e22c52ca271b",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260827T210229Z-TripletPerBottomTopWindowReset/summary.json"
-      },
-      "mechanism_family": "triplet-per-bottom-top-window-reset",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260827T210229Z-TripletPerBottomTopWindowReset/summary.json",
-      "started_at": "2026-08-27T21:02:29.581792Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 325.93
-    },
-    {
-      "candidate": "TripletCandidateSegmentedSoA",
-      "classification": "structural",
-      "duration_seconds": 803.901,
-      "finished_at": "2026-08-27T21:29:47.327922Z",
-      "implementation_commit": "0c2b81f3bf889e33a47d8b9d10ea5cb771ed2cfa",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/0c2b81f3bf889e33a47d8b9d10ea5cb771ed2cfa",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260827T211623Z-TripletCandidateSegmentedSoA/summary.json"
-      },
-      "mechanism_family": "triplet-candidate-segmented-soa",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260827T211623Z-TripletCandidateSegmentedSoA/summary.json",
-      "started_at": "2026-08-27T21:16:23.427057Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 299.79
-    },
-    {
-      "candidate": "DoubletSegmentedSoA",
-      "classification": "structural",
-      "duration_seconds": 820.806,
-      "finished_at": "2026-08-27T21:44:03.135917Z",
-      "implementation_commit": "92fb6560eadf217844bd7d9e065aac3edb0c4be8",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/92fb6560eadf217844bd7d9e065aac3edb0c4be8",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260827T213022Z-DoubletSegmentedSoA/summary.json"
-      },
-      "mechanism_family": "doublet-segmented-soa",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260827T213022Z-DoubletSegmentedSoA/summary.json",
-      "started_at": "2026-08-27T21:30:22.330098Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 311.52
-    },
-    {
-      "candidate": "CandidateSegmentedCanonicalStorage",
-      "classification": "structural",
-      "duration_seconds": 814.372,
-      "finished_at": "2026-08-27T21:58:20.149330Z",
-      "implementation_commit": "2e2efac93daedc2d3ca4c89e465b4cf6c6eed98b",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/2e2efac93daedc2d3ca4c89e465b4cf6c6eed98b",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260827T214445Z-CandidateSegmentedCanonicalStorage/summary.json"
-      },
-      "mechanism_family": "candidate-segmented-canonical-storage",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260827T214445Z-CandidateSegmentedCanonicalStorage/summary.json",
-      "started_at": "2026-08-27T21:44:45.777152Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 298.31
-    },
-    {
-      "candidate": "GridBinCountCache",
-      "classification": "micro",
-      "duration_seconds": 820.548,
-      "finished_at": "2026-08-27T22:12:35.392005Z",
-      "implementation_commit": "cae3fce77d3a40878b3e030cdbd9a09443d2baa8",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/cae3fce77d3a40878b3e030cdbd9a09443d2baa8",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260827T215854Z-GridBinCountCache/summary.json"
-      },
-      "mechanism_family": "grid-bin-count-cache",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260827T215854Z-GridBinCountCache/summary.json",
-      "started_at": "2026-08-27T21:58:54.844257Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 295.61
-    },
-    {
-      "candidate": "GridBinSelectionSort",
-      "classification": "structural",
-      "duration_seconds": 798.593,
-      "finished_at": "2026-08-27T22:26:20.591000Z",
-      "implementation_commit": "579db89672637ee1a471becf534201c48892a1a1",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/579db89672637ee1a471becf534201c48892a1a1",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260827T221301Z-GridBinSelectionSort/summary.json"
-      },
-      "mechanism_family": "grid-bin-selection-sort",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260827T221301Z-GridBinSelectionSort/summary.json",
-      "started_at": "2026-08-27T22:13:01.997619Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 299.63
-    },
-    {
-      "candidate": "DoubletCotThetaSelectionSort",
-      "classification": "structural",
-      "duration_seconds": 805.809,
-      "finished_at": "2026-08-27T22:40:11.704631Z",
-      "implementation_commit": "d91a1218e96fec5af6780a61f907d20fd49e2f7b",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/d91a1218e96fec5af6780a61f907d20fd49e2f7b",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260827T222645Z-DoubletCotThetaSelectionSort/summary.json"
-      },
-      "mechanism_family": "doublet-cottheta-selection-sort",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260827T222645Z-DoubletCotThetaSelectionSort/summary.json",
-      "started_at": "2026-08-27T22:26:45.895326Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 299.16
-    },
-    {
-      "candidate": "FilterCurvatureSelectionSort",
-      "classification": "structural",
-      "duration_seconds": 819.581,
-      "finished_at": "2026-08-27T22:54:23.537824Z",
-      "implementation_commit": "831805aa0c5ba891a0ddda1db01274dddeab7108",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/831805aa0c5ba891a0ddda1db01274dddeab7108",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260827T224043Z-FilterCurvatureSelectionSort/summary.json"
-      },
-      "mechanism_family": "filter-curvature-selection-sort",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260827T224043Z-FilterCurvatureSelectionSort/summary.json",
-      "started_at": "2026-08-27T22:40:43.957019Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 296.43
-    },
-    {
-      "candidate": "FilterPairCompatibilityGraph",
-      "classification": "structural",
-      "duration_seconds": 836.758,
-      "finished_at": "2026-08-27T23:09:41.178145Z",
-      "implementation_commit": "a0a358f05e8a706ddddddd36b479941e9639e361",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/a0a358f05e8a706ddddddd36b479941e9639e361",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260827T225544Z-FilterPairCompatibilityGraph/summary.json"
-      },
-      "mechanism_family": "filter-pair-compatibility-graph",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260827T225544Z-FilterPairCompatibilityGraph/summary.json",
-      "started_at": "2026-08-27T22:55:44.420376Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 299.47
-    },
-    {
-      "candidate": "DoubletPrefilterStaging",
-      "classification": "structural",
-      "duration_seconds": 822.845,
-      "finished_at": "2026-08-27T23:24:50.567186Z",
-      "implementation_commit": "65b4cb25fdb0bf54f78f569df8641393116fb5c6",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/65b4cb25fdb0bf54f78f569df8641393116fb5c6",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260827T231107Z-DoubletPrefilterStaging/summary.json"
-      },
-      "mechanism_family": "doublet-prefilter-staging",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260827T231107Z-DoubletPrefilterStaging/summary.json",
-      "started_at": "2026-08-27T23:11:07.722009Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 340.82
-    },
-    {
-      "candidate": "TripletSlopePrefilterStaging",
-      "classification": "structural",
-      "duration_seconds": 39.204,
-      "finished_at": "2026-08-27T23:26:19.395081Z",
-      "implementation_commit": "e1bcf04f1d6a12d8e507f00d452a7399a388f6a9",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/e1bcf04f1d6a12d8e507f00d452a7399a388f6a9",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Errors/20260827T232540Z-TripletSlopePrefilterStaging/summary.json"
-      },
-      "mechanism_family": "triplet-slope-prefilter-staging",
-      "outcome": "candidate build failed",
-      "record": "records/Errors/20260827T232540Z-TripletSlopePrefilterStaging/summary.json",
-      "started_at": "2026-08-27T23:25:40.190892Z",
+      "mechanism_family": "core-packed-xyzr-layout",
+      "outcome": "candidate failed stage: ten_event_seeding",
+      "record": "records/Failed/20260828T125743Z-CorePackedXYZRLayout/summary.json",
+      "started_at": "2026-08-28T12:57:43.301880Z",
       "state": "failed",
       "timed_ambiguity_particle_efficiency": null,
       "timed_seeding_time_per_event_ms": null
     },
     {
-      "candidate": "TripletSlopePrefilterStaging",
+      "candidate": "CorePackedXYZRLayout",
       "classification": "structural",
-      "duration_seconds": 789.031,
-      "finished_at": "2026-08-27T23:40:44.093557Z",
-      "implementation_commit": "504d11d0b48aea63a485890c87eb1e8798c411c1",
+      "duration_seconds": 852.113,
+      "finished_at": "2026-08-28T13:15:55.812932Z",
+      "implementation_commit": "f35abcd80f64400c9df6ca78b6ea04937bb06f9b",
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/504d11d0b48aea63a485890c87eb1e8798c411c1",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260827T232735Z-TripletSlopePrefilterStaging/summary.json"
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/f35abcd80f64400c9df6ca78b6ea04937bb06f9b",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T130143Z-CorePackedXYZRLayout/summary.json"
       },
-      "mechanism_family": "triplet-slope-prefilter-staging",
+      "mechanism_family": "core-packed-xyzr-layout",
       "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260827T232735Z-TripletSlopePrefilterStaging/summary.json",
-      "started_at": "2026-08-27T23:27:35.062723Z",
+      "record": "records/Development/20260828T130143Z-CorePackedXYZRLayout/summary.json",
+      "started_at": "2026-08-28T13:01:43.699901Z",
       "state": "completed",
       "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 325.92
+      "timed_seeding_time_per_event_ms": 297.15
     },
     {
-      "candidate": "GridCorePrefixOffsetLayout",
+      "candidate": "DoubletLongitudinalBoundIntersection",
       "classification": "structural",
-      "duration_seconds": 804.195,
-      "finished_at": "2026-08-27T23:55:04.417742Z",
-      "implementation_commit": "f20309b3b3a1cd183f15817d5aaac39b4d6afeaf",
+      "duration_seconds": 857.795,
+      "finished_at": "2026-08-28T13:32:19.989688Z",
+      "implementation_commit": "dcf4503a4902c8f1784a5bacf2d16df1890e7c7c",
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/f20309b3b3a1cd183f15817d5aaac39b4d6afeaf",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260827T234140Z-GridCorePrefixOffsetLayout/summary.json"
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/dcf4503a4902c8f1784a5bacf2d16df1890e7c7c",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T131802Z-DoubletLongitudinalBoundIntersection/summary.json"
       },
-      "mechanism_family": "grid-core-prefix-offset-layout",
+      "mechanism_family": "doublet-longitudinal-bound-intersection",
       "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260827T234140Z-GridCorePrefixOffsetLayout/summary.json",
-      "started_at": "2026-08-27T23:41:40.222816Z",
+      "record": "records/Development/20260828T131802Z-DoubletLongitudinalBoundIntersection/summary.json",
+      "started_at": "2026-08-28T13:18:02.194746Z",
       "state": "completed",
       "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 298.74
+      "timed_seeding_time_per_event_ms": 295.8
     },
     {
-      "candidate": "FilterCompatibilityConfigCache",
+      "candidate": "GridSortedBinRadiusRange",
+      "classification": "structural",
+      "duration_seconds": 793.547,
+      "finished_at": "2026-08-28T13:47:47.974449Z",
+      "implementation_commit": "0874be33c64f06a2f0abca2e641453ca04c3d2f1",
+      "links": {
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/0874be33c64f06a2f0abca2e641453ca04c3d2f1",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T133434Z-GridSortedBinRadiusRange/summary.json"
+      },
+      "mechanism_family": "grid-sorted-bin-radius-range",
+      "outcome": "Passed all controlled Development stages.",
+      "record": "records/Development/20260828T133434Z-GridSortedBinRadiusRange/summary.json",
+      "started_at": "2026-08-28T13:34:34.427635Z",
+      "state": "completed",
+      "timed_ambiguity_particle_efficiency": 0.972769,
+      "timed_seeding_time_per_event_ms": 295.78
+    },
+    {
+      "candidate": "TripletIdentityImpactPairLayout",
+      "classification": "structural",
+      "duration_seconds": 813.449,
+      "finished_at": "2026-08-28T14:03:14.885311Z",
+      "implementation_commit": "03949c5565ff7a2d48d305cf3dd8d3f25a3cf6f5",
+      "links": {
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/03949c5565ff7a2d48d305cf3dd8d3f25a3cf6f5",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T134941Z-TripletIdentityImpactPairLayout/summary.json"
+      },
+      "mechanism_family": "triplet-identity-impact-pair-layout",
+      "outcome": "Passed all controlled Development stages.",
+      "record": "records/Development/20260828T134941Z-TripletIdentityImpactPairLayout/summary.json",
+      "started_at": "2026-08-28T13:49:41.435935Z",
+      "state": "completed",
+      "timed_ambiguity_particle_efficiency": 0.972769,
+      "timed_seeding_time_per_event_ms": 298.6
+    },
+    {
+      "candidate": "SeederStreamedBottomGroups",
+      "classification": "structural",
+      "duration_seconds": 807.895,
+      "finished_at": "2026-08-28T14:18:40.229169Z",
+      "implementation_commit": "af0fae5f0de8314a25e2ea28467aa7e0b9fd917b",
+      "links": {
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/af0fae5f0de8314a25e2ea28467aa7e0b9fd917b",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T140512Z-SeederStreamedBottomGroups/summary.json"
+      },
+      "mechanism_family": "seeder-streamed-bottom-groups",
+      "outcome": "Passed all controlled Development stages.",
+      "record": "records/Development/20260828T140512Z-SeederStreamedBottomGroups/summary.json",
+      "started_at": "2026-08-28T14:05:12.333928Z",
+      "state": "completed",
+      "timed_ambiguity_particle_efficiency": 0.972769,
+      "timed_seeding_time_per_event_ms": 290.85
+    },
+    {
+      "candidate": "SeederCrossGroupTopWindowCarry",
+      "classification": "structural",
+      "duration_seconds": 704.478,
+      "finished_at": "2026-08-28T14:31:58.335762Z",
+      "implementation_commit": "8911e4896c20e38b9e458600faab6af4b6785767",
+      "links": {
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/8911e4896c20e38b9e458600faab6af4b6785767",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T142013Z-SeederCrossGroupTopWindowCarry/summary.json"
+      },
+      "mechanism_family": "seeder-cross-group-top-window-carry",
+      "outcome": "Passed all controlled Development stages.",
+      "record": "records/Development/20260828T142013Z-SeederCrossGroupTopWindowCarry/summary.json",
+      "started_at": "2026-08-28T14:20:13.858224Z",
+      "state": "completed",
+      "timed_ambiguity_particle_efficiency": 0.655284,
+      "timed_seeding_time_per_event_ms": 261.22
+    },
+    {
+      "candidate": "GridRadixFloatKeyLayout",
+      "classification": "structural",
+      "duration_seconds": 798.841,
+      "finished_at": "2026-08-28T14:46:47.925467Z",
+      "implementation_commit": "c3c06d354ade3cf169f80bea69312a027fd97806",
+      "links": {
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/c3c06d354ade3cf169f80bea69312a027fd97806",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T143329Z-GridRadixFloatKeyLayout/summary.json"
+      },
+      "mechanism_family": "grid-radix-float-key-layout",
+      "outcome": "Passed all controlled Development stages.",
+      "record": "records/Development/20260828T143329Z-GridRadixFloatKeyLayout/summary.json",
+      "started_at": "2026-08-28T14:33:29.084640Z",
+      "state": "completed",
+      "timed_ambiguity_particle_efficiency": 0.972769,
+      "timed_seeding_time_per_event_ms": 289.92
+    },
+    {
+      "candidate": "CoreScalarCoordinateLayout",
+      "classification": "structural",
+      "duration_seconds": 850.241,
+      "finished_at": "2026-08-28T15:02:51.679603Z",
+      "implementation_commit": "9ce229a435c846a836d6f25f194c6f8a162bc975",
+      "links": {
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/9ce229a435c846a836d6f25f194c6f8a162bc975",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T144841Z-CoreScalarCoordinateLayout/summary.json"
+      },
+      "mechanism_family": "core-scalar-coordinate-layout",
+      "outcome": "Passed all controlled Development stages.",
+      "record": "records/Development/20260828T144841Z-CoreScalarCoordinateLayout/summary.json",
+      "started_at": "2026-08-28T14:48:41.438943Z",
+      "state": "completed",
+      "timed_ambiguity_particle_efficiency": 0.972769,
+      "timed_seeding_time_per_event_ms": 298.88
+    },
+    {
+      "candidate": "DoubletNaturalOrderFastPath",
+      "classification": "structural",
+      "duration_seconds": 848.894,
+      "finished_at": "2026-08-28T15:18:54.590938Z",
+      "implementation_commit": "9c857a5991e3212a1aa4509891ddbc8c4d001121",
+      "links": {
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/9c857a5991e3212a1aa4509891ddbc8c4d001121",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T150445Z-DoubletNaturalOrderFastPath/summary.json"
+      },
+      "mechanism_family": "doublet-natural-order-fast-path",
+      "outcome": "Passed all controlled Development stages.",
+      "record": "records/Development/20260828T150445Z-DoubletNaturalOrderFastPath/summary.json",
+      "started_at": "2026-08-28T15:04:45.697032Z",
+      "state": "completed",
+      "timed_ambiguity_particle_efficiency": 0.972769,
+      "timed_seeding_time_per_event_ms": 289.87
+    },
+    {
+      "candidate": "DoubletMonotonicDirectionFastPath",
+      "classification": "structural",
+      "duration_seconds": 802.621,
+      "finished_at": "2026-08-28T15:33:31.964177Z",
+      "implementation_commit": "f8950fdd43b9ef0138664824eb614af6647ded09",
+      "links": {
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/f8950fdd43b9ef0138664824eb614af6647ded09",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T152009Z-DoubletMonotonicDirectionFastPath/summary.json"
+      },
+      "mechanism_family": "doublet-monotonic-direction-fast-path",
+      "outcome": "Passed all controlled Development stages.",
+      "record": "records/Development/20260828T152009Z-DoubletMonotonicDirectionFastPath/summary.json",
+      "started_at": "2026-08-28T15:20:09.343450Z",
+      "state": "completed",
+      "timed_ambiguity_particle_efficiency": 0.972769,
+      "timed_seeding_time_per_event_ms": 291.0
+    },
+    {
+      "candidate": "GridRadixShortBinBranchHint",
       "classification": "micro",
-      "duration_seconds": 791.021,
-      "finished_at": "2026-08-28T00:08:47.532387Z",
-      "implementation_commit": "73a5fcedfd972a89931d3b9d4698436f19ab2c72",
+      "duration_seconds": 808.446,
+      "finished_at": "2026-08-28T15:48:00.174421Z",
+      "implementation_commit": "167863816cc2be13633591a7a13bcca9cb08823b",
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/73a5fcedfd972a89931d3b9d4698436f19ab2c72",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260827T235536Z-FilterCompatibilityConfigCache/summary.json"
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/167863816cc2be13633591a7a13bcca9cb08823b",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T153431Z-GridRadixShortBinBranchHint/summary.json"
       },
-      "mechanism_family": "filter-compatibility-config-cache",
+      "mechanism_family": "grid-radix-short-bin-branch-hint",
       "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260827T235536Z-FilterCompatibilityConfigCache/summary.json",
-      "started_at": "2026-08-27T23:55:36.511794Z",
+      "record": "records/Development/20260828T153431Z-GridRadixShortBinBranchHint/summary.json",
+      "started_at": "2026-08-28T15:34:31.728421Z",
       "state": "completed",
       "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 297.5
+      "timed_seeding_time_per_event_ms": 289.84
     },
     {
-      "candidate": "CandidateSmallBufferStorage",
-      "classification": "structural",
-      "duration_seconds": 801.867,
-      "finished_at": "2026-08-28T00:22:51.359220Z",
-      "implementation_commit": "e030bf4f8c49697a617c1c6022686b67a1a87588",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/e030bf4f8c49697a617c1c6022686b67a1a87588",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260828T000929Z-CandidateSmallBufferStorage/summary.json"
-      },
-      "mechanism_family": "candidate-small-buffer-storage",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260828T000929Z-CandidateSmallBufferStorage/summary.json",
-      "started_at": "2026-08-28T00:09:29.492516Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 296.89
-    },
-    {
-      "candidate": "DoubletDerivedSmallBufferColumns",
-      "classification": "structural",
-      "duration_seconds": 815.341,
-      "finished_at": "2026-08-28T00:36:51.899319Z",
-      "implementation_commit": "b2bfdb3905361a68f2ecdf6eefbb749dcfa77ab2",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/b2bfdb3905361a68f2ecdf6eefbb749dcfa77ab2",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260828T002316Z-DoubletDerivedSmallBufferColumns/summary.json"
-      },
-      "mechanism_family": "doublet-derived-small-buffer-columns",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260828T002316Z-DoubletDerivedSmallBufferColumns/summary.json",
-      "started_at": "2026-08-28T00:23:16.558048Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 293.16
-    },
-    {
-      "candidate": "TripletCandidateSmallBufferSoA",
-      "classification": "structural",
-      "duration_seconds": 807.743,
-      "finished_at": "2026-08-28T00:50:46.712579Z",
-      "implementation_commit": "991b6b7ea5ae9dfaf6e7c399a3db205a515c2050",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/991b6b7ea5ae9dfaf6e7c399a3db205a515c2050",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260828T003718Z-TripletCandidateSmallBufferSoA/summary.json"
-      },
-      "mechanism_family": "triplet-candidate-small-buffer-soa",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260828T003718Z-TripletCandidateSmallBufferSoA/summary.json",
-      "started_at": "2026-08-28T00:37:18.969623Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 293.99
-    },
-    {
-      "candidate": "GridBinSmallBufferStorage",
-      "classification": "structural",
-      "duration_seconds": 805.797,
-      "finished_at": "2026-08-28T01:04:33.759114Z",
-      "implementation_commit": "ed41da7ba2804fa223de0dc75f7b3c2a1fffb0b6",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/ed41da7ba2804fa223de0dc75f7b3c2a1fffb0b6",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260828T005107Z-GridBinSmallBufferStorage/summary.json"
-      },
-      "mechanism_family": "grid-bin-small-buffer-storage",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260828T005107Z-GridBinSmallBufferStorage/summary.json",
-      "started_at": "2026-08-28T00:51:07.962402Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 296.37
-    },
-    {
-      "candidate": "DoubletDistanceConfigCache",
+      "candidate": "SeederStreamedBottomEmptyBranchHint",
       "classification": "micro",
-      "duration_seconds": 820.759,
-      "finished_at": "2026-08-28T01:18:46.678870Z",
-      "implementation_commit": "3488dc84d718ad760ceefcbbe72e9acf125e086f",
+      "duration_seconds": 786.231,
+      "finished_at": "2026-08-28T16:02:03.010000Z",
+      "implementation_commit": "92aa1249ba589d4e93c8ace18f12f37ef8178b4d",
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/3488dc84d718ad760ceefcbbe72e9acf125e086f",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260828T010505Z-DoubletDistanceConfigCache/summary.json"
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/92aa1249ba589d4e93c8ace18f12f37ef8178b4d",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T154856Z-SeederStreamedBottomEmptyBranchHint/summary.json"
       },
-      "mechanism_family": "doublet-distance-config-cache",
+      "mechanism_family": "seeder-streamed-bottom-empty-branch-hint",
       "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260828T010505Z-DoubletDistanceConfigCache/summary.json",
-      "started_at": "2026-08-28T01:05:05.919537Z",
+      "record": "records/Development/20260828T154856Z-SeederStreamedBottomEmptyBranchHint/summary.json",
+      "started_at": "2026-08-28T15:48:56.779497Z",
       "state": "completed",
       "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 301.66
+      "timed_seeding_time_per_event_ms": 289.65
     },
     {
-      "candidate": "SeederUnifiedSortedDoubletArena",
-      "classification": "structural",
-      "duration_seconds": 819.136,
-      "finished_at": "2026-08-28T01:33:18.439162Z",
-      "implementation_commit": "2a8f472687e90e09039dd5b37bf61941789f0b9a",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/2a8f472687e90e09039dd5b37bf61941789f0b9a",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260828T011939Z-SeederUnifiedSortedDoubletArena/summary.json"
-      },
-      "mechanism_family": "seeder-unified-sorted-doublet-arena",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260828T011939Z-SeederUnifiedSortedDoubletArena/summary.json",
-      "started_at": "2026-08-28T01:19:39.303004Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 298.59
-    },
-    {
-      "candidate": "SeederInterleavedDoubletFlow",
-      "classification": "structural",
-      "duration_seconds": 820.802,
-      "finished_at": "2026-08-28T01:47:53.695741Z",
-      "implementation_commit": "4b36925c3170b6a4237f40529b11acd02dc23442",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/4b36925c3170b6a4237f40529b11acd02dc23442",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260828T013412Z-SeederInterleavedDoubletFlow/summary.json"
-      },
-      "mechanism_family": "seeder-interleaved-doublet-flow",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260828T013412Z-SeederInterleavedDoubletFlow/summary.json",
-      "started_at": "2026-08-28T01:34:12.894081Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 316.88
-    },
-    {
-      "candidate": "TripletPixelConfigCache",
+      "candidate": "DoubletNaturalOrderFallbackBranchHint",
       "classification": "micro",
-      "duration_seconds": 774.948,
-      "finished_at": "2026-08-28T02:02:00.067388Z",
-      "implementation_commit": "fe8d89b5ca2199c6ec5c3f020f778318cfd62126",
+      "duration_seconds": 800.537,
+      "finished_at": "2026-08-28T16:16:20.626032Z",
+      "implementation_commit": "22e555395ce437ad1a4f25758e989ef25eca2a91",
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/fe8d89b5ca2199c6ec5c3f020f778318cfd62126",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260828T014905Z-TripletPixelConfigCache/summary.json"
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/22e555395ce437ad1a4f25758e989ef25eca2a91",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T160300Z-DoubletNaturalOrderFallbackBranchHint/summary.json"
       },
-      "mechanism_family": "triplet-pixel-config-cache",
+      "mechanism_family": "doublet-natural-order-fallback-branch-hint",
       "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260828T014905Z-TripletPixelConfigCache/summary.json",
-      "started_at": "2026-08-28T01:49:05.119257Z",
+      "record": "records/Development/20260828T160300Z-DoubletNaturalOrderFallbackBranchHint/summary.json",
+      "started_at": "2026-08-28T16:03:00.089126Z",
       "state": "completed",
       "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 302.58
-    },
-    {
-      "candidate": "GridNeighborRangeSmallBuffer",
-      "classification": "structural",
-      "duration_seconds": 802.06,
-      "finished_at": "2026-08-28T02:15:42.308777Z",
-      "implementation_commit": "2662b2473128adf68e9024a0423011f0531f7dee",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/2662b2473128adf68e9024a0423011f0531f7dee",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260828T020220Z-GridNeighborRangeSmallBuffer/summary.json"
-      },
-      "mechanism_family": "grid-neighbor-range-small-buffer",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260828T020220Z-GridNeighborRangeSmallBuffer/summary.json",
-      "started_at": "2026-08-28T02:02:20.248316Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 298.69
-    },
-    {
-      "candidate": "FilterCompatibleRadiusTree",
-      "classification": "structural",
-      "duration_seconds": 800.735,
-      "finished_at": "2026-08-28T02:29:43.468665Z",
-      "implementation_commit": "974141a38e2e059e4eb3501c4ba23312fd479670",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/974141a38e2e059e4eb3501c4ba23312fd479670",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260828T021622Z-FilterCompatibleRadiusTree/summary.json"
-      },
-      "mechanism_family": "filter-compatible-radius-tree",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260828T021622Z-FilterCompatibleRadiusTree/summary.json",
-      "started_at": "2026-08-28T02:16:22.733338Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 307.48
-    },
-    {
-      "candidate": "SeederNeighborOccupancyOrder",
-      "classification": "structural",
-      "duration_seconds": 823.056,
-      "finished_at": "2026-08-28T02:44:14.724744Z",
-      "implementation_commit": "7b2873e18b9d7b0d4c36fcc7a38ad03037226453",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/7b2873e18b9d7b0d4c36fcc7a38ad03037226453",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260828T023031Z-SeederNeighborOccupancyOrder/summary.json"
-      },
-      "mechanism_family": "seeder-neighbor-occupancy-order",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260828T023031Z-SeederNeighborOccupancyOrder/summary.json",
-      "started_at": "2026-08-28T02:30:31.669086Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 308.48
-    },
-    {
-      "candidate": "DoubletGallopingRadiusBound",
-      "classification": "structural",
-      "duration_seconds": 788.753,
-      "finished_at": "2026-08-28T02:58:15.815704Z",
-      "implementation_commit": "b5637c66b363eeb245a0564f7dfa75e8d9cbc34c",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/b5637c66b363eeb245a0564f7dfa75e8d9cbc34c",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260828T024507Z-DoubletGallopingRadiusBound/summary.json"
-      },
-      "mechanism_family": "doublet-galloping-radius-bound",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260828T024507Z-DoubletGallopingRadiusBound/summary.json",
-      "started_at": "2026-08-28T02:45:07.063153Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 300.56
-    },
-    {
-      "candidate": "FilterCurvatureGallopingBound",
-      "classification": "structural",
-      "duration_seconds": 787.52,
-      "finished_at": "2026-08-28T03:12:14.556288Z",
-      "implementation_commit": "83195ab607a3f35502d4d50d91833f71dfedf068",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/83195ab607a3f35502d4d50d91833f71dfedf068",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260828T025907Z-FilterCurvatureGallopingBound/summary.json"
-      },
-      "mechanism_family": "filter-curvature-galloping-bound",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260828T025907Z-FilterCurvatureGallopingBound/summary.json",
-      "started_at": "2026-08-28T02:59:07.036634Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 298.91
-    },
-    {
-      "candidate": "DoubletCollisionRegionBranchHint",
-      "classification": "micro",
-      "duration_seconds": 789.214,
-      "finished_at": "2026-08-28T03:25:55.383509Z",
-      "implementation_commit": "016514841e15476616d4f8ae14aa41988904d901",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/016514841e15476616d4f8ae14aa41988904d901",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260828T031246Z-DoubletCollisionRegionBranchHint/summary.json"
-      },
-      "mechanism_family": "doublet-collision-region-branch-hint",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260828T031246Z-DoubletCollisionRegionBranchHint/summary.json",
-      "started_at": "2026-08-28T03:12:46.169511Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 297.37
-    },
-    {
-      "candidate": "CandidatePreconstructedSlotArena",
-      "classification": "structural",
-      "duration_seconds": 828.933,
-      "finished_at": "2026-08-28T03:40:24.045917Z",
-      "implementation_commit": "ce33d23fb5be6cafcf1ba8b4628cd347915cceb1",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/ce33d23fb5be6cafcf1ba8b4628cd347915cceb1",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260828T032635Z-CandidatePreconstructedSlotArena/summary.json"
-      },
-      "mechanism_family": "candidate-preconstructed-slot-arena",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260828T032635Z-CandidatePreconstructedSlotArena/summary.json",
-      "started_at": "2026-08-28T03:26:35.112451Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 298.39
-    },
-    {
-      "candidate": "GridBinShellSort",
-      "classification": "structural",
-      "duration_seconds": 821.096,
-      "finished_at": "2026-08-28T03:54:25.011185Z",
-      "implementation_commit": "3e0a54e572e386ff9023132ed0c29d8a8537804b",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/3e0a54e572e386ff9023132ed0c29d8a8537804b",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260828T034043Z-GridBinShellSort/summary.json"
-      },
-      "mechanism_family": "grid-bin-shell-sort",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260828T034043Z-GridBinShellSort/summary.json",
-      "started_at": "2026-08-28T03:40:43.914713Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 297.13
-    },
-    {
-      "candidate": "DoubletCotThetaShellSort",
-      "classification": "structural",
-      "duration_seconds": 812.185,
-      "finished_at": "2026-08-28T04:08:21.393091Z",
-      "implementation_commit": "1a90c74288e43076707c65c1936498e7400f7e8e",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/1a90c74288e43076707c65c1936498e7400f7e8e",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260828T035449Z-DoubletCotThetaShellSort/summary.json"
-      },
-      "mechanism_family": "doublet-cottheta-shell-sort",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260828T035449Z-DoubletCotThetaShellSort/summary.json",
-      "started_at": "2026-08-28T03:54:49.207650Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 317.31
-    },
-    {
-      "candidate": "FilterCurvatureShellSort",
-      "classification": "structural",
-      "duration_seconds": 818.737,
-      "finished_at": "2026-08-28T04:22:21.817357Z",
-      "implementation_commit": "57669e27ed8a1bec4b02479ce2c7df8c94570351",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/57669e27ed8a1bec4b02479ce2c7df8c94570351",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260828T040843Z-FilterCurvatureShellSort/summary.json"
-      },
-      "mechanism_family": "filter-curvature-shell-sort",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260828T040843Z-FilterCurvatureShellSort/summary.json",
-      "started_at": "2026-08-28T04:08:43.080769Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 298.27
+      "timed_seeding_time_per_event_ms": 290.82
     }
   ],
   "blockers": [],
   "campaign": {
-    "branch": "autoresearch-acts-seeding/campaign-v7",
-    "name": "ACTS Seeding Development Campaign V7",
-    "phase": "Captain ended campaign early after restart at 41 attempts",
-    "started_at": "2026-08-27T18:23:05Z",
+    "branch": "autoresearch-acts-seeding/campaign-v8",
+    "name": "ACTS Seeding Development Campaign V8",
+    "phase": "completed Development campaign; canonical Genesis restored",
+    "started_at": "2026-08-28T10:50:43Z",
     "targets": {
-      "completed_attempts": 41,
-      "micro_optimization_cap": 6,
-      "structural_attempts": 35
+      "completed_attempts": 20,
+      "micro_optimization_cap": 5,
+      "structural_attempts": 10
     }
   },
   "current_attempt": null,
   "failures": [
     {
-      "candidate": "TripletSlopePrefilterStaging",
-      "message": "candidate build failed",
-      "record_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Errors/20260827T232540Z-TripletSlopePrefilterStaging/summary.json"
+      "candidate": "CorePackedXYZRLayout",
+      "message": "candidate failed stage: ten_event_seeding",
+      "record_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Failed/20260828T125743Z-CorePackedXYZRLayout/summary.json"
     }
   ],
-  "generated_at": "2026-08-28T10:32:10.230558Z",
+  "generated_at": "2026-08-28T16:18:03.098392Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/18de8ef1013cd362ba9014f46ad1126c0cac853b",
-    "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/campaign-v7",
-    "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/28"
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/951c660107089ca9a3a9cc6234c4b5801b555832",
+    "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/campaign-v8",
+    "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/29"
   },
   "progress": {
-    "completed_attempts": 41,
-    "elapsed_seconds": 58145.230558,
+    "completed_attempts": 20,
+    "elapsed_seconds": 19640.098392,
     "estimated_remaining_seconds": 0.0,
     "eta_basis": "Campaign attempt targets are complete.",
-    "eta_sample_count": 41,
-    "expected_finish_at": "2026-08-28T10:32:10.230558Z",
-    "median_completed_attempt_duration_seconds": 805.809,
-    "micro_optimizations": 6,
-    "structural_attempts": 35
+    "eta_sample_count": 20,
+    "expected_finish_at": "2026-08-28T16:18:03.098392Z",
+    "median_completed_attempt_duration_seconds": 808.1705,
+    "micro_optimizations": 3,
+    "structural_attempts": 17
   },
   "promising_results": {
     "best_ambiguity_efficiency": {
-      "candidate": "TripletUnsortedDoubletTraversal",
+      "candidate": "TripletKinematicsPairLayout",
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/46844f5c5303529c0c221c5bfad20e2c88ab0a33",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260827T193744Z-TripletUnsortedDoubletTraversal/summary.json"
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/c0fdd671861e00af7c71c710e65787b677b6db38",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T114030Z-TripletKinematicsPairLayout/summary.json"
       },
-      "started_at": "2026-08-27T19:37:44.489995Z",
+      "started_at": "2026-08-28T11:40:30.720321Z",
       "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 296.44
+      "timed_seeding_time_per_event_ms": 294.61
     },
     "best_seeding": {
-      "candidate": "DoubletDerivedSmallBufferColumns",
-      "delta_vs_genesis_ms": -4.829999999999984,
+      "candidate": "SeederCrossGroupTopWindowCarry",
+      "delta_vs_genesis_ms": -37.02999999999997,
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/b2bfdb3905361a68f2ecdf6eefbb749dcfa77ab2",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260828T002316Z-DoubletDerivedSmallBufferColumns/summary.json"
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/8911e4896c20e38b9e458600faab6af4b6785767",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T142013Z-SeederCrossGroupTopWindowCarry/summary.json"
       },
-      "percentage_vs_genesis": -1.6208597603946389,
-      "started_at": "2026-08-28T00:23:16.558048Z",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 293.16
+      "percentage_vs_genesis": -12.415758591785405,
+      "started_at": "2026-08-28T14:20:13.858224Z",
+      "timed_ambiguity_particle_efficiency": 0.655284,
+      "timed_seeding_time_per_event_ms": 261.22
     },
     "latest_genesis": {
       "candidate": "Genesis",
       "links": {
         "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260827T182329402303Z-Genesis/summary.json"
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T105122298587Z-Genesis/summary.json"
       },
-      "started_at": "2026-08-27T18:23:29.402303Z",
+      "started_at": "2026-08-28T10:51:22.298587Z",
       "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 297.99
+      "timed_seeding_time_per_event_ms": 298.25
     },
     "pareto_front": [
       {
-        "candidate": "DoubletDerivedSmallBufferColumns",
+        "candidate": "SeederCrossGroupTopWindowCarry",
         "links": {
-          "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/b2bfdb3905361a68f2ecdf6eefbb749dcfa77ab2",
-          "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260828T002316Z-DoubletDerivedSmallBufferColumns/summary.json"
+          "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/8911e4896c20e38b9e458600faab6af4b6785767",
+          "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T142013Z-SeederCrossGroupTopWindowCarry/summary.json"
         },
-        "started_at": "2026-08-28T00:23:16.558048Z",
+        "started_at": "2026-08-28T14:20:13.858224Z",
+        "timed_ambiguity_particle_efficiency": 0.655284,
+        "timed_seeding_time_per_event_ms": 261.22
+      },
+      {
+        "candidate": "SeederStreamedBottomEmptyBranchHint",
+        "links": {
+          "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/92aa1249ba589d4e93c8ace18f12f37ef8178b4d",
+          "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T154856Z-SeederStreamedBottomEmptyBranchHint/summary.json"
+        },
+        "started_at": "2026-08-28T15:48:56.779497Z",
         "timed_ambiguity_particle_efficiency": 0.972769,
-        "timed_seeding_time_per_event_ms": 293.16
+        "timed_seeding_time_per_event_ms": 289.65
       }
     ]
   },
