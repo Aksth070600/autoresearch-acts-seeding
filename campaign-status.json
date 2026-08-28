@@ -144,6 +144,24 @@
       "state": "completed",
       "timed_ambiguity_particle_efficiency": 0.972769,
       "timed_seeding_time_per_event_ms": 300.35
+    },
+    {
+      "candidate": "CorePackedXYZRLayout",
+      "classification": "structural",
+      "duration_seconds": 154.203,
+      "finished_at": "2026-08-28T13:00:17.504467Z",
+      "implementation_commit": "86b78fad06516e99372f8951349032ce0af8c52d",
+      "links": {
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/86b78fad06516e99372f8951349032ce0af8c52d",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Failed/20260828T125743Z-CorePackedXYZRLayout/summary.json"
+      },
+      "mechanism_family": "core-packed-xyzr-layout",
+      "outcome": "candidate failed stage: ten_event_seeding",
+      "record": "records/Failed/20260828T125743Z-CorePackedXYZRLayout/summary.json",
+      "started_at": "2026-08-28T12:57:43.301880Z",
+      "state": "failed",
+      "timed_ambiguity_particle_efficiency": null,
+      "timed_seeding_time_per_event_ms": null
     }
   ],
   "blockers": [],
@@ -161,25 +179,31 @@
   "current_attempt": {
     "candidate": "CorePackedXYZRLayout",
     "classification": "structural",
-    "controlled_stage": "queued Development run",
+    "controlled_stage": "queued Development retry after const-proxy fix",
     "mechanism_family": "core-packed-xyzr-layout",
-    "started_at": "2026-08-28T12:57:38Z",
+    "started_at": "2026-08-28T13:01:39Z",
     "state": "queued"
   },
-  "failures": [],
-  "generated_at": "2026-08-28T12:57:38.526490Z",
+  "failures": [
+    {
+      "candidate": "CorePackedXYZRLayout",
+      "message": "candidate failed stage: ten_event_seeding",
+      "record_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Failed/20260828T125743Z-CorePackedXYZRLayout/summary.json"
+    }
+  ],
+  "generated_at": "2026-08-28T13:01:39.943084Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/86b78fad06516e99372f8951349032ce0af8c52d",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/f35abcd80f64400c9df6ca78b6ea04937bb06f9b",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/campaign-v8",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/29"
   },
   "progress": {
     "completed_attempts": 7,
-    "elapsed_seconds": 7615.52649,
-    "estimated_remaining_seconds": 10514.237509999999,
+    "elapsed_seconds": 7856.943084,
+    "estimated_remaining_seconds": 10513.820916,
     "eta_basis": "Median of 7 completed attempts; current attempt elapsed time deducted.",
     "eta_sample_count": 7,
-    "expected_finish_at": "2026-08-28T15:52:52.764000Z",
+    "expected_finish_at": "2026-08-28T15:56:53.764000Z",
     "median_completed_attempt_duration_seconds": 808.828,
     "micro_optimizations": 0,
     "structural_attempts": 8
