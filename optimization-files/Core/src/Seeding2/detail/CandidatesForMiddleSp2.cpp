@@ -34,14 +34,26 @@ bool CandidatesForMiddleSp2::push(SpacePointIndex2 spB, SpacePointIndex2 spM,
   // Decide in which collection this candidate may be added to according to the
   // isQuality boolean
   if (isQuality) {
-    return push(m_indicesHigh, m_maxSizeHigh, spB, spM, spT, weight, zOrigin,
-                isQuality);
+    return push(m_indicesHigh, m_minimumHigh, m_maxSizeHigh, spB, spM, spT,
+                weight, zOrigin, isQuality);
   }
-  return push(m_indicesLow, m_maxSizeLow, spB, spM, spT, weight, zOrigin,
-              isQuality);
+  return push(m_indicesLow, m_minimumLow, m_maxSizeLow, spB, spM, spT, weight,
+              zOrigin, isQuality);
 }
 
-bool CandidatesForMiddleSp2::push(Container& container, Size nMax,
+CandidatesForMiddleSp2::Size CandidatesForMiddleSp2::findMinimumPosition(
+    const Container& container) {
+  Size minimum = 0;
+  for (Size position = 1; position < container.size(); ++position) {
+    if (container[position].first < container[minimum].first) {
+      minimum = position;
+    }
+  }
+  return minimum;
+}
+
+bool CandidatesForMiddleSp2::push(Container& container,
+                                  Size& minimumPosition, Size nMax,
                                   SpacePointIndex2 spB, SpacePointIndex2 spM,
                                   SpacePointIndex2 spT, float weight,
                                   float zOrigin, bool isQuality) {
@@ -50,26 +62,23 @@ bool CandidatesForMiddleSp2::push(Container& container, Size nMax,
   }
 
   if (container.size() < nMax) {
-    // If there is still space, add anything
     m_storage.emplace_back(spB, spM, spT, weight, zOrigin, isQuality);
     container.emplace_back(weight, m_storage.size() - 1);
-    std::ranges::push_heap(container, comparator);
+    if (container.size() == nMax) {
+      minimumPosition = findMinimumPosition(container);
+    }
     return true;
   }
 
-  // If no space, replace one if quality is enough
-  // Compare to element with lowest weight
-  const auto [smallestWeight, smallestIndex] = container.front();
+  const auto [smallestWeight, smallestIndex] = container[minimumPosition];
   if (weight <= smallestWeight) {
     return false;
   }
 
-  // Remove element with lower weight and add this one
   m_storage[smallestIndex] =
       TripletCandidate2(spB, spM, spT, weight, zOrigin, isQuality);
-  std::ranges::pop_heap(container, comparator);
-  container.back() = {weight, smallestIndex};
-  std::ranges::push_heap(container, comparator);
+  container[minimumPosition] = {weight, smallestIndex};
+  minimumPosition = findMinimumPosition(container);
 
   return true;
 }
@@ -79,8 +88,8 @@ void CandidatesForMiddleSp2::toSortedCandidates(
   output.clear();
   output.reserve(size());
 
-  std::ranges::sort_heap(m_indicesHigh, comparator);
-  std::ranges::sort_heap(m_indicesLow, comparator);
+  std::ranges::sort(m_indicesHigh, comparator);
+  std::ranges::sort(m_indicesLow, comparator);
 
   for (const auto& [weight, index] : m_indicesHigh) {
     output.emplace_back(m_storage[index]);
