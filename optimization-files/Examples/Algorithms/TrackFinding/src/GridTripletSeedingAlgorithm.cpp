@@ -186,8 +186,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   }
 
   Acts::SpacePointContainer2 coreSpacePoints(
-      Acts::SpacePointColumns::X | Acts::SpacePointColumns::Y |
-      Acts::SpacePointColumns::Z | Acts::SpacePointColumns::R |
+      Acts::SpacePointColumns::PackedXY | Acts::SpacePointColumns::PackedZR |
       Acts::SpacePointColumns::PackedVarianceZR |
       Acts::SpacePointColumns::CopyFromIndex);
   coreSpacePoints.reserve(grid.numberOfSpacePoints());
@@ -199,10 +198,10 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
       const ConstSpacePointProxy& sp = spacePoints[spIndex];
 
       auto newSp = coreSpacePoints.createSpacePoint();
-      newSp.x() = static_cast<float>(sp.x());
-      newSp.y() = static_cast<float>(sp.y());
-      newSp.z() = static_cast<float>(sp.z());
-      newSp.r() = static_cast<float>(sp.r());
+      newSp.xy() = std::array<float, 2>{static_cast<float>(sp.x()),
+                                        static_cast<float>(sp.y())};
+      newSp.zr() = std::array<float, 2>{static_cast<float>(sp.z()),
+                                        static_cast<float>(sp.r())};
       newSp.varianceZR() =
           std::array<float, 2>{static_cast<float>(sp.varianceZ()),
                                static_cast<float>(sp.varianceR())};
@@ -211,8 +210,6 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
     std::uint32_t end = coreSpacePoints.size();
     gridSpacePointRanges.emplace_back(begin, end);
   }
-
-  const Acts::SpacePointContainer2& constCoreSpacePoints = coreSpacePoints;
 
   // Compute radius range. We rely on the fact the grid is storing the proxies
   // with a sorting in the radius
@@ -223,8 +220,8 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
       if (range.first == range.second) {
         continue;
       }
-      auto first = constCoreSpacePoints[range.first];
-      auto last = constCoreSpacePoints[range.second - 1];
+      auto first = coreSpacePoints[range.first];
+      auto last = coreSpacePoints[range.second - 1];
       minRange = std::min(first.zr()[1], minRange);
       maxRange = std::max(last.zr()[1], maxRange);
     }

@@ -348,23 +348,15 @@ class SpacePointProxy2 {
   SpacePointIndex2 copyFromIndex() const noexcept {
     return accessImpl(m_container->m_copyFromIndexColumn);
   }
-  /// @brief Get `XY` coordinates from packed or scalar columns
-  /// @return Array containing `[x, y]` coordinates
-  std::array<float, 2> xy() const noexcept {
-    if (m_container->m_xyColumn.has_value()) {
-      return accessImpl(m_container->m_xyColumn);
-    }
-    return {accessImpl(m_container->m_xColumn),
-            accessImpl(m_container->m_yColumn)};
+  /// @brief Get const reference to `XY` coordinates of the space point
+  /// @return Const reference to array containing `[x, y]` coordinates
+  const std::array<float, 2> &xy() const noexcept {
+    return accessImpl(m_container->m_xyColumn);
   }
-  /// @brief Get `ZR` coordinates from packed or scalar columns
-  /// @return Array containing `[z, r]` coordinates
-  std::array<float, 2> zr() const noexcept {
-    if (m_container->m_zrColumn.has_value()) {
-      return accessImpl(m_container->m_zrColumn);
-    }
-    return {accessImpl(m_container->m_zColumn),
-            accessImpl(m_container->m_rColumn)};
+  /// @brief Get const reference to `ZR` coordinates of the space point
+  /// @return Const reference to array containing `[z, r]` coordinates
+  const std::array<float, 2> &zr() const noexcept {
+    return accessImpl(m_container->m_zrColumn);
   }
   /// @brief Get const reference to `XYZ` coordinates of the space point
   /// @return Const reference to array containing `[x, y, z]` coordinates
