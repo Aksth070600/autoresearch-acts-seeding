@@ -18,6 +18,8 @@
 #include "Acts/Utilities/Delegate.hpp"
 #include "ActsExamples/EventData/SpacePoint.hpp"
 
+#include <boost/container/small_vector.hpp>
+
 #include <cmath>
 #include <csignal>
 #include <cstddef>
@@ -258,9 +260,11 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
                                           filterCache, *m_filterLogger);
   static thread_local Acts::TripletSeeder::Cache cache;
 
-  std::vector<Acts::SpacePointContainer2::ConstRange> bottomSpRanges;
+  using NeighborRanges = boost::container::small_vector<
+      Acts::SpacePointContainer2::ConstRange, 27>;
+  NeighborRanges bottomSpRanges;
   std::optional<Acts::SpacePointContainer2::ConstRange> middleSpRange;
-  std::vector<Acts::SpacePointContainer2::ConstRange> topSpRanges;
+  NeighborRanges topSpRanges;
 
   Acts::SeedContainer2 seeds;
   seeds.assignSpacePointContainer(spacePoints);
