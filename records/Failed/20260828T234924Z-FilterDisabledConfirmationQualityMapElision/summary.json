@@ -1,0 +1,134 @@
+{
+  "acts_backup": "/storage/thomaaks/acts-v46.5.0-autoresearch-backup",
+  "acts_source": "/storage/thomaaks/acts-v46.5.0",
+  "baseline": false,
+  "build_parallel_jobs": 8,
+  "candidate_identity": {
+    "classification": "major",
+    "derives_from": null,
+    "mechanism_family": "filter-confirmation-state-pruning",
+    "mechanism_key": "filter-disabled-confirmation-quality-map-elision"
+  },
+  "candidate_name": "FilterDisabledConfirmationQualityMapElision",
+  "category": "Failed",
+  "combination_provenance": null,
+  "error": "candidate failed stage: one_event_seeding_smoke",
+  "execution_target": "HEPP02",
+  "finished_at": "2026-08-28T23:50:54.166488+00:00",
+  "implementation_commit": "0bf182617d283e73cc711a1d9fbe98a3a780b991",
+  "mode": "development",
+  "optimization_files": [
+    "Core/include/Acts/EventData/SpacePointColumnProxy2.hpp",
+    "Core/include/Acts/EventData/SpacePointColumns.hpp",
+    "Core/include/Acts/EventData/SpacePointContainer2.hpp",
+    "Core/include/Acts/EventData/SpacePointContainer2.ipp",
+    "Core/include/Acts/EventData/SpacePointProxy2.hpp",
+    "Core/include/Acts/Seeding/BinnedGroup.hpp",
+    "Core/include/Acts/Seeding/BinnedGroup.ipp",
+    "Core/include/Acts/Seeding/BinnedGroupIterator.hpp",
+    "Core/include/Acts/Seeding/BinnedGroupIterator.ipp",
+    "Core/include/Acts/Seeding2/BroadTripletSeedFilter.hpp",
+    "Core/include/Acts/Seeding2/CylindricalSpacePointGrid2.hpp",
+    "Core/include/Acts/Seeding2/DoubletSeedFinder.hpp",
+    "Core/include/Acts/Seeding2/ITripletSeedFilter.hpp",
+    "Core/include/Acts/Seeding2/TripletSeedFinder.hpp",
+    "Core/include/Acts/Seeding2/TripletSeeder.hpp",
+    "Core/include/Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp",
+    "Core/include/Acts/Utilities/GridBinFinder.hpp",
+    "Core/include/Acts/Utilities/GridBinFinder.ipp",
+    "Core/src/EventData/SpacePointContainer2.cpp",
+    "Core/src/Seeding2/BroadTripletSeedFilter.cpp",
+    "Core/src/Seeding2/CylindricalSpacePointGrid2.cpp",
+    "Core/src/Seeding2/DoubletSeedFinder.cpp",
+    "Core/src/Seeding2/TripletSeedFinder.cpp",
+    "Core/src/Seeding2/TripletSeeder.cpp",
+    "Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp",
+    "Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/GridTripletSeedingAlgorithm.hpp",
+    "Examples/Algorithms/TrackFinding/src/GridTripletSeedingAlgorithm.cpp"
+  ],
+  "pileup": 200,
+  "proposal_binding": {
+    "proposal": {
+      "candidate": "FilterDisabledConfirmationQualityMapElision",
+      "changed_symbols": [
+        "Acts::BroadTripletSeedFilter::filterTripletsMiddleFixed"
+      ],
+      "combination_provenance": null,
+      "expected_hot_path": "Acts::BroadTripletSeedFilter::filterTripletsMiddleFixed emitted-seed state updates with seedConfirmation disabled.",
+      "falsifier": "The prediction fails if median seeding time does not decrease from fresh Genesis or timed seeding particle efficiency changes.",
+      "hypothesis": "Moving best-seed-quality map updates inside the seed-confirmation branch will remove three unordered-map operations from every emitted seed in the Development configuration and reduce median seeding time without changing selected seeds.",
+      "implementation_commit": "0bf182617d283e73cc711a1d9fbe98a3a780b991",
+      "intended_files": [
+        "optimization-files/Core/src/Seeding2/BroadTripletSeedFilter.cpp"
+      ],
+      "novelty_reason": "Prior map work reduced duplicate lookup cost, while this candidate removes the entire inactive map data flow under the existing configuration invariant and does not alter candidate ordering or selection.",
+      "predicted_directions": {
+        "timed_seeding_particle_efficiency": "unchanged",
+        "timed_seeding_time_per_event_ms": "decrease"
+      },
+      "schema_version": "1.0.0",
+      "source_references": [
+        {
+          "acts_mapping": "Upstream Acts::BroadTripletSeedFilter::filterTripletsMiddleFixed maps directly to optimization-files/Core/src/Seeding2/BroadTripletSeedFilter.cpp; the Development example leaves Config::seedConfirmation false.",
+          "directly_inspected": true,
+          "inspected_scope": "BroadTripletSeedFilter getBestSeedQuality/setBestSeedQuality helpers and filterTripletsMiddleFixed seed-confirmation and emitted-seed quality-state flow.",
+          "reference": "https://github.com/acts-project/acts/blob/941a3c7cfe3bc413647d351a83b4b025d9213903/Core/src/Seeding/BroadTripletSeedFilter.cpp",
+          "relevance": "The permanent upstream implementation shows best-seed-quality state helpers and the filter output path that maintains this state even though reads are guarded by seed confirmation.",
+          "source_type": "inspected source code"
+        },
+        {
+          "directly_inspected": true,
+          "reference": "0155cb01d2f69992290d8870acc7ab23c7af6866",
+          "relevance": "The directly inspected prior implementation showed map lookup cost was measurable, but optimized each update rather than pruning disabled confirmation state.",
+          "source_type": "prior record/commit"
+        }
+      ]
+    },
+    "proposal_hash": "aab731c688af107579e55804abbd922c0eb5991e489fb05e66d977a3b098130c",
+    "schema_version": "1.0.0"
+  },
+  "protocol": {
+    "acts_version": "v46.5.0",
+    "dataset": "ttbar_pu200",
+    "execution_stage": "seeding",
+    "execution_target": "HEPP02",
+    "expected_unmasked_fpe_handling": "accept only after every requested event completed",
+    "id": "acts-seeding-v3",
+    "pileup": 200,
+    "rss_events": 10,
+    "rss_instrumentation": "GNU time -v",
+    "rss_metrics_mode": "time",
+    "seed": 42,
+    "smoke_events": 1,
+    "smoke_instrumentation": "none",
+    "threads": 1,
+    "timed_aggregation": "median",
+    "timed_repetitions": 3,
+    "timing_events": 10,
+    "timing_instrumentation": "none"
+  },
+  "protocol_id": "acts-seeding-v3",
+  "raw_logs_retained": true,
+  "rss_evidence": null,
+  "seed": 42,
+  "stages": [
+    {
+      "comparison": "smoke",
+      "events": 1,
+      "exit_code": 139,
+      "metrics_mode": "none",
+      "name": "one_event_seeding_smoke",
+      "protocol_id": "acts-seeding-v3",
+      "raw_exit_code": 139,
+      "stage": "seeding",
+      "status": "failed"
+    }
+  ],
+  "started_at": "2026-08-28T23:49:24.268632+00:00",
+  "status": "failed",
+  "threads": 1,
+  "timed_aggregation": "median",
+  "timed_comparison": null,
+  "timed_repetitions": 3,
+  "workload": "ttbar_pu200"
+}

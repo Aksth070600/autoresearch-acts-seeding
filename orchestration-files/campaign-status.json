@@ -18,6 +18,76 @@
       "state": "completed",
       "timed_seeding_particle_efficiency": 0.983101,
       "timed_seeding_time_per_event_ms": 289.9
+    },
+    {
+      "candidate": "FilterDisabledConfirmationQualityMapElision",
+      "changed_symbols": [
+        "Acts::BroadTripletSeedFilter::filterTripletsMiddleFixed"
+      ],
+      "classification": "major",
+      "combination_provenance": null,
+      "derives_from": null,
+      "duration_seconds": 89.898,
+      "files_changed": [
+        "optimization-files/Core/src/Seeding2/BroadTripletSeedFilter.cpp#L372-L377"
+      ],
+      "finished_at": "2026-08-28T23:50:54.166488Z",
+      "hot_path_rationale": "Acts::BroadTripletSeedFilter::filterTripletsMiddleFixed emitted-seed state updates with seedConfirmation disabled.",
+      "implementation_commit": "0bf182617d283e73cc711a1d9fbe98a3a780b991",
+      "lesson": "The one-event smoke segfaulted after a successful build, so the quality-map updates cannot be pruned safely under the assumed disabled-confirmation invariant.",
+      "links": {
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/0bf182617d283e73cc711a1d9fbe98a3a780b991",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug29/records/Failed/20260828T234924Z-FilterDisabledConfirmationQualityMapElision/summary.json"
+      },
+      "mechanism_family": "filter-confirmation-state-pruning",
+      "mechanism_key": "filter-disabled-confirmation-quality-map-elision",
+      "novelty_rationale": "Prior map work reduced duplicate lookup cost, while this candidate removes the entire inactive map data flow under the existing configuration invariant and does not alter candidate ordering or selection.",
+      "outcome": "crash",
+      "prediction_assessment": "inconclusive",
+      "prediction_assessment_rationale": "The smoke stage crashed before any timed or seeding-efficiency evidence was produced.",
+      "proposal": {
+        "candidate": "FilterDisabledConfirmationQualityMapElision",
+        "changed_symbols": [
+          "Acts::BroadTripletSeedFilter::filterTripletsMiddleFixed"
+        ],
+        "combination_provenance": null,
+        "expected_hot_path": "Acts::BroadTripletSeedFilter::filterTripletsMiddleFixed emitted-seed state updates with seedConfirmation disabled.",
+        "falsifier": "The prediction fails if median seeding time does not decrease from fresh Genesis or timed seeding particle efficiency changes.",
+        "hypothesis": "Moving best-seed-quality map updates inside the seed-confirmation branch will remove three unordered-map operations from every emitted seed in the Development configuration and reduce median seeding time without changing selected seeds.",
+        "implementation_commit": "0bf182617d283e73cc711a1d9fbe98a3a780b991",
+        "intended_files": [
+          "optimization-files/Core/src/Seeding2/BroadTripletSeedFilter.cpp"
+        ],
+        "novelty_reason": "Prior map work reduced duplicate lookup cost, while this candidate removes the entire inactive map data flow under the existing configuration invariant and does not alter candidate ordering or selection.",
+        "predicted_directions": {
+          "timed_seeding_particle_efficiency": "unchanged",
+          "timed_seeding_time_per_event_ms": "decrease"
+        },
+        "schema_version": "1.0.0",
+        "source_references": [
+          {
+            "acts_mapping": "Upstream Acts::BroadTripletSeedFilter::filterTripletsMiddleFixed maps directly to optimization-files/Core/src/Seeding2/BroadTripletSeedFilter.cpp; the Development example leaves Config::seedConfirmation false.",
+            "directly_inspected": true,
+            "inspected_scope": "BroadTripletSeedFilter getBestSeedQuality/setBestSeedQuality helpers and filterTripletsMiddleFixed seed-confirmation and emitted-seed quality-state flow.",
+            "reference": "https://github.com/acts-project/acts/blob/941a3c7cfe3bc413647d351a83b4b025d9213903/Core/src/Seeding/BroadTripletSeedFilter.cpp",
+            "relevance": "The permanent upstream implementation shows best-seed-quality state helpers and the filter output path that maintains this state even though reads are guarded by seed confirmation.",
+            "source_type": "inspected source code"
+          },
+          {
+            "directly_inspected": true,
+            "reference": "0155cb01d2f69992290d8870acc7ab23c7af6866",
+            "relevance": "The directly inspected prior implementation showed map lookup cost was measurable, but optimized each update rather than pruning disabled confirmation state.",
+            "source_type": "prior record/commit"
+          }
+        ]
+      },
+      "proposal_hash": "aab731c688af107579e55804abbd922c0eb5991e489fb05e66d977a3b098130c",
+      "record": "records/Failed/20260828T234924Z-FilterDisabledConfirmationQualityMapElision/summary.json",
+      "run_result": "candidate failed stage: one_event_seeding_smoke",
+      "started_at": "2026-08-28T23:49:24.268632Z",
+      "state": "failed",
+      "timed_seeding_particle_efficiency": null,
+      "timed_seeding_time_per_event_ms": null
     }
   ],
   "blockers": [],
@@ -28,7 +98,7 @@
     "genesis_commit": "f8e809e118e41889850cf9cf3c46988e7c583625",
     "mode": "continuous",
     "name": "ACTS Seeding continuous aug29",
-    "phase": "quality-map elision queued Development",
+    "phase": "continuous Development",
     "started_at": "2026-08-28T23:32:45Z",
     "targets": {
       "combination_percentage": 25,
@@ -43,20 +113,17 @@
     "request": null,
     "state": "open"
   },
-  "current_attempt": {
-    "candidate": "FilterDisabledConfirmationQualityMapElision",
-    "classification": "major",
-    "controlled_stage": "queued Development run",
-    "mechanism_family": "filter-confirmation-state-pruning",
-    "mechanism_key": "filter-disabled-confirmation-quality-map-elision",
-    "scheduling": "ordinary",
-    "started_at": "2026-08-28T23:48:57Z",
-    "state": "queued"
-  },
-  "failures": [],
-  "generated_at": "2026-08-28T23:49:07.813853Z",
+  "current_attempt": null,
+  "failures": [
+    {
+      "candidate": "FilterDisabledConfirmationQualityMapElision",
+      "message": "candidate failed stage: one_event_seeding_smoke",
+      "record_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug29/records/Failed/20260828T234924Z-FilterDisabledConfirmationQualityMapElision/summary.json"
+    }
+  ],
+  "generated_at": "2026-08-28T23:51:35.080058Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/0bf182617d283e73cc711a1d9fbe98a3a780b991",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/ecb4024400fec0613d654c5611603d2cee110cc4",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/aug29",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/36"
   },
@@ -83,7 +150,7 @@
         "target_percentage": 25.0
       }
     },
-    "elapsed_seconds": 982.813853,
+    "elapsed_seconds": 1130.080058,
     "estimated_remaining_seconds": null,
     "eta_basis": "Unavailable until a stop request fixes the exact final candidate target.",
     "eta_sample_count": 0,
@@ -147,9 +214,9 @@
     "blocker": null,
     "combination_eligible": false,
     "decision": {
-      "action": "finish-active",
+      "action": "schedule",
       "category": "major",
-      "reason": "Finish the active candidate transaction and record its restoration evidence."
+      "reason": "Selected by deterministic target deficit and category-order tie-break."
     },
     "final_targets": null,
     "state": "running",
