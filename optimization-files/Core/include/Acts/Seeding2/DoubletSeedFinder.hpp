@@ -14,8 +14,6 @@
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/detail/ContainerIterator.hpp"
 
-#include <boost/container/small_vector.hpp>
-
 #include <cstdint>
 #include <vector>
 
@@ -258,9 +256,9 @@ class DoubletsForMiddleSp {
 
   // parameters required to calculate a circle with linear equation
   std::vector<float> m_cotTheta;
-  boost::container::small_vector<std::array<float, 2>, 64> m_er_iDeltaR;
-  boost::container::small_vector<std::array<float, 2>, 64> m_uv;
-  boost::container::small_vector<std::array<float, 2>, 64> m_xy;
+  std::vector<std::array<float, 2>> m_er_iDeltaR;
+  std::vector<std::array<float, 2>> m_uv;
+  std::vector<std::array<float, 2>> m_xy;
 };
 
 /// Derived quantities for the middle space point in a doublet.
