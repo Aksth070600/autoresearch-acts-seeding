@@ -52,30 +52,31 @@ void createSeedsFromGroupsImpl(
     SeedContainer2& outputSeeds) {
   MiddleSpInfo middleSpInfo = DoubletSeedFinder::computeMiddleSpInfo(middleSp);
 
-  // Interleave neighboring top and bottom groups so both doublet stores grow
-  // together for a middle point.
+  // create middle-top doublets
   cache.topDoublets.clear();
-  cache.bottomDoublets.clear();
-  const std::size_t groupCount =
-      std::max(topSpGroups.size(), bottomSpGroups.size());
-  for (std::size_t group = 0; group < groupCount; ++group) {
-    if (group < topSpGroups.size()) {
-      topFinder.createDoublets(middleSp, middleSpInfo, topSpGroups[group],
-                               cache.topDoublets);
-    }
-    if (group < bottomSpGroups.size()) {
-      bottomFinder.createDoublets(middleSp, middleSpInfo,
-                                  bottomSpGroups[group], cache.bottomDoublets);
-    }
+  for (auto& topSpGroup : topSpGroups) {
+    topFinder.createDoublets(middleSp, middleSpInfo, topSpGroup,
+                             cache.topDoublets);
   }
 
+  // no top SP found -> cannot form any triplet
   if (cache.topDoublets.empty()) {
     ACTS_VERBOSE("No compatible Tops, returning");
     return;
   }
+
   if (!filter.sufficientTopDoublets(spacePoints, middleSp, cache.topDoublets)) {
     return;
   }
+
+  // create middle-bottom doublets
+  cache.bottomDoublets.clear();
+  for (auto& bottomSpGroup : bottomSpGroups) {
+    bottomFinder.createDoublets(middleSp, middleSpInfo, bottomSpGroup,
+                                cache.bottomDoublets);
+  }
+
+  // no bottom SP found -> cannot form any triplet
   if (cache.bottomDoublets.empty()) {
     ACTS_VERBOSE("No compatible Bottoms, returning");
     return;
