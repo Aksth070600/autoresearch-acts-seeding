@@ -22,15 +22,15 @@
     "state": "queued"
   },
   "failures": [],
-  "generated_at": "2026-08-28T10:50:43.493599Z",
+  "generated_at": "2026-08-28T10:51:08.526989Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/c332db5b808d460361baa925b075c125417e17b8",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/05e5ae250ab066db707ed7719b6ba0f56b160a92",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/campaign-v8",
-    "pull_request": null
+    "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/29"
   },
   "progress": {
     "completed_attempts": 0,
-    "elapsed_seconds": 0.493599,
+    "elapsed_seconds": 25.526989,
     "estimated_remaining_seconds": null,
     "eta_basis": "Unavailable until 3 completed attempt durations exist (0 available).",
     "eta_sample_count": 0,
