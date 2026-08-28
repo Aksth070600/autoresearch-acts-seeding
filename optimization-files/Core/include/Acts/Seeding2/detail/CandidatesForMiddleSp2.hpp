@@ -53,7 +53,9 @@ class CandidatesForMiddleSp2 {
   /// @param nHigh Maximum number of candidates in the high-quality collection
   CandidatesForMiddleSp2(Size nLow, Size nHigh);
 
-  Size size() const { return m_storage.size(); }
+  Size size() const {
+    return static_cast<Size>(m_indicesLow.size() + m_indicesHigh.size());
+  }
 
   /// @brief Clear the internal storage
   void clear();
@@ -102,6 +104,8 @@ class CandidatesForMiddleSp2 {
 
   // storage contains the collection of the candidates
   std::vector<TripletCandidate2> m_storage;
+  bool m_fixedStorage{};
+  Size m_nextSlot{};
 
   Container m_indicesLow;
   Container m_indicesHigh;
