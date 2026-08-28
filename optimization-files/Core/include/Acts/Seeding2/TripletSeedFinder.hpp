@@ -26,28 +26,28 @@ class TripletTopCandidates {
   /// Type alias for candidate index type
   using Index = std::uint32_t;
 
-  /// Top identity and impact values consumed together during seed scoring.
-  struct IdentityImpact {
-    SpacePointIndex2 topSpacePoint{};
+  /// Curvature and impact values produced and consumed together.
+  struct Kinematics {
+    float curvature{};
     float impactParameter{};
   };
 
   /// @brief Returns the number of triplet candidates stored
   /// @return Number of triplet candidates in the container
-  Index size() const { return static_cast<Index>(m_identityImpacts.size()); }
+  Index size() const { return static_cast<Index>(m_topSpacePoints.size()); }
 
   /// @brief Reserves storage space for the specified number of candidates
   /// @param size Number of candidates to reserve space for
   void reserve(Index size) {
-    m_identityImpacts.reserve(size);
-    m_curvatures.reserve(size);
+    m_topSpacePoints.reserve(size);
+    m_kinematics.reserve(size);
   }
 
   /// @brief Clears all stored triplet candidates
   /// Removes all candidates from the container and frees memory
   void clear() {
-    m_identityImpacts.clear();
-    m_curvatures.clear();
+    m_topSpacePoints.clear();
+    m_kinematics.clear();
   }
 
   /// @brief Adds a new triplet candidate to the container
@@ -56,16 +56,17 @@ class TripletTopCandidates {
   /// @param impactParameter Impact parameter estimation for the triplet
   void emplace_back(SpacePointIndex2 spT, float curvature,
                     float impactParameter) {
-    m_identityImpacts.push_back({spT, impactParameter});
-    m_curvatures.push_back(curvature);
+    m_topSpacePoints.emplace_back(spT);
+    m_kinematics.push_back({curvature, impactParameter});
   }
 
-  /// Return the top identity and impact value for one candidate.
-  const IdentityImpact& identityImpact(Index index) const {
-    return m_identityImpacts[index];
+  /// @brief Returns the vector of top space point indices
+  /// @return Const reference to vector containing all top space point indices
+  const std::vector<SpacePointIndex2>& topSpacePoints() const {
+    return m_topSpacePoints;
   }
-  /// Return the curvature for one candidate.
-  float curvature(Index index) const { return m_curvatures[index]; }
+  /// Return the curvature and impact values for one candidate.
+  const Kinematics& kinematics(Index index) const { return m_kinematics[index]; }
 
   /// Proxy providing access to a triplet candidate.
   class Proxy {
@@ -79,17 +80,19 @@ class TripletTopCandidates {
     /// Get the space point index
     /// @return The space point index
     SpacePointIndex2 spacePoint() const {
-      return m_container->m_identityImpacts[m_index].topSpacePoint;
+      return m_container->m_topSpacePoints[m_index];
     }
 
     /// Get the curvature estimation
     /// @return The curvature value
-    float curvature() const { return m_container->m_curvatures[m_index]; }
+    float curvature() const {
+      return m_container->m_kinematics[m_index].curvature;
+    }
 
     /// Get the impact parameter estimation
     /// @return The impact parameter value
     float impactParameter() const {
-      return m_container->m_identityImpacts[m_index].impactParameter;
+      return m_container->m_kinematics[m_index].impactParameter;
     }
 
    private:
@@ -114,8 +117,8 @@ class TripletTopCandidates {
   const_iterator end() const { return const_iterator(*this, size()); }
 
  private:
-  std::vector<IdentityImpact> m_identityImpacts;
-  std::vector<float> m_curvatures;
+  std::vector<SpacePointIndex2> m_topSpacePoints;
+  std::vector<Kinematics> m_kinematics;
 };
 
 /// Interface and a collection of standard implementations for a triplet seed
