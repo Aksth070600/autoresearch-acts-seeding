@@ -147,7 +147,7 @@ class Impl final : public DoubletSeedFinder {
       // check if duplet origin on z axis within collision region
       if (outsideRangeCheck(zOriginTimesDeltaR,
                             m_cfg.collisionRegionMin * deltaR,
-                            m_cfg.collisionRegionMax * deltaR)) [[unlikely]] {
+                            m_cfg.collisionRegionMax * deltaR)) {
         continue;
       }
 
