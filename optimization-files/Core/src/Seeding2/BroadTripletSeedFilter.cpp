@@ -174,6 +174,25 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
 
     float weight = -impact * config().impactWeightFactor;
 
+    const auto& curvatures = tripletTopCandidates.curvatures();
+    const std::size_t candidateCount = cache().topSpIndexVec.size();
+    std::size_t bracketBegin = beginCompTopIndex;
+    std::size_t step = 1;
+    while (bracketBegin + step < candidateCount &&
+           curvatures[cache().topSpIndexVec[bracketBegin + step]] <
+               lowerLimitCurv) {
+      bracketBegin += step;
+      step *= 2;
+    }
+    const std::size_t bracketEnd =
+        std::min(candidateCount, bracketBegin + step + 1);
+    const auto firstCompatible = std::ranges::lower_bound(
+        cache().topSpIndexVec.begin() + bracketBegin,
+        cache().topSpIndexVec.begin() + bracketEnd, lowerLimitCurv, {},
+        [&curvatures](std::size_t index) { return curvatures[index]; });
+    beginCompTopIndex = static_cast<std::size_t>(
+        firstCompatible - cache().topSpIndexVec.begin());
+
     // loop over compatible top SP candidates
     for (std::size_t variableCompTopIndex = beginCompTopIndex;
          variableCompTopIndex < cache().topSpIndexVec.size();
@@ -189,12 +208,6 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
       float otherTopR = getTopR(otherSpT);
 
       // curvature difference within limits?
-      if (tripletTopCandidates.curvatures()[compatibleTopSpIndex] <
-          lowerLimitCurv) {
-        // the SPs are sorted in curvature so we skip unnecessary iterations
-        beginCompTopIndex = variableCompTopIndex + 1;
-        continue;
-      }
       if (tripletTopCandidates.curvatures()[compatibleTopSpIndex] >
           upperLimitCurv) {
         // the SPs are sorted in curvature so we skip unnecessary iterations
