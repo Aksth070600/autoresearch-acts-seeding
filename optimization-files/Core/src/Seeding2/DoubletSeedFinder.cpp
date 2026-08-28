@@ -182,14 +182,6 @@ class Impl final : public DoubletSeedFinder {
         const float iDeltaR = std::sqrt(iDeltaR2);
         const float cotTheta = deltaZ * iDeltaR;
 
-        // Apply configured experiment cuts in both interaction-point paths.
-        if constexpr (experimentCuts) {
-          if (!m_cfg.experimentCuts(middleSp, container[indexO], cotTheta,
-                                    isBottomCandidate)) {
-            continue;
-          }
-        }
-
         const float er =
             calculateError(varianceZO, varianceRO, iDeltaR2, cotTheta);
 
