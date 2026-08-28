@@ -14,9 +14,6 @@
 
 #include <Eigen/Dense>
 
-#include <numeric>
-#include <ranges>
-
 namespace Acts {
 
 namespace {
@@ -55,19 +52,10 @@ void createSeedsFromGroupsImpl(
     SeedContainer2& outputSeeds) {
   MiddleSpInfo middleSpInfo = DoubletSeedFinder::computeMiddleSpInfo(middleSp);
 
-  const auto orderByOccupancy = [](const auto& groups) {
-    std::vector<std::size_t> order(groups.size());
-    std::iota(order.begin(), order.end(), 0);
-    std::ranges::sort(order, [&](std::size_t left, std::size_t right) {
-      return groups[left].size() > groups[right].size();
-    });
-    return order;
-  };
-
-  // create middle-top doublets from dense neighbor groups first
+  // create middle-top doublets
   cache.topDoublets.clear();
-  for (std::size_t group : orderByOccupancy(topSpGroups)) {
-    topFinder.createDoublets(middleSp, middleSpInfo, topSpGroups[group],
+  for (auto& topSpGroup : topSpGroups) {
+    topFinder.createDoublets(middleSp, middleSpInfo, topSpGroup,
                              cache.topDoublets);
   }
 
@@ -81,10 +69,10 @@ void createSeedsFromGroupsImpl(
     return;
   }
 
-  // create middle-bottom doublets from dense neighbor groups first
+  // create middle-bottom doublets
   cache.bottomDoublets.clear();
-  for (std::size_t group : orderByOccupancy(bottomSpGroups)) {
-    bottomFinder.createDoublets(middleSp, middleSpInfo, bottomSpGroups[group],
+  for (auto& bottomSpGroup : bottomSpGroups) {
+    bottomFinder.createDoublets(middleSp, middleSpInfo, bottomSpGroup,
                                 cache.bottomDoublets);
   }
 
