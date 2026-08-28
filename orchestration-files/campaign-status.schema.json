@@ -24,7 +24,7 @@
   "properties": {
     "$schema": {"type": "string", "format": "uri"},
     "schema_version": {"const": "1.0.0"},
-    "protocol_id": {"const": "acts-seeding-v2"},
+    "protocol_id": {"enum": ["acts-seeding-v2", "acts-seeding-v3"]},
     "generated_at": {"$ref": "#/$defs/timestamp"},
     "stale_after_seconds": {"type": "integer", "minimum": 60},
     "repository": {
@@ -69,7 +69,11 @@
     "promising_results": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["latest_genesis", "best_seeding", "best_ambiguity_efficiency", "pareto_front"],
+      "required": ["latest_genesis", "best_seeding", "pareto_front"],
+      "oneOf": [
+        {"required": ["best_ambiguity_efficiency"]},
+        {"required": ["best_seeding_efficiency"]}
+      ],
       "properties": {
         "latest_genesis": {"$ref": "#/$defs/nullableResult"},
         "best_seeding": {
@@ -79,6 +83,7 @@
           ]
         },
         "best_ambiguity_efficiency": {"$ref": "#/$defs/nullableResult"},
+        "best_seeding_efficiency": {"$ref": "#/$defs/nullableResult"},
         "pareto_front": {
           "type": "array",
           "items": {"$ref": "#/$defs/result"}
@@ -266,11 +271,16 @@
     "result": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["candidate", "timed_seeding_time_per_event_ms", "timed_ambiguity_particle_efficiency", "started_at", "links"],
+      "required": ["candidate", "timed_seeding_time_per_event_ms", "started_at", "links"],
+      "oneOf": [
+        {"required": ["timed_ambiguity_particle_efficiency"]},
+        {"required": ["timed_seeding_particle_efficiency"]}
+      ],
       "properties": {
         "candidate": {"$ref": "#/$defs/candidate"},
         "timed_seeding_time_per_event_ms": {"$ref": "#/$defs/nonnegativeNumber"},
         "timed_ambiguity_particle_efficiency": {"type": "number", "minimum": 0, "maximum": 1},
+        "timed_seeding_particle_efficiency": {"type": "number", "minimum": 0, "maximum": 1},
         "started_at": {"$ref": "#/$defs/timestamp"},
         "links": {"$ref": "#/$defs/links"}
       }
@@ -279,11 +289,16 @@
     "bestSeedingResult": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["candidate", "timed_seeding_time_per_event_ms", "timed_ambiguity_particle_efficiency", "started_at", "links", "delta_vs_genesis_ms", "percentage_vs_genesis"],
+      "required": ["candidate", "timed_seeding_time_per_event_ms", "started_at", "links", "delta_vs_genesis_ms", "percentage_vs_genesis"],
+      "oneOf": [
+        {"required": ["timed_ambiguity_particle_efficiency"]},
+        {"required": ["timed_seeding_particle_efficiency"]}
+      ],
       "properties": {
         "candidate": {"$ref": "#/$defs/candidate"},
         "timed_seeding_time_per_event_ms": {"$ref": "#/$defs/nonnegativeNumber"},
         "timed_ambiguity_particle_efficiency": {"type": "number", "minimum": 0, "maximum": 1},
+        "timed_seeding_particle_efficiency": {"type": "number", "minimum": 0, "maximum": 1},
         "started_at": {"$ref": "#/$defs/timestamp"},
         "links": {"$ref": "#/$defs/links"},
         "delta_vs_genesis_ms": {"$ref": "#/$defs/nullableNumber"},
@@ -293,7 +308,11 @@
     "legacyAttempt": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["candidate", "mechanism_family", "classification", "state", "outcome", "started_at", "finished_at", "duration_seconds", "timed_seeding_time_per_event_ms", "timed_ambiguity_particle_efficiency", "implementation_commit", "links", "record"],
+      "required": ["candidate", "mechanism_family", "classification", "state", "outcome", "started_at", "finished_at", "duration_seconds", "timed_seeding_time_per_event_ms", "implementation_commit", "links", "record"],
+      "oneOf": [
+        {"required": ["timed_ambiguity_particle_efficiency"]},
+        {"required": ["timed_seeding_particle_efficiency"]}
+      ],
       "properties": {
         "candidate": {"$ref": "#/$defs/candidate"},
         "mechanism_family": {"$ref": "#/$defs/label"},
@@ -305,6 +324,7 @@
         "duration_seconds": {"$ref": "#/$defs/nullableNonnegativeNumber"},
         "timed_seeding_time_per_event_ms": {"$ref": "#/$defs/nullableNonnegativeNumber"},
         "timed_ambiguity_particle_efficiency": {"oneOf": [{"type": "null"}, {"type": "number", "minimum": 0, "maximum": 1}]},
+        "timed_seeding_particle_efficiency": {"oneOf": [{"type": "null"}, {"type": "number", "minimum": 0, "maximum": 1}]},
         "implementation_commit": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/fullCommit"}]},
         "links": {"$ref": "#/$defs/links"},
         "record": {"type": "string", "minLength": 1}
@@ -373,10 +393,10 @@
         "predicted_directions": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["timed_seeding_time_per_event_ms", "timed_ambiguity_particle_efficiency"],
+          "required": ["timed_seeding_time_per_event_ms", "timed_seeding_particle_efficiency"],
           "properties": {
             "timed_seeding_time_per_event_ms": {"enum": ["decrease", "unchanged", "increase"]},
-            "timed_ambiguity_particle_efficiency": {"enum": ["decrease", "unchanged", "increase"]}
+            "timed_seeding_particle_efficiency": {"enum": ["decrease", "unchanged", "increase"]}
           }
         },
         "expected_hot_path": {"type": "string", "minLength": 1, "maxLength": 700},
@@ -404,6 +424,10 @@
         "proposal": ["proposal_hash", "prediction_assessment", "prediction_assessment_rationale", "derives_from"],
         "proposal_hash": ["proposal"]
       },
+      "oneOf": [
+        {"required": ["timed_ambiguity_particle_efficiency"]},
+        {"required": ["timed_seeding_particle_efficiency"]}
+      ],
       "required": [
         "candidate",
         "mechanism_key",
@@ -416,7 +440,6 @@
         "finished_at",
         "duration_seconds",
         "timed_seeding_time_per_event_ms",
-        "timed_ambiguity_particle_efficiency",
         "implementation_commit",
         "changed_symbols",
         "files_changed",
@@ -440,6 +463,7 @@
         "duration_seconds": {"$ref": "#/$defs/nullableNonnegativeNumber"},
         "timed_seeding_time_per_event_ms": {"$ref": "#/$defs/nullableNonnegativeNumber"},
         "timed_ambiguity_particle_efficiency": {"oneOf": [{"type": "null"}, {"type": "number", "minimum": 0, "maximum": 1}]},
+        "timed_seeding_particle_efficiency": {"oneOf": [{"type": "null"}, {"type": "number", "minimum": 0, "maximum": 1}]},
         "implementation_commit": {"$ref": "#/$defs/fullCommit"},
         "changed_symbols": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1, "maxLength": 160}},
         "files_changed": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/fileLineRange"}},

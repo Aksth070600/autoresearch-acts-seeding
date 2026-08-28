@@ -31,22 +31,17 @@ experiments until the baseline completes or its failure is understood.
 ## Controlled campaign protocol
 
 The machine-readable evaluator contract is `orchestration-files/protocol.py`.
-The experiment agent must use protocol `acts-seeding-v2` without overrides:
+The experiment agent must use protocol `acts-seeding-v3` without overrides:
 
 - ACTS v46.5.0 on the fixed `ttbar_pu200` ITk dataset through HEPP02.
 - One ACTS thread, seed 42, and pileup 200.
-- Experiment candidates use the 10-event development workload only. Evaluation workloads are captain-controlled and must not be run by experiment agents.
-- Clean full-chain stages may run once. Timed full-chain stages run three repetitions;
-  compare their median and retain each repetition, range, and unscaled median absolute deviation for auditability.
+- Development and captain-authorized Evaluation use the same seeding-only matrix. Evaluation remains captain-controlled and must not be run by experiment agents.
+- Run one uninstrumented 1-event seeding smoke stage, three uninstrumented 10-event seeding timing repetitions, and one separate 10-event seeding stage under GNU `time -v` for Peak RSS.
+- The three timing repetitions own the median, range, and unscaled median absolute deviation. The separate instrumented run owns Peak RSS and never enters timing aggregation.
 - Accept expected unmasked FPEs only when every requested event completed.
 - Keep every ACTS build at exactly `ACTS_BUILD_JOBS=8`. Do not raise the build job cap.
 
-The only primary objectives are median timed seeding time per event (minimize)
-and median timed particle ambiguity-resolution efficiency (maximize). Keep them
-as a Pareto tradeoff. Full-chain and CKF timing are diagnostics unless the
-candidate actually changes those implementation areas. All other metrics are
-diagnostics only and must not determine eligibility, Pareto objectives, or
-recommendation ranking.
+The only primary objectives are median seeding time per event (minimize) and median seeding-stage particle efficiency (maximize). Keep them as a Pareto tradeoff. Peak RSS is a lower-is-better diagnostic. Ambiguity-resolution, CKF, and full-chain values are historical diagnostics only. Diagnostics must not determine eligibility, Pareto objectives, or recommendation ranking.
 
 Captain-selected Evaluation reports classify seeding-speed evidence as `confirmed`, `directional`, or `inconclusive`. The predeclared practical margin is the maximum Genesis repetition range or unscaled median absolute deviation. A positive speed difference must exceed that margin and comparable candidate/Genesis dispersion to be confirmed. This is reporting and captain selection evidence only. It does not authorize Evaluation, change Development eligibility, or change either primary objective.
 
@@ -67,8 +62,7 @@ Do not reproduce those lifecycle operations manually.
 
 ## Run commands
 
-The development evaluator runs one candidate through 10-event seeding and
-clean full-chain stages plus three 10-event timed full-chain repetitions:
+The Development evaluator runs one candidate through the seeding-only 1 + 3 + 1 matrix:
 
 ```text
 make evaluate CANDIDATE=<candidate-name>
@@ -90,10 +84,9 @@ Use `make record` for a named candidate and read the curated lessons before choo
 A candidate is eligible to remain the active experiment base only when it passes all requested stages and improves at least one of the two primary metrics against the fresh Genesis baseline:
 
 - Lower median timed seeding time per event.
-- Higher median timed particle ambiguity-resolution efficiency.
+- Higher median seeding-stage particle efficiency.
 
-Full-chain and CKF timing are diagnostics unless the candidate actually changes
-those implementation areas. Use Pareto dominance and the non-dominated front for candidate comparison. Do not
+Peak RSS is diagnostic. Ambiguity-resolution, CKF, and full-chain values are historical diagnostics only. Use Pareto dominance and the non-dominated front for candidate comparison. Do not
 collapse the two objectives into a weighted score. A candidate that improves one
 primary metric while worsening the other may remain a Pareto tradeoff for a
 follow-up experiment, but report it as a mixed result and do not call it an
@@ -133,7 +126,7 @@ For each attempt:
 9. Run `make evaluate CANDIDATE=<candidate-name>`.
 10. Run `make record CANDIDATE=<candidate-name>` and judge success, failure, and improvement from its output.
 11. Record the result in `orchestration-files/agent-learnings.md`. In status input, add exact changed file ranges, outcome, lesson, and a `held`, `not held`, `mixed`, or `inconclusive` prediction assessment with rationale. Do not restate proposal claims. Update the phase or current controlled stage, run `make campaign-status` again, and include both status files in the normal evidence commit and push.
-12. Keep a candidate that meets the active-base criteria. Otherwise restore the previous candidate with a safe, non-force operation on the campaign branch. Keep a mixed ambiguity-improvement candidate when a follow-up experiment explicitly targets recovery of its seeding time, but do not present it as an overall improvement.
+12. Keep a candidate that meets the active-base criteria. Otherwise restore the previous candidate with a safe, non-force operation on the campaign branch. Keep a mixed seeding-efficiency candidate when a follow-up explicitly targets recovery of its seeding time, but do not present it as an overall improvement.
 13. Use the simplification skill to curate `orchestration-files/agent-learnings.md` when it reaches 250 lines.
 14. Never allow `orchestration-files/agent-learnings.md` to exceed 500 lines.
 15. After all 20 completed candidates and before campaign closure, restore the canonical Genesis implementation with a safe revert commit. Keep every candidate implementation commit reachable.
@@ -161,11 +154,7 @@ Use `make report` for interactive comparison when the captain requests a broader
 A successful Genesis development run writes a unique timestamped record under
 `records/Development/` and retains any older records. The legacy canonical
 `records/Development/Genesis/summary.json` location remains readable for
-compatibility. Each summary records protocol identity, the timed repetition
-metadata, every timed repetition, and the median timed metrics. A failed or
-incomplete Genesis run must not be used as a baseline. Successful non-Genesis
-candidates are retained by the evaluator. Consumers must reject summaries whose
-protocol identity does not match `acts-seeding-v2`.
+compatibility. Each v3 summary records protocol identity, the exact seeding-only stage matrix, all three uninstrumented timing repetitions and their aggregate, and separate Peak RSS evidence. A failed or incomplete Genesis run must not be used as a baseline. Successful non-Genesis candidates are retained by the evaluator. Comparison consumers accept only `acts-seeding-v3`. Read-only record lookup and legacy campaign views continue to accept v2 evidence.
 Do not commit failure logs, temporary output, or runtime state.
 
 ### Live campaign status

@@ -5,7 +5,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "orchestration-files"))
 
-from evaluate import build_timed_comparison  # noqa: E402
+from evaluate import (  # noqa: E402
+    build_rss_evidence,
+    build_timed_comparison,
+    controlled_stage_plan,
+)
 from objectives import (  # noqa: E402
     PRIMARY_EFFICIENCY_METRIC,
     PRIMARY_TIME_METRIC,
@@ -38,8 +42,8 @@ class PrimaryObjectiveTests(unittest.TestCase):
             "metrics": {
                 "timed_seeding_time_per_event_ms": 110.0,
                 "timed_total_time_per_event_ms": 290.0,
-                "timed_ambiguity_particle_efficiency": 0.94,
-                "timed_seeding_particle_efficiency": 0.99,
+                "timed_ambiguity_particle_efficiency": 0.99,
+                "timed_seeding_particle_efficiency": 0.80,
                 "timed_ckf_particle_efficiency": 0.99,
             },
         }
@@ -49,10 +53,10 @@ class PrimaryObjectiveTests(unittest.TestCase):
     def test_objectives_are_only_the_two_primary_metrics(self) -> None:
         self.assertEqual(
             {PRIMARY_TIME_METRIC, PRIMARY_EFFICIENCY_METRIC},
-            {"seeding_time_per_event_ms", "ambiguity_particle_efficiency"},
+            {"seeding_time_per_event_ms", "seeding_particle_efficiency"},
         )
 
-    def test_record_loading_keeps_full_chain_as_diagnostic(self) -> None:
+    def test_legacy_full_chain_and_ambiguity_diagnostics_do_not_affect_objectives(self) -> None:
         metrics = {}
         add_run_metrics(
             metrics,
@@ -74,11 +78,36 @@ class PrimaryObjectiveTests(unittest.TestCase):
         self.assertEqual(
             metrics,
             {
-                "timed_total_time_per_event_ms": 300.0,
                 "timed_seeding_time_per_event_ms": 100.0,
-                "timed_ambiguity_particle_efficiency": 0.95,
+                "timed_seeding_particle_efficiency": 0.99,
             },
         )
+
+    def test_controlled_stage_plan_is_exact_seeding_only_one_plus_three_plus_one(self) -> None:
+        plan = controlled_stage_plan()
+        self.assertEqual(len(plan), 5)
+        self.assertEqual(
+            [
+                (
+                    stage["comparison"],
+                    stage["events"],
+                    stage["stage"],
+                    stage["metrics"],
+                    stage.get("repetition"),
+                )
+                for stage in plan
+            ],
+            [
+                ("smoke", 1, "seeding", "none", None),
+                ("timed", 10, "seeding", "none", 1),
+                ("timed", 10, "seeding", "none", 2),
+                ("timed", 10, "seeding", "none", 3),
+                ("rss", 10, "seeding", "time", None),
+            ],
+        )
+        serialized = repr(plan).lower()
+        self.assertNotIn("full", serialized)
+        self.assertNotIn("50", serialized)
 
     def test_timed_comparison_reports_the_median_and_keeps_repetitions(self) -> None:
         stages = [
@@ -87,11 +116,15 @@ class PrimaryObjectiveTests(unittest.TestCase):
                 "repetition": repetition,
                 "name": f"timed-{repetition}",
                 "events": 10,
+                "stage": "seeding",
+                "metrics_mode": "none",
                 "status": "passed",
                 "run_metrics": {
-                    "timing_total": {"time_per_event_ms": float(value)},
+                    "timing": {
+                        "seeding": {"time_per_event_ms": float(value)}
+                    },
                     "performance": {
-                        "ambiguity_resolution": {"efficiency_particles": value / 100.0}
+                        "seeding": {"efficiency_particles": value / 100.0}
                     },
                 },
             }
@@ -104,20 +137,55 @@ class PrimaryObjectiveTests(unittest.TestCase):
         self.assertTrue(comparison["complete"])
         self.assertEqual(comparison["repetition_count"], 3)
         self.assertEqual(len(comparison["repetitions"]), 3)
-        self.assertEqual(comparison["median_run_metrics"]["timing_total"]["time_per_event_ms"], 110)
+        self.assertTrue(
+            all(item["metrics_mode"] == "none" for item in comparison["repetitions"])
+        )
+        self.assertNotIn("median_resource_metrics", comparison)
+        instrumented = [dict(stage) for stage in stages]
+        instrumented[0]["resource_metrics"] = {"peak_rss_kb": 1001}
+        self.assertFalse(build_timed_comparison(instrumented)["complete"])
         self.assertEqual(
-            comparison["median_run_metrics"]["performance"]["ambiguity_resolution"]["efficiency_particles"],
+            comparison["median_run_metrics"]["timing"]["seeding"]["time_per_event_ms"],
+            110,
+        )
+        self.assertEqual(
+            comparison["median_run_metrics"]["performance"]["seeding"]["efficiency_particles"],
             1.1,
         )
         self.assertEqual(
-            comparison["range_run_metrics"]["timing_total"]["time_per_event_ms"],
+            comparison["range_run_metrics"]["timing"]["seeding"]["time_per_event_ms"],
             20.0,
         )
         self.assertEqual(
-            comparison["median_absolute_deviation_run_metrics"]["timing_total"][
+            comparison["median_absolute_deviation_run_metrics"]["timing"]["seeding"][
                 "time_per_event_ms"
             ],
             10.0,
+        )
+
+    def test_rss_evidence_is_separate_from_timing_aggregation(self) -> None:
+        evidence = build_rss_evidence(
+            [
+                {
+                    "comparison": "rss",
+                    "events": 10,
+                    "stage": "seeding",
+                    "metrics_mode": "time",
+                    "status": "passed",
+                    "resource_metrics": {"peak_rss_kb": 2048},
+                }
+            ]
+        )
+        self.assertEqual(
+            evidence,
+            {
+                "complete": True,
+                "events": 10,
+                "stage": "seeding",
+                "metrics_mode": "time",
+                "status": "passed",
+                "resource_metrics": {"peak_rss_kb": 2048},
+            },
         )
 
     def test_latest_complete_genesis_is_the_baseline(self) -> None:
@@ -158,7 +226,7 @@ class PrimaryObjectiveTests(unittest.TestCase):
             "metrics": {
                 "timed_seeding_time_per_event_ms": 90.0,
                 "timed_total_time_per_event_ms": 290.0,
-                "timed_ambiguity_particle_efficiency": 0.94,
+                "timed_seeding_particle_efficiency": 0.79,
             },
         }
         more_efficient = {
@@ -167,7 +235,7 @@ class PrimaryObjectiveTests(unittest.TestCase):
             "metrics": {
                 "timed_seeding_time_per_event_ms": 110.0,
                 "timed_total_time_per_event_ms": 310.0,
-                "timed_ambiguity_particle_efficiency": 0.96,
+                "timed_seeding_particle_efficiency": 0.81,
             },
         }
 

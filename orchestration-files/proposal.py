@@ -12,7 +12,7 @@ PROPOSAL_SCHEMA_VERSION = "1.0.0"
 PRIMARY_PREDICTIONS = frozenset(
     {
         "timed_seeding_time_per_event_ms",
-        "timed_ambiguity_particle_efficiency",
+        "timed_seeding_particle_efficiency",
     }
 )
 PREDICTED_DIRECTIONS = frozenset({"decrease", "unchanged", "increase"})

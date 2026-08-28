@@ -32,7 +32,7 @@ class CandidateProposalTests(unittest.TestCase):
             "falsifier": "Seeding time does not decrease or efficiency decreases.",
             "predicted_directions": {
                 "timed_seeding_time_per_event_ms": "decrease",
-                "timed_ambiguity_particle_efficiency": "unchanged",
+                "timed_seeding_particle_efficiency": "unchanged",
             },
             "expected_hot_path": "Acts::TripletSeeder::createSeedsForGroup traversal.",
             "changed_symbols": ["Acts::TripletSeeder::createSeedsForGroup"],

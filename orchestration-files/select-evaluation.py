@@ -48,7 +48,7 @@ def deduplicate(rows: list[dict[str, Any]], baseline: dict[str, Any]) -> list[di
     return list(unique.values())
 
 
-def rank_ambiguity(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def rank_seeding_efficiency(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return sorted(
         rows,
         key=lambda row: (
@@ -84,7 +84,7 @@ def choose(rows: list[dict[str, Any]], baseline_name: str, count: int) -> list[d
     except SelectionError as error:
         raise ValueError(str(error)) from error
     candidates = eligible_candidates(rows, baseline)
-    ambiguity = rank_ambiguity(candidates)
+    efficiency = rank_seeding_efficiency(candidates)
     seeding_time = rank_seeding_time(candidates)
 
     selected: list[dict[str, Any]] = [dict(baseline, selection_reason="baseline")]
@@ -101,7 +101,7 @@ def choose(rows: list[dict[str, Any]], baseline_name: str, count: int) -> list[d
             if added == limit:
                 return
 
-    add_from(ambiguity, "highest timed particle ambiguity efficiency", 2)
+    add_from(efficiency, "highest timed seeding particle efficiency", 2)
     add_from(seeding_time, "lowest timed seeding time per event", 2)
 
     if len(selected) < count + 1:
@@ -148,9 +148,10 @@ def main() -> int:
                 "record": row["record"],
                 "implementation_commit": row["commit"],
                 "selection_reason": row["selection_reason"],
-                "timed_ambiguity_particle_efficiency": row["metrics"].get("timed_ambiguity_particle_efficiency"),
+                "timed_seeding_particle_efficiency": row["metrics"].get("timed_seeding_particle_efficiency"),
                 "timed_seeding_time_per_event_ms": row["metrics"].get("timed_seeding_time_per_event_ms"),
-                "timed_total_time_per_event_ms": row["metrics"].get("timed_total_time_per_event_ms"),
+                "proposal": row.get("proposal"),
+                "candidate_identity": row.get("candidate_identity"),
             }
             for row in selected
         ],

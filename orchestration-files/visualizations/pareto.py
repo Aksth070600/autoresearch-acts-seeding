@@ -119,10 +119,7 @@ const cornerOverlays = {
 };
 
 const STAGES = {
-  seeding: { label: 'Seeding', time: 'timed_seeding_time_per_event_ms', quality: 'timed_seeding' },
-  ckf: { label: 'CKF', time: 'timed_ckf_time_per_event_ms', quality: 'timed_ckf' },
-  ambiguity: { label: 'Ambiguity', time: 'timed_ambiguity_time_per_event_ms', quality: 'timed_ambiguity' },
-  full_chain: { label: 'Full chain', time: 'timed_total_time_per_event_ms', quality: null }
+  seeding: { label: 'Seeding', time: 'timed_seeding_time_per_event_ms', quality: 'timed_seeding' }
 };
 const QUALITY_METRICS = [
   ['particle_efficiency', 'Particle efficiency'],
@@ -138,8 +135,8 @@ const TOOLTIP_ROWS = [
   { label: 'F', type: 'quality', suffix: 'particle_fake_ratio' },
   { label: 'D', type: 'quality', suffix: 'particle_duplicate_ratio' }
 ];
-const TOOLTIP_STAGES = ['seeding', 'ckf', 'ambiguity'];
-const TIMED_PEAK_RSS_KEY = 'timed_peak_rss_kb';
+const TOOLTIP_STAGES = ['seeding'];
+const RSS_PEAK_KEY = 'rss_peak_rss_kb';
 const AXES = ['x', 'y'];
 
 function option(select, value, label) {
@@ -182,7 +179,6 @@ function updateAxisOptions(axis) {
   const previousMetric = elements.metric.value;
   elements.stage.replaceChildren();
   Object.entries(STAGES)
-    .filter(([key]) => elements.kind.value === 'time' || key !== 'full_chain')
     .forEach(([key, stage]) => option(elements.stage, key, stage.label));
   elements.stage.value = [...elements.stage.options].some((item) => item.value === previousStage)
     ? previousStage
@@ -199,7 +195,7 @@ function updateAxisOptions(axis) {
 }
 function axisKey(axis) {
   const elements = axisElements(axis);
-  if (elements.kind.value === 'rss') return TIMED_PEAK_RSS_KEY;
+  if (elements.kind.value === 'rss') return RSS_PEAK_KEY;
   if (elements.kind.value === 'time') return STAGES[elements.stage.value].time;
   return `timed_${elements.stage.value}_${elements.metric.value}`;
 }
@@ -214,8 +210,8 @@ function axisLabel(axis) {
 function axisDefaults(axis, defaultKey) {
   const elements = axisElements(axis);
   const timeStage = Object.entries(STAGES).find(([, stage]) => stage.time === defaultKey);
-  const qualityMatch = /^timed_(seeding|ckf|ambiguity)_(.+)$/.exec(defaultKey || '');
-  if (defaultKey === TIMED_PEAK_RSS_KEY) {
+  const qualityMatch = /^timed_(seeding)_(.+)$/.exec(defaultKey || '');
+  if (defaultKey === RSS_PEAK_KEY) {
     elements.kind.value = 'rss';
     updateAxisOptions(axis);
   } else if (timeStage) {
@@ -289,7 +285,7 @@ function candidateTooltip(row) {
     const values = stageKeys.map((stageKey) => tooltipValue(row, stageKey, metric));
     return `${metric.label}&nbsp;&nbsp;&nbsp;${values.join('&nbsp;→&nbsp;')}`;
   }).join('<br>');
-  const peakRss = formatPeakRss(row.metrics[TIMED_PEAK_RSS_KEY], 'n/a');
+  const peakRss = formatPeakRss(row.metrics[RSS_PEAK_KEY], 'n/a');
   const hypothesis = row.proposal ? `<br>Hypothesis&nbsp;&nbsp;${escapeHtml(row.proposal.hypothesis)}` : '';
   return `<b>${escapeHtml(row.candidate)}</b><br><span style="font-family:monospace">Stage&nbsp;&nbsp;${stageHeading}<br>${metricLines}<br>Peak RSS&nbsp;&nbsp;${peakRss}${timingEvidenceTooltip(row)}${hypothesis}</span>`;
 }

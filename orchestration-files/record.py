@@ -10,7 +10,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-from protocol import is_compatible_summary
+from protocol import is_readable_summary
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 RECORDS_ROOT = PROJECT_ROOT / "records"
@@ -35,7 +35,7 @@ def compatible_summary(path: Path) -> bool:
         summary = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return False
-    return is_compatible_summary(summary)
+    return is_readable_summary(summary)
 
 
 def record_recency(path: Path) -> tuple[datetime, str]:

@@ -22,6 +22,8 @@ from protocol import (
     PROTOCOL_METADATA,
     SOURCE_GROUNDED_MAJOR_MINIMUM,
     is_compatible_summary,
+    is_complete_rss_evidence,
+    is_complete_stage_matrix,
 )
 from proposal import (
     ProposalError,
@@ -606,22 +608,33 @@ def objective_metrics(summary: dict[str, Any]) -> tuple[float, float]:
         comparison.get("complete") is True
         and comparison.get("aggregation") == PROTOCOL_METADATA["timed_aggregation"]
         and comparison.get("repetition_count") == PROTOCOL_METADATA["timed_repetitions"]
+        and comparison.get("events") == PROTOCOL_METADATA["timing_events"]
         and isinstance(repetitions, list)
         and len(repetitions) == PROTOCOL_METADATA["timed_repetitions"]
+        and all(
+            isinstance(repetition, dict)
+            and repetition.get("status") == "passed"
+            and repetition.get("stage") == PROTOCOL_METADATA["execution_stage"]
+            and repetition.get("metrics_mode")
+            == PROTOCOL_METADATA["timing_instrumentation"]
+            and repetition.get("events") == PROTOCOL_METADATA["timing_events"]
+            and not repetition.get("resource_metrics")
+            and isinstance(repetition.get("run_metrics"), dict)
+            and bool(repetition.get("run_metrics"))
+            for repetition in repetitions
+        )
     ):
         raise StatusError("passed summary has an incomplete timed comparison")
     median_metrics = comparison.get("median_run_metrics")
     try:
         seeding = median_metrics["timing"]["seeding"]["time_per_event_ms"]
-        efficiency = median_metrics["performance"]["ambiguity_resolution"][
-            "efficiency_particles"
-        ]
+        efficiency = median_metrics["performance"]["seeding"]["efficiency_particles"]
     except (KeyError, TypeError) as error:
         raise StatusError("passed summary is missing a primary objective") from error
     if not finite_number(seeding) or seeding < 0:
         raise StatusError("timed seeding time/event must be a finite non-negative number")
     if not finite_number(efficiency) or not 0 <= efficiency <= 1:
-        raise StatusError("particle ambiguity efficiency must be between zero and one")
+        raise StatusError("seeding particle efficiency must be between zero and one")
     return float(seeding), float(efficiency)
 
 
@@ -630,9 +643,8 @@ def summary_passed(summary: dict[str, Any]) -> bool:
     return (
         summary.get("status") == "passed"
         and str(summary.get("category", "")).lower() == "development"
-        and isinstance(stages, list)
-        and bool(stages)
-        and all(isinstance(stage, dict) and stage.get("status") == "passed" for stage in stages)
+        and is_complete_stage_matrix(stages)
+        and is_complete_rss_evidence(summary.get("rss_evidence"))
     )
 
 
@@ -754,7 +766,7 @@ def load_attempts(
             "finished_at": isoformat(finished) if finished is not None else None,
             "duration_seconds": duration_seconds,
             "timed_seeding_time_per_event_ms": seeding,
-            "timed_ambiguity_particle_efficiency": efficiency,
+            "timed_seeding_particle_efficiency": efficiency,
             "implementation_commit": implementation_commit,
             "links": {
                 "commit": (
@@ -818,8 +830,8 @@ def result_point(attempt: dict[str, Any]) -> dict[str, Any]:
     return {
         "candidate": attempt["candidate"],
         "timed_seeding_time_per_event_ms": attempt["timed_seeding_time_per_event_ms"],
-        "timed_ambiguity_particle_efficiency": attempt[
-            "timed_ambiguity_particle_efficiency"
+        "timed_seeding_particle_efficiency": attempt[
+            "timed_seeding_particle_efficiency"
         ],
         "started_at": attempt["started_at"],
         "links": dict(attempt["links"]),
@@ -831,14 +843,14 @@ def pareto_front(attempts: list[dict[str, Any]]) -> list[dict[str, Any]]:
     front = []
     for candidate in completed:
         candidate_time = candidate["timed_seeding_time_per_event_ms"]
-        candidate_efficiency = candidate["timed_ambiguity_particle_efficiency"]
+        candidate_efficiency = candidate["timed_seeding_particle_efficiency"]
         dominated = any(
             other is not candidate
             and other["timed_seeding_time_per_event_ms"] <= candidate_time
-            and other["timed_ambiguity_particle_efficiency"] >= candidate_efficiency
+            and other["timed_seeding_particle_efficiency"] >= candidate_efficiency
             and (
                 other["timed_seeding_time_per_event_ms"] < candidate_time
-                or other["timed_ambiguity_particle_efficiency"] > candidate_efficiency
+                or other["timed_seeding_particle_efficiency"] > candidate_efficiency
             )
             for other in completed
         )
@@ -848,7 +860,7 @@ def pareto_front(attempts: list[dict[str, Any]]) -> list[dict[str, Any]]:
         front,
         key=lambda item: (
             item["timed_seeding_time_per_event_ms"],
-            -item["timed_ambiguity_particle_efficiency"],
+            -item["timed_seeding_particle_efficiency"],
             item["candidate"],
         ),
     )
@@ -865,7 +877,7 @@ def promising_results(attempts: list[dict[str, Any]]) -> dict[str, Any]:
     )
     best_efficiency = max(
         completed,
-        key=lambda item: (item["timed_ambiguity_particle_efficiency"], item["candidate"]),
+        key=lambda item: (item["timed_seeding_particle_efficiency"], item["candidate"]),
         default=None,
     )
     best_seeding_result = result_point(best_seeding) if best_seeding is not None else None
@@ -883,7 +895,7 @@ def promising_results(attempts: list[dict[str, Any]]) -> dict[str, Any]:
     return {
         "latest_genesis": result_point(latest_genesis) if latest_genesis is not None else None,
         "best_seeding": best_seeding_result,
-        "best_ambiguity_efficiency": (
+        "best_seeding_efficiency": (
             result_point(best_efficiency) if best_efficiency is not None else None
         ),
         "pareto_front": pareto_front(attempts),
@@ -1113,7 +1125,13 @@ def build_status(
     return status
 
 
-def validate_result(value: Any, field: str, *, best_seeding: bool = False) -> None:
+def validate_result(
+    value: Any,
+    field: str,
+    efficiency_field: str,
+    *,
+    best_seeding: bool = False,
+) -> None:
     if value is None:
         return
     if not isinstance(value, dict):
@@ -1121,7 +1139,7 @@ def validate_result(value: Any, field: str, *, best_seeding: bool = False) -> No
     for key in (
         "candidate",
         "timed_seeding_time_per_event_ms",
-        "timed_ambiguity_particle_efficiency",
+        efficiency_field,
         "started_at",
         "links",
     ):
@@ -1129,7 +1147,7 @@ def validate_result(value: Any, field: str, *, best_seeding: bool = False) -> No
             raise StatusError(f"{field} is missing {key}")
     if not finite_number(value["timed_seeding_time_per_event_ms"]):
         raise StatusError(f"{field} has invalid seeding time")
-    if not finite_number(value["timed_ambiguity_particle_efficiency"]):
+    if not finite_number(value[efficiency_field]):
         raise StatusError(f"{field} has invalid efficiency")
     parse_instant(value["started_at"], f"{field}.started_at")
     if best_seeding:
@@ -1165,8 +1183,17 @@ def validate_status(value: Any) -> None:
         raise StatusError("campaign status fields do not match schema v1")
     if value["schema_version"] != STATUS_SCHEMA_VERSION:
         raise StatusError("campaign status schema version is unsupported")
-    if value["protocol_id"] != PROTOCOL_ID:
+    if value["protocol_id"] not in {"acts-seeding-v2", PROTOCOL_ID}:
         raise StatusError("campaign status protocol is incompatible")
+    legacy_protocol = value["protocol_id"] == "acts-seeding-v2"
+    efficiency_field = (
+        "timed_ambiguity_particle_efficiency"
+        if legacy_protocol
+        else "timed_seeding_particle_efficiency"
+    )
+    best_efficiency_field = (
+        "best_ambiguity_efficiency" if legacy_protocol else "best_seeding_efficiency"
+    )
     parse_instant(value["generated_at"], "generated_at")
     if not isinstance(value["stale_after_seconds"], int) or value["stale_after_seconds"] < 60:
         raise StatusError("stale_after_seconds must be at least 60")
@@ -1233,24 +1260,34 @@ def validate_status(value: Any) -> None:
     if not isinstance(promising, dict) or set(promising) != {
         "latest_genesis",
         "best_seeding",
-        "best_ambiguity_efficiency",
+        best_efficiency_field,
         "pareto_front",
     }:
         raise StatusError("promising_results is invalid")
-    validate_result(promising["latest_genesis"], "promising_results.latest_genesis")
+    validate_result(
+        promising["latest_genesis"],
+        "promising_results.latest_genesis",
+        efficiency_field,
+    )
     validate_result(
         promising["best_seeding"],
         "promising_results.best_seeding",
+        efficiency_field,
         best_seeding=True,
     )
     validate_result(
-        promising["best_ambiguity_efficiency"],
-        "promising_results.best_ambiguity_efficiency",
+        promising[best_efficiency_field],
+        f"promising_results.{best_efficiency_field}",
+        efficiency_field,
     )
     if not isinstance(promising["pareto_front"], list):
         raise StatusError("promising_results.pareto_front must be an array")
     for index, item in enumerate(promising["pareto_front"]):
-        validate_result(item, f"promising_results.pareto_front[{index}]")
+        validate_result(
+            item,
+            f"promising_results.pareto_front[{index}]",
+            efficiency_field,
+        )
     if not isinstance(value["attempts"], list):
         raise StatusError("attempts must be an array")
     for index, attempt in enumerate(value["attempts"]):
@@ -1269,13 +1306,14 @@ def validate_status(value: Any) -> None:
             or attempt["duration_seconds"] < 0
         ):
             raise StatusError(f"attempts[{index}].duration_seconds is invalid")
-        for objective in (
-            "timed_seeding_time_per_event_ms",
-            "timed_ambiguity_particle_efficiency",
-        ):
+        for objective in ("timed_seeding_time_per_event_ms", efficiency_field):
             if attempt.get(objective) is not None and not finite_number(attempt[objective]):
                 raise StatusError(f"attempts[{index}].{objective} is invalid")
-        if policy_format == "candidate-composition" and classification != "baseline":
+        if (
+            not legacy_protocol
+            and policy_format == "candidate-composition"
+            and classification != "baseline"
+        ):
             evidence_fields = {
                 "files_changed",
                 "outcome",

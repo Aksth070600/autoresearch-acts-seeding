@@ -7,6 +7,7 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -83,7 +84,33 @@ def main() -> int:
             commit = candidate["implementation_commit"]
             print(f"selected_candidate={name} commit={commit}", flush=True)
             run(["git", "checkout", "--detach", commit])
-            result = run([sys.executable, str(EVALUATOR), name, "--evaluation"], check=False)
+            command = [sys.executable, str(EVALUATOR), name, "--evaluation"]
+            with tempfile.TemporaryDirectory() as temporary:
+                if name != "Genesis":
+                    identity = candidate.get("candidate_identity")
+                    proposal = candidate.get("proposal")
+                    if not isinstance(identity, dict) or not isinstance(proposal, dict):
+                        raise SystemExit(f"selected candidate has no bound proposal: {name}")
+                    metadata = {
+                        "candidate": name,
+                        "mechanism_key": identity.get("mechanism_key"),
+                        "mechanism_family": identity.get("mechanism_family"),
+                        "classification": identity.get("classification"),
+                        "proposal": proposal,
+                    }
+                    if identity.get("derives_from") is not None:
+                        metadata["derives_from"] = identity["derives_from"]
+                    if proposal.get("combination_provenance") is not None:
+                        metadata["combination_provenance"] = proposal[
+                            "combination_provenance"
+                        ]
+                    campaign_input = Path(temporary) / "campaign-input.json"
+                    campaign_input.write_text(
+                        json.dumps({"attempt_metadata": [metadata]}),
+                        encoding="utf-8",
+                    )
+                    command.extend(["--campaign-input", str(campaign_input)])
+                result = run(command, check=False)
             if result.returncode != 0:
                 raise SystemExit(f"evaluation failed for {name}")
     finally:

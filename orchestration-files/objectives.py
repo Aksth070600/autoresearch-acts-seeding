@@ -9,14 +9,17 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from protocol import PROTOCOL_METADATA, is_compatible_summary
+from proposal import ProposalError, proposal_from_summary
+from protocol import (
+    PROTOCOL_METADATA,
+    is_compatible_summary,
+    is_complete_rss_evidence,
+    is_complete_stage_matrix,
+)
 
 PRIMARY_TIME_METRIC = "seeding_time_per_event_ms"
-PRIMARY_EFFICIENCY_METRIC = "ambiguity_particle_efficiency"
+PRIMARY_EFFICIENCY_METRIC = "seeding_particle_efficiency"
 PRIMARY_METRICS = (PRIMARY_TIME_METRIC, PRIMARY_EFFICIENCY_METRIC)
-FULL_CHAIN_TIME_METRIC = "total_time_per_event_ms"
-
-
 class SelectionError(RuntimeError):
     """Raised when controlled records cannot support deterministic selection."""
 
@@ -29,23 +32,10 @@ def finite(value: Any) -> bool:
     )
 
 
-def stage_prefix(stage: dict[str, Any]) -> str | None:
-    name = str(stage.get("name", ""))
-    if "timed" in name or stage.get("metrics_mode") == "time":
-        return "timed"
-    if stage.get("metrics_mode") == "none" and stage.get("events", 0) > 1:
-        return "clean"
-    return None
-
-
 def add_run_metrics(
     metrics: dict[str, float], prefix: str, run_metrics: dict[str, Any]
 ) -> None:
-    """Flatten the two objectives and the full-chain timing diagnostic."""
-
-    total_time = run_metrics.get("timing_total", {}).get("time_per_event_ms")
-    if finite(total_time):
-        metrics[f"{prefix}_{FULL_CHAIN_TIME_METRIC}"] = float(total_time)
+    """Flatten only the two v3 primary objectives."""
 
     seeding_time = (
         run_metrics.get("timing", {}).get("seeding", {}).get("time_per_event_ms")
@@ -55,7 +45,7 @@ def add_run_metrics(
 
     efficiency = (
         run_metrics.get("performance", {})
-        .get("ambiguity_resolution", {})
+        .get("seeding", {})
         .get("efficiency_particles")
     )
     if finite(efficiency):
@@ -68,23 +58,12 @@ def flatten_summary(
     if summary.get("status") != "passed" or not is_compatible_summary(summary):
         return None
     stages = summary.get("stages")
-    if (
-        not isinstance(stages, list)
-        or not stages
-        or any(
-            not isinstance(stage, dict) or stage.get("status") != "passed"
-            for stage in stages
-        )
+    if not is_complete_stage_matrix(stages) or not is_complete_rss_evidence(
+        summary.get("rss_evidence")
     ):
         return None
 
     metrics: dict[str, float] = {}
-    for stage in stages:
-        if not isinstance(stage, dict) or stage.get("comparison") != "clean":
-            continue
-        if stage_prefix(stage) == "clean" and isinstance(stage.get("run_metrics"), dict):
-            add_run_metrics(metrics, "clean", stage["run_metrics"])
-
     comparison = summary.get("timed_comparison", {})
     if not isinstance(comparison, dict):
         comparison = {}
@@ -93,12 +72,18 @@ def flatten_summary(
     if (
         comparison.get("complete") is True
         and comparison.get("aggregation") == PROTOCOL_METADATA["timed_aggregation"]
+        and comparison.get("events") == PROTOCOL_METADATA["timing_events"]
         and comparison.get("repetition_count") == PROTOCOL_METADATA["timed_repetitions"]
         and isinstance(repetitions, list)
         and len(repetitions) == PROTOCOL_METADATA["timed_repetitions"]
         and all(
             isinstance(repetition, dict)
             and repetition.get("status") == "passed"
+            and repetition.get("stage") == PROTOCOL_METADATA["execution_stage"]
+            and repetition.get("metrics_mode")
+            == PROTOCOL_METADATA["timing_instrumentation"]
+            and repetition.get("events") == PROTOCOL_METADATA["timing_events"]
+            and not repetition.get("resource_metrics")
             and isinstance(repetition.get("run_metrics"), dict)
             and bool(repetition.get("run_metrics"))
             for repetition in repetitions
@@ -111,6 +96,12 @@ def flatten_summary(
     if not required.issubset(metrics):
         return None
     candidate = str(summary.get("candidate_name", path.parent.name))
+    try:
+        proposal = proposal_from_summary(summary)
+    except ProposalError:
+        return None
+    if candidate != "Genesis" and proposal is None:
+        return None
     return {
         "candidate": candidate,
         "category": str(summary.get("category", path.parent.parent.name)),
@@ -121,6 +112,8 @@ def flatten_summary(
         "started_at": str(summary.get("started_at", "")),
         "finished_at": str(summary.get("finished_at", "")),
         "metrics": metrics,
+        "proposal": proposal,
+        "candidate_identity": summary.get("candidate_identity"),
     }
 
 

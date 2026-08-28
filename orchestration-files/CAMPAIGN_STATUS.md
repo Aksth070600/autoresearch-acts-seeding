@@ -5,9 +5,9 @@
 The snapshot contains only protocol-compatible Development evidence. Its scientific fields come from the median timed comparison in generated `summary.json` records:
 
 - Timed seeding time per event, minimized.
-- Timed particle ambiguity-resolution efficiency, maximized.
+- Timed seeding-stage particle efficiency, maximized.
 
-Full-chain time is not an objective. The generator derives record durations, progress, failures, the latest campaign Genesis baseline, objective leaders, and the current Pareto front. Do not hand-edit generated fields.
+Peak RSS is a separate diagnostic. Ambiguity-resolution, CKF, and full-chain values are not v3 objectives. Development and captain-authorized Evaluation both use one uninstrumented 1-event seeding smoke run, three uninstrumented 10-event seeding timing repetitions, and one separate instrumented 10-event seeding Peak RSS run. The generator derives record durations, progress, failures, the latest campaign Genesis baseline, objective leaders, and the current Pareto front. Do not hand-edit generated fields.
 
 ## Standard composition
 
@@ -75,7 +75,7 @@ Before a non-Genesis run, append metadata with no `evidence` block yet. The prop
     "falsifier": "The prediction fails if median seeding time does not decrease.",
     "predicted_directions": {
       "timed_seeding_time_per_event_ms": "decrease",
-      "timed_ambiguity_particle_efficiency": "unchanged"
+      "timed_seeding_particle_efficiency": "unchanged"
     },
     "expected_hot_path": "Acts::Example::run accepted-item traversal.",
     "changed_symbols": ["Acts::Example::run"],
@@ -181,4 +181,4 @@ Only a selected open campaign refreshes, at most once per minute with cache bust
 
 The 10/5/5 composition is a backward-compatible campaign-status v1 extension. New snapshots use candidate target and progress fields and the `major`, `minor`, and `combination` classifications. The schema and dashboard also accept immutable historical v1 snapshots that contain the former `completed_attempts`, `structural_attempts`, and `micro_optimization_cap` targets, matching progress fields, and `structural` or `micro` classifications. Historical snapshots render their original labels. Do not rewrite archived snapshots or records.
 
-Version 1 also accepts both canonical and legacy `repository.snapshot_path` values. Any future incompatible change requires a new `schema_version`.
+Version 1 also accepts both canonical and legacy `repository.snapshot_path` values. Historical v2 snapshots retain ambiguity-efficiency fields. New v3 snapshots use seeding-efficiency fields. The dashboard maps each protocol to its matching field without comparing protocols. Any future incompatible status shape requires a new `schema_version`.

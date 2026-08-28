@@ -99,7 +99,7 @@ class CampaignStatusTests(unittest.TestCase):
             "falsifier": "The prediction fails if seeding time does not decrease.",
             "predicted_directions": {
                 "timed_seeding_time_per_event_ms": "decrease",
-                "timed_ambiguity_particle_efficiency": "unchanged",
+                "timed_seeding_particle_efficiency": "unchanged",
             },
             "expected_hot_path": "Accepted-candidate traversal in the seeding loop.",
             "changed_symbols": [f"{candidate}::run"],
@@ -167,15 +167,12 @@ class CampaignStatusTests(unittest.TestCase):
     ) -> dict:
         started = datetime.fromisoformat(started_at.replace("Z", "+00:00"))
         run_metrics = {
-            "timing_total": {"time_per_event_ms": seeding_ms + 5000},
             "timing": {"seeding": {"time_per_event_ms": seeding_ms}},
-            "performance": {
-                "ambiguity_resolution": {"efficiency_particles": efficiency}
-            },
+            "performance": {"seeding": {"efficiency_particles": efficiency}},
         }
         summary = {
             "candidate_name": candidate,
-            "protocol_id": "acts-seeding-v2",
+            "protocol_id": "acts-seeding-v3",
             "protocol": current_protocol(),
             "implementation_commit": commit,
             "mode": "development",
@@ -187,18 +184,52 @@ class CampaignStatusTests(unittest.TestCase):
             ).isoformat(),
             "stages": [
                 {
-                    "name": "controlled-development",
+                    "comparison": "smoke",
+                    "events": 1,
+                    "stage": "seeding",
+                    "metrics_mode": "none",
                     "status": "passed" if passed else "failed",
-                }
+                },
+                *[
+                    {
+                        "comparison": "timed",
+                        "repetition": number,
+                        "events": 10,
+                        "stage": "seeding",
+                        "metrics_mode": "none",
+                        "status": "passed",
+                        "run_metrics": run_metrics,
+                    }
+                    for number in (1, 2, 3)
+                ],
+                {
+                    "comparison": "rss",
+                    "events": 10,
+                    "stage": "seeding",
+                    "metrics_mode": "time",
+                    "status": "passed",
+                },
             ],
+            "rss_evidence": {
+                "complete": passed,
+                "events": 10,
+                "stage": "seeding",
+                "metrics_mode": "time",
+                "status": "passed" if passed else "failed",
+                "resource_metrics": {"peak_rss_kb": 2048},
+            },
             "timed_comparison": {
                 "aggregation": "median",
                 "repetition_count": 3,
                 "required_repetitions": 3,
+                "events": 10,
                 "complete": passed,
                 "repetitions": [
                     {
                         "repetition": number,
+                        "events": 10,
+                        "stage": "seeding",
+                        "metrics_mode": "none",
                         "status": "passed",
                         "run_metrics": run_metrics,
                     }
@@ -256,7 +287,10 @@ class CampaignStatusTests(unittest.TestCase):
             )
         )
         self.assertEqual(schema["properties"]["schema_version"]["const"], "1.0.0")
-        self.assertEqual(schema["properties"]["protocol_id"]["const"], "acts-seeding-v2")
+        self.assertEqual(
+            schema["properties"]["protocol_id"]["enum"],
+            ["acts-seeding-v2", "acts-seeding-v3"],
+        )
         self.assertEqual(
             schema["properties"]["repository"]["properties"]["snapshot_path"]["enum"],
             [
@@ -434,7 +468,7 @@ class CampaignStatusTests(unittest.TestCase):
         self.assertAlmostEqual(
             promising["best_seeding"]["percentage_vs_genesis"], -100 / 9
         )
-        self.assertEqual(promising["best_ambiguity_efficiency"]["candidate"], "Efficient")
+        self.assertEqual(promising["best_seeding_efficiency"]["candidate"], "Efficient")
         self.assertEqual(
             {point["candidate"] for point in promising["pareto_front"]},
             {"Genesis", "Fast", "Efficient"},
@@ -448,6 +482,8 @@ class CampaignStatusTests(unittest.TestCase):
         serialized = json.dumps(status)
         self.assertNotIn("timed_total", serialized)
         self.assertNotIn("full_chain", serialized)
+        self.assertNotIn("timed_ambiguity_particle_efficiency", serialized)
+        self.assertIn("timed_seeding_particle_efficiency", serialized)
 
     def test_explicit_campaign_targets_override_defaults_and_drive_progress(self) -> None:
         special_targets = {
@@ -846,6 +882,33 @@ class CampaignStatusTests(unittest.TestCase):
                 "repo": {"full_name": "Aksth070600/autoresearch-acts-seeding"},
             },
         }
+
+    def test_dashboard_maps_v2_and_v3_efficiency_fields_without_mixing(self) -> None:
+        if shutil.which("node") is None:
+            self.skipTest("node is required for dashboard JavaScript tests")
+        html = self.dashboard_html()
+        mapper = "function efficiencyValue" + html.split(
+            "function efficiencyValue", 1
+        )[1].split("function validateSnapshot", 1)[0]
+        result = subprocess.run(
+            [
+                "node",
+                "-e",
+                mapper
+                + "console.log(JSON.stringify({"
+                + "v2: efficiencyValue({timed_ambiguity_particle_efficiency: 0.8}),"
+                + "v3: efficiencyValue({timed_seeding_particle_efficiency: 0.9, timed_ambiguity_particle_efficiency: 0.1}),"
+                + "failed: efficiencyValue({timed_seeding_particle_efficiency: null})"
+                + "}));",
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(
+            json.loads(result.stdout), {"v2": 0.8, "v3": 0.9, "failed": None}
+        )
 
     def test_dashboard_maps_historical_and_new_progress_snapshots(self) -> None:
         historical = {

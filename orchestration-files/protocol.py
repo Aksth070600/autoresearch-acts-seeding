@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 
-PROTOCOL_ID = "acts-seeding-v2"
+PROTOCOL_ID = "acts-seeding-v3"
 
 # Changing any controlled value requires a new protocol identity.  Keep this
 # object JSON-compatible because it is embedded verbatim in every summary.
@@ -17,10 +17,16 @@ PROTOCOL_METADATA: dict[str, Any] = {
     "threads": 1,
     "seed": 42,
     "pileup": 200,
-    "development_events": 10,
-    "evaluation_events": 50,
+    "execution_stage": "seeding",
+    "smoke_events": 1,
+    "timing_events": 10,
+    "rss_events": 10,
     "timed_repetitions": 3,
     "timed_aggregation": "median",
+    "smoke_instrumentation": "none",
+    "timing_instrumentation": "none",
+    "rss_metrics_mode": "time",
+    "rss_instrumentation": "GNU time -v",
     "expected_unmasked_fpe_handling": "accept only after every requested event completed",
 }
 
@@ -57,11 +63,91 @@ def is_compatible_summary(summary: dict[str, Any]) -> bool:
     )
 
 
-def protocol_events(mode: str) -> int:
-    """Return the controlled event count for an evaluator mode."""
+def is_complete_stage_matrix(stages: Any) -> bool:
+    """Return whether stage evidence matches the exact seeding-only 1 + 3 + 1 matrix."""
 
-    if mode == "development":
-        return int(PROTOCOL_METADATA["development_events"])
-    if mode == "evaluation":
-        return int(PROTOCOL_METADATA["evaluation_events"])
-    raise ValueError(f"unsupported protocol mode: {mode}")
+    if not isinstance(stages, list) or len(stages) != 5:
+        return False
+    expected = [
+        (
+            "smoke",
+            PROTOCOL_METADATA["smoke_events"],
+            PROTOCOL_METADATA["execution_stage"],
+            PROTOCOL_METADATA["smoke_instrumentation"],
+            None,
+        ),
+        *[
+            (
+                "timed",
+                PROTOCOL_METADATA["timing_events"],
+                PROTOCOL_METADATA["execution_stage"],
+                PROTOCOL_METADATA["timing_instrumentation"],
+                repetition,
+            )
+            for repetition in range(
+                1, int(PROTOCOL_METADATA["timed_repetitions"]) + 1
+            )
+        ],
+        (
+            "rss",
+            PROTOCOL_METADATA["rss_events"],
+            PROTOCOL_METADATA["execution_stage"],
+            PROTOCOL_METADATA["rss_metrics_mode"],
+            None,
+        ),
+    ]
+    actual = [
+        (
+            stage.get("comparison"),
+            stage.get("events"),
+            stage.get("stage"),
+            stage.get("metrics_mode"),
+            stage.get("repetition"),
+        )
+        if isinstance(stage, dict) and stage.get("status") == "passed"
+        else None
+        for stage in stages
+    ]
+    return actual == expected
+
+
+def is_complete_rss_evidence(value: Any) -> bool:
+    """Return whether the separate instrumented run owns valid Peak RSS evidence."""
+
+    if not isinstance(value, dict):
+        return False
+    peak_rss = value.get("resource_metrics", {}).get("peak_rss_kb")
+    return (
+        value.get("complete") is True
+        and value.get("events") == PROTOCOL_METADATA["rss_events"]
+        and value.get("stage") == PROTOCOL_METADATA["execution_stage"]
+        and value.get("metrics_mode") == PROTOCOL_METADATA["rss_metrics_mode"]
+        and value.get("status") == "passed"
+        and isinstance(peak_rss, (int, float))
+        and not isinstance(peak_rss, bool)
+        and peak_rss >= 0
+    )
+
+
+def is_readable_summary(summary: dict[str, Any]) -> bool:
+    """Accept current evidence and known v2 evidence for read-only historical access."""
+
+    return is_compatible_summary(summary) or (
+        summary.get("protocol_id") == "acts-seeding-v2"
+        and isinstance(summary.get("protocol"), dict)
+        and summary["protocol"].get("id") == "acts-seeding-v2"
+    )
+
+
+def protocol_events(stage: str) -> int:
+    """Return the event count for one stage in the controlled 1 + 3 + 1 matrix."""
+
+    fields = {
+        "smoke": "smoke_events",
+        "timing": "timing_events",
+        "rss": "rss_events",
+    }
+    try:
+        return int(PROTOCOL_METADATA[fields[stage]])
+    except KeyError as error:
+        raise ValueError(f"unsupported protocol stage: {stage}") from error

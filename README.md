@@ -2,8 +2,8 @@
 
 An experiment platform for making ACTS Seeding faster without sacrificing reconstruction quality.
 It runs controlled candidates on the fixed ITk workload through ACTS on HEPP02, keeps the results, and helps the next experiment build on what worked.
-The active protocol uses ACTS v46.5.0, one ACTS thread, 10-event development runs, and 50-event evaluation runs.
-Each timed comparison has three repetitions, with the median seeding timing and particle ambiguity efficiency used for candidate comparison. Full-chain and CKF timing remain diagnostic.
+The active `acts-seeding-v3` protocol uses ACTS v46.5.0, one ACTS thread, and the same seeding-only stage matrix for Development and captain-authorized Evaluation.
+Each run has one uninstrumented 1-event smoke stage, three uninstrumented 10-event timing repetitions, and one separate instrumented 10-event Peak RSS stage. Pareto comparison uses median seeding time and seeding particle efficiency. Peak RSS is diagnostic.
 
 [Open the interactive results report](https://aksth070600.github.io/autoresearch-acts-seeding/)
 
@@ -24,11 +24,11 @@ flowchart LR
 ```
 
 - `optimization-files/` contains the ACTS implementation files an experiment may change.
-- Prior controlled records and `orchestration-files/agent-learnings.md` provide deterministic evidence for new hypotheses. Pareto comparison uses only timed seeding time per event and particle ambiguity-resolution efficiency. Full-chain and CKF timing remain diagnostics unless the candidate changes those implementation areas.
+- Prior controlled records and `orchestration-files/agent-learnings.md` provide deterministic evidence for new hypotheses. Pareto comparison uses only seeding time per event and seeding-stage particle efficiency.
 - `make evaluate CANDIDATE=name` runs the controlled development workload.
 - `make record CANDIDATE=name` returns the latest summary and failure details without editing the archive.
 - `make campaign-status` builds the live snapshot. See [`orchestration-files/CAMPAIGN_STATUS.md`](orchestration-files/CAMPAIGN_STATUS.md).
-- `make evaluate-selected` is captain/operator-only. It evaluates Genesis, the two strongest particle ambiguity-efficiency candidates, and two lowest-seeding-time candidates, filling overlaps with the next unique candidates.
+- `make evaluate-selected` is captain/operator-only. It evaluates Genesis, the two strongest seeding-efficiency candidates, and two lowest-seeding-time candidates, filling overlaps with the next unique candidates.
 - `records/` stores reproducible summaries used by deterministic Evaluation selection and reports.
 - `orchestration-files/agent-learnings.md` stores short lessons so agents do not repeat failed ideas.
 - `Genesis` is the starting point for every campaign. Successful development baselines use timestamped `records/Development/*-Genesis/` directories; the legacy canonical Genesis summary remains readable for compatibility. Deterministic Evaluation selection uses the latest complete protocol-compatible Development Genesis record.
@@ -62,7 +62,7 @@ make campaign-status
 ```
 
 `make report` writes the historical report and live campaign page to the ignored `build/site/` directory.
-`make evaluate` runs 10-event development stages. `EVALUATION=1` runs the 50-event evaluation stages for captain/operator-controlled review. Timed stages run three repetitions and store every repetition plus their median in each summary.
+`make evaluate` runs the controlled seeding-only 1 + 3 + 1 matrix and writes Development records. `EVALUATION=1` uses the same matrix and writes captain-controlled Evaluation records. The three uninstrumented timing repetitions own median, range, and MAD. The separate GNU `time -v` stage owns Peak RSS.
 
 The orchestration and report tools use the Python standard library. Run the full repository tests with:
 

@@ -14,7 +14,7 @@ ITK_METRICS ?= none
 ORCHESTRATION_PYTHON ?= /usr/bin/python3
 REPORT_DATASET ?= development
 REPORT_X_METRIC ?= timed_seeding_time_per_event_ms
-REPORT_Y_METRIC ?= timed_ambiguity_particle_efficiency
+REPORT_Y_METRIC ?= timed_seeding_particle_efficiency
 HEPP_RUN_TIMEOUT ?= 1800
 HEPP_HOST ?= thomaaks@hepp02.hpc.uio.no
 HEPP_STORAGE ?= /storage/thomaaks
@@ -43,10 +43,10 @@ help:
 	  'make hepp02-setup            Copy files and verify ACTS Python on HEPP02.' \
 	  'make hepp02-setup-and-build  Copy files, configure, and build ACTS on HEPP02.' \
 	  'make hepp02-full-chain-itk   Run the configurable ttbar ITk chain and return output.' \
-	  '  Defaults use the v2 protocol: 10 events and one ACTS thread.' \
+	  '  Manual helper defaults use 10 events and one ACTS thread.' \
 	  '  ITK_STAGE=seeding stops after seeding; full runs reconstruction.' \
 	  '  ITK_METRICS=time adds GNU time RSS and CPU metrics; none runs clean.' \
-	  'make evaluate CANDIDATE=name  Run 10-event development stages for a committed candidate.' \
+	  'make evaluate CANDIDATE=name  Run the controlled seeding-only 1 + 3 + 1 matrix.' \
 	  'make report                 Build the results report and live campaign dashboard.' \
 	  'make campaign-status        Generate orchestration-files/campaign-status.json.' \
 	  'make record CANDIDATE=name  Print the latest candidate result and failure logs.' \

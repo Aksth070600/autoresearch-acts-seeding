@@ -16,6 +16,8 @@ from protocol import (
     PROTOCOL_ID,
     PROTOCOL_METADATA,
     is_compatible_summary,
+    is_complete_rss_evidence,
+    is_complete_stage_matrix,
 )
 from proposal import ProposalError, median_absolute_deviation, proposal_from_summary
 
@@ -46,7 +48,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--x-metric", default="timed_seeding_time_per_event_ms")
     parser.add_argument(
         "--y-metric",
-        default="timed_ambiguity_particle_efficiency",
+        default="timed_seeding_particle_efficiency",
     )
     parser.add_argument(
         "--list-metrics",
@@ -66,39 +68,14 @@ def commit_url(commit: str) -> str:
     return f"{REPOSITORY_URL}/commit/{commit}"
 
 
-def stage_prefix(stage: dict[str, Any]) -> str | None:
-    name = str(stage.get("name", ""))
-    if "timed" in name or stage.get("metrics_mode") == "time":
-        return "timed"
-    if stage.get("metrics_mode") == "none" and stage.get("events", 0) > 1:
-        return "clean"
-    return None
-
-
 def add_metrics(metrics: dict[str, float], prefix: str, run_metrics: dict[str, Any], stage: dict[str, Any]) -> None:
-    timing_total = run_metrics.get("timing_total", {})
-    for source, suffix in (
-        ("total_time_ms", "total_time_ms"),
-        ("time_per_event_ms", "total_time_per_event_ms"),
-    ):
-        value = timing_total.get(source)
-        if finite_number(value):
-            metrics[f"{prefix}_{suffix}"] = float(value)
+    """Flatten only seeding timing and quality from a v3 timing aggregate."""
 
-    timing = run_metrics.get("timing", {})
-    for algorithm in ("seeding", "ckf", "ambiguity_resolution"):
-        values = timing.get(algorithm, {})
-        value = values.get("time_per_event_ms")
-        if finite_number(value):
-            metric_algorithm = "ambiguity" if algorithm == "ambiguity_resolution" else algorithm
-            metrics[f"{prefix}_{metric_algorithm}_time_per_event_ms"] = float(value)
+    seeding_timing = run_metrics.get("timing", {}).get("seeding", {})
+    value = seeding_timing.get("time_per_event_ms")
+    if finite_number(value):
+        metrics[f"{prefix}_seeding_time_per_event_ms"] = float(value)
 
-    performance = run_metrics.get("performance", {})
-    algorithm_keys = {
-        "ambiguity_resolution": "ambiguity",
-        "seeding": "seeding",
-        "ckf": "ckf",
-    }
     metric_keys = {
         "efficiency_particles": "particle_efficiency",
         "efficiency_tracks": "track_efficiency",
@@ -107,24 +84,12 @@ def add_metrics(metrics: dict[str, float], prefix: str, run_metrics: dict[str, A
         "duplicate_ratio_particles": "particle_duplicate_ratio",
         "duplicate_ratio_tracks": "track_duplicate_ratio",
     }
-    for algorithm, values in performance.items():
-        algorithm_key = algorithm_keys.get(algorithm, algorithm)
-        for metric_name, value in values.items():
-            if finite_number(value):
-                metric_key = metric_keys.get(metric_name, metric_name)
-                metrics[f"{prefix}_{algorithm_key}_{metric_key}"] = float(value)
-
-    resource = run_metrics.get("resource_metrics", {})
-    for source, suffix in (
-        ("peak_rss_kb", "peak_rss_kb"),
-        ("user_seconds", "user_seconds"),
-        ("system_seconds", "system_seconds"),
-    ):
-        value = resource.get(source)
+    seeding_performance = run_metrics.get("performance", {}).get("seeding", {})
+    for metric_name, value in seeding_performance.items():
         if finite_number(value):
-            metrics[f"{prefix}_{suffix}"] = float(value)
+            metric_key = metric_keys.get(metric_name, metric_name)
+            metrics[f"{prefix}_seeding_{metric_key}"] = float(value)
 
-    # Keep the event count available for hover details and future comparisons.
     events = stage.get("events")
     if finite_number(events):
         metrics[f"{prefix}_events"] = float(events)
@@ -202,19 +167,11 @@ def flatten_summary(summary: dict[str, Any], path: Path, records_root: Path) -> 
     if summary.get("status") != "passed" or not is_compatible_summary(summary):
         return None
     stages = summary.get("stages")
-    if (
-        not isinstance(stages, list)
-        or not stages
-        or any(not isinstance(stage, dict) or stage.get("status") != "passed" for stage in stages)
+    if not is_complete_stage_matrix(stages) or not is_complete_rss_evidence(
+        summary.get("rss_evidence")
     ):
         return None
     metrics: dict[str, float] = {}
-    for stage in stages:
-        if not isinstance(stage, dict) or stage.get("comparison") != "clean":
-            continue
-        if stage_prefix(stage) == "clean" and isinstance(stage.get("run_metrics"), dict):
-            add_metrics(metrics, "clean", stage["run_metrics"], stage)
-
     timed_comparison = summary.get("timed_comparison", {})
     if not isinstance(timed_comparison, dict):
         timed_comparison = {}
@@ -228,18 +185,32 @@ def flatten_summary(summary: dict[str, Any], path: Path, records_root: Path) -> 
         and all(
             isinstance(repetition, dict)
             and repetition.get("status") == "passed"
+            and repetition.get("stage") == PROTOCOL_METADATA["execution_stage"]
+            and repetition.get("metrics_mode")
+            == PROTOCOL_METADATA["timing_instrumentation"]
+            and repetition.get("events") == PROTOCOL_METADATA["timing_events"]
+            and not repetition.get("resource_metrics")
             and isinstance(repetition.get("run_metrics"), dict)
             and bool(repetition.get("run_metrics"))
             for repetition in timed_comparison["repetitions"]
         )
         and isinstance(median_metrics, dict)
+        and "resource_metrics" not in median_metrics
     ):
-        timed_stage = {
-            "events": timed_comparison.get("events", PROTOCOL_METADATA["development_events"]),
-        }
-        timed_median = dict(median_metrics)
-        timed_median["resource_metrics"] = timed_comparison.get("median_resource_metrics", {})
-        add_metrics(metrics, "timed", timed_median, timed_stage)
+        timed_stage = {"events": timed_comparison.get("events")}
+        add_metrics(metrics, "timed", median_metrics, timed_stage)
+
+    rss_evidence = summary.get("rss_evidence")
+    if isinstance(rss_evidence, dict) and rss_evidence.get("complete") is True:
+        resource_metrics = rss_evidence.get("resource_metrics", {})
+        for source, suffix in (
+            ("peak_rss_kb", "peak_rss_kb"),
+            ("user_seconds", "user_seconds"),
+            ("system_seconds", "system_seconds"),
+        ):
+            value = resource_metrics.get(source)
+            if finite_number(value):
+                metrics[f"rss_{suffix}"] = float(value)
 
     if not metrics:
         return None
@@ -292,15 +263,16 @@ def metric_label(key: str) -> str:
         "clean_total_time_ms": "Clean total selected time (ms)",
         "timed_total_time_ms": "Timed total selected time (ms)",
         "clean_time_per_event_ms": "Clean selected time/event (ms)",
-        "timed_total_time_per_event_ms": "Diagnostic: timed full-chain time/event (ms)",
-        "timed_seeding_time_per_event_ms": "PRIMARY: timed seeding time/event (ms)",
-        "timed_ckf_time_per_event_ms": "Timed CKF time/event (ms)",
-        "timed_ambiguity_time_per_event_ms": "Timed ambiguity time/event (ms)",
-        "clean_ambiguity_particle_efficiency": "Clean ambiguity particle efficiency",
-        "timed_ambiguity_particle_efficiency": "PRIMARY: timed ambiguity particle efficiency",
-        "timed_peak_rss_kb": "Peak RSS (KiB)",
-        "timed_user_seconds": "Timed user CPU (s)",
-        "timed_system_seconds": "Timed system CPU (s)",
+        "timed_total_time_per_event_ms": "Legacy diagnostic: full-chain time/event (ms)",
+        "timed_seeding_time_per_event_ms": "PRIMARY: seeding time/event (ms)",
+        "timed_ckf_time_per_event_ms": "Legacy diagnostic: CKF time/event (ms)",
+        "timed_ambiguity_time_per_event_ms": "Legacy diagnostic: ambiguity time/event (ms)",
+        "clean_ambiguity_particle_efficiency": "Legacy ambiguity particle efficiency",
+        "timed_ambiguity_particle_efficiency": "Legacy ambiguity particle efficiency",
+        "timed_seeding_particle_efficiency": "PRIMARY: seeding particle efficiency",
+        "rss_peak_rss_kb": "Separate seeding Peak RSS (KiB)",
+        "rss_user_seconds": "Separate RSS-run user CPU (s)",
+        "rss_system_seconds": "Separate RSS-run system CPU (s)",
     }
     if key in labels:
         return labels[key]
@@ -425,7 +397,7 @@ def build_report(
         "protocol": PROTOCOL_METADATA,
         "primary_objectives": {
             "minimize": "timed_seeding_time_per_event_ms",
-            "maximize": "timed_ambiguity_particle_efficiency",
+            "maximize": "timed_seeding_particle_efficiency",
         },
         "evaluation_timing_policy": {
             **EVALUATION_TIMING_REPORTING,
