@@ -900,7 +900,7 @@ console.log(JSON.stringify({
             )
             self.assertNotIn("rss_peak_rss_kb", payload["rows"][0]["metrics"])
             self.assertIn("timed_peak_rss_kb", payload["rows"][0]["metrics"])
-            self.assertIn("Captain-approved seeding objective pool", index)
+            self.assertNotIn("Captain-approved seeding objective pool", index)
             self.assertNotIn("fallback", index.lower())
 
             rss_output = root / "rss-site"

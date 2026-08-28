@@ -462,13 +462,7 @@ def render(report: dict[str, Any], output: Path, *, defaults: dict[str, str]) ->
     protocol = report.get("protocol", {})
     members = protocol.get("members", []) if isinstance(protocol, dict) else []
     if len(members) == 2:
-        protocol_context = (
-            "Captain-approved seeding objective pool: "
-            f"{members[0]} and {members[1]} seeding time and particle efficiency "
-            "are directly comparable. Peak RSS is an approximate diagnostic: "
-            "v2 raw RSS + (v3 Genesis mean - v2 Genesis mean); v3 stays raw. "
-            "V2 RSS is unavailable until both dataset-specific Genesis means exist."
-        )
+        protocol_context = ""
     elif selected_protocol:
         protocol_context = f"Protocol {selected_protocol}."
     else:
