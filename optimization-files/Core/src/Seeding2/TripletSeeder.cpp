@@ -69,41 +69,52 @@ void createSeedsFromGroupsImpl(
     return;
   }
 
-  // create middle-bottom doublets
-  cache.bottomDoublets.clear();
-  for (auto& bottomSpGroup : bottomSpGroups) {
-    bottomFinder.createDoublets(middleSp, middleSpInfo, bottomSpGroup,
-                                cache.bottomDoublets);
+  // Stream bottom groups through one reusable doublet store. This bounds the
+  // live bottom data by one neighboring group instead of accumulating and then
+  // globally sorting every group for the middle point.
+  std::size_t bottomCount = 0;
+  if (tripletFinder.config().sortedByCotTheta) {
+    cache.topDoublets.sortByCotTheta({0, cache.topDoublets.size()},
+                                     cache.sortedTops);
+    for (auto& bottomSpGroup : bottomSpGroups) {
+      cache.bottomDoublets.clear();
+      bottomFinder.createDoublets(middleSp, middleSpInfo, bottomSpGroup,
+                                  cache.bottomDoublets);
+      if (cache.bottomDoublets.empty()) {
+        continue;
+      }
+      bottomCount += cache.bottomDoublets.size();
+      cache.bottomDoublets.sortByCotTheta({0, cache.bottomDoublets.size()},
+                                          cache.sortedBottoms);
+      createAndFilterTriplets(cache, tripletFinder, filter, spacePoints,
+                              cache.bottomDoublets.subset(cache.sortedBottoms),
+                              middleSp,
+                              cache.topDoublets.subset(cache.sortedTops));
+    }
+  } else {
+    for (auto& bottomSpGroup : bottomSpGroups) {
+      cache.bottomDoublets.clear();
+      bottomFinder.createDoublets(middleSp, middleSpInfo, bottomSpGroup,
+                                  cache.bottomDoublets);
+      if (cache.bottomDoublets.empty()) {
+        continue;
+      }
+      bottomCount += cache.bottomDoublets.size();
+      createAndFilterTriplets(cache, tripletFinder, filter, spacePoints,
+                              cache.bottomDoublets.range(), middleSp,
+                              cache.topDoublets.range());
+    }
   }
 
-  // no bottom SP found -> cannot form any triplet
-  if (cache.bottomDoublets.empty()) {
+  if (bottomCount == 0) {
     ACTS_VERBOSE("No compatible Bottoms, returning");
     return;
   }
 
-  ACTS_VERBOSE("Candidates: " << cache.bottomDoublets.size() << " bottoms and "
+  ACTS_VERBOSE("Candidates: " << bottomCount << " bottoms and "
                               << cache.topDoublets.size()
                               << " tops for middle candidate indexed "
                               << middleSp.index());
-
-  // combine doublets to triplets
-  if (tripletFinder.config().sortedByCotTheta) {
-    cache.bottomDoublets.sortByCotTheta({0, cache.bottomDoublets.size()},
-                                        cache.sortedBottoms);
-    cache.topDoublets.sortByCotTheta({0, cache.topDoublets.size()},
-                                     cache.sortedTops);
-
-    createAndFilterTriplets(cache, tripletFinder, filter, spacePoints,
-                            cache.bottomDoublets.subset(cache.sortedBottoms),
-                            middleSp,
-                            cache.topDoublets.subset(cache.sortedTops));
-  } else {
-    createAndFilterTriplets(cache, tripletFinder, filter, spacePoints,
-                            cache.bottomDoublets.range(), middleSp,
-                            cache.topDoublets.range());
-  }
-
   filter.filterTripletsMiddleFixed(spacePoints, outputSeeds);
 }
 
