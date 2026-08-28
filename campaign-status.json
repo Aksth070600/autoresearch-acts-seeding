@@ -468,13 +468,31 @@
       "state": "completed",
       "timed_ambiguity_particle_efficiency": 0.972769,
       "timed_seeding_time_per_event_ms": 296.89
+    },
+    {
+      "candidate": "DoubletDerivedSmallBufferColumns",
+      "classification": "structural",
+      "duration_seconds": 815.341,
+      "finished_at": "2026-08-28T00:36:51.899319Z",
+      "implementation_commit": "b2bfdb3905361a68f2ecdf6eefbb749dcfa77ab2",
+      "links": {
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/b2bfdb3905361a68f2ecdf6eefbb749dcfa77ab2",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260828T002316Z-DoubletDerivedSmallBufferColumns/summary.json"
+      },
+      "mechanism_family": "doublet-derived-small-buffer-columns",
+      "outcome": "Passed all controlled Development stages.",
+      "record": "records/Development/20260828T002316Z-DoubletDerivedSmallBufferColumns/summary.json",
+      "started_at": "2026-08-28T00:23:16.558048Z",
+      "state": "completed",
+      "timed_ambiguity_particle_efficiency": 0.972769,
+      "timed_seeding_time_per_event_ms": 293.16
     }
   ],
   "blockers": [],
   "campaign": {
     "branch": "autoresearch-acts-seeding/campaign-v7",
     "name": "ACTS Seeding Development Campaign V7",
-    "phase": "Development attempt 25 of 61",
+    "phase": "Development attempt 25 of 61 recorded",
     "started_at": "2026-08-27T18:23:05Z",
     "targets": {
       "completed_attempts": 61,
@@ -482,14 +500,7 @@
       "structural_attempts": 30
     }
   },
-  "current_attempt": {
-    "candidate": "DoubletDerivedSmallBufferColumns",
-    "classification": "structural",
-    "controlled_stage": "queued Development run with ACTS_BUILD_JOBS=8",
-    "mechanism_family": "doublet-derived-small-buffer-columns",
-    "started_at": "2026-08-28T00:23:14.409622Z",
-    "state": "queued"
-  },
+  "current_attempt": null,
   "failures": [
     {
       "candidate": "TripletSlopePrefilterStaging",
@@ -497,20 +508,20 @@
       "record_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Errors/20260827T232540Z-TripletSlopePrefilterStaging/summary.json"
     }
   ],
-  "generated_at": "2026-08-28T00:23:14.447895Z",
+  "generated_at": "2026-08-28T00:36:52.016163Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/b2bfdb3905361a68f2ecdf6eefbb749dcfa77ab2",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/89f863360d4543ff8315446cbd1120230b9f8b95",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/campaign-v7",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/28"
   },
   "progress": {
-    "completed_attempts": 24,
-    "elapsed_seconds": 21609.447895,
-    "estimated_remaining_seconds": 29749.737727,
-    "eta_basis": "Median of 24 completed attempts; current attempt elapsed time deducted.",
-    "eta_sample_count": 24,
-    "expected_finish_at": "2026-08-28T08:39:04.185622Z",
-    "median_completed_attempt_duration_seconds": 804.048,
+    "completed_attempts": 25,
+    "elapsed_seconds": 22427.016163,
+    "estimated_remaining_seconds": 28951.02,
+    "eta_basis": "Median of 25 completed attempts.",
+    "eta_sample_count": 25,
+    "expected_finish_at": "2026-08-28T08:39:23.036163Z",
+    "median_completed_attempt_duration_seconds": 804.195,
     "micro_optimizations": 3,
     "structural_attempts": 22
   },
@@ -526,16 +537,16 @@
       "timed_seeding_time_per_event_ms": 296.44
     },
     "best_seeding": {
-      "candidate": "GridBinCountCache",
-      "delta_vs_genesis_ms": -2.3799999999999955,
+      "candidate": "DoubletDerivedSmallBufferColumns",
+      "delta_vs_genesis_ms": -4.829999999999984,
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/cae3fce77d3a40878b3e030cdbd9a09443d2baa8",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260827T215854Z-GridBinCountCache/summary.json"
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/b2bfdb3905361a68f2ecdf6eefbb749dcfa77ab2",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260828T002316Z-DoubletDerivedSmallBufferColumns/summary.json"
       },
-      "percentage_vs_genesis": -0.7986845196147505,
-      "started_at": "2026-08-27T21:58:54.844257Z",
+      "percentage_vs_genesis": -1.6208597603946389,
+      "started_at": "2026-08-28T00:23:16.558048Z",
       "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 295.61
+      "timed_seeding_time_per_event_ms": 293.16
     },
     "latest_genesis": {
       "candidate": "Genesis",
@@ -549,14 +560,14 @@
     },
     "pareto_front": [
       {
-        "candidate": "GridBinCountCache",
+        "candidate": "DoubletDerivedSmallBufferColumns",
         "links": {
-          "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/cae3fce77d3a40878b3e030cdbd9a09443d2baa8",
-          "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260827T215854Z-GridBinCountCache/summary.json"
+          "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/b2bfdb3905361a68f2ecdf6eefbb749dcfa77ab2",
+          "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v7/records/Development/20260828T002316Z-DoubletDerivedSmallBufferColumns/summary.json"
         },
-        "started_at": "2026-08-27T21:58:54.844257Z",
+        "started_at": "2026-08-28T00:23:16.558048Z",
         "timed_ambiguity_particle_efficiency": 0.972769,
-        "timed_seeding_time_per_event_ms": 295.61
+        "timed_seeding_time_per_event_ms": 293.16
       }
     ]
   },
