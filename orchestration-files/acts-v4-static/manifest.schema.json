@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://autoresearch.invalid/schemas/acts-owned-seeding-dataset-v1.json",
-  "title": "Owned ACTS seeding qualification dataset manifest v1",
+  "title": "Owned ACTS seeding qualification or canonical dataset manifest v1",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema", "qualification", "protocol", "dataset", "payload", "production", "identities", "contracts"],
@@ -17,25 +17,36 @@
       }
     },
     "qualification": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["only", "canonical", "unresolved_captain_decisions"],
-      "properties": {
-        "only": {"const": true},
-        "canonical": {"const": false},
-        "unresolved_captain_decisions": {
-          "const": ["canonical-genesis-commit", "immutable-production-locator", "storage-ownership", "root-compression", "final-protocol-and-dataset-ids", "publication-actor"]
+      "oneOf": [
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["only", "canonical", "unresolved_captain_decisions"],
+          "properties": {
+            "only": {"const": true}, "canonical": {"const": false},
+            "unresolved_captain_decisions": {"const": ["canonical-genesis-commit", "immutable-production-locator", "storage-ownership", "root-compression", "final-protocol-and-dataset-ids", "publication-actor"]}
+          }
+        },
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["only", "canonical", "unresolved_captain_decisions"],
+          "properties": {
+            "only": {"const": false}, "canonical": {"const": true},
+            "unresolved_captain_decisions": {"const": []}
+          }
         }
-      }
+      ]
     },
     "protocol": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["id", "prefix"],
-      "properties": {
-        "id": {"type": "string", "pattern": "^acts-seeding-v4-owned-static-test(?:-[a-z0-9._-]+)?$"},
-        "prefix": {"const": "acts-seeding-v4-owned-static-test"}
-      }
+      "oneOf": [
+        {
+          "type": "object", "additionalProperties": false, "required": ["id", "prefix"],
+          "properties": {
+            "id": {"type": "string", "pattern": "^acts-seeding-v4-owned-static-test(?:-[a-z0-9._-]+)?$"},
+            "prefix": {"const": "acts-seeding-v4-owned-static-test"}
+          }
+        },
+        {"const": {"id": "acts-seeding-v4-owned-static", "prefix": "acts-seeding-v4-owned-static"}}
+      ]
     },
     "dataset": {
       "type": "object",
@@ -90,8 +101,8 @@
         "acts": {
           "const": {"tag": "v46.5.0", "commit": "34edd48852f766e1b9d94d3dc996e27476339f1b"}
         },
-        "project_genesis_commit": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/sha256"}]},
-        "project_genesis_is_canonical": {"const": false},
+        "project_genesis_commit": {"oneOf": [{"type": "null"}, {"type": "string", "pattern": "^[0-9a-f]{40}$"}]},
+        "project_genesis_is_canonical": {"type": "boolean"},
         "seed": {"const": 42},
         "pileup": {"const": 200},
         "events": {"type": "integer", "minimum": 1},

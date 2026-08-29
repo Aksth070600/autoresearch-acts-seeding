@@ -8,7 +8,10 @@ from pathlib import Path
 from support import manifest_fixture
 
 from schema import (
+    CANONICAL_PROJECT_GENESIS_COMMIT,
+    CANONICAL_PROTOCOL_ID,
     ManifestError,
+    canonical_dataset_id,
     canonical_json_bytes,
     validate_dataset_directory,
     validate_manifest,
@@ -19,6 +22,25 @@ class ManifestTests(unittest.TestCase):
     def test_accepts_strict_provisional_manifest(self) -> None:
         manifest = manifest_fixture(2)
         self.assertEqual(validate_manifest(manifest, expected_events=2), manifest)
+
+    def test_accepts_only_self_digest_bound_canonical_manifest(self) -> None:
+        manifest = manifest_fixture(50)
+        manifest["qualification"] = {
+            "only": False,
+            "canonical": True,
+            "unresolved_captain_decisions": [],
+        }
+        manifest["protocol"] = {
+            "id": CANONICAL_PROTOCOL_ID,
+            "prefix": CANONICAL_PROTOCOL_ID,
+        }
+        manifest["production"]["project_genesis_commit"] = CANONICAL_PROJECT_GENESIS_COMMIT
+        manifest["production"]["project_genesis_is_canonical"] = True
+        manifest["dataset"]["id"] = canonical_dataset_id(manifest)
+        self.assertEqual(validate_manifest(manifest), manifest)
+        manifest["payload"]["sha256"] = "2" * 64
+        with self.assertRaises(ManifestError):
+            validate_manifest(manifest)
 
     def test_rejects_protocol_drift_and_old_protocols(self) -> None:
         for protocol in ("acts-seeding-v2", "acts-seeding-v3", "acts-seeding-v4"):

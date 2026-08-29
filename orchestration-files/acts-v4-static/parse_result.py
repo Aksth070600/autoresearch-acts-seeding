@@ -15,6 +15,8 @@ from typing import Any, Mapping
 from schema import (
     ACTS_COMMIT,
     ACTS_TAG,
+    CANONICAL_PROTOCOL_ID,
+    PILOT_PROTOCOL_REVISION,
     PROVISIONAL_PROTOCOL_PREFIX,
     ManifestError,
     atomic_write_json,
@@ -32,7 +34,7 @@ STATS = (
     "nTotalDuplicateParticles",
     "nTotalFakeParticles",
 )
-RAW_KEYS = {
+RAW_KEYS_V1 = {
     "protocol_id",
     "dataset_id",
     "event_count",
@@ -42,9 +44,12 @@ RAW_KEYS = {
     "stats",
     "diagnostics",
     "identities",
+    "candidate_binding",
+    "loaded_dsos",
     "expected_unmasked_fpes",
     "root_plots",
 }
+RAW_KEYS_V2 = RAW_KEYS_V1 | {"protocol_revision", "loaded_acts_dso_closure"}
 DIAGNOSTIC_KEYS = {
     "raw_seed_count",
     "estimated_seed_count",
@@ -58,10 +63,19 @@ IDENTITY_KEYS = {
     "acts_commit",
     "manifest_sha256",
     "payload_sha256",
+    "dataset_source_manifest_sha256",
+    "dataset_build_manifest_sha256",
+    "runtime_source_manifest_sha256",
+    "runtime_build_manifest_sha256",
+    "overlay_manifest_sha256",
+    "loaded_dso_manifest_sha256",
+    "runner_sha256",
+}
+CANDIDATE_BINDING_KEYS = {
     "source_manifest_sha256",
     "build_manifest_sha256",
     "overlay_manifest_sha256",
-    "runner_sha256",
+    "proposal_sha256",
 }
 
 
@@ -204,13 +218,22 @@ def build_result(
     process_exit_status: int,
     total_latency_seconds: str | None = None,
 ) -> dict[str, Any]:
-    raw = _exact_object(raw, RAW_KEYS, "raw result")
+    if not isinstance(raw, dict):
+        raise ManifestError("raw result has unexpected keys")
+    protocol_revision = raw.get("protocol_revision", 1)
+    if protocol_revision == PILOT_PROTOCOL_REVISION:
+        raw = _exact_object(raw, RAW_KEYS_V2, "raw result")
+    elif protocol_revision == 1 and "protocol_revision" not in raw:
+        raw = _exact_object(raw, RAW_KEYS_V1, "raw result")
+    else:
+        raise ManifestError("result protocol revision is unsupported")
     protocol_id = raw["protocol_id"]
     if not isinstance(protocol_id, str) or (
-        protocol_id != PROVISIONAL_PROTOCOL_PREFIX
+        protocol_id != CANONICAL_PROTOCOL_ID
+        and protocol_id != PROVISIONAL_PROTOCOL_PREFIX
         and not protocol_id.startswith(PROVISIONAL_PROTOCOL_PREFIX + "-")
     ):
-        raise ManifestError("result protocol is outside the static-v4 qualification namespace")
+        raise ManifestError("result protocol is outside the owned static-v4 namespace")
     if not isinstance(raw["dataset_id"], str) or not raw["dataset_id"]:
         raise ManifestError("result dataset ID is missing")
     events = _nonnegative_int(raw["event_count"], "event_count")
@@ -284,6 +307,62 @@ def build_result(
     for key in IDENTITY_KEYS - {"acts_tag", "acts_commit"}:
         _sha(identities[key], f"identities.{key}")
 
+    candidate_binding = raw["candidate_binding"]
+    exact_candidate_binding = None
+    if candidate_binding is not None:
+        candidate_binding = _exact_object(
+            candidate_binding, CANDIDATE_BINDING_KEYS, "candidate_binding"
+        )
+        exact_candidate_binding = {
+            key: _sha(value, f"candidate_binding.{key}")
+            for key, value in candidate_binding.items()
+        }
+        for source, identity in (
+            ("source_manifest_sha256", "runtime_source_manifest_sha256"),
+            ("build_manifest_sha256", "runtime_build_manifest_sha256"),
+            ("overlay_manifest_sha256", "overlay_manifest_sha256"),
+        ):
+            if exact_candidate_binding[source] != exact_identities[identity]:
+                raise ManifestError("candidate binding differs from runtime identity")
+    loaded_dsos = raw["loaded_dsos"]
+    if not isinstance(loaded_dsos, dict) or not loaded_dsos:
+        raise ManifestError("loaded DSO identity map is missing")
+    exact_loaded_dsos: dict[str, str] = {}
+    for relative, digest in loaded_dsos.items():
+        path = Path(relative)
+        if (
+            not isinstance(relative, str)
+            or path.is_absolute()
+            or ".." in path.parts
+            or ".so" not in path.name
+        ):
+            raise ManifestError("loaded DSO path is unsafe")
+        exact_loaded_dsos[relative] = _sha(digest, f"loaded_dsos.{relative}")
+    if sha256_bytes(canonical_json_bytes(exact_loaded_dsos)) != exact_identities[
+        "loaded_dso_manifest_sha256"
+    ]:
+        raise ManifestError("loaded DSO manifest hash mismatch")
+    loaded_closure = None
+    if protocol_revision == PILOT_PROTOCOL_REVISION:
+        loaded_closure = _exact_object(
+            raw["loaded_acts_dso_closure"],
+            {
+                "inspection",
+                "complete",
+                "external_acts_objects_rejected",
+                "object_count",
+            },
+            "loaded ACTS DSO closure",
+        )
+        if (
+            loaded_closure["inspection"] != "/proc/self/maps"
+            or loaded_closure["complete"] is not True
+            or loaded_closure["external_acts_objects_rejected"] is not True
+            or loaded_closure["object_count"] != len(exact_loaded_dsos)
+        ):
+            raise ManifestError("loaded ACTS DSO closure proof is invalid")
+        loaded_closure = dict(loaded_closure)
+
     if raw["expected_unmasked_fpes"] != 0:
         raise ManifestError("static qualification expected-FPE policy drifted")
     if type(raw["root_plots"]) is not bool or raw["root_plots"]:
@@ -317,8 +396,12 @@ def build_result(
         total_gate = {"seconds": str(total), "target_seconds": 300, "passed": True}
 
     result: dict[str, Any] = {
-        "schema": "acts-seeding-v4-owned-static-result-v1",
-        "qualification_only": True,
+        "schema": (
+            "acts-seeding-v4-owned-static-result-v2"
+            if protocol_revision == PILOT_PROTOCOL_REVISION
+            else "acts-seeding-v4-owned-static-result-v1"
+        ),
+        "qualification_only": protocol_id != CANONICAL_PROTOCOL_ID,
         "protocol_id": protocol_id,
         "dataset_id": raw["dataset_id"],
         "events": events,
@@ -349,7 +432,12 @@ def build_result(
         "preparation_build_target_seconds": 45,
         "preparation_build_target_waives_other_targets": False,
         "identities": exact_identities,
+        "candidate_binding": exact_candidate_binding,
+        "loaded_dsos": exact_loaded_dsos,
     }
+    if protocol_revision == PILOT_PROTOCOL_REVISION:
+        result["protocol_revision"] = PILOT_PROTOCOL_REVISION
+        result["loaded_acts_dso_closure"] = loaded_closure
     result["result_sha256"] = sha256_bytes(canonical_json_bytes(result))
     return result
 

@@ -14,13 +14,18 @@ import acts.examples
 import acts.examples.itk
 import acts.examples.root
 
+from candidate_identity import validate_candidate_build
 from identity import input_identities, source_file_identities, validate_private_build
+from loaded_dsos import loaded_acts_dsos
 from pipeline import add_exact_downstream, diagnostics_dict, stats_dict
 from schema import (
     ACTS_COMMIT,
     ACTS_TAG,
+    PILOT_PROTOCOL_REVISION,
     ManifestError,
     atomic_write_json,
+    canonical_json_bytes,
+    sha256_bytes,
     sha256_file,
     validate_dataset_directory,
 )
@@ -39,6 +44,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--raw-result", type=Path, required=True)
     parser.add_argument("--protocol-id", required=True)
     parser.add_argument("--dataset-id", required=True)
+    parser.add_argument("--candidate-identity-dir", type=Path)
+    parser.add_argument("--proposal-sha256")
+    parser.add_argument(
+        "--protocol-revision", type=int, choices=(1, PILOT_PROTOCOL_REVISION), default=1
+    )
     return parser.parse_args()
 
 
@@ -59,14 +69,35 @@ def main() -> int:
         expected_protocol_id=args.protocol_id,
         expected_dataset_id=args.dataset_id,
     )
-    build_identity = validate_private_build(
-        args.private_source, args.private_build, args.identity_dir
-    )
-    if any(
-        manifest["identities"][key] != value
-        for key, value in build_identity.items()
-    ):
-        raise ManifestError("static private source/build differs from dataset production")
+    if (args.candidate_identity_dir is None) != (args.proposal_sha256 is None):
+        raise ManifestError(
+            "candidate identity directory and proposal hash must be supplied together"
+        )
+    if args.candidate_identity_dir is None:
+        build_identity = validate_private_build(
+            args.private_source, args.private_build, args.identity_dir
+        )
+        if any(
+            manifest["identities"][key] != value
+            for key, value in build_identity.items()
+        ):
+            raise ManifestError("static Genesis source/build differs from dataset production")
+        candidate_binding = None
+    else:
+        if len(args.proposal_sha256) != 64:
+            raise ManifestError("candidate proposal hash is malformed")
+        build_identity, _ = validate_candidate_build(
+            args.private_source,
+            args.private_build,
+            args.candidate_identity_dir,
+            args.proposal_sha256,
+        )
+        if (
+            manifest["identities"]["overlay_manifest_sha256"]
+            != build_identity["overlay_manifest_sha256"]
+        ):
+            raise ManifestError("candidate overlay differs from dataset production")
+        candidate_binding = dict(build_identity)
     geometry_identity = input_identities(args.geometry_dir)
     if any(
         manifest["identities"][key] != value
@@ -87,7 +118,12 @@ def main() -> int:
     published_output = False
     try:
         raw = _run_static(
-            args, manifest, detached, build_identity, staging_output
+            args,
+            manifest,
+            detached,
+            build_identity,
+            candidate_binding,
+            staging_output,
         )
         os.replace(staging_output, args.output_dir)
         published_output = True
@@ -104,7 +140,9 @@ def main() -> int:
     return 0
 
 
-def _run_static(args, manifest, detached, build_identity, staging_output: Path) -> dict:
+def _run_static(
+    args, manifest, detached, build_identity, candidate_binding, staging_output: Path
+) -> dict:
     detector = acts.examples.itk.buildITkGeometry(args.geometry_dir)
     tracking_geometry = detector.trackingGeometry()
     field = acts.root.MagneticFieldMapXyz(
@@ -154,6 +192,8 @@ def _run_static(args, manifest, detached, build_identity, staging_output: Path) 
             "ordered_diagnostics_sha256",
         )
     }
+    loaded_dsos = loaded_acts_dsos(args.private_build)
+    loaded_dso_manifest_sha256 = sha256_bytes(canonical_json_bytes(loaded_dsos))
     raw = {
         "protocol_id": manifest["protocol"]["id"],
         "dataset_id": manifest["dataset"]["id"],
@@ -168,12 +208,27 @@ def _run_static(args, manifest, detached, build_identity, staging_output: Path) 
             "acts_commit": ACTS_COMMIT,
             "manifest_sha256": detached["manifest.json"],
             "payload_sha256": detached["payload.root"],
-            **build_identity,
+            "dataset_source_manifest_sha256": manifest["identities"]["source_manifest_sha256"],
+            "dataset_build_manifest_sha256": manifest["identities"]["build_manifest_sha256"],
+            "runtime_source_manifest_sha256": build_identity["source_manifest_sha256"],
+            "runtime_build_manifest_sha256": build_identity["build_manifest_sha256"],
+            "overlay_manifest_sha256": build_identity["overlay_manifest_sha256"],
+            "loaded_dso_manifest_sha256": loaded_dso_manifest_sha256,
             "runner_sha256": sha256_file(MODULE / "run_static.py"),
         },
+        "candidate_binding": candidate_binding,
+        "loaded_dsos": loaded_dsos,
         "expected_unmasked_fpes": 0,
         "root_plots": False,
     }
+    if args.protocol_revision == PILOT_PROTOCOL_REVISION:
+        raw["protocol_revision"] = PILOT_PROTOCOL_REVISION
+        raw["loaded_acts_dso_closure"] = {
+            "inspection": "/proc/self/maps",
+            "complete": True,
+            "external_acts_objects_rejected": True,
+            "object_count": len(loaded_dsos),
+        }
     atomic_write_json(staging_output / "diagnostics.json", diagnostic_output)
     return raw
 

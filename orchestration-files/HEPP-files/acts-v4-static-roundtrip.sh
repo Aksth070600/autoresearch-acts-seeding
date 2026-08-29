@@ -11,6 +11,7 @@ DATASET_ID="${6:?provisional dataset ID is required}"
 EVENTS="${7:?event count is required}"
 COMPRESSION="${8:?compression setting is required}"
 COMPRESSION_LEVEL="${9:?compression level is required}"
+PROJECT_GENESIS_COMMIT="${10:-}"
 ACTS_SOURCE="${ACTS_SOURCE:?ACTS_SOURCE must name the private source path}"
 ACTS_BUILD_DIR="${ACTS_BUILD_DIR:?ACTS_BUILD_DIR must name the private build path}"
 ACTS_LCG_SETUP="${ACTS_LCG_SETUP:-/cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc13-opt/setup.sh}"
@@ -42,6 +43,10 @@ source "$ACTS_BUILD_DIR/python/setup.sh"
 set -u
 
 mkdir -p -- "$WORKSPACE"
+genesis_args=()
+if [[ -n "$PROJECT_GENESIS_COMMIT" ]]; then
+  genesis_args=(--project-genesis-commit "$PROJECT_GENESIS_COMMIT")
+fi
 staging="$WORKSPACE/generation-staging"
 dataset="$WORKSPACE/dataset"
 generation_log="$WORKSPACE/generation.log"
@@ -61,6 +66,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 "$MODULE_DIR/build_dataset.py" \
   --compression "$COMPRESSION" \
   --compression-level "$COMPRESSION_LEVEL" \
   --container-image-sha256 514a5c2c01f33371da3ff78f9806a293ac5cc7d175a022ced4a16c8d5ed5e8d8 \
+  "${genesis_args[@]}" \
   >"$generation_log" 2>&1
 generation_rc=$?
 set -e

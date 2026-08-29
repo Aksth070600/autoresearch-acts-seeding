@@ -45,11 +45,16 @@ def raw_fixture() -> dict:
             "acts_commit": ACTS_COMMIT,
             "manifest_sha256": digest,
             "payload_sha256": digest,
-            "source_manifest_sha256": digest,
-            "build_manifest_sha256": digest,
+            "dataset_source_manifest_sha256": digest,
+            "dataset_build_manifest_sha256": digest,
+            "runtime_source_manifest_sha256": digest,
+            "runtime_build_manifest_sha256": digest,
             "overlay_manifest_sha256": digest,
+            "loaded_dso_manifest_sha256": "28b828963758703a7b2241af69d42366a3c5c053bae8ae20f7d421c042d636ca",
             "runner_sha256": digest,
         },
+        "candidate_binding": None,
+        "loaded_dsos": {"lib64/libActsCore.so": digest},
         "expected_unmasked_fpes": 0,
         "root_plots": False,
     }
@@ -67,6 +72,29 @@ LOG = "Processed 2 events in 2.1s\nNo unmasked FPEs encountered\n"
 
 
 class ResultTests(unittest.TestCase):
+    def test_protocol_revision_two_binds_complete_loaded_dso_closure(self) -> None:
+        raw = raw_fixture()
+        raw["protocol_revision"] = 2
+        raw["loaded_acts_dso_closure"] = {
+            "inspection": "/proc/self/maps",
+            "complete": True,
+            "external_acts_objects_rejected": True,
+            "object_count": 1,
+        }
+        result = build_result(
+            raw,
+            timing_csv=TIMING,
+            time_v=TIME_V,
+            process_log=LOG,
+            process_exit_status=0,
+        )
+        self.assertEqual(result["schema"], "acts-seeding-v4-owned-static-result-v2")
+        self.assertEqual(result["protocol_revision"], 2)
+        self.assertTrue(result["loaded_acts_dso_closure"]["complete"])
+
+        raw["loaded_acts_dso_closure"]["object_count"] = 2
+        self.assertRejected(raw=raw)
+
     def test_emits_exact_pairs_resources_and_stable_hash(self) -> None:
         result = build_result(
             raw_fixture(),
