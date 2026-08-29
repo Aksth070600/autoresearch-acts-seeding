@@ -1,5 +1,11 @@
 {
-  "archive": null,
+  "archive": {
+    "branch": "fm/acts-v4-static-pilot",
+    "evaluation_run": false,
+    "merge_authorized": false,
+    "mode": "direct archive PR",
+    "pr_url": null
+  },
   "campaign": {
     "acts_commit": "34edd48852f766e1b9d94d3dc996e27476339f1b",
     "branch": "fm/acts-v4-static-pilot",
@@ -13,8 +19,9 @@
     "development_only": true,
     "evaluation_authorized": false,
     "name": "ACTS Seeding owned-static v4 Development pilot",
-    "phase": "four candidate processes complete; final Genesis restoration",
+    "phase": "scientific execution complete; Genesis restored; rendering archive report",
     "protocol_id": "acts-seeding-v4-owned-static",
+    "scientific_completed_at": "2026-08-29T17:43:07Z",
     "started_at": "2026-08-29T16:18:00Z"
   },
   "corrections": "orchestration-files/acts-v4-static-pilot/corrections.json",
@@ -40,7 +47,13 @@
     "publication_path": "/storage/thomaaks/acts-v4-owned-static/acts-seeding-v4-owned-static-a05ae8663452d52dc2b90e2fa5372091a2cb04feb8cce86646da9f6ccbc2f3fb",
     "qualification_evidence_sha256": "ed16fef43f1b6818e52cf6b0493d9c786a70444d212e7ab521eadd03d4b37237"
   },
-  "final_genesis_restoration": null,
+  "final_genesis_restoration": {
+    "build_manifest_sha256": "be4b95d060f4798d724ebe5b3f4fecaa52145822977327965dc6ea6b2f85ef98",
+    "evidence_sha256": "acb19cfddf37d1c4a2d550b7e8edd5255ac4e453c906ff9e24b2734f1acf02e7",
+    "path": "orchestration-files/acts-v4-static-pilot/evidence/final-genesis-restoration.json",
+    "source_binary_consistent": true,
+    "source_manifest_sha256": "22f7d97e2bd08de128467b83cf5a2373bbf36fc064fb9430011e3ffd7e55a183"
+  },
   "genesis_calibration": {
     "path": "orchestration-files/acts-v4-static-pilot/calibration.json",
     "runs": 5,
