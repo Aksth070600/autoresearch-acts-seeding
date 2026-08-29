@@ -259,6 +259,9 @@ class StaticV4ContinuousCampaignTests(unittest.TestCase):
             )
             self.assertEqual(snapshot["composition"]["completed_blocks"], 1)
             self.assertEqual(snapshot["attempts"][1]["status"], "invalid")
+            self.assertEqual(
+                snapshot["attempts"][1]["record_path"], str(root / "record-2.json")
+            )
 
             v3 = self.record(4, "combination")
             v3["protocol_id"] = "acts-seeding-v3"

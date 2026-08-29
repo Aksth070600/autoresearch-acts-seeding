@@ -637,10 +637,56 @@ def consume_stop(state: dict[str, Any], consumed_at: datetime) -> dict[str, Any]
     return validate_state(updated)
 
 
-def _record_projection(record: dict[str, Any]) -> dict[str, Any]:
+def _genesis_median_peak_rss(
+    calibration: dict[str, Any], repository_root: Path
+) -> int | None:
+    expected_timings = sorted(calibration.get("genesis_per_event_nanoseconds", []))
+    if len(expected_timings) != 5:
+        return None
+    groups: dict[str, list[tuple[int, int]]] = {}
+    for path in repository_root.glob("records/Development/*-Genesis-*/summary.json"):
+        try:
+            record = _canonical_load(path)
+        except ContinuousCampaignError:
+            continue
+        result = record.get("result")
+        resources = result.get("resources") if isinstance(result, dict) else None
+        timing = result.get("timing") if isinstance(result, dict) else None
+        if (
+            record.get("schema") != RECORD_SCHEMA
+            or record.get("candidate_name") != "Genesis"
+            or record.get("status") != "passed"
+            or record.get("protocol_id") != CANONICAL_PROTOCOL_ID
+            or record.get("protocol_revision") != PILOT_PROTOCOL_REVISION
+            or record.get("dataset_id") != DATASET_ID
+            or record.get("implementation_commit") != SCIENTIFIC_GENESIS_COMMIT
+            or not isinstance(resources, dict)
+            or not isinstance(timing, dict)
+            or not isinstance(resources.get("peak_rss_kb"), int)
+            or not isinstance(timing.get("per_event_nanoseconds"), int)
+        ):
+            continue
+        group = path.parent.name.rsplit("-Genesis-", 1)[0]
+        groups.setdefault(group, []).append(
+            (timing["per_event_nanoseconds"], resources["peak_rss_kb"])
+        )
+    matches = [
+        values
+        for values in groups.values()
+        if len(values) == 5
+        and sorted(timing for timing, _ in values) == expected_timings
+    ]
+    if len(matches) != 1:
+        return None
+    values = sorted(rss for _, rss in matches[0])
+    return values[len(values) // 2]
+
+
+def _record_projection(record: dict[str, Any], record_path: str) -> dict[str, Any]:
     result = record["result"]
     return {
         "slot": record["slot"],
+        "record_path": record_path,
         "candidate": record["candidate_name"],
         "classification": record["classification"],
         "status": record["status"],
@@ -682,6 +728,9 @@ def build_status(
         calibration_value = (
             _canonical_load(path) if path.is_file() else validated["calibration"]
         )
+        median_peak_rss = _genesis_median_peak_rss(calibration_value, repository_root)
+        if median_peak_rss is not None:
+            calibration_value["median_peak_rss_kb"] = median_peak_rss
     return {
         "schema": STATUS_SCHEMA,
         "generated_at": _iso(generated_at),
@@ -711,7 +760,8 @@ def build_status(
                 _validate_record(
                     _resolve_evidence_path(attempt["record_path"], repository_root),
                     attempt,
-                )
+                ),
+                attempt["record_path"],
             )
             for attempt in validated["attempts"]
         ],
