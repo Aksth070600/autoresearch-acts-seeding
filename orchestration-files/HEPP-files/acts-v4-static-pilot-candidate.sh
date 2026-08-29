@@ -123,14 +123,16 @@ if [[ "$dry_run" != *"no work to do"* ]]; then
   exit 1
 fi
 build_seconds="$(python3 -c "print(($build_end_ns-$build_start_ns)/1e9)")"
-preparation_end_ns="$(date +%s%N)"
-preparation_seconds="$(python3 -c "print(($preparation_end_ns-$queue_ns)/1e9)")"
+pre_identity_ns="$(date +%s%N)"
+pre_identity_seconds="$(python3 -c "print(($pre_identity_ns-$queue_ns)/1e9)")"
 identity_dir="$WORKSPACE/candidate-identity"
 PYTHONDONTWRITEBYTECODE=1 python3 "$MODULE_DIR/candidate_identity.py" \
   --source "$ACTS_SOURCE" --build "$ACTS_BUILD_DIR" \
   --genesis-tree "$GENESIS_OPTIMIZATION" --proposal "$PROPOSAL" \
   --implementation-commit "$IMPLEMENTATION_COMMIT" --invalidation "$invalidation" \
-  --output "$identity_dir" --preparation-build-seconds "$preparation_seconds"
+  --output "$identity_dir" --preparation-build-seconds "$pre_identity_seconds"
+preparation_end_ns="$(date +%s%N)"
+preparation_seconds="$(python3 -c "print(($preparation_end_ns-$queue_ns)/1e9)")"
 proposal_sha256="$(sha256sum "$PROPOSAL" | awk '{print $1}')"
 
 # shellcheck disable=SC1090,SC1091
@@ -148,6 +150,7 @@ ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE=1 PYTHONDONTWRITEBYTECODE=1 \
   --protocol-id acts-seeding-v4-owned-static \
   --dataset-id "$(basename -- "$DATASET")" >"$process_log" 2>&1
 process_rc=$?
+process_end_ns="$(date +%s%N)"
 set -e
 cat "$process_log"
 cat "$time_log"
@@ -163,7 +166,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 "$MODULE_DIR/parse_result.py" \
   --output "$WORKSPACE/result.json"
 
 record_start_ns="$(date +%s%N)"
-record_prep_seconds="$(python3 -c "print(($record_start_ns-$preparation_end_ns)/1e9)")"
+record_prep_seconds="$(python3 -c "print(($record_start_ns-$process_end_ns)/1e9)")"
 total_seconds="$(python3 -c "print(($record_start_ns-$queue_ns)/1e9)")"
 slot_number="$(python3 - "$PROPOSAL" <<'PY'
 import json,sys
