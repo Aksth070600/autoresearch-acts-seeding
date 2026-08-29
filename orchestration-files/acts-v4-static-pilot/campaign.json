@@ -56,6 +56,12 @@
     "scientific_validity": "invalid diagnostics only",
     "timing_selection_allowed": false
   },
+  "loaded_dso_qualification": {
+    "external_rejection_passed": true,
+    "loaded_acts_object_count": 33,
+    "path": "orchestration-files/acts-v4-static-pilot/evidence/revision-2-loaded-dso-qualification.json",
+    "qualification_sha256": "ea1d575dd0357c5b8e41a075feb8f94513f7b1040a1a2c86d2da1223f34ca6ed"
+  },
   "schema": "acts-v4-owned-static-pilot-campaign-v2",
   "slots": [
     {
