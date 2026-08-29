@@ -1,3 +1,6 @@
+import re
+import shutil
+import subprocess
 import sys
 import unittest
 from pathlib import Path
@@ -112,6 +115,29 @@ class StaticV4PublicCampaignTests(unittest.TestCase):
         self.assertIn("c" * 64, output)
         self.assertIn("f" * 40, output)
         self.assertIn("regular merge commit, never squash", output)
+        self.assertIn('id="metric-select"', output)
+        self.assertIn('id="metric-chart"', output)
+        self.assertIn('class="composition-grid"', output)
+        self.assertIn('class="chart-point"', output)
+        self.assertIn('class="finish-button"', output)
+        self.assertIn("CoreBatchMaterializationV4C", output)
+        self.assertNotIn("<script src=", output)
+        self.assertNotIn('rel="stylesheet"', output)
+
+    def test_generated_dashboard_inline_javascript_is_syntax_valid(self):
+        if shutil.which("node") is None:
+            self.skipTest("node is required")
+        output = render(self.status(), deployed_commit="f" * 40)
+        scripts = re.findall(r"<script>(.*?)</script>", output, re.DOTALL)
+        self.assertEqual(len(scripts), 1)
+        result = subprocess.run(
+            ["node", "--check", "-"],
+            input=scripts[0],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_public_dashboard_rejects_v3_or_wrong_static_dataset(self):
         status = self.status()
