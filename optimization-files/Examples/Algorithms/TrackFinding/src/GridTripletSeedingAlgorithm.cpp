@@ -18,12 +18,9 @@
 #include "Acts/Utilities/Delegate.hpp"
 #include "ActsExamples/EventData/SpacePoint.hpp"
 
-#include <array>
-#include <bit>
 #include <cmath>
 #include <csignal>
 #include <cstddef>
-#include <cstdint>
 #include <stdexcept>
 
 namespace ActsExamples {
@@ -151,38 +148,11 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
     grid.insert(i, phi, sp.z(), sp.r());
   }
 
-  std::vector<Acts::SpacePointIndex2> radixScratch;
   for (std::size_t i = 0; i < grid.numberOfBins(); ++i) {
-    auto& bin = grid.at(i);
-    if (bin.size() < 64) {
-      std::ranges::sort(bin, [&](const Acts::SpacePointIndex2& a,
-                                 const Acts::SpacePointIndex2& b) {
-        return spacePoints[a].r() < spacePoints[b].r();
-      });
-      continue;
-    }
-
-    radixScratch.resize(bin.size());
-    for (unsigned int shift = 0; shift < 64; shift += 8) {
-      std::array<std::size_t, 256> offsets{};
-      for (Acts::SpacePointIndex2 index : bin) {
-        const auto key = std::bit_cast<std::uint64_t>(
-            static_cast<double>(spacePoints[index].r()));
-        ++offsets[(key >> shift) & 0xffu];
-      }
-      std::size_t prefix = 0;
-      for (std::size_t& offset : offsets) {
-        const std::size_t count = offset;
-        offset = prefix;
-        prefix += count;
-      }
-      for (Acts::SpacePointIndex2 index : bin) {
-        const auto key = std::bit_cast<std::uint64_t>(
-            static_cast<double>(spacePoints[index].r()));
-        radixScratch[offsets[(key >> shift) & 0xffu]++] = index;
-      }
-      bin.swap(radixScratch);
-    }
+    std::ranges::sort(grid.at(i), [&](const Acts::SpacePointIndex2& a,
+                                      const Acts::SpacePointIndex2& b) {
+      return spacePoints[a].r() < spacePoints[b].r();
+    });
   }
 
   Acts::SpacePointContainer2 coreSpacePoints(
