@@ -229,6 +229,97 @@
       "state": "failed",
       "timed_seeding_particle_efficiency": null,
       "timed_seeding_time_per_event_ms": null
+    },
+    {
+      "candidate": "CandidateMiddleIndexHoist",
+      "changed_symbols": [
+        "Acts::CandidatesForMiddleSp2::StoredCandidate",
+        "Acts::CandidatesForMiddleSp2::clear",
+        "Acts::CandidatesForMiddleSp2::push",
+        "Acts::CandidatesForMiddleSp2::toSortedCandidates"
+      ],
+      "classification": "major",
+      "combination_provenance": null,
+      "derives_from": null,
+      "duration_seconds": 1025.586,
+      "files_changed": [
+        "optimization-files/Core/include/Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp#L14-L14",
+        "optimization-files/Core/include/Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp#L104-L115",
+        "optimization-files/Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp#L12-L12",
+        "optimization-files/Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp#L27-L27",
+        "optimization-files/Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp#L54-L64",
+        "optimization-files/Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp#L77-L77",
+        "optimization-files/Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp#L93-L106"
+      ],
+      "finished_at": "2026-08-29T01:20:02.778230Z",
+      "hot_path_rationale": "Acts::CandidatesForMiddleSp2 bounded candidate insertion, replacement, and sorted output for one fixed middle space point.",
+      "implementation_commit": "c5a0bf9b3056c0d23442187232e41c69a0c8e459",
+      "lesson": "Hoisting the invariant middle index preserved seeding efficiency but raised median seeding time by 5.65 ms/event; retain direct TripletCandidate2 records.",
+      "links": {
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/c5a0bf9b3056c0d23442187232e41c69a0c8e459",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug29/records/Development/20260829T010257Z-CandidateMiddleIndexHoist/summary.json"
+      },
+      "mechanism_family": "candidate-record-dataflow",
+      "mechanism_key": "candidate-shared-middle-index-storage",
+      "novelty_rationale": "Earlier candidate-storage experiments changed heap algorithms, ownership topology, allocation strategy, or whole-record placement; none hoisted only the per-middle invariant index while preserving the existing bounded heaps and output record contract.",
+      "outcome": "discard",
+      "prediction_assessment": "mixed",
+      "prediction_assessment_rationale": "Timed seeding particle efficiency remained 0.983101 as predicted, but median seeding time increased to 295.55 ms/event from the 289.90 ms/event Genesis baseline.",
+      "proposal": {
+        "candidate": "CandidateMiddleIndexHoist",
+        "changed_symbols": [
+          "Acts::CandidatesForMiddleSp2::StoredCandidate",
+          "Acts::CandidatesForMiddleSp2::clear",
+          "Acts::CandidatesForMiddleSp2::push",
+          "Acts::CandidatesForMiddleSp2::toSortedCandidates"
+        ],
+        "combination_provenance": null,
+        "expected_hot_path": "Acts::CandidatesForMiddleSp2 bounded candidate insertion, replacement, and sorted output for one fixed middle space point.",
+        "falsifier": "The prediction fails if median seeding time does not decrease from fresh Genesis or timed seeding particle efficiency changes.",
+        "hypothesis": "Hoisting the middle-space-point index shared by every retained candidate into collector state will shrink each hot candidate record and reduce insertion, replacement, and output memory traffic, lowering median seeding time without changing the reconstructed triplets.",
+        "implementation_commit": "c5a0bf9b3056c0d23442187232e41c69a0c8e459",
+        "intended_files": [
+          "optimization-files/Core/include/Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp",
+          "optimization-files/Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp"
+        ],
+        "novelty_reason": "Earlier candidate-storage experiments changed heap algorithms, ownership topology, allocation strategy, or whole-record placement; none hoisted only the per-middle invariant index while preserving the existing bounded heaps and output record contract.",
+        "predicted_directions": {
+          "timed_seeding_particle_efficiency": "unchanged",
+          "timed_seeding_time_per_event_ms": "decrease"
+        },
+        "schema_version": "1.0.0",
+        "source_references": [
+          {
+            "acts_mapping": "The upstream CandidatesForMiddleSp2 header is byte-identical to the Genesis optimization file before this change and maps directly to the retained-candidate record layout used by BroadTripletSeedFilter.",
+            "directly_inspected": true,
+            "inspected_scope": "TripletCandidate2 fields plus CandidatesForMiddleSp2 storage, clear, push, and toSortedCandidates declarations at ACTS commit 34edd488.",
+            "reference": "https://github.com/acts-project/acts/blob/34edd48852f766e1b9d94d3dc996e27476339f1b/Core/include/Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp",
+            "relevance": "The permanent upstream header shows that TripletCandidate2 stores the middle index in every record while CandidatesForMiddleSp2 owns one collector across a fixed-middle transaction.",
+            "source_type": "inspected source code"
+          },
+          {
+            "acts_mapping": "The upstream implementation is byte-identical to the Genesis optimization file before this change; the candidate keeps its heap ordering and reconstructs the same public TripletCandidate2 output.",
+            "directly_inspected": true,
+            "inspected_scope": "CandidatesForMiddleSp2::clear, public and private push overloads, replacement path, and toSortedCandidates reconstruction at ACTS commit 34edd488.",
+            "reference": "https://github.com/acts-project/acts/blob/34edd48852f766e1b9d94d3dc996e27476339f1b/Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp",
+            "relevance": "The permanent upstream implementation shows that every accepted or replaced candidate copies spM and that clear ends the collector lifecycle after sorted output.",
+            "source_type": "inspected source code"
+          },
+          {
+            "directly_inspected": true,
+            "reference": "2467a5a4c230ef968b7ba5508f79cb2d43a0efd8",
+            "relevance": "The directly inspected full-record-heap experiment altered ownership and heap payload together; it motivates isolating only the invariant middle-index field without repeating that mechanism.",
+            "source_type": "prior record/commit"
+          }
+        ]
+      },
+      "proposal_hash": "11837029fdab49c8eb310254a7569b337149fe7a364fa45df07338daa4bfe005",
+      "record": "records/Development/20260829T010257Z-CandidateMiddleIndexHoist/summary.json",
+      "run_result": "Passed all controlled Development stages.",
+      "started_at": "2026-08-29T01:02:57.192680Z",
+      "state": "completed",
+      "timed_seeding_particle_efficiency": 0.983101,
+      "timed_seeding_time_per_event_ms": 295.55
     }
   ],
   "blockers": [],
@@ -254,16 +345,7 @@
     "request": null,
     "state": "open"
   },
-  "current_attempt": {
-    "candidate": "CandidateMiddleIndexHoist",
-    "classification": "major",
-    "controlled_stage": "queued Development run",
-    "mechanism_family": "candidate-record-dataflow",
-    "mechanism_key": "candidate-shared-middle-index-storage",
-    "scheduling": "ordinary",
-    "started_at": "2026-08-29T01:02:40.887522Z",
-    "state": "queued"
-  },
+  "current_attempt": null,
   "failures": [
     {
       "candidate": "FilterDisabledConfirmationQualityMapElision",
@@ -281,42 +363,42 @@
       "record_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug29/records/Failed/20260828T235932Z-GridEmptyNeighborRangePrune/summary.json"
     }
   ],
-  "generated_at": "2026-08-29T01:02:41.372944Z",
+  "generated_at": "2026-08-29T01:21:02.188381Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/c5a0bf9b3056c0d23442187232e41c69a0c8e459",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/01adaf2e5e21154a16532655a944a0daa18b378b",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/aug29",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/36"
   },
   "progress": {
     "combination_candidates": 0,
-    "completed_candidates": 0,
+    "completed_candidates": 1,
     "composition": {
       "combination": {
         "completed": 0,
         "completed_percentage": 0.0,
-        "deficit_candidates": 0.0,
+        "deficit_candidates": 0.25,
         "target_percentage": 25.0
       },
       "major": {
-        "completed": 0,
-        "completed_percentage": 0.0,
-        "deficit_candidates": 0.0,
+        "completed": 1,
+        "completed_percentage": 100.0,
+        "deficit_candidates": -0.5,
         "target_percentage": 50.0
       },
       "minor": {
         "completed": 0,
         "completed_percentage": 0.0,
-        "deficit_candidates": 0.0,
+        "deficit_candidates": 0.25,
         "target_percentage": 25.0
       }
     },
-    "elapsed_seconds": 5396.372944,
+    "elapsed_seconds": 6497.188381,
     "estimated_remaining_seconds": null,
     "eta_basis": "Unavailable until a stop request fixes the exact final candidate target.",
-    "eta_sample_count": 0,
+    "eta_sample_count": 1,
     "expected_finish_at": null,
-    "major_candidates": 0,
-    "median_completed_attempt_duration_seconds": null,
+    "major_candidates": 1,
+    "median_completed_attempt_duration_seconds": 1025.586,
     "minor_candidates": 0
   },
   "promising_results": {
@@ -374,9 +456,9 @@
     "blocker": null,
     "combination_eligible": false,
     "decision": {
-      "action": "finish-active",
-      "category": "major",
-      "reason": "Finish the active candidate transaction and record its restoration evidence."
+      "action": "schedule",
+      "category": "minor",
+      "reason": "Selected by deterministic target deficit and category-order tie-break."
     },
     "final_targets": null,
     "state": "running",
