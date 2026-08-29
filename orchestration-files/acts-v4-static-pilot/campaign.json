@@ -51,9 +51,10 @@
     {
       "candidate": "PackedVarianceColumnsV4",
       "classification": "major",
+      "implementation_commit": "636a31d0c2f4b1024b39372d8eb7280854c16016",
       "mechanism_key": "v4-core-packed-variance-zr-layout",
       "slot": 1,
-      "state": "proposal drafted"
+      "state": "proposal bound and queued"
     },
     {
       "candidate": null,
