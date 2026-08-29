@@ -19,7 +19,7 @@
     "development_only": true,
     "evaluation_authorized": false,
     "name": "ACTS Seeding owned-static v4 Development pilot",
-    "phase": "revision 2 infrastructure qualified; five-run Genesis calibration queued",
+    "phase": "revision 2 Genesis calibration complete; slot 1 queued",
     "protocol_id": "acts-seeding-v4-owned-static",
     "protocol_revision": 2,
     "protocol_revision_started_at": "2026-08-29T18:01:44Z",
@@ -49,7 +49,12 @@
     "qualification_evidence_sha256": "ed16fef43f1b6818e52cf6b0493d9c786a70444d212e7ab521eadd03d4b37237"
   },
   "final_genesis_restoration": null,
-  "genesis_calibration": null,
+  "genesis_calibration": {
+    "path": "orchestration-files/acts-v4-static-pilot/calibration.json",
+    "protocol_revision": 2,
+    "runs": 5,
+    "sha256": "645b1c8826aeb3fb8e3131a83c8e6ef0f0b3be097a3cbdfb21016a674d347d97"
+  },
   "invalidated_revision_1": {
     "invalidation_sha256": "dc422c7e94379244766687832599afd71afc8b9d9db49a56b3b2cf58e13f0a7a",
     "path": "orchestration-files/acts-v4-static-pilot/invalid-diagnostics/revision-1-invalidation.json",
@@ -71,7 +76,7 @@
       "mechanism_key": "v4-core-packed-variance-zr-layout",
       "proposal": "orchestration-files/acts-v4-static-pilot/proposals/revision-2/slot-1-packed-variance.json",
       "slot": 1,
-      "state": "revision 2 predeclared and queued"
+      "state": "revision 2 proposal bound and queued"
     },
     {
       "candidate": "TripletKinematicsPairV4",
