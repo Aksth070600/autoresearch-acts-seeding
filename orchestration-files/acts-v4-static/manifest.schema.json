@@ -1,0 +1,170 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://autoresearch.invalid/schemas/acts-owned-seeding-dataset-v1.json",
+  "title": "Owned ACTS seeding qualification dataset manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "qualification", "protocol", "dataset", "payload", "production", "identities", "contracts"],
+  "properties": {
+    "schema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version", "canonical_stream"],
+      "properties": {
+        "id": {"const": "acts-owned-seeding-dataset-v1"},
+        "version": {"const": 1},
+        "canonical_stream": {"const": "acts-owned-seeding-canonical-v1"}
+      }
+    },
+    "qualification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["only", "canonical", "unresolved_captain_decisions"],
+      "properties": {
+        "only": {"const": true},
+        "canonical": {"const": false},
+        "unresolved_captain_decisions": {
+          "const": ["canonical-genesis-commit", "immutable-production-locator", "storage-ownership", "root-compression", "final-protocol-and-dataset-ids", "publication-actor"]
+        }
+      }
+    },
+    "protocol": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "prefix"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^acts-seeding-v4-owned-static-test(?:-[a-z0-9._-]+)?$"},
+        "prefix": {"const": "acts-seeding-v4-owned-static-test"}
+      }
+    },
+    "dataset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "event_count", "ordered_event_ids", "events"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]+[a-z0-9]$"},
+        "event_count": {"type": "integer", "minimum": 1},
+        "ordered_event_ids": {"type": "array", "items": {"type": "integer", "minimum": 0}, "uniqueItems": true},
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["ordinal", "event_id", "counts", "section_sha256", "semantic_sha256"],
+            "properties": {
+              "ordinal": {"type": "integer", "minimum": 0},
+              "event_id": {"type": "integer", "minimum": 0},
+              "counts": {"$ref": "#/$defs/counts"},
+              "section_sha256": {"$ref": "#/$defs/hashes"},
+              "semantic_sha256": {"$ref": "#/$defs/sha256"}
+            }
+          }
+        }
+      }
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "sha256", "size_bytes", "root_uuid", "compression"],
+      "properties": {
+        "file": {"const": "payload.root"},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "size_bytes": {"type": "integer", "minimum": 1},
+        "root_uuid": {"type": "string", "minLength": 1},
+        "compression": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["algorithm", "level"],
+          "properties": {
+            "algorithm": {"enum": ["uncompressed", "lz4", "zstd"]},
+            "level": {"type": "integer", "minimum": 0}
+          }
+        }
+      }
+    },
+    "production": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["acts", "project_genesis_commit", "project_genesis_is_canonical", "seed", "pileup", "events", "threads", "generator", "hard_process", "host", "container_image_sha256", "started_at", "finished_at", "exit_status", "completed_event_ids", "unmasked_fpes"],
+      "properties": {
+        "acts": {
+          "const": {"tag": "v46.5.0", "commit": "34edd48852f766e1b9d94d3dc996e27476339f1b"}
+        },
+        "project_genesis_commit": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/sha256"}]},
+        "project_genesis_is_canonical": {"const": false},
+        "seed": {"const": 42},
+        "pileup": {"const": 200},
+        "events": {"type": "integer", "minimum": 1},
+        "threads": {"const": 1},
+        "generator": {"const": "Pythia8"},
+        "hard_process": {"const": ["Top:qqbar2ttbar=on"]},
+        "host": {"type": "string", "minLength": 1},
+        "container_image_sha256": {"$ref": "#/$defs/sha256"},
+        "started_at": {"type": "string", "minLength": 1},
+        "finished_at": {"type": "string", "minLength": 1},
+        "exit_status": {"const": 0},
+        "completed_event_ids": {"type": "array", "items": {"type": "integer", "minimum": 0}, "uniqueItems": true},
+        "unmasked_fpes": {"type": "integer", "minimum": 0}
+      }
+    },
+    "identities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_manifest_sha256", "build_manifest_sha256", "overlay_manifest_sha256", "writer_source_sha256", "reader_source_sha256", "builder_sha256", "geometry_tgeo_sha256", "geometry_material_sha256", "field_sha256", "digitization_sha256", "pixel_geometry_selection_sha256", "seeding_config_sha256"],
+      "properties": {
+        "source_manifest_sha256": {"$ref": "#/$defs/sha256"},
+        "build_manifest_sha256": {"$ref": "#/$defs/sha256"},
+        "overlay_manifest_sha256": {"$ref": "#/$defs/sha256"},
+        "writer_source_sha256": {"$ref": "#/$defs/sha256"},
+        "reader_source_sha256": {"$ref": "#/$defs/sha256"},
+        "builder_sha256": {"$ref": "#/$defs/sha256"},
+        "geometry_tgeo_sha256": {"$ref": "#/$defs/sha256"},
+        "geometry_material_sha256": {"$ref": "#/$defs/sha256"},
+        "field_sha256": {"$ref": "#/$defs/sha256"},
+        "digitization_sha256": {"$ref": "#/$defs/sha256"},
+        "pixel_geometry_selection_sha256": {"$ref": "#/$defs/sha256"},
+        "seeding_config_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "contracts": {
+      "const": {
+        "truth_payload_scope": "all-simulated-particles",
+        "selected_particle_marker": "exact-post-digitization-container",
+        "pixel_spacepoint_policy": "ordered-pixel-only-one-index-source-link",
+        "static_expected_unmasked_fpes": 0,
+        "performance_output": "exact-json-collector-stats",
+        "root_plots": false,
+        "matcher": {"matching_ratio": 1.0, "double_matching": false}
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["measurements", "space_points", "particles", "selected_particles", "measurement_particles", "particle_measurements"],
+      "properties": {
+        "measurements": {"type": "integer", "minimum": 0},
+        "space_points": {"type": "integer", "minimum": 0},
+        "particles": {"type": "integer", "minimum": 0},
+        "selected_particles": {"type": "integer", "minimum": 0},
+        "measurement_particles": {"type": "integer", "minimum": 0},
+        "particle_measurements": {"type": "integer", "minimum": 0}
+      }
+    },
+    "hashes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["measurements", "space_points", "particles", "selected_particles", "measurement_particles", "particle_measurements"],
+      "properties": {
+        "measurements": {"$ref": "#/$defs/sha256"},
+        "space_points": {"$ref": "#/$defs/sha256"},
+        "particles": {"$ref": "#/$defs/sha256"},
+        "selected_particles": {"$ref": "#/$defs/sha256"},
+        "measurement_particles": {"$ref": "#/$defs/sha256"},
+        "particle_measurements": {"$ref": "#/$defs/sha256"}
+      }
+    }
+  }
+}
