@@ -110,11 +110,6 @@ class SpacePointContainer2 {
   /// @return A mutable proxy to the newly created space point.
   MutableProxy createSpacePoint() noexcept;
 
-  /// Creates a contiguous batch of default-initialized space points.
-  /// @param count Number of space points to append.
-  /// @return Index range containing the appended space points.
-  IndexRange createSpacePoints(std::uint32_t count) noexcept;
-
   /// Copies the specified columns from another space point to this space point
   /// @param index The index of the space point to copy to in this container.
   /// @param otherContainer The space point container to copy from.

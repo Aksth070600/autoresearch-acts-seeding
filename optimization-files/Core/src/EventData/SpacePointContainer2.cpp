@@ -171,16 +171,6 @@ MutableSpacePointProxy2 SpacePointContainer2::createSpacePoint() noexcept {
   return MutableProxy(*this, size() - 1);
 }
 
-SpacePointContainer2::IndexRange SpacePointContainer2::createSpacePoints(
-    std::uint32_t count) noexcept {
-  const Index begin = m_size;
-  m_size += count;
-  for (const auto &[name, column] : m_allColumns) {
-    column->resize(m_size);
-  }
-  return {begin, m_size};
-}
-
 void SpacePointContainer2::copyFrom(Index index,
                                     const SpacePointContainer2 &otherContainer,
                                     Index otherIndex,
