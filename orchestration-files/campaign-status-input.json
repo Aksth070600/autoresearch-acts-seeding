@@ -1,238 +1,162 @@
 {
-  "schema_version": "1.1.0",
-  "campaign": {
-    "name": "ACTS Seeding continuous aug29",
-    "branch": "autoresearch-acts-seeding/aug29",
-    "phase": "continuous Development",
-    "started_at": "2026-08-28T23:32:45Z",
-    "mode": "continuous",
-    "campaign_id": "acts-seeding-aug29-20260829",
-    "control_id": "277074895a3b09a536336bc5ad8b96a6e37f6a3a88c5decfdb47fcfa9842d434",
-    "genesis_commit": "f8e809e118e41889850cf9cf3c46988e7c583625",
-    "targets": {
-      "major_percentage": 50,
-      "minor_percentage": 25,
-      "combination_percentage": 25
-    }
-  },
-  "current_attempt": {
-    "candidate": "GridEmptyMiddleEarlyPrune",
-    "mechanism_key": "grid-empty-middle-neighborhood-prune",
-    "mechanism_family": "grid-neighbor-dataflow-pruning",
-    "classification": "major",
-    "controlled_stage": "queued Development run",
-    "state": "queued",
-    "started_at": "2026-08-29T01:42:30.133887Z",
-    "scheduling": "ordinary"
-  },
   "attempt_metadata": [
     {
       "candidate": "FilterDisabledConfirmationQualityMapElision",
-      "mechanism_key": "filter-disabled-confirmation-quality-map-elision",
-      "mechanism_family": "filter-confirmation-state-pruning",
       "classification": "major",
-      "proposal": {
-        "schema_version": "1.0.0",
-        "candidate": "FilterDisabledConfirmationQualityMapElision",
-        "implementation_commit": "0bf182617d283e73cc711a1d9fbe98a3a780b991",
-        "hypothesis": "Moving best-seed-quality map updates inside the seed-confirmation branch will remove three unordered-map operations from every emitted seed in the Development configuration and reduce median seeding time without changing selected seeds.",
-        "falsifier": "The prediction fails if median seeding time does not decrease from fresh Genesis or timed seeding particle efficiency changes.",
-        "predicted_directions": {
-          "timed_seeding_time_per_event_ms": "decrease",
-          "timed_seeding_particle_efficiency": "unchanged"
-        },
-        "expected_hot_path": "Acts::BroadTripletSeedFilter::filterTripletsMiddleFixed emitted-seed state updates with seedConfirmation disabled.",
-        "changed_symbols": [
-          "Acts::BroadTripletSeedFilter::filterTripletsMiddleFixed"
-        ],
-        "intended_files": [
-          "optimization-files/Core/src/Seeding2/BroadTripletSeedFilter.cpp"
-        ],
-        "novelty_reason": "Prior map work reduced duplicate lookup cost, while this candidate removes the entire inactive map data flow under the existing configuration invariant and does not alter candidate ordering or selection.",
-        "source_references": [
-          {
-            "source_type": "inspected source code",
-            "reference": "https://github.com/acts-project/acts/blob/941a3c7cfe3bc413647d351a83b4b025d9213903/Core/src/Seeding/BroadTripletSeedFilter.cpp",
-            "relevance": "The permanent upstream implementation shows best-seed-quality state helpers and the filter output path that maintains this state even though reads are guarded by seed confirmation.",
-            "directly_inspected": true,
-            "inspected_scope": "BroadTripletSeedFilter getBestSeedQuality/setBestSeedQuality helpers and filterTripletsMiddleFixed seed-confirmation and emitted-seed quality-state flow.",
-            "acts_mapping": "Upstream Acts::BroadTripletSeedFilter::filterTripletsMiddleFixed maps directly to optimization-files/Core/src/Seeding2/BroadTripletSeedFilter.cpp; the Development example leaves Config::seedConfirmation false."
-          },
-          {
-            "source_type": "prior record/commit",
-            "reference": "0155cb01d2f69992290d8870acc7ab23c7af6866",
-            "relevance": "The directly inspected prior implementation showed map lookup cost was measurable, but optimized each update rather than pruning disabled confirmation state.",
-            "directly_inspected": true
-          }
-        ],
-        "combination_provenance": null
-      },
       "evidence": {
         "files_changed": [
           "optimization-files/Core/src/Seeding2/BroadTripletSeedFilter.cpp#L372-L377"
         ],
-        "outcome": "crash",
         "lesson": "The one-event smoke segfaulted after a successful build, so the quality-map updates cannot be pruned safely under the assumed disabled-confirmation invariant.",
+        "outcome": "crash",
         "prediction_assessment": "inconclusive",
         "prediction_assessment_rationale": "The smoke stage crashed before any timed or seeding-efficiency evidence was produced."
+      },
+      "mechanism_family": "filter-confirmation-state-pruning",
+      "mechanism_key": "filter-disabled-confirmation-quality-map-elision",
+      "proposal": {
+        "candidate": "FilterDisabledConfirmationQualityMapElision",
+        "changed_symbols": [
+          "Acts::BroadTripletSeedFilter::filterTripletsMiddleFixed"
+        ],
+        "combination_provenance": null,
+        "expected_hot_path": "Acts::BroadTripletSeedFilter::filterTripletsMiddleFixed emitted-seed state updates with seedConfirmation disabled.",
+        "falsifier": "The prediction fails if median seeding time does not decrease from fresh Genesis or timed seeding particle efficiency changes.",
+        "hypothesis": "Moving best-seed-quality map updates inside the seed-confirmation branch will remove three unordered-map operations from every emitted seed in the Development configuration and reduce median seeding time without changing selected seeds.",
+        "implementation_commit": "0bf182617d283e73cc711a1d9fbe98a3a780b991",
+        "intended_files": [
+          "optimization-files/Core/src/Seeding2/BroadTripletSeedFilter.cpp"
+        ],
+        "novelty_reason": "Prior map work reduced duplicate lookup cost, while this candidate removes the entire inactive map data flow under the existing configuration invariant and does not alter candidate ordering or selection.",
+        "predicted_directions": {
+          "timed_seeding_particle_efficiency": "unchanged",
+          "timed_seeding_time_per_event_ms": "decrease"
+        },
+        "schema_version": "1.0.0",
+        "source_references": [
+          {
+            "acts_mapping": "Upstream Acts::BroadTripletSeedFilter::filterTripletsMiddleFixed maps directly to optimization-files/Core/src/Seeding2/BroadTripletSeedFilter.cpp; the Development example leaves Config::seedConfirmation false.",
+            "directly_inspected": true,
+            "inspected_scope": "BroadTripletSeedFilter getBestSeedQuality/setBestSeedQuality helpers and filterTripletsMiddleFixed seed-confirmation and emitted-seed quality-state flow.",
+            "reference": "https://github.com/acts-project/acts/blob/941a3c7cfe3bc413647d351a83b4b025d9213903/Core/src/Seeding/BroadTripletSeedFilter.cpp",
+            "relevance": "The permanent upstream implementation shows best-seed-quality state helpers and the filter output path that maintains this state even though reads are guarded by seed confirmation.",
+            "source_type": "inspected source code"
+          },
+          {
+            "directly_inspected": true,
+            "reference": "0155cb01d2f69992290d8870acc7ab23c7af6866",
+            "relevance": "The directly inspected prior implementation showed map lookup cost was measurable, but optimized each update rather than pruning disabled confirmation state.",
+            "source_type": "prior record/commit"
+          }
+        ]
       }
     },
     {
       "candidate": "DoubletDisabledIPExperimentCuts",
-      "mechanism_key": "doublet-disabled-ip-experiment-cuts",
-      "mechanism_family": "doublet-experiment-cut-pruning",
       "classification": "major",
-      "proposal": {
-        "schema_version": "1.0.0",
-        "candidate": "DoubletDisabledIPExperimentCuts",
-        "implementation_commit": "c1eb3ec94b03bfd45eacf3933a7137fc4d035d94",
-        "hypothesis": "Applying the connected ITk experiment cut when interactionPointCut is disabled will reject incompatible bottom doublets before storage and triplet formation, reducing median seeding time while preserving seeding efficiency.",
-        "falsifier": "The prediction fails if median seeding time does not decrease from fresh Genesis or timed seeding particle efficiency changes.",
-        "predicted_directions": {
-          "timed_seeding_time_per_event_ms": "decrease",
-          "timed_seeding_particle_efficiency": "unchanged"
-        },
-        "expected_hot_path": "Acts::DoubletSeedFinder Impl::createDoubletsImpl non-interaction-point branch before compatible-doublet storage.",
-        "changed_symbols": [
-          "Acts::DoubletSeedFinder::Impl::createDoubletsImpl"
-        ],
-        "intended_files": [
-          "optimization-files/Core/src/Seeding2/DoubletSeedFinder.cpp"
-        ],
-        "novelty_reason": "This activates the already-connected detector experiment cut in the non-interaction-point branch; the earlier interaction-point candidate enabled a separate curvature approximation and therefore did not isolate this pruning mechanism.",
-        "source_references": [
-          {
-            "source_type": "inspected source code",
-            "reference": "https://github.com/acts-project/acts/blob/941a3c7cfe3bc413647d351a83b4b025d9213903/Core/src/Seeding/DoubletSeedFinder.cpp",
-            "relevance": "The permanent upstream implementation fixes the missing experiment-cut call in the interactionPointCut-disabled branch before doublet storage.",
-            "directly_inspected": true,
-            "inspected_scope": "Commit 941a3c7 DoubletSeedFinder.cpp patch and createDoubletsImpl branches around cotTheta calculation, experimentCuts dispatch, propagated error calculation, and compatibleDoublets.emplace_back.",
-            "acts_mapping": "Upstream Acts::DoubletSeedFinder::Impl::createDoubletsImpl maps directly to optimization-files/Core/src/Seeding2/DoubletSeedFinder.cpp; GridTripletSeedingAlgorithm connects itkFastTrackingCuts to this specialization."
-          },
-          {
-            "source_type": "prior record/commit",
-            "reference": "188fe967a2f2968ffe92845cfa608fa85ab6d13c",
-            "relevance": "The directly inspected prior implementation enabled interaction-point pruning, which also caused the experiment cut to execute and motivates isolating the missing dispatch.",
-            "directly_inspected": true
-          }
-        ],
-        "combination_provenance": null
-      },
       "evidence": {
         "files_changed": [
           "optimization-files/Core/src/Seeding2/DoubletSeedFinder.cpp#L185-L191"
         ],
-        "outcome": "crash",
         "lesson": "The one-event smoke segfaulted after a successful build, so the upstream experiment-cut dispatch is unsafe in the controlled v46.5.0 ITk path as applied.",
+        "outcome": "crash",
         "prediction_assessment": "inconclusive",
         "prediction_assessment_rationale": "The smoke stage crashed before any timed or seeding-efficiency evidence was produced."
+      },
+      "mechanism_family": "doublet-experiment-cut-pruning",
+      "mechanism_key": "doublet-disabled-ip-experiment-cuts",
+      "proposal": {
+        "candidate": "DoubletDisabledIPExperimentCuts",
+        "changed_symbols": [
+          "Acts::DoubletSeedFinder::Impl::createDoubletsImpl"
+        ],
+        "combination_provenance": null,
+        "expected_hot_path": "Acts::DoubletSeedFinder Impl::createDoubletsImpl non-interaction-point branch before compatible-doublet storage.",
+        "falsifier": "The prediction fails if median seeding time does not decrease from fresh Genesis or timed seeding particle efficiency changes.",
+        "hypothesis": "Applying the connected ITk experiment cut when interactionPointCut is disabled will reject incompatible bottom doublets before storage and triplet formation, reducing median seeding time while preserving seeding efficiency.",
+        "implementation_commit": "c1eb3ec94b03bfd45eacf3933a7137fc4d035d94",
+        "intended_files": [
+          "optimization-files/Core/src/Seeding2/DoubletSeedFinder.cpp"
+        ],
+        "novelty_reason": "This activates the already-connected detector experiment cut in the non-interaction-point branch; the earlier interaction-point candidate enabled a separate curvature approximation and therefore did not isolate this pruning mechanism.",
+        "predicted_directions": {
+          "timed_seeding_particle_efficiency": "unchanged",
+          "timed_seeding_time_per_event_ms": "decrease"
+        },
+        "schema_version": "1.0.0",
+        "source_references": [
+          {
+            "acts_mapping": "Upstream Acts::DoubletSeedFinder::Impl::createDoubletsImpl maps directly to optimization-files/Core/src/Seeding2/DoubletSeedFinder.cpp; GridTripletSeedingAlgorithm connects itkFastTrackingCuts to this specialization.",
+            "directly_inspected": true,
+            "inspected_scope": "Commit 941a3c7 DoubletSeedFinder.cpp patch and createDoubletsImpl branches around cotTheta calculation, experimentCuts dispatch, propagated error calculation, and compatibleDoublets.emplace_back.",
+            "reference": "https://github.com/acts-project/acts/blob/941a3c7cfe3bc413647d351a83b4b025d9213903/Core/src/Seeding/DoubletSeedFinder.cpp",
+            "relevance": "The permanent upstream implementation fixes the missing experiment-cut call in the interactionPointCut-disabled branch before doublet storage.",
+            "source_type": "inspected source code"
+          },
+          {
+            "directly_inspected": true,
+            "reference": "188fe967a2f2968ffe92845cfa608fa85ab6d13c",
+            "relevance": "The directly inspected prior implementation enabled interaction-point pruning, which also caused the experiment cut to execute and motivates isolating the missing dispatch.",
+            "source_type": "prior record/commit"
+          }
+        ]
       }
     },
     {
       "candidate": "GridEmptyNeighborRangePrune",
-      "mechanism_key": "grid-empty-neighbor-range-prune",
-      "mechanism_family": "grid-neighbor-dataflow-pruning",
       "classification": "major",
-      "proposal": {
-        "schema_version": "1.0.0",
-        "candidate": "GridEmptyNeighborRangePrune",
-        "implementation_commit": "8d38f98aa430aa2ac48360cb51db5088b25d5182",
-        "hypothesis": "Pruning empty bottom and top neighbor ranges while constructing the binned-group inputs will preserve the successful historical empty-group mechanism while also avoiding empty range storage and finder dispatch, reducing median seeding time without changing selected seeds.",
-        "falsifier": "The prediction fails if median seeding time does not decrease from fresh Genesis or timed seeding particle efficiency changes.",
-        "predicted_directions": {
-          "timed_seeding_time_per_event_ms": "decrease",
-          "timed_seeding_particle_efficiency": "unchanged"
-        },
-        "expected_hot_path": "ActsExamples::GridTripletSeedingAlgorithm::execute binned-neighborhood range construction before Acts::TripletSeeder dispatch.",
-        "changed_symbols": [
-          "ActsExamples::GridTripletSeedingAlgorithm::execute"
-        ],
-        "intended_files": [
-          "optimization-files/Examples/Algorithms/TrackFinding/src/GridTripletSeedingAlgorithm.cpp"
-        ],
-        "novelty_reason": "The historical source checked empty groups inside TripletSeeder; this adaptation moves the invariant to the producer seam so empty ranges are neither stored nor dispatched, without changing nonempty group order or seeding cuts.",
-        "source_references": [
-          {
-            "source_type": "prior record/commit",
-            "reference": "57b3a2571813146fd1898c74e2662df759d54cb0",
-            "relevance": "The directly inspected successful v2 implementation showed that skipping empty top and bottom groups completed all stages and reduced seeding time; this candidate preserves that mechanism at an earlier data-flow seam.",
-            "directly_inspected": true,
-            "inspected_scope": "Full optimization-files/Core/src/Seeding2/TripletSeeder.cpp implementation diff for SeederEmptyGroupPrune, including both top and bottom group loops.",
-            "acts_mapping": "The prior TripletSeeder group loops consume the bottomSpRanges and topSpRanges built by ActsExamples::GridTripletSeedingAlgorithm::execute, where this adaptation removes empty producer entries."
-          },
-          {
-            "source_type": "Genesis",
-            "reference": "records/Development/20260828T233358598694Z-Genesis/summary.json",
-            "relevance": "The fresh v3 Genesis provides the current controlled objective baseline for this low-risk traversal adaptation.",
-            "directly_inspected": true
-          }
-        ],
-        "combination_provenance": null
-      },
       "evidence": {
         "files_changed": [
           "optimization-files/Examples/Algorithms/TrackFinding/src/GridTripletSeedingAlgorithm.cpp#L273-L277",
           "optimization-files/Examples/Algorithms/TrackFinding/src/GridTripletSeedingAlgorithm.cpp#L283-L287"
         ],
-        "outcome": "crash",
         "lesson": "The independently sourced empty-range adaptation segfaulted in the one-event smoke stage after a successful build; stop candidate generation pending diagnosis against untouched Genesis.",
+        "outcome": "crash",
         "prediction_assessment": "inconclusive",
         "prediction_assessment_rationale": "The smoke stage crashed before any timed or seeding-efficiency evidence was produced."
+      },
+      "mechanism_family": "grid-neighbor-dataflow-pruning",
+      "mechanism_key": "grid-empty-neighbor-range-prune",
+      "proposal": {
+        "candidate": "GridEmptyNeighborRangePrune",
+        "changed_symbols": [
+          "ActsExamples::GridTripletSeedingAlgorithm::execute"
+        ],
+        "combination_provenance": null,
+        "expected_hot_path": "ActsExamples::GridTripletSeedingAlgorithm::execute binned-neighborhood range construction before Acts::TripletSeeder dispatch.",
+        "falsifier": "The prediction fails if median seeding time does not decrease from fresh Genesis or timed seeding particle efficiency changes.",
+        "hypothesis": "Pruning empty bottom and top neighbor ranges while constructing the binned-group inputs will preserve the successful historical empty-group mechanism while also avoiding empty range storage and finder dispatch, reducing median seeding time without changing selected seeds.",
+        "implementation_commit": "8d38f98aa430aa2ac48360cb51db5088b25d5182",
+        "intended_files": [
+          "optimization-files/Examples/Algorithms/TrackFinding/src/GridTripletSeedingAlgorithm.cpp"
+        ],
+        "novelty_reason": "The historical source checked empty groups inside TripletSeeder; this adaptation moves the invariant to the producer seam so empty ranges are neither stored nor dispatched, without changing nonempty group order or seeding cuts.",
+        "predicted_directions": {
+          "timed_seeding_particle_efficiency": "unchanged",
+          "timed_seeding_time_per_event_ms": "decrease"
+        },
+        "schema_version": "1.0.0",
+        "source_references": [
+          {
+            "acts_mapping": "The prior TripletSeeder group loops consume the bottomSpRanges and topSpRanges built by ActsExamples::GridTripletSeedingAlgorithm::execute, where this adaptation removes empty producer entries.",
+            "directly_inspected": true,
+            "inspected_scope": "Full optimization-files/Core/src/Seeding2/TripletSeeder.cpp implementation diff for SeederEmptyGroupPrune, including both top and bottom group loops.",
+            "reference": "57b3a2571813146fd1898c74e2662df759d54cb0",
+            "relevance": "The directly inspected successful v2 implementation showed that skipping empty top and bottom groups completed all stages and reduced seeding time; this candidate preserves that mechanism at an earlier data-flow seam.",
+            "source_type": "prior record/commit"
+          },
+          {
+            "directly_inspected": true,
+            "reference": "records/Development/20260828T233358598694Z-Genesis/summary.json",
+            "relevance": "The fresh v3 Genesis provides the current controlled objective baseline for this low-risk traversal adaptation.",
+            "source_type": "Genesis"
+          }
+        ]
       }
     },
     {
       "candidate": "CandidateMiddleIndexHoist",
-      "mechanism_key": "candidate-shared-middle-index-storage",
-      "mechanism_family": "candidate-record-dataflow",
       "classification": "major",
-      "proposal": {
-        "schema_version": "1.0.0",
-        "candidate": "CandidateMiddleIndexHoist",
-        "implementation_commit": "c5a0bf9b3056c0d23442187232e41c69a0c8e459",
-        "hypothesis": "Hoisting the middle-space-point index shared by every retained candidate into collector state will shrink each hot candidate record and reduce insertion, replacement, and output memory traffic, lowering median seeding time without changing the reconstructed triplets.",
-        "falsifier": "The prediction fails if median seeding time does not decrease from fresh Genesis or timed seeding particle efficiency changes.",
-        "predicted_directions": {
-          "timed_seeding_time_per_event_ms": "decrease",
-          "timed_seeding_particle_efficiency": "unchanged"
-        },
-        "expected_hot_path": "Acts::CandidatesForMiddleSp2 bounded candidate insertion, replacement, and sorted output for one fixed middle space point.",
-        "changed_symbols": [
-          "Acts::CandidatesForMiddleSp2::StoredCandidate",
-          "Acts::CandidatesForMiddleSp2::clear",
-          "Acts::CandidatesForMiddleSp2::push",
-          "Acts::CandidatesForMiddleSp2::toSortedCandidates"
-        ],
-        "intended_files": [
-          "optimization-files/Core/include/Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp",
-          "optimization-files/Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp"
-        ],
-        "novelty_reason": "Earlier candidate-storage experiments changed heap algorithms, ownership topology, allocation strategy, or whole-record placement; none hoisted only the per-middle invariant index while preserving the existing bounded heaps and output record contract.",
-        "source_references": [
-          {
-            "source_type": "inspected source code",
-            "reference": "https://github.com/acts-project/acts/blob/34edd48852f766e1b9d94d3dc996e27476339f1b/Core/include/Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp",
-            "relevance": "The permanent upstream header shows that TripletCandidate2 stores the middle index in every record while CandidatesForMiddleSp2 owns one collector across a fixed-middle transaction.",
-            "directly_inspected": true,
-            "inspected_scope": "TripletCandidate2 fields plus CandidatesForMiddleSp2 storage, clear, push, and toSortedCandidates declarations at ACTS commit 34edd488.",
-            "acts_mapping": "The upstream CandidatesForMiddleSp2 header is byte-identical to the Genesis optimization file before this change and maps directly to the retained-candidate record layout used by BroadTripletSeedFilter."
-          },
-          {
-            "source_type": "inspected source code",
-            "reference": "https://github.com/acts-project/acts/blob/34edd48852f766e1b9d94d3dc996e27476339f1b/Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp",
-            "relevance": "The permanent upstream implementation shows that every accepted or replaced candidate copies spM and that clear ends the collector lifecycle after sorted output.",
-            "directly_inspected": true,
-            "inspected_scope": "CandidatesForMiddleSp2::clear, public and private push overloads, replacement path, and toSortedCandidates reconstruction at ACTS commit 34edd488.",
-            "acts_mapping": "The upstream implementation is byte-identical to the Genesis optimization file before this change; the candidate keeps its heap ordering and reconstructs the same public TripletCandidate2 output."
-          },
-          {
-            "source_type": "prior record/commit",
-            "reference": "2467a5a4c230ef968b7ba5508f79cb2d43a0efd8",
-            "relevance": "The directly inspected full-record-heap experiment altered ownership and heap payload together; it motivates isolating only the invariant middle-index field without repeating that mechanism.",
-            "directly_inspected": true
-          }
-        ],
-        "combination_provenance": null
-      },
       "evidence": {
         "files_changed": [
           "optimization-files/Core/include/Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp#L14-L14",
@@ -243,121 +167,199 @@
           "optimization-files/Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp#L77-L77",
           "optimization-files/Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp#L93-L106"
         ],
-        "outcome": "discard",
         "lesson": "Hoisting the invariant middle index preserved seeding efficiency but raised median seeding time by 5.65 ms/event; retain direct TripletCandidate2 records.",
+        "outcome": "discard",
         "prediction_assessment": "mixed",
         "prediction_assessment_rationale": "Timed seeding particle efficiency remained 0.983101 as predicted, but median seeding time increased to 295.55 ms/event from the 289.90 ms/event Genesis baseline."
+      },
+      "mechanism_family": "candidate-record-dataflow",
+      "mechanism_key": "candidate-shared-middle-index-storage",
+      "proposal": {
+        "candidate": "CandidateMiddleIndexHoist",
+        "changed_symbols": [
+          "Acts::CandidatesForMiddleSp2::StoredCandidate",
+          "Acts::CandidatesForMiddleSp2::clear",
+          "Acts::CandidatesForMiddleSp2::push",
+          "Acts::CandidatesForMiddleSp2::toSortedCandidates"
+        ],
+        "combination_provenance": null,
+        "expected_hot_path": "Acts::CandidatesForMiddleSp2 bounded candidate insertion, replacement, and sorted output for one fixed middle space point.",
+        "falsifier": "The prediction fails if median seeding time does not decrease from fresh Genesis or timed seeding particle efficiency changes.",
+        "hypothesis": "Hoisting the middle-space-point index shared by every retained candidate into collector state will shrink each hot candidate record and reduce insertion, replacement, and output memory traffic, lowering median seeding time without changing the reconstructed triplets.",
+        "implementation_commit": "c5a0bf9b3056c0d23442187232e41c69a0c8e459",
+        "intended_files": [
+          "optimization-files/Core/include/Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp",
+          "optimization-files/Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp"
+        ],
+        "novelty_reason": "Earlier candidate-storage experiments changed heap algorithms, ownership topology, allocation strategy, or whole-record placement; none hoisted only the per-middle invariant index while preserving the existing bounded heaps and output record contract.",
+        "predicted_directions": {
+          "timed_seeding_particle_efficiency": "unchanged",
+          "timed_seeding_time_per_event_ms": "decrease"
+        },
+        "schema_version": "1.0.0",
+        "source_references": [
+          {
+            "acts_mapping": "The upstream CandidatesForMiddleSp2 header is byte-identical to the Genesis optimization file before this change and maps directly to the retained-candidate record layout used by BroadTripletSeedFilter.",
+            "directly_inspected": true,
+            "inspected_scope": "TripletCandidate2 fields plus CandidatesForMiddleSp2 storage, clear, push, and toSortedCandidates declarations at ACTS commit 34edd488.",
+            "reference": "https://github.com/acts-project/acts/blob/34edd48852f766e1b9d94d3dc996e27476339f1b/Core/include/Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp",
+            "relevance": "The permanent upstream header shows that TripletCandidate2 stores the middle index in every record while CandidatesForMiddleSp2 owns one collector across a fixed-middle transaction.",
+            "source_type": "inspected source code"
+          },
+          {
+            "acts_mapping": "The upstream implementation is byte-identical to the Genesis optimization file before this change; the candidate keeps its heap ordering and reconstructs the same public TripletCandidate2 output.",
+            "directly_inspected": true,
+            "inspected_scope": "CandidatesForMiddleSp2::clear, public and private push overloads, replacement path, and toSortedCandidates reconstruction at ACTS commit 34edd488.",
+            "reference": "https://github.com/acts-project/acts/blob/34edd48852f766e1b9d94d3dc996e27476339f1b/Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp",
+            "relevance": "The permanent upstream implementation shows that every accepted or replaced candidate copies spM and that clear ends the collector lifecycle after sorted output.",
+            "source_type": "inspected source code"
+          },
+          {
+            "directly_inspected": true,
+            "reference": "2467a5a4c230ef968b7ba5508f79cb2d43a0efd8",
+            "relevance": "The directly inspected full-record-heap experiment altered ownership and heap payload together; it motivates isolating only the invariant middle-index field without repeating that mechanism.",
+            "source_type": "prior record/commit"
+          }
+        ]
       }
     },
     {
       "candidate": "GridSelectorRejectionUnlikely",
-      "mechanism_key": "grid-selector-rejection-branch-layout",
-      "mechanism_family": "grid-input-selection",
       "classification": "minor",
-      "proposal": {
-        "schema_version": "1.0.0",
-        "candidate": "GridSelectorRejectionUnlikely",
-        "implementation_commit": "db4bf462e709fb8d20f2e304736ad5b62f49fc78",
-        "hypothesis": "Marking rejection by the connected ITk space-point selector as unlikely will keep the common accepted grid-fill path contiguous and reduce median seeding time without changing selected space points or seeding efficiency.",
-        "falsifier": "The prediction fails if median seeding time does not decrease from fresh Genesis or timed seeding particle efficiency changes.",
-        "predicted_directions": {
-          "timed_seeding_time_per_event_ms": "decrease",
-          "timed_seeding_particle_efficiency": "unchanged"
-        },
-        "expected_hot_path": "ActsExamples::GridTripletSeedingAlgorithm::execute per-input space-point selector branch during cylindrical grid fill.",
-        "changed_symbols": [
-          "ActsExamples::GridTripletSeedingAlgorithm::execute"
-        ],
-        "intended_files": [
-          "optimization-files/Examples/Algorithms/TrackFinding/src/GridTripletSeedingAlgorithm.cpp"
-        ],
-        "novelty_reason": "The earlier selector-loop specialization duplicated the entire traversal around event-invariant delegate connectivity; this minor candidate preserves the original single loop and changes only the code layout of the per-space-point rejection edge.",
-        "source_references": [
-          {
-            "source_type": "Genesis",
-            "reference": "records/Development/20260828T233358598694Z-Genesis/summary.json",
-            "relevance": "The fresh v3 Genesis fixes the objective baseline and confirms the unmodified connected-selector path completes the controlled matrix.",
-            "directly_inspected": true
-          },
-          {
-            "source_type": "prior record/commit",
-            "reference": "0d20ab17cbb3fce4de2eecad71a4874db99849ed",
-            "relevance": "The directly inspected selector-loop specialization changed whole-loop topology; its implementation establishes that this branch is a distinct narrower code-layout experiment.",
-            "directly_inspected": true
-          }
-        ],
-        "combination_provenance": null
-      },
       "evidence": {
         "files_changed": [
           "optimization-files/Examples/Algorithms/TrackFinding/src/GridTripletSeedingAlgorithm.cpp#L143-L144"
         ],
-        "outcome": "discard",
         "lesson": "The selector rejection hint preserved seeding efficiency but raised median seeding time by 7.38 ms/event; leave the grid-fill branch unannotated.",
+        "outcome": "discard",
         "prediction_assessment": "mixed",
         "prediction_assessment_rationale": "Timed seeding particle efficiency remained 0.983101 as predicted, but median seeding time increased to 297.28 ms/event from the 289.90 ms/event Genesis baseline."
+      },
+      "mechanism_family": "grid-input-selection",
+      "mechanism_key": "grid-selector-rejection-branch-layout",
+      "proposal": {
+        "candidate": "GridSelectorRejectionUnlikely",
+        "changed_symbols": [
+          "ActsExamples::GridTripletSeedingAlgorithm::execute"
+        ],
+        "combination_provenance": null,
+        "expected_hot_path": "ActsExamples::GridTripletSeedingAlgorithm::execute per-input space-point selector branch during cylindrical grid fill.",
+        "falsifier": "The prediction fails if median seeding time does not decrease from fresh Genesis or timed seeding particle efficiency changes.",
+        "hypothesis": "Marking rejection by the connected ITk space-point selector as unlikely will keep the common accepted grid-fill path contiguous and reduce median seeding time without changing selected space points or seeding efficiency.",
+        "implementation_commit": "db4bf462e709fb8d20f2e304736ad5b62f49fc78",
+        "intended_files": [
+          "optimization-files/Examples/Algorithms/TrackFinding/src/GridTripletSeedingAlgorithm.cpp"
+        ],
+        "novelty_reason": "The earlier selector-loop specialization duplicated the entire traversal around event-invariant delegate connectivity; this minor candidate preserves the original single loop and changes only the code layout of the per-space-point rejection edge.",
+        "predicted_directions": {
+          "timed_seeding_particle_efficiency": "unchanged",
+          "timed_seeding_time_per_event_ms": "decrease"
+        },
+        "schema_version": "1.0.0",
+        "source_references": [
+          {
+            "directly_inspected": true,
+            "reference": "records/Development/20260828T233358598694Z-Genesis/summary.json",
+            "relevance": "The fresh v3 Genesis fixes the objective baseline and confirms the unmodified connected-selector path completes the controlled matrix.",
+            "source_type": "Genesis"
+          },
+          {
+            "directly_inspected": true,
+            "reference": "0d20ab17cbb3fce4de2eecad71a4874db99849ed",
+            "relevance": "The directly inspected selector-loop specialization changed whole-loop topology; its implementation establishes that this branch is a distinct narrower code-layout experiment.",
+            "source_type": "prior record/commit"
+          }
+        ]
       }
     },
     {
       "candidate": "GridEmptyMiddleEarlyPrune",
-      "mechanism_key": "grid-empty-middle-neighborhood-prune",
-      "mechanism_family": "grid-neighbor-dataflow-pruning",
       "classification": "major",
+      "mechanism_family": "grid-neighbor-dataflow-pruning",
+      "mechanism_key": "grid-empty-middle-neighborhood-prune",
       "proposal": {
-        "schema_version": "1.0.0",
         "candidate": "GridEmptyMiddleEarlyPrune",
-        "implementation_commit": "a5a4461b5253a5c1241d2cc9cb787d8279c5e41c",
-        "hypothesis": "Checking the middle grid range before materializing its bottom and top neighbor ranges will skip all neighbor-range construction for empty middle bins, reducing median seeding time without changing any nonempty seeding group or selected seed.",
-        "falsifier": "The prediction fails if median seeding time does not decrease from fresh Genesis or timed seeding particle efficiency changes.",
-        "predicted_directions": {
-          "timed_seeding_time_per_event_ms": "decrease",
-          "timed_seeding_particle_efficiency": "unchanged"
-        },
-        "expected_hot_path": "ActsExamples::GridTripletSeedingAlgorithm::execute binned-group traversal before bottom and top core-range materialization.",
         "changed_symbols": [
           "ActsExamples::GridTripletSeedingAlgorithm::execute"
         ],
+        "combination_provenance": null,
+        "expected_hot_path": "ActsExamples::GridTripletSeedingAlgorithm::execute binned-group traversal before bottom and top core-range materialization.",
+        "falsifier": "The prediction fails if median seeding time does not decrease from fresh Genesis or timed seeding particle efficiency changes.",
+        "hypothesis": "Checking the middle grid range before materializing its bottom and top neighbor ranges will skip all neighbor-range construction for empty middle bins, reducing median seeding time without changing any nonempty seeding group or selected seed.",
+        "implementation_commit": "a5a4461b5253a5c1241d2cc9cb787d8279c5e41c",
         "intended_files": [
           "optimization-files/Examples/Algorithms/TrackFinding/src/GridTripletSeedingAlgorithm.cpp"
         ],
         "novelty_reason": "GridEmptyNeighborRangePrune filtered individual empty bottom and top ranges inside every neighborhood; this candidate instead moves the existing middle-bin guard ahead of both neighbor loops so an empty middle prunes the whole neighborhood setup while leaving nonempty neighbor lists unchanged.",
+        "predicted_directions": {
+          "timed_seeding_particle_efficiency": "unchanged",
+          "timed_seeding_time_per_event_ms": "decrease"
+        },
+        "schema_version": "1.0.0",
         "source_references": [
           {
-            "source_type": "Genesis",
+            "directly_inspected": true,
             "reference": "records/Development/20260828T233358598694Z-Genesis/summary.json",
             "relevance": "The fresh v3 Genesis provides the current controlled objective baseline and shows the existing post-materialization middle guard.",
-            "directly_inspected": true
+            "source_type": "Genesis"
           },
           {
-            "source_type": "prior record/commit",
+            "directly_inspected": true,
             "reference": "8d38f98aa430aa2ac48360cb51db5088b25d5182",
             "relevance": "The directly inspected failed implementation filtered empty bottom and top ranges; its exact producer-seam changes establish that whole-neighborhood middle pruning is a distinct mechanism.",
-            "directly_inspected": true
+            "source_type": "prior record/commit"
           },
           {
-            "source_type": "prior record/commit",
+            "directly_inspected": true,
             "reference": "a44b3b89ea2373bc03549d272c43bf4505daa530",
             "relevance": "The directly inspected range-view cache confirms repeated neighbor-range materialization is a measurable data-flow seam, while this candidate removes that work only for empty middles.",
-            "directly_inspected": true
+            "source_type": "prior record/commit"
           }
-        ],
-        "combination_provenance": null
+        ]
       }
     }
   ],
   "blockers": [],
-  "pull_request_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/36",
-  "control": {
-    "state": "open",
-    "request": null,
-    "observed_at": null,
-    "consumed_at": null,
-    "completed_at": null
+  "campaign": {
+    "branch": "autoresearch-acts-seeding/aug29",
+    "campaign_id": "acts-seeding-aug29-20260829",
+    "control_id": "277074895a3b09a536336bc5ad8b96a6e37f6a3a88c5decfdb47fcfa9842d434",
+    "genesis_commit": "f8e809e118e41889850cf9cf3c46988e7c583625",
+    "mode": "continuous",
+    "name": "ACTS Seeding continuous aug29",
+    "phase": "authenticated stop requested; queued candidate canceled",
+    "started_at": "2026-08-28T23:32:45Z",
+    "targets": {
+      "combination_percentage": 25,
+      "major_percentage": 50,
+      "minor_percentage": 25
+    }
   },
+  "control": {
+    "completed_at": null,
+    "consumed_at": null,
+    "observed_at": "2026-08-29T01:58:19.534901Z",
+    "request": {
+      "campaign_branch": "autoresearch-acts-seeding/aug29",
+      "campaign_id": "acts-seeding-aug29-20260829",
+      "control_id": "277074895a3b09a536336bc5ad8b96a6e37f6a3a88c5decfdb47fcfa9842d434",
+      "issue_number": 39,
+      "issue_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/issues/39",
+      "requested_at": "2026-08-29T01:56:54.019603Z",
+      "requested_by": "Aksth070600",
+      "workflow_run_attempt": 1,
+      "workflow_run_id": 33227702222,
+      "workflow_run_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/actions/runs/33227702222"
+    },
+    "state": "requested"
+  },
+  "current_attempt": null,
+  "pull_request_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/36",
   "scheduler": {
-    "state": "running",
+    "blocker": null,
     "combination_readiness": null,
     "final_targets": null,
-    "blocker": null
-  }
+    "state": "running"
+  },
+  "schema_version": "1.1.0"
 }
