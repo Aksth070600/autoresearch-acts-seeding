@@ -34,9 +34,9 @@ experiments until the baseline completes or its failure is understood.
 
 Judge complete Development results by the two primary objectives: median seeding time per event (minimize) and median seeding-stage particle efficiency (maximize). Keep them as a Pareto tradeoff. Peak RSS is diagnostic and must not determine candidate eligibility or ranking.
 
-By captain-approved scientific interpretation, complete v2 and v3 records share one evidence family only for their recorded seeding time per event and seeding-stage particle efficiency. New runs still use the active v3 protocol. Future agents may use v2 implementations, mechanisms, outcomes, and lessons as prior evidence and combination sources when all existing provenance rules are satisfied. Never substitute v2 ambiguity efficiency for seeding efficiency.
+Current reports, Genesis aggregation, Pareto fronts, leaders, recommendations, and Evaluation selection use exact active v3 summaries only. Never compare or normalize v2 and v3 metric points. An active Development or Evaluation view with no valid v3 summaries stays unavailable. V3 Peak RSS remains its raw seeding-only diagnostic and never affects selection, ranking, or scientific claims.
 
-The report translates valid v2 full-chain Peak RSS onto the v3 scale with the separate Development or Evaluation Genesis mean offset. This is an approximate diagnostic only. V3 RSS remains raw. V2 adjusted RSS remains unavailable until both protocol Genesis references exist, and RSS never affects selection, Pareto fronts, campaign ranking, or scientific claims.
+V2 records, snapshots, commits, outcomes, and lessons remain immutable research inputs. Their metrics never become v3 evidence. A successful v2 implementation may supply one mechanism to a new v3 combination only through the verified historical provenance form in `orchestration-files/CAMPAIGN_STATUS.md`. Measure the combined implementation entirely under v3.
 
 Accept expected unmasked FPEs only when every requested event completed. Treat any other incomplete or failed run as a failure.
 
@@ -151,7 +151,7 @@ Do not hide other errors or reduce event counts.
 
 Do not inspect or edit generated summaries and logs directly during the ordinary loop.
 Use `make record` for run output and inspect named historical commits directly when they inform a new candidate.
-Use `make report` for the captain-approved shared v2/v3 seeding-objective comparison when the captain requests a broader visual review. The report preserves each source protocol and raw RSS in its payload and never rewrites summary JSON.
+Use `make report` for the active v3 Development report. Select Evaluation explicitly when authorized to review that dataset. The report never imports v2 points and never rewrites summary JSON.
 
 Do not commit failure logs, temporary output, or runtime state.
 

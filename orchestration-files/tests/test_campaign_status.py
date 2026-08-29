@@ -24,6 +24,7 @@ from campaign_status import (  # noqa: E402
     load_attempts,
     validate_live_state,
     validate_status,
+    verify_historical_combination_source,
 )
 from protocol import current_protocol  # noqa: E402
 from proposal import bind_proposal  # noqa: E402
@@ -310,6 +311,12 @@ class CampaignStatusTests(unittest.TestCase):
             "orchestration-files/campaign-status.json",
         )
         self.assertFalse(schema["additionalProperties"])
+        combination_source = schema["$defs"]["combinationSource"]
+        self.assertEqual(
+            combination_source["dependentRequired"]["historical_record"],
+            ["files_changed"],
+        )
+        self.assertIn("historical_record", combination_source["properties"])
         proposal_schema = schema["$defs"]["candidateProposal"]
         self.assertIn("hypothesis", proposal_schema["required"])
         self.assertIn("falsifier", proposal_schema["required"])
@@ -670,6 +677,108 @@ class CampaignStatusTests(unittest.TestCase):
                     ),
                 ]
             )
+
+    def test_verified_v2_mechanism_can_source_a_new_v3_combination(self) -> None:
+        historical = {
+            "candidate": "DoubletInsertionSort",
+            "mechanism_key": "doublet-insertion-sort",
+            "implementation_commit": "776df4d2d1f54c3e05ead9c8cc3f4b56559a1e50",
+            "directly_inspected": True,
+            "historical_record": (
+                "records/Development/20260827T112040Z-DoubletInsertionSort/summary.json"
+            ),
+            "files_changed": [
+                "optimization-files/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp#L101-L110"
+            ],
+        }
+        current = self.candidate_metadata("CurrentSource", commit="b" * 40)
+        provenance = {
+            "sources": [
+                historical,
+                {
+                    "candidate": "CurrentSource",
+                    "mechanism_key": current["mechanism_key"],
+                    "implementation_commit": "b" * 40,
+                    "directly_inspected": True,
+                },
+            ],
+            "compatibility_rationale": "The mechanisms affect separate seams.",
+            "interaction_hypothesis": "Their v3 interaction should reduce traversal cost.",
+        }
+        combined = self.candidate_metadata(
+            "CombinedV3",
+            "combination",
+            commit="c" * 40,
+            combination_provenance=provenance,
+        )
+        state = self.live_state([current, combined])
+
+        with tempfile.TemporaryDirectory() as temporary:
+            records = Path(temporary) / "records"
+            records.mkdir()
+            self.write_summary(
+                records,
+                "current",
+                self.summary(
+                    "CurrentSource", "2026-08-27T10:00:00Z", 100, 90, 0.9,
+                    commit="b" * 40,
+                ),
+            )
+            self.write_summary(
+                records,
+                "combined",
+                self.summary(
+                    "CombinedV3", "2026-08-27T10:05:00Z", 100, 80, 0.91,
+                    commit="c" * 40,
+                    proposal=combined["proposal"],
+                ),
+            )
+            attempts = load_attempts(records, state)
+
+        self.assertEqual(
+            [attempt["candidate"] for attempt in attempts],
+            ["CurrentSource", "CombinedV3"],
+        )
+        combined_attempt = attempts[1]
+        self.assertEqual(combined_attempt["combination_provenance"], provenance)
+        self.assertEqual(combined_attempt["timed_seeding_time_per_event_ms"], 80)
+        self.assertNotIn("acts-seeding-v2", json.dumps(attempts))
+
+        verify_historical_combination_source(historical, "source")
+        for field, replacement, message in (
+            ("historical_record", "records/Development/missing/summary.json", "not readable"),
+            ("implementation_commit", "f" * 40, "not reachable"),
+        ):
+            invalid = copy.deepcopy(historical)
+            invalid[field] = replacement
+            with self.subTest(field=field), self.assertRaisesRegex(StatusError, message):
+                verify_historical_combination_source(invalid, "source")
+
+        failed = {
+            **historical,
+            "candidate": "CorePackedXYZRLayout",
+            "implementation_commit": "86b78fad06516e99372f8951349032ce0af8c52d",
+            "historical_record": (
+                "records/Failed/20260828T125743Z-CorePackedXYZRLayout/summary.json"
+            ),
+        }
+        with self.assertRaisesRegex(StatusError, "successful v2"):
+            verify_historical_combination_source(failed, "source")
+
+        with tempfile.TemporaryDirectory() as temporary:
+            duplicate_lessons = Path(temporary) / "lessons.md"
+            lesson = next(
+                line
+                for line in (PROJECT_ROOT / "orchestration-files" / "agent-learnings.md")
+                .read_text(encoding="utf-8")
+                .splitlines()
+                if "candidate: DoubletInsertionSort" in line
+            )
+            duplicate_lessons.write_text(lesson + "\n" + lesson + "\n", encoding="utf-8")
+            with self.assertRaisesRegex(StatusError, "exactly one"):
+                verify_historical_combination_source(
+                    historical, "source", lessons_path=duplicate_lessons
+                )
 
     def test_rejects_duplicate_exact_mechanism_keys(self) -> None:
         metadata = [

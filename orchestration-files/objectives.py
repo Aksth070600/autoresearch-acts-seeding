@@ -13,9 +13,9 @@ from proposal import ProposalError, proposal_from_summary
 from protocol import (
     PROTOCOL_ID,
     PROTOCOL_METADATA,
+    is_compatible_summary,
     is_complete_rss_evidence,
     is_complete_stage_matrix,
-    seeding_objective_protocol,
 )
 
 PRIMARY_TIME_METRIC = "seeding_time_per_event_ms"
@@ -23,6 +23,15 @@ PRIMARY_EFFICIENCY_METRIC = "seeding_particle_efficiency"
 PRIMARY_METRICS = (PRIMARY_TIME_METRIC, PRIMARY_EFFICIENCY_METRIC)
 class SelectionError(RuntimeError):
     """Raised when controlled records cannot support deterministic selection."""
+
+
+def is_active_row(row: dict[str, Any]) -> bool:
+    """Return whether a flattened row is exact active v3 comparison evidence."""
+
+    return (
+        row.get("protocol_id") == PROTOCOL_ID
+        and row.get("source_protocol_id", PROTOCOL_ID) == PROTOCOL_ID
+    )
 
 
 def finite(value: Any) -> bool:
@@ -36,7 +45,7 @@ def finite(value: Any) -> bool:
 def add_run_metrics(
     metrics: dict[str, float], prefix: str, run_metrics: dict[str, Any]
 ) -> None:
-    """Flatten only the two shared v2/v3 primary objectives."""
+    """Flatten the two active v3 primary objectives."""
 
     seeding_time = (
         run_metrics.get("timing", {}).get("seeding", {}).get("time_per_event_ms")
@@ -56,22 +65,11 @@ def add_run_metrics(
 def flatten_summary(
     summary: dict[str, Any], path: Path, records_root: Path
 ) -> dict[str, Any] | None:
-    protocol = seeding_objective_protocol(summary)
-    if summary.get("status") != "passed" or protocol is None:
+    if summary.get("status") != "passed" or not is_compatible_summary(summary):
         return None
     stages = summary.get("stages")
-    if protocol["id"] == PROTOCOL_ID:
-        if not is_complete_stage_matrix(stages) or not is_complete_rss_evidence(
-            summary.get("rss_evidence")
-        ):
-            return None
-    elif (
-        not isinstance(stages, list)
-        or not stages
-        or any(
-            not isinstance(stage, dict) or stage.get("status") != "passed"
-            for stage in stages
-        )
+    if not is_complete_stage_matrix(stages) or not is_complete_rss_evidence(
+        summary.get("rss_evidence")
     ):
         return None
 
@@ -81,15 +79,8 @@ def flatten_summary(
         comparison = {}
     repetitions = comparison.get("repetitions")
     median_metrics = comparison.get("median_run_metrics")
-    expected_repetitions = int(protocol["timed_repetitions"])
-    category = str(summary.get("category", path.parent.parent.name)).lower()
-    if protocol["id"] != PROTOCOL_ID and category not in {"development", "evaluation"}:
-        return None
-    expected_events = (
-        int(PROTOCOL_METADATA["timing_events"])
-        if protocol["id"] == PROTOCOL_ID
-        else int(protocol[f"{category}_events"])
-    )
+    expected_repetitions = int(PROTOCOL_METADATA["timed_repetitions"])
+    expected_events = int(PROTOCOL_METADATA["timing_events"])
     repetitions_complete = (
         isinstance(repetitions, list)
         and len(repetitions) == expected_repetitions
@@ -102,7 +93,7 @@ def flatten_summary(
             for repetition in repetitions
         )
     )
-    if protocol["id"] == PROTOCOL_ID and repetitions_complete:
+    if repetitions_complete:
         repetitions_complete = all(
             repetition.get("stage") == PROTOCOL_METADATA["execution_stage"]
             and repetition.get("metrics_mode")
@@ -112,7 +103,7 @@ def flatten_summary(
         )
     if (
         comparison.get("complete") is True
-        and comparison.get("aggregation") == protocol["timed_aggregation"]
+        and comparison.get("aggregation") == PROTOCOL_METADATA["timed_aggregation"]
         and comparison.get("events") == expected_events
         and comparison.get("repetition_count") == expected_repetitions
         and repetitions_complete
@@ -133,8 +124,8 @@ def flatten_summary(
     return {
         "candidate": candidate,
         "category": str(summary.get("category", path.parent.parent.name)),
-        "protocol_id": str(protocol["id"]),
-        "source_protocol_id": str(protocol["id"]),
+        "protocol_id": PROTOCOL_ID,
+        "source_protocol_id": PROTOCOL_ID,
         "commit": str(summary.get("implementation_commit", "")),
         "record": path.relative_to(records_root).as_posix(),
         "status": str(summary.get("status", "")),
@@ -148,7 +139,7 @@ def flatten_summary(
 
 
 def load_records(records_root: Path, dataset: str) -> list[dict[str, Any]]:
-    """Load complete seeding-objective-family summaries in path order."""
+    """Load exact, complete active v3 summaries in path order."""
 
     rows: list[dict[str, Any]] = []
     for path in sorted(records_root.glob("**/summary.json")):
@@ -156,7 +147,7 @@ def load_records(records_root: Path, dataset: str) -> list[dict[str, Any]]:
             summary = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             continue
-        if seeding_objective_protocol(summary) is None:
+        if not is_compatible_summary(summary):
             continue
         category = str(summary.get("category", path.parent.parent.name)).lower()
         if dataset != "all" and category != dataset:
@@ -202,14 +193,15 @@ def choose_baseline(
     matches = [
         row
         for row in rows
-        if row["candidate"] == candidate_name
+        if is_active_row(row)
+        and row["candidate"] == candidate_name
         and row["category"].lower() == "development"
         and row.get("is_baseline", True)
         and row.get("status", "passed") == "passed"
     ]
     if not matches:
         raise SelectionError(
-            "seeding-objective-compatible Development Genesis baseline required; "
+            "active v3 Development Genesis baseline required; "
             "run `make evaluate CANDIDATE=Genesis` first"
         )
     return max(
@@ -221,6 +213,8 @@ def choose_baseline(
 def improved_over_baseline(
     row: dict[str, Any], baseline: dict[str, Any], stage: str = "timed"
 ) -> bool:
+    if not is_active_row(row) or not is_active_row(baseline):
+        return False
     metrics = row["metrics"]
     base = baseline["metrics"]
     required = tuple(f"{stage}_{name}" for name in PRIMARY_METRICS)
@@ -239,6 +233,8 @@ def dominates(
 ) -> bool:
     """Return whether left is at least as good on both primary objectives."""
 
+    if not is_active_row(left) or not is_active_row(right):
+        return False
     left_time = left["metrics"][f"{stage}_{PRIMARY_TIME_METRIC}"]
     right_time = right["metrics"][f"{stage}_{PRIMARY_TIME_METRIC}"]
     left_efficiency = left["metrics"][f"{stage}_{PRIMARY_EFFICIENCY_METRIC}"]
@@ -265,11 +261,13 @@ def pareto_front(
 ) -> list[dict[str, Any]]:
     """Return primary-objective candidates in deterministic time-first order."""
 
+    active_rows = [row for row in rows if is_active_row(row)]
     front = [
         row
-        for row in rows
+        for row in active_rows
         if not any(
-            other is not row and dominates(other, row, stage) for other in rows
+            other is not row and dominates(other, row, stage)
+            for other in active_rows
         )
     ]
     return sorted(front, key=lambda row: time_first_key(row, stage))

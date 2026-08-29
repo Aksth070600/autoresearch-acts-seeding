@@ -14,4 +14,4 @@ When updating this file, preserve this bar for all agents and keep entries conci
 - The controlled campaign identity, run constants, and standard candidate composition are authoritative in `orchestration-files/protocol.py`; evaluator, report, status, and record consumers must use that protocol.
 - For candidate proposal binding, live status, continuous scheduling, authenticated finish control, or archive finalization, follow `orchestration-files/CAMPAIGN_STATUS.md`; proposal normalization and hashing are authoritative in `orchestration-files/proposal.py`.
 - For future continuous archive closure and task-scoped firstmate merge gates, follow `agent-instructions.md`; the campaign worker never merges its own PR.
-- Before controlled evaluation resumes after a candidate, verify restoration rebuilt changed ACTS objects. `restore-acts-files.sh` preserves baseline timestamps, so a restore build can report no work and leave candidate binaries behind restored Genesis sources.
+- When changing the evaluator transaction or HEPP build helpers, run `orchestration-files/tests/test_evaluator_restoration.py`; it protects restored source and binary agreement.

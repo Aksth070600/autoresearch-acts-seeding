@@ -164,7 +164,9 @@ Evidence is required for every candidate record included in a new-format snapsho
 
 ### Combination provenance
 
-A combination must include `combination_provenance` before its run. Copy the same normalized object into the proposal's `combination_provenance`; the validator rejects any difference. Each source must name an earlier metadata entry with completed evidence. The source mechanism key and full implementation commit must match that entry. At least two distinct sources are required.
+A combination must include `combination_provenance` before its run. Copy the same normalized object into the proposal's `combination_provenance`; the validator rejects any difference. At least two distinct sources are required. A current-campaign v3 source must name an earlier metadata entry with completed evidence, and its mechanism key and full implementation commit must match that entry.
+
+A successful historical v2 mechanism may instead include `historical_record` and `files_changed`. Validation requires the exact canonical passed Development summary, an exact `outcome: keep` lesson with matching candidate, commit, mechanism key, and changed ranges, a reachable implementation commit that changed every named file, and `directly_inspected: true`. Missing, failed, discarded, unreachable, or ambiguous historical sources are rejected. This provenance permits inspection and code reuse only. It does not import or relabel the v2 metrics. The new combination enters current comparisons only after a complete v3 run.
 
 ```json
 "combination_provenance": {
@@ -187,7 +189,7 @@ A combination must include `combination_provenance` before its run. Copy the sam
 }
 ```
 
-Before setting `directly_inspected`, inspect each source with `git show <full-commit> -- <file>`. Candidate and chart links continue to point to the new combined implementation commit.
+Before setting `directly_inspected`, inspect each source with `git show <full-commit> -- <file>`. For a historical source, add its exact fields to the source object, for example `"historical_record": "records/Development/<run>-<candidate>/summary.json"` and `"files_changed": ["optimization-files/<file>#L10-L20"]`. Candidate and chart links continue to point to the new combined implementation commit.
 
 The generator rejects unknown input fields. This prevents measured metrics and unbound scientific claims from entering the hand-maintained file.
 

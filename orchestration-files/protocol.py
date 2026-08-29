@@ -46,14 +46,10 @@ V2_PROTOCOL_METADATA: dict[str, Any] = {
     "expected_unmasked_fpe_handling": "accept only after every requested event completed",
 }
 
-# Captain-approved scientific interpretation. Only these two recorded seeding-stage
-# objective metrics cross the otherwise incompatible v2/v3 protocol boundary.
-SEEDING_OBJECTIVE_FAMILY_ID = "acts-seeding-v2-v3-seeding-objectives"
-SEEDING_OBJECTIVE_METRICS = (
+PRIMARY_REPORT_METRICS = (
     "timed_seeding_time_per_event_ms",
     "timed_seeding_particle_efficiency",
 )
-SEEDING_OBJECTIVE_PROTOCOLS = (V2_PROTOCOL_METADATA, V3_PROTOCOL_METADATA)
 
 # Campaign composition does not change scientific protocol compatibility.
 # CAMPAIGN_COMPOSITION remains the owner of archived fixed-20 evidence.
@@ -98,18 +94,6 @@ def is_compatible_summary(summary: dict[str, Any]) -> bool:
         summary.get("protocol_id") == PROTOCOL_ID
         and summary.get("protocol") == PROTOCOL_METADATA
     )
-
-
-def seeding_objective_protocol(summary: dict[str, Any]) -> dict[str, Any] | None:
-    """Return the exact source protocol admitted to the shared objective family."""
-
-    for protocol in SEEDING_OBJECTIVE_PROTOCOLS:
-        if (
-            summary.get("protocol_id") == protocol["id"]
-            and summary.get("protocol") == protocol
-        ):
-            return protocol
-    return None
 
 
 def is_complete_stage_matrix(stages: Any) -> bool:

@@ -29,6 +29,7 @@ from protocol import (
     PROTOCOL_ID,
     PROTOCOL_METADATA,
     SOURCE_GROUNDED_MAJOR_MINIMUM,
+    V2_PROTOCOL_METADATA,
     is_compatible_summary,
     is_complete_rss_evidence,
     is_complete_stage_matrix,
@@ -46,6 +47,7 @@ ORCHESTRATION_ROOT = Path(__file__).resolve().parent
 DEFAULT_RECORDS = PROJECT_ROOT / "records"
 DEFAULT_INPUT = ORCHESTRATION_ROOT / "campaign-status-input.json"
 DEFAULT_OUTPUT = ORCHESTRATION_ROOT / "campaign-status.json"
+HISTORICAL_LESSONS = ORCHESTRATION_ROOT / "agent-learnings.md"
 REPOSITORY_URL = "https://github.com/Aksth070600/autoresearch-acts-seeding"
 SNAPSHOT_PATH = "orchestration-files/campaign-status.json"
 STATUS_SCHEMA_VERSION = "1.0.0"
@@ -265,6 +267,94 @@ def validate_evidence(value: Any, field: str) -> dict[str, Any]:
     }
 
 
+def verify_historical_combination_source(
+    source: dict[str, Any],
+    field: str,
+    *,
+    repository_root: Path = PROJECT_ROOT,
+    records_root: Path = DEFAULT_RECORDS,
+    lessons_path: Path = HISTORICAL_LESSONS,
+) -> None:
+    """Verify one successful immutable v2 mechanism without importing its metrics."""
+
+    record = source["historical_record"]
+    relative = Path(record)
+    if relative.is_absolute() or ".." in relative.parts or relative.parts[:1] != ("records",):
+        raise StatusError(f"{field}.historical_record is unsafe")
+    record_path = records_root.joinpath(*relative.parts[1:])
+    try:
+        summary = json.loads(record_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise StatusError(f"{field}.historical_record is not readable: {error}") from error
+    commit = source["implementation_commit"]
+    reachable = subprocess.run(
+        ["git", "-C", str(repository_root), "merge-base", "--is-ancestor", commit, "HEAD"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
+    if reachable.returncode != 0:
+        raise StatusError(f"{field}.implementation_commit is not reachable")
+    if (
+        not isinstance(summary, dict)
+        or summary.get("protocol_id") != V2_PROTOCOL_METADATA["id"]
+        or summary.get("protocol") != V2_PROTOCOL_METADATA
+        or summary.get("status") != "passed"
+        or str(summary.get("category", "")).lower() != "development"
+        or summary.get("candidate_name") != source["candidate"]
+        or resolve_implementation_commit(summary, repository_root) != commit
+    ):
+        raise StatusError(
+            f"{field}.historical_record does not match an exact successful v2 record"
+        )
+
+    changed = subprocess.run(
+        [
+            "git", "-C", str(repository_root), "diff-tree", "--root",
+            "--no-commit-id", "--name-only", "-r", commit, "--", "optimization-files",
+        ],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    if changed.returncode != 0:
+        raise StatusError(f"{field}.implementation_commit cannot be inspected")
+    changed_paths = set(changed.stdout.splitlines())
+    claimed_paths = {
+        item.split("#", 1)[0] for item in source["files_changed"]
+    }
+    if not claimed_paths or claimed_paths != changed_paths:
+        raise StatusError(f"{field}.files_changed do not exactly match the implementation commit")
+
+    try:
+        lesson_lines = lessons_path.read_text(encoding="utf-8").splitlines()
+    except OSError as error:
+        raise StatusError(f"{field}: historical lessons are not readable: {error}") from error
+    expected = {
+        "candidate": source["candidate"],
+        "implementation_commit": commit,
+        "mechanism_key": source["mechanism_key"],
+        "files_changed": ", ".join(source["files_changed"]),
+        "outcome": "keep",
+    }
+    matches = []
+    for line in lesson_lines:
+        if not line.startswith("- "):
+            continue
+        fields: dict[str, str] = {}
+        for part in line[2:].split(" | "):
+            key, separator, value = part.partition(": ")
+            if separator:
+                fields[key] = value
+        if all(fields.get(key) == value for key, value in expected.items()):
+            matches.append(line)
+    if len(matches) != 1:
+        raise StatusError(
+            f"{field} must match exactly one successful historical mechanism lesson"
+        )
+
+
 def validate_combination_provenance(
     value: Any,
     field: str,
@@ -285,11 +375,22 @@ def validate_combination_provenance(
         "implementation_commit",
         "directly_inspected",
     }
+    historical_fields = {"historical_record", "files_changed"}
     for index, source in enumerate(sources):
         source_field = f"{field}.sources[{index}]"
         if not isinstance(source, dict):
             raise StatusError(f"{source_field} must be an object")
-        require_keys(source, source_field, source_fields, source_fields)
+        present_historical_fields = set(source) & historical_fields
+        if present_historical_fields and present_historical_fields != historical_fields:
+            raise StatusError(
+                f"{source_field} must provide historical_record and files_changed together"
+            )
+        require_keys(
+            source,
+            source_field,
+            source_fields | historical_fields,
+            source_fields | present_historical_fields,
+        )
         candidate = validate_label(source["candidate"], f"{source_field}.candidate", maximum=80)
         if not CANDIDATE_NAME.fullmatch(candidate):
             raise StatusError(f"{source_field}.candidate has unsupported characters")
@@ -299,8 +400,14 @@ def validate_combination_provenance(
         earlier = (
             earlier_metadata.get(candidate) if earlier_metadata is not None else None
         )
-        if earlier_metadata is not None and earlier is None:
-            raise StatusError(f"{source_field}.candidate must name an earlier candidate")
+        if earlier_metadata is not None and earlier is None and not present_historical_fields:
+            raise StatusError(
+                f"{source_field}.candidate must name an earlier candidate or verified v2 record"
+            )
+        if earlier is not None and present_historical_fields:
+            raise StatusError(
+                f"{source_field} cannot relabel current-campaign evidence as historical"
+            )
         mechanism_key = validate_label(
             source["mechanism_key"], f"{source_field}.mechanism_key"
         )
@@ -319,14 +426,48 @@ def validate_combination_provenance(
                 )
         if source["directly_inspected"] is not True:
             raise StatusError(f"{source_field}.directly_inspected must be true")
-        normalized_sources.append(
-            {
-                "candidate": candidate,
-                "mechanism_key": mechanism_key,
-                "implementation_commit": commit.lower(),
-                "directly_inspected": True,
-            }
-        )
+        normalized_source: dict[str, Any] = {
+            "candidate": candidate,
+            "mechanism_key": mechanism_key,
+            "implementation_commit": commit.lower(),
+            "directly_inspected": True,
+        }
+        if present_historical_fields:
+            record = validate_label(
+                source["historical_record"],
+                f"{source_field}.historical_record",
+                maximum=500,
+            )
+            files = source["files_changed"]
+            if not isinstance(files, list) or not files:
+                raise StatusError(f"{source_field}.files_changed must be a non-empty array")
+            normalized_files = []
+            for file_index, item in enumerate(files):
+                item = validate_label(
+                    item,
+                    f"{source_field}.files_changed[{file_index}]",
+                    maximum=300,
+                )
+                path, marker, ranges = item.partition("#")
+                if (
+                    not marker
+                    or not path.startswith("optimization-files/")
+                    or any(
+                        re.fullmatch(r"L[1-9][0-9]*-L[1-9][0-9]*", part) is None
+                        for part in ranges.split(",")
+                    )
+                ):
+                    raise StatusError(
+                        f"{source_field}.files_changed must contain exact optimization file ranges"
+                    )
+                normalized_files.append(item)
+            if len(set(normalized_files)) != len(normalized_files):
+                raise StatusError(f"{source_field}.files_changed must be unique")
+            normalized_source.update(
+                {"historical_record": record, "files_changed": normalized_files}
+            )
+            verify_historical_combination_source(normalized_source, source_field)
+        normalized_sources.append(normalized_source)
     return {
         "sources": normalized_sources,
         "compatibility_rationale": validate_label(
