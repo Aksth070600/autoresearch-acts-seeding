@@ -110,9 +110,10 @@
     {
       "candidate": "TripletKinematicsPairV4",
       "classification": "major",
+      "implementation_commit": "f7539bf674476baaf366ef9069bbaa2668d112f8",
       "mechanism_key": "v4-triplet-kinematics-pair-layout",
       "slot": 2,
-      "state": "proposal drafted"
+      "state": "proposal bound and queued"
     },
     {
       "candidate": null,
