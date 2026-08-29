@@ -321,6 +321,15 @@
     {
       "candidate": "GridSortCopyLoopFusion",
       "classification": "major",
+      "evidence": {
+        "files_changed": [
+          "optimization-files/Examples/Algorithms/TrackFinding/src/GridTripletSeedingAlgorithm.cpp#L151-L166"
+        ],
+        "lesson": "Fusing per-bin sorting with core materialization preserved seeding efficiency but raised median seeding time by 5.17 ms/event; retain separate sort and copy passes.",
+        "outcome": "discard",
+        "prediction_assessment": "mixed",
+        "prediction_assessment_rationale": "Timed seeding particle efficiency remained 0.983101 as predicted, but median seeding time increased to 295.07 ms/event from the 289.90 ms/event Genesis baseline."
+      },
       "mechanism_family": "grid-core-materialization-dataflow",
       "mechanism_key": "grid-sort-copy-loop-fusion",
       "proposal": {
@@ -399,20 +408,28 @@
     },
     "state": "consumed"
   },
-  "current_attempt": {
-    "candidate": "GridSortCopyLoopFusion",
-    "classification": "major",
-    "controlled_stage": "queued Development finalization run",
-    "mechanism_family": "grid-core-materialization-dataflow",
-    "mechanism_key": "grid-sort-copy-loop-fusion",
-    "scheduling": "finalization",
-    "started_at": "2026-08-29T02:02:30.786181Z",
-    "state": "queued"
-  },
+  "current_attempt": null,
   "pull_request_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/36",
   "scheduler": {
     "blocker": null,
-    "combination_readiness": null,
+    "combination_readiness": {
+      "compatibility_rationale": "The middle-index storage change is confined to candidate retention and reconstruction, while the branch-layout hint is confined to input grid filling; they share no files, state, ordering contract, or cut logic.",
+      "interaction_hypothesis": "Applying the independent candidate-record traffic reduction and grid-fill branch layout together may offset their isolated instruction-layout costs across separate stages while preserving identical reconstructed seeds.",
+      "sources": [
+        {
+          "candidate": "CandidateMiddleIndexHoist",
+          "directly_inspected": true,
+          "implementation_commit": "c5a0bf9b3056c0d23442187232e41c69a0c8e459",
+          "mechanism_key": "candidate-shared-middle-index-storage"
+        },
+        {
+          "candidate": "GridSelectorRejectionUnlikely",
+          "directly_inspected": true,
+          "implementation_commit": "db4bf462e709fb8d20f2e304736ad5b62f49fc78",
+          "mechanism_key": "grid-selector-rejection-branch-layout"
+        }
+      ]
+    },
     "final_targets": {
       "combination_candidates": 1,
       "completed_candidates": 4,

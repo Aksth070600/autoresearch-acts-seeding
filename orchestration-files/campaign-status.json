@@ -388,6 +388,80 @@
       "state": "completed",
       "timed_seeding_particle_efficiency": 0.983101,
       "timed_seeding_time_per_event_ms": 297.28
+    },
+    {
+      "candidate": "GridSortCopyLoopFusion",
+      "changed_symbols": [
+        "ActsExamples::GridTripletSeedingAlgorithm::execute"
+      ],
+      "classification": "major",
+      "combination_provenance": null,
+      "derives_from": null,
+      "duration_seconds": 992.501,
+      "files_changed": [
+        "optimization-files/Examples/Algorithms/TrackFinding/src/GridTripletSeedingAlgorithm.cpp#L151-L166"
+      ],
+      "finished_at": "2026-08-29T02:19:12.827526Z",
+      "hot_path_rationale": "ActsExamples::GridTripletSeedingAlgorithm::execute per-event radius sorting and grid-to-core space-point materialization.",
+      "implementation_commit": "9e099cf8f01be9dc235ace9d27e4c13eb41b6ae8",
+      "lesson": "Fusing per-bin sorting with core materialization preserved seeding efficiency but raised median seeding time by 5.17 ms/event; retain separate sort and copy passes.",
+      "links": {
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/9e099cf8f01be9dc235ace9d27e4c13eb41b6ae8",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug29/records/Development/20260829T020240Z-GridSortCopyLoopFusion/summary.json"
+      },
+      "mechanism_family": "grid-core-materialization-dataflow",
+      "mechanism_key": "grid-sort-copy-loop-fusion",
+      "novelty_rationale": "Earlier grid fusion moved radius-extrema accumulation into the copy or derived extrema from sorted endpoints; this candidate leaves radius-range computation intact and instead fuses the complete per-bin sort pass with the existing contiguous core-copy pass.",
+      "outcome": "discard",
+      "prediction_assessment": "mixed",
+      "prediction_assessment_rationale": "Timed seeding particle efficiency remained 0.983101 as predicted, but median seeding time increased to 295.07 ms/event from the 289.90 ms/event Genesis baseline.",
+      "proposal": {
+        "candidate": "GridSortCopyLoopFusion",
+        "changed_symbols": [
+          "ActsExamples::GridTripletSeedingAlgorithm::execute"
+        ],
+        "combination_provenance": null,
+        "expected_hot_path": "ActsExamples::GridTripletSeedingAlgorithm::execute per-event radius sorting and grid-to-core space-point materialization.",
+        "falsifier": "The prediction fails if median seeding time does not decrease from fresh Genesis or timed seeding particle efficiency changes.",
+        "hypothesis": "Sorting each cylindrical grid bin immediately before copying that bin into contiguous core storage will remove a full grid-bin traversal and keep the sorted index list hot for its only subsequent read, reducing median seeding time without changing bin order, core layout, or seeding efficiency.",
+        "implementation_commit": "9e099cf8f01be9dc235ace9d27e4c13eb41b6ae8",
+        "intended_files": [
+          "optimization-files/Examples/Algorithms/TrackFinding/src/GridTripletSeedingAlgorithm.cpp"
+        ],
+        "novelty_reason": "Earlier grid fusion moved radius-extrema accumulation into the copy or derived extrema from sorted endpoints; this candidate leaves radius-range computation intact and instead fuses the complete per-bin sort pass with the existing contiguous core-copy pass.",
+        "predicted_directions": {
+          "timed_seeding_particle_efficiency": "unchanged",
+          "timed_seeding_time_per_event_ms": "decrease"
+        },
+        "schema_version": "1.0.0",
+        "source_references": [
+          {
+            "directly_inspected": true,
+            "reference": "records/Development/20260828T233358598694Z-Genesis/summary.json",
+            "relevance": "The fresh v3 Genesis fixes the current baseline and contains separate complete grid-bin sort and core-copy traversals.",
+            "source_type": "Genesis"
+          },
+          {
+            "directly_inspected": true,
+            "reference": "4eb7cad7956863101a76572fdc3c05fa0ccba342",
+            "relevance": "The directly inspected failed fusion changed radius-range accumulation but retained separate sorting, establishing a distinct pass-fusion boundary.",
+            "source_type": "prior record/commit"
+          },
+          {
+            "directly_inspected": true,
+            "reference": "59e7fb575596a7adc2936cd40bf1b06a6303b79a",
+            "relevance": "The directly inspected successful batch materialization changed allocation and row creation; this candidate preserves per-row creation and changes only sort-to-copy traversal locality.",
+            "source_type": "prior record/commit"
+          }
+        ]
+      },
+      "proposal_hash": "3a6f3e75aba9bd29eeaf59a332f77b319e5915f9da9c9871d3a6d510ccc79318",
+      "record": "records/Development/20260829T020240Z-GridSortCopyLoopFusion/summary.json",
+      "run_result": "Passed all controlled Development stages.",
+      "started_at": "2026-08-29T02:02:40.326608Z",
+      "state": "completed",
+      "timed_seeding_particle_efficiency": 0.983101,
+      "timed_seeding_time_per_event_ms": 295.07
     }
   ],
   "blockers": [],
@@ -424,16 +498,7 @@
     },
     "state": "consumed"
   },
-  "current_attempt": {
-    "candidate": "GridSortCopyLoopFusion",
-    "classification": "major",
-    "controlled_stage": "queued Development finalization run",
-    "mechanism_family": "grid-core-materialization-dataflow",
-    "mechanism_key": "grid-sort-copy-loop-fusion",
-    "scheduling": "finalization",
-    "started_at": "2026-08-29T02:02:30.786181Z",
-    "state": "queued"
-  },
+  "current_attempt": null,
   "failures": [
     {
       "candidate": "FilterDisabledConfirmationQualityMapElision",
@@ -451,42 +516,42 @@
       "record_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug29/records/Failed/20260828T235932Z-GridEmptyNeighborRangePrune/summary.json"
     }
   ],
-  "generated_at": "2026-08-29T02:02:32.177930Z",
+  "generated_at": "2026-08-29T02:20:00.929406Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/9e099cf8f01be9dc235ace9d27e4c13eb41b6ae8",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/f7cbf968a99e6d93ddd9334cf457ac7c374ce7cc",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/aug29",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/36"
   },
   "progress": {
     "combination_candidates": 0,
-    "completed_candidates": 2,
+    "completed_candidates": 3,
     "composition": {
       "combination": {
         "completed": 0,
         "completed_percentage": 0.0,
-        "deficit_candidates": 0.5,
+        "deficit_candidates": 0.75,
         "target_percentage": 25.0
       },
       "major": {
-        "completed": 1,
-        "completed_percentage": 50.0,
-        "deficit_candidates": 0.0,
+        "completed": 2,
+        "completed_percentage": 66.66666666666666,
+        "deficit_candidates": -0.5,
         "target_percentage": 50.0
       },
       "minor": {
         "completed": 1,
-        "completed_percentage": 50.0,
-        "deficit_candidates": -0.5,
+        "completed_percentage": 33.33333333333333,
+        "deficit_candidates": -0.25,
         "target_percentage": 25.0
       }
     },
-    "elapsed_seconds": 8987.17793,
-    "estimated_remaining_seconds": null,
-    "eta_basis": "Unavailable until 3 completed attempt durations exist (2 available).",
-    "eta_sample_count": 2,
-    "expected_finish_at": null,
-    "major_candidates": 1,
-    "median_completed_attempt_duration_seconds": 1022.3205,
+    "elapsed_seconds": 10035.929406,
+    "estimated_remaining_seconds": 1019.055,
+    "eta_basis": "Median of 3 completed attempts.",
+    "eta_sample_count": 3,
+    "expected_finish_at": "2026-08-29T02:36:59.984406Z",
+    "major_candidates": 2,
+    "median_completed_attempt_duration_seconds": 1019.055,
     "minor_candidates": 1
   },
   "promising_results": {
@@ -503,14 +568,14 @@
       "timed_seeding_time_per_event_ms": 289.9
     },
     "best_seeding_efficiency": {
-      "candidate": "GridSelectorRejectionUnlikely",
+      "candidate": "GridSortCopyLoopFusion",
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/db4bf462e709fb8d20f2e304736ad5b62f49fc78",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug29/records/Development/20260829T012321Z-GridSelectorRejectionUnlikely/summary.json"
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/9e099cf8f01be9dc235ace9d27e4c13eb41b6ae8",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug29/records/Development/20260829T020240Z-GridSortCopyLoopFusion/summary.json"
       },
-      "started_at": "2026-08-29T01:23:21.619893Z",
+      "started_at": "2026-08-29T02:02:40.326608Z",
       "timed_seeding_particle_efficiency": 0.983101,
-      "timed_seeding_time_per_event_ms": 297.28
+      "timed_seeding_time_per_event_ms": 295.07
     },
     "latest_genesis": {
       "candidate": "Genesis",
@@ -542,11 +607,16 @@
   },
   "scheduler": {
     "blocker": null,
-    "combination_eligible": false,
+    "combination_eligible": true,
     "decision": {
-      "action": "finish-active",
-      "category": "major",
-      "reason": "Finish the active candidate transaction and record its restoration evidence."
+      "action": "schedule-finalization",
+      "category": "combination",
+      "deficits": {
+        "combination": 1,
+        "major": 0,
+        "minor": 0
+      },
+      "reason": "Selected from only the persisted exact-ratio category deficits."
     },
     "final_targets": {
       "combination_candidates": 1,
