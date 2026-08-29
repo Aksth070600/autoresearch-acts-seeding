@@ -3,12 +3,9 @@ from pathlib import Path
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-CANDIDATE_HELPER = (
-    PROJECT_ROOT
-    / "orchestration-files"
-    / "HEPP-files"
-    / "acts-v4-static-pilot-candidate.sh"
-)
+HEPP_FILES = PROJECT_ROOT / "orchestration-files" / "HEPP-files"
+CANDIDATE_HELPER = HEPP_FILES / "acts-v4-static-pilot-candidate.sh"
+RESTORE_HELPER = HEPP_FILES / "acts-v4-static-pilot-restore.sh"
 
 
 class StaticV4CandidateHelperTests(unittest.TestCase):
@@ -33,19 +30,24 @@ class StaticV4CandidateHelperTests(unittest.TestCase):
         self.assertNotIn("export PATH=", pinned_environment)
 
     def test_generated_python_setup_runs_without_nounset(self):
-        script = CANDIDATE_HELPER.read_text(encoding="utf-8")
-        setup = 'source "$ACTS_BUILD_DIR/python/setup.sh"'
-        setup_index = script.index(setup)
-
-        self.assertEqual(script.count(setup), 1)
-        self.assertEqual(script[:setup_index].rstrip().splitlines()[-2:], [
-            "set +u",
-            "# shellcheck disable=SC1090,SC1091",
-        ])
-        self.assertEqual(
-            script[setup_index:].splitlines()[1],
-            "set -u",
+        cases = (
+            (CANDIDATE_HELPER, 'source "$ACTS_BUILD_DIR/python/setup.sh"'),
+            (RESTORE_HELPER, 'source "$SLOT/build/python/setup.sh"'),
         )
+        for helper, setup in cases:
+            with self.subTest(helper=helper.name):
+                script = helper.read_text(encoding="utf-8")
+                setup_index = script.index(setup)
+
+                self.assertEqual(script.count(setup), 1)
+                self.assertEqual(script[:setup_index].rstrip().splitlines()[-2:], [
+                    "set +u",
+                    "# shellcheck disable=SC1090,SC1091",
+                ])
+                self.assertEqual(
+                    script[setup_index:].splitlines()[1],
+                    "set -u",
+                )
 
 
 if __name__ == "__main__":

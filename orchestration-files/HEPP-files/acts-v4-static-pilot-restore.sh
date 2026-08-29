@@ -51,8 +51,10 @@ if [[ "$dry_run" != *"no work to do"* ]]; then
   echo "error: final Genesis binary closure has pending work" >&2
   exit 1
 fi
+set +u
 # shellcheck disable=SC1090,SC1091
 source "$SLOT/build/python/setup.sh"
+set -u
 python3 - <<'PY'
 import acts
 import acts.examples
