@@ -35,6 +35,17 @@ if [[ ! -f "$ACTS_LCG_SETUP" ]]; then
   exit 2
 fi
 
+unset CC CXX FC
+set +e +u
+# shellcheck disable=SC1090
+source "$ACTS_LCG_SETUP"
+setup_rc=$?
+set -e -u
+if (( setup_rc != 0 )); then
+  echo "error: LCG setup failed: $setup_rc" >&2
+  exit 1
+fi
+
 queue_ns="$(date +%s%N)"
 lock_path="$(dirname -- "$TEMPLATE")/.campaign.lock"
 exec 9>"$lock_path"
@@ -101,16 +112,6 @@ PYTHONDONTWRITEBYTECODE=1 python3 "$MODULE_DIR/invalidate_candidate.py" \
   --genesis-tree "$GENESIS_OPTIMIZATION" \
   "${invalidation_args[@]}" --output "$invalidation"
 
-unset CC CXX FC
-set +e +u
-# shellcheck disable=SC1090
-source "$ACTS_LCG_SETUP"
-setup_rc=$?
-set -e -u
-if (( setup_rc != 0 )); then
-  echo "error: LCG setup failed: $setup_rc" >&2
-  exit 1
-fi
 build_start_ns="$(date +%s%N)"
 cmake --build "$ACTS_BUILD_DIR" --target ActsPythonBindings --parallel "$ACTS_BUILD_JOBS" \
   >"$WORKSPACE/build.log" 2>&1
