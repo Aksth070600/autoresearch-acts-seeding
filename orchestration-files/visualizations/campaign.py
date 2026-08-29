@@ -10,6 +10,7 @@ from campaign_status import StatusError, validate_ref
 
 REPOSITORY = "Aksth070600/autoresearch-acts-seeding"
 POLL_INTERVAL_MS = 60_000
+PLOTLY_SCRIPT_URL = "https://cdn.plot.ly/plotly-2.35.2.min.js"
 
 
 HTML_TEMPLATE = r"""<!doctype html>
@@ -919,7 +920,17 @@ setInterval(() => {
 """
 
 
-def freshness_state(updated_at: str, now: datetime, stale_after_seconds: int = 900) -> str:
+def visual_styles() -> str:
+    """Return the established live-campaign visual language for trusted pages."""
+
+    start = HTML_TEMPLATE.index("<style>") + len("<style>")
+    end = HTML_TEMPLATE.index("</style>", start)
+    return HTML_TEMPLATE[start:end].strip()
+
+
+def freshness_state(
+    updated_at: str, now: datetime, stale_after_seconds: int = 900
+) -> str:
     """Return the dashboard freshness class for focused state tests."""
 
     try:
@@ -928,7 +939,12 @@ def freshness_state(updated_at: str, now: datetime, stale_after_seconds: int = 9
         raise StatusError("updated_at must be an ISO 8601 timestamp") from error
     if updated.tzinfo is None:
         raise StatusError("updated_at must include a timezone")
-    age = max((now.astimezone(timezone.utc) - updated.astimezone(timezone.utc)).total_seconds(), 0)
+    age = max(
+        (
+            now.astimezone(timezone.utc) - updated.astimezone(timezone.utc)
+        ).total_seconds(),
+        0,
+    )
     if age >= stale_after_seconds:
         return "stale"
     if age >= stale_after_seconds / 2:
@@ -948,4 +964,10 @@ def render(output: Path) -> None:
     )
 
 
-__all__ = ["freshness_state", "render", "validate_ref"]
+__all__ = [
+    "PLOTLY_SCRIPT_URL",
+    "freshness_state",
+    "render",
+    "validate_ref",
+    "visual_styles",
+]

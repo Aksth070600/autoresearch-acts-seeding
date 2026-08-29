@@ -1,8 +1,11 @@
+import json
 import re
 import shutil
 import subprocess
 import sys
 import unittest
+from datetime import datetime, timedelta, timezone
+from html.parser import HTMLParser
 from pathlib import Path
 
 
@@ -10,16 +13,118 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_ROOT / "orchestration-files"))
 
 from static_v4_public_dashboard import render  # noqa: E402
+from visualizations.campaign import PLOTLY_SCRIPT_URL  # noqa: E402
+
+
+class ArtifactParser(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.classes = set()
+        self.ids = set()
+        self.script_sources = []
+        self.hrefs = []
+        self.attempt_count = None
+
+    def handle_starttag(self, tag, attrs):
+        attributes = dict(attrs)
+        self.classes.update(attributes.get("class", "").split())
+        if "id" in attributes:
+            self.ids.add(attributes["id"])
+        if tag == "script" and "src" in attributes:
+            self.script_sources.append(attributes["src"])
+        if tag == "a" and "href" in attributes:
+            self.hrefs.append(attributes["href"])
+        if attributes.get("id") == "dashboard":
+            self.attempt_count = int(attributes["data-attempt-count"])
 
 
 class StaticV4PublicCampaignTests(unittest.TestCase):
     def status(self):
+        genesis_interval = {
+            "lower": {"numerator": 297004000, "denominator": 1},
+            "upper": {"numerator": 298800000, "denominator": 1},
+        }
+        candidate_interval = {
+            "lower": {"numerator": 294500000, "denominator": 1},
+            "upper": {"numerator": 296500000, "denominator": 1},
+        }
+        attempts = []
+        for slot, candidate, mechanism, timing, commit, rss in (
+            (
+                1,
+                "CoreBatchMaterializationV4C",
+                "v4c-core-batch-spacepoint-materialization",
+                295485000,
+                "1" * 40,
+                2121648,
+            ),
+            (
+                2,
+                "CandidateInlineStorageV4C",
+                "v4c-candidate-inline-bounded-storage",
+                295884000,
+                "3" * 40,
+                2124800,
+            ),
+        ):
+            attempts.append(
+                {
+                    "slot": slot,
+                    "record_path": f"records/Development/slot-{slot}/summary.json",
+                    "candidate": candidate,
+                    "classification": "major",
+                    "mechanism_key": mechanism,
+                    "status": "passed",
+                    "timing": {"per_event_nanoseconds": timing},
+                    "stats": {
+                        "nTotalMatchedParticles": 57398,
+                        "nTotalParticles": 58310,
+                        "nTotalFakeTracks": 26451,
+                        "nTotalDuplicateTracks": 586907,
+                        "nTotalTracks": 1065071,
+                    },
+                    "scientific_classification": {
+                        "timing": {
+                            "label": "confidently faster",
+                            "candidate_interval_nanoseconds": candidate_interval,
+                            "genesis_interval_nanoseconds": genesis_interval,
+                        },
+                        "efficiency": {
+                            "genesis": {"numerator": 28699, "denominator": 29155}
+                        },
+                        "overall": "valid improvement",
+                    },
+                    "latency": {
+                        "preparation_seconds": "174.473603783",
+                        "build_seconds": "86.127670679",
+                        "queue_to_immutable_record_seconds": "251.511444851",
+                    },
+                    "resources": {"wall_seconds": "76.80", "peak_rss_kb": rss},
+                    "implementation_commit": commit,
+                    "loaded_dso_manifest_sha256": "2" * 64,
+                    "proposal": {
+                        "changed_symbols": ["Acts::Example::execute"],
+                        "derives_from": (
+                            {
+                                "candidate": "EarlierCandidate",
+                                "mechanism_key": "earlier-mechanism",
+                                "implementation_commit": "9" * 40,
+                            }
+                            if slot == 1
+                            else None
+                        ),
+                        "combination_provenance": None,
+                    },
+                }
+            )
         return {
             "schema": "acts-v4-owned-static-continuous-status-v1",
+            "generated_at": "2026-08-29T20:12:32Z",
             "campaign": {
                 "campaign_id": "acts-v4-owned-static-continuous-20260829t185722z-fm",
                 "control_id": "c" * 64,
                 "branch": "fm/acts-v4-continuous-campaign",
+                "started_at": "2026-08-29T18:57:22Z",
                 "platform_commit": "c72c1a32d61858eaad05b0f6f19c712d0c53f2ba",
                 "scientific_genesis_commit": "5ed3b47329ceda4edaab48b1efc3c5635f361a30",
                 "acts_commit": "34edd48852f766e1b9d94d3dc996e27476339f1b",
@@ -36,6 +141,13 @@ class StaticV4PublicCampaignTests(unittest.TestCase):
                     297902000,
                 ],
                 "median_per_event_nanoseconds": 297902000,
+                "median_peak_rss_kb": 2125020,
+                "baseline": {
+                    "stats": {
+                        "nTotalMatchedParticles": 57398,
+                        "nTotalParticles": 58310,
+                    }
+                },
                 "relative_empirical_noise_envelope": {
                     "numerator": 449,
                     "denominator": 148951,
@@ -47,87 +159,106 @@ class StaticV4PublicCampaignTests(unittest.TestCase):
                 "counts": {"major": 2, "minor": 0, "combination": 0},
                 "completed_blocks": 0,
             },
-            "attempts": [
-                {
-                    "slot": 1,
-                    "candidate": "CoreBatchMaterializationV4C",
-                    "classification": "major",
-                    "mechanism_key": "v4c-core-batch-spacepoint-materialization",
-                    "status": "passed",
-                    "timing": {"per_event_nanoseconds": 295485000},
-                    "stats": {
-                        "nTotalMatchedParticles": 57398,
-                        "nTotalParticles": 58310,
-                        "nTotalFakeTracks": 26451,
-                        "nTotalDuplicateTracks": 586907,
-                        "nTotalTracks": 1065071,
-                    },
-                    "scientific_classification": {
-                        "timing": {"label": "confidently faster"},
-                        "overall": "valid improvement",
-                    },
-                    "latency": {
-                        "build_seconds": "86.127670679",
-                        "queue_to_immutable_record_seconds": "251.511444851",
-                    },
-                    "resources": {"wall_seconds": "76.80", "peak_rss_kb": 2121648},
-                    "implementation_commit": "1" * 40,
-                    "loaded_dso_manifest_sha256": "2" * 64,
-                },
-                {
-                    "slot": 2,
-                    "candidate": "CandidateInlineStorageV4C",
-                    "classification": "major",
-                    "mechanism_key": "v4c-candidate-inline-bounded-storage",
-                    "status": "passed",
-                    "timing": {"per_event_nanoseconds": 295884000},
-                    "stats": {
-                        "nTotalMatchedParticles": 57398,
-                        "nTotalParticles": 58310,
-                        "nTotalFakeTracks": 26451,
-                        "nTotalDuplicateTracks": 586907,
-                        "nTotalTracks": 1065071,
-                    },
-                    "scientific_classification": {
-                        "timing": {"label": "confidently faster"},
-                        "overall": "valid improvement",
-                    },
-                    "latency": {
-                        "build_seconds": "87.486383499",
-                        "queue_to_immutable_record_seconds": "253.036802506",
-                    },
-                    "resources": {"wall_seconds": "78.30", "peak_rss_kb": 2124800},
-                    "implementation_commit": "3" * 40,
-                    "loaded_dso_manifest_sha256": "4" * 64,
-                },
-            ],
+            "current_attempt": None,
+            "attempts": attempts,
             "corrections": [],
         }
 
-    def test_trusted_public_dashboard_shows_exact_active_v4_identity_and_records(self):
-        output = render(self.status(), deployed_commit="f" * 40)
+    def output(self):
+        first = datetime(2026, 8, 29, 19, 19, 49, tzinfo=timezone.utc)
+        return render(
+            self.status(),
+            deployed_commit="f" * 40,
+            completion_times={1: first, 2: first + timedelta(minutes=6, seconds=34)},
+        )
+
+    def test_generated_artifact_has_accepted_visual_structure_and_exact_identity(self):
+        output = self.output()
+        parser = ArtifactParser()
+        parser.feed(output)
+
+        self.assertEqual(parser.attempt_count, 2)
+        self.assertEqual(parser.script_sources, [PLOTLY_SCRIPT_URL])
+        self.assertTrue(all(url.startswith("https://") for url in parser.hrefs))
+        for required_class in (
+            "controls",
+            "finish-control",
+            "identity-row",
+            "progress-grid",
+            "timing-grid",
+            "results-grid",
+            "card",
+            "corner-badge",
+        ):
+            self.assertIn(required_class, parser.classes)
+        for required_id in (
+            "campaign-select",
+            "finish-control",
+            "finish-identity",
+            "dashboard",
+            "baseline-heading",
+            "chart-frame",
+            "chart",
+            "corner-overlays",
+        ):
+            self.assertIn(required_id, parser.ids)
+
+        self.assertIn("Running · ACTS Seeding Campaign · Aug 29, 2026", output)
         self.assertIn("acts-v4-owned-static-continuous-20260829t185722z-fm", output)
-        self.assertIn("CoreBatchMaterializationV4C", output)
-        self.assertIn("CandidateInlineStorageV4C", output)
-        self.assertIn("295.485000", output)
-        self.assertIn("Empirical noise envelope", output)
-        self.assertIn("not a confidence level", output)
-        self.assertIn("c" * 64, output)
-        self.assertIn("f" * 40, output)
-        self.assertIn("regular merge commit, never squash", output)
-        self.assertIn('id="metric-select"', output)
-        self.assertIn('id="metric-chart"', output)
-        self.assertIn('class="composition-grid"', output)
-        self.assertIn('class="chart-point"', output)
-        self.assertIn('class="finish-button"', output)
-        self.assertIn("CoreBatchMaterializationV4C", output)
-        self.assertNotIn("<script src=", output)
+        self.assertIn("Core Batch Materialization", output)
+        self.assertIn("295.485 ms", output)
+        self.assertIn("Time per experiment", output)
+        self.assertIn("6m 34s", output)
+        self.assertIn("449/148951", output)
+        self.assertNotIn("Captain visual review", output)
         self.assertNotIn('rel="stylesheet"', output)
+
+    def test_generated_chart_payload_preserves_all_exact_v4_record_data(self):
+        output = self.output()
+        match = re.search(
+            r"const CAMPAIGN = (.*?);\nconst plotEmpty", output, re.DOTALL
+        )
+        self.assertIsNotNone(match)
+        payload = json.loads(match.group(1))
+
+        self.assertEqual(
+            payload["campaign"]["protocol_id"], "acts-seeding-v4-owned-static"
+        )
+        self.assertEqual(payload["campaign"]["protocol_revision"], 2)
+        self.assertEqual(len(payload["attempts"]), 2)
+        first = payload["attempts"][0]
+        self.assertEqual(first["candidate"], "CoreBatchMaterializationV4C")
+        self.assertEqual(first["timing_ms"], 295.485)
+        self.assertEqual(first["efficiency"], 57398 / 58310)
+        self.assertEqual(first["fake_rate"], 26451 / 1065071)
+        self.assertEqual(first["duplicate_rate"], 586907 / 1065071)
+        self.assertEqual(first["latency"]["queue_to_record_seconds"], 251.511444851)
+        self.assertEqual(
+            first["mechanism_key"], "v4c-core-batch-spacepoint-materialization"
+        )
+        self.assertEqual(first["lineage"][0]["candidate"], "EarlierCandidate")
+        self.assertEqual(
+            first["commit_url"],
+            f"https://github.com/Aksth070600/autoresearch-acts-seeding/commit/{'1' * 40}",
+        )
+        self.assertEqual(payload["genesis"]["empirical_envelope"], "449/148951")
+
+        for visual_contract in (
+            "mode:'markers',type:'scatter',name:'Candidates'",
+            "pointSize",
+            "Decision: ${decision}",
+            "rgba(34,197,94,0.14)",
+            "rgba(239,68,68,0.14)",
+            "rgba(234,179,8,0.14)",
+            "x0:0,x1:1,xref:'paper',y0:gy,y1:gy",
+            "paper_bgcolor:'#111827',plot_bgcolor:'#0b1120'",
+        ):
+            self.assertIn(visual_contract, output)
 
     def test_generated_dashboard_inline_javascript_is_syntax_valid(self):
         if shutil.which("node") is None:
             self.skipTest("node is required")
-        output = render(self.status(), deployed_commit="f" * 40)
+        output = self.output()
         scripts = re.findall(r"<script>(.*?)</script>", output, re.DOTALL)
         self.assertEqual(len(scripts), 1)
         result = subprocess.run(

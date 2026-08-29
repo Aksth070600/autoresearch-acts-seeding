@@ -7,9 +7,16 @@ import argparse
 import html
 import json
 import re
+import statistics
+import subprocess
+from datetime import datetime
+from fractions import Fraction
 from pathlib import Path
 from typing import Any
 
+from visualizations.campaign import PLOTLY_SCRIPT_URL, visual_styles
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
 STATUS_SCHEMA = "acts-v4-owned-static-continuous-status-v1"
 PROTOCOL_ID = "acts-seeding-v4-owned-static"
 PROTOCOL_REVISION = 2
@@ -17,11 +24,12 @@ DATASET_ID = (
     "acts-seeding-v4-owned-static-"
     "a05ae8663452d52dc2b90e2fa5372091a2cb04feb8cce86646da9f6ccbc2f3fb"
 )
+REPOSITORY_URL = "https://github.com/Aksth070600/autoresearch-acts-seeding"
 FULL_SHA = re.compile(r"^[0-9a-f]{40}$")
-CATEGORY_COLORS = {
-    "major": "#38bdf8",
-    "minor": "#fbbf24",
-    "combination": "#a78bfa",
+CATEGORY_LABELS = {
+    "major": "Major",
+    "minor": "Minor",
+    "combination": "Combination",
 }
 
 
@@ -29,24 +37,57 @@ def _escape(value: Any) -> str:
     return html.escape(str(value))
 
 
-def _milliseconds(value: Any) -> str:
-    return f"{value / 1_000_000:.6f}" if isinstance(value, int) else "unavailable"
-
-
-def _fraction(value: Any) -> str:
+def _fraction(value: Any) -> Fraction | None:
     if not isinstance(value, dict):
-        return "unavailable"
-    return f"{value.get('numerator')}/{value.get('denominator')}"
+        return None
+    numerator = value.get("numerator")
+    denominator = value.get("denominator")
+    if (
+        not isinstance(numerator, int)
+        or not isinstance(denominator, int)
+        or not denominator
+    ):
+        return None
+    return Fraction(numerator, denominator)
 
 
-def _counts(stats: Any) -> tuple[str, str, str]:
-    if not isinstance(stats, dict):
-        return ("unavailable",) * 3
+def _fraction_text(value: Any) -> str:
+    fraction = _fraction(value)
     return (
-        f"{stats.get('nTotalMatchedParticles')}/{stats.get('nTotalParticles')}",
-        f"{stats.get('nTotalFakeTracks')}/{stats.get('nTotalTracks')}",
-        f"{stats.get('nTotalDuplicateTracks')}/{stats.get('nTotalTracks')}",
+        f"{fraction.numerator}/{fraction.denominator}"
+        if fraction is not None
+        else "unavailable"
     )
+
+
+def _milliseconds(value: Any) -> float | None:
+    return value / 1_000_000 if isinstance(value, int) else None
+
+
+def _decimal(value: Any) -> float | None:
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    return number if number == number and abs(number) != float("inf") else None
+
+
+def _rate(stats: dict[str, Any], numerator: str, denominator: str) -> float | None:
+    top = stats.get(numerator)
+    bottom = stats.get(denominator)
+    if not isinstance(top, int) or not isinstance(bottom, int) or bottom <= 0:
+        return None
+    return top / bottom
+
+
+def _interval(value: Any) -> list[float] | None:
+    if not isinstance(value, dict):
+        return None
+    lower = _fraction(value.get("lower"))
+    upper = _fraction(value.get("upper"))
+    if lower is None or upper is None:
+        return None
+    return [float(lower / 1_000_000), float(upper / 1_000_000)]
 
 
 def _validate(status: Any, deployed_commit: str) -> dict[str, Any]:
@@ -71,220 +112,487 @@ def _validate(status: Any, deployed_commit: str) -> dict[str, Any]:
     return status
 
 
-def _chart(attempts: list[dict[str, Any]], genesis_ns: Any) -> str:
-    points = []
-    for attempt in attempts:
-        value = (attempt.get("timing") or {}).get("per_event_nanoseconds")
-        slot = attempt.get("slot")
-        if isinstance(value, int) and isinstance(slot, int):
-            points.append((slot, value / 1_000_000, attempt))
-    width, height = 920, 330
-    left, right, top, bottom = 76, 30, 32, 58
-    plot_width = width - left - right
-    plot_height = height - top - bottom
-    values = [value for _, value, _ in points]
-    if isinstance(genesis_ns, int):
-        values.append(genesis_ns / 1_000_000)
-    if values:
-        low, high = min(values), max(values)
-        padding = max((high - low) * 0.18, 0.25)
-        low -= padding
-        high += padding
-    else:
-        low, high = 0.0, 1.0
-    max_slot = max((slot for slot, _, _ in points), default=1)
-
-    def x(slot: int) -> float:
-        return left + (slot - 0.5) / max_slot * plot_width
-
-    def y(value: float) -> float:
-        return top + (high - value) / (high - low) * plot_height
-
-    grid = []
-    for index in range(5):
-        value = high - index * (high - low) / 4
-        py = y(value)
-        grid.append(
-            f'<line x1="{left}" y1="{py:.2f}" x2="{width - right}" y2="{py:.2f}" class="grid-line"/>'
-            f'<text x="{left - 10}" y="{py + 4:.2f}" text-anchor="end" class="axis-label">{value:.3f}</text>'
-        )
-    marks = []
-    for slot, value, attempt in points:
-        color = CATEGORY_COLORS.get(attempt.get("classification"), "#94a3b8")
-        title = (
-            f"Slot {slot}: {attempt.get('candidate')} - {value:.6f} ms/event - "
-            f"{(attempt.get('scientific_classification') or {}).get('overall', 'invalid')}"
-        )
-        marks.append(
-            f'<circle class="chart-point" cx="{x(slot):.2f}" cy="{y(value):.2f}" r="7" fill="{color}" '
-            f'data-slot="{slot}" tabindex="0"><title>{_escape(title)}</title></circle>'
-            f'<text x="{x(slot):.2f}" y="{height - bottom + 23}" text-anchor="middle" class="axis-label">{slot}</text>'
-        )
-    genesis_line = ""
-    if isinstance(genesis_ns, int):
-        genesis = genesis_ns / 1_000_000
-        genesis_line = (
-            f'<line x1="{left}" y1="{y(genesis):.2f}" x2="{width - right}" y2="{y(genesis):.2f}" class="genesis-line"/>'
-            f'<text x="{width - right - 4}" y="{y(genesis) - 7:.2f}" text-anchor="end" class="genesis-label">Genesis {genesis:.6f}</text>'
-        )
-    return (
-        f'<svg id="metric-chart" viewBox="0 0 {width} {height}" role="img" '
-        'aria-label="Candidate GridTriplet seeding time by immutable slot">'
-        f'<text x="{left}" y="18" class="chart-title">GridTriplet seeding time (ms/event, lower is better)</text>'
-        f"{''.join(grid)}{genesis_line}{''.join(marks)}"
-        f'<text x="{width / 2}" y="{height - 8}" text-anchor="middle" class="axis-title">Immutable candidate slot</text>'
-        f'<text x="18" y="{height / 2}" text-anchor="middle" transform="rotate(-90 18 {height / 2})" class="axis-title">ms/event</text>'
-        "</svg>"
-    )
-
-
-def render(status: dict[str, Any], *, deployed_commit: str) -> str:
-    status = _validate(status, deployed_commit)
-    campaign = status["campaign"]
-    calibration = status.get("calibration")
-    genesis_ns = None
-    if isinstance(calibration, dict):
-        genesis_ns = calibration.get("median_per_event_nanoseconds")
-        timings = ", ".join(
-            _milliseconds(value)
-            for value in calibration.get("genesis_per_event_nanoseconds", [])
-        )
-        calibration_html = (
-            f"<p>Five independent timings (ms/event): {_escape(timings)}<br>"
-            f"Median: {_milliseconds(genesis_ns)} ms/event<br>"
-            "Empirical noise envelope: "
-            f"{_escape(_fraction(calibration.get('relative_empirical_noise_envelope')))}. "
-            "This is not a confidence level.</p>"
-        )
-    else:
-        calibration_html = "<p>Fresh campaign calibration is pending.</p>"
-
-    rows = []
-    for attempt in status["attempts"]:
-        if not isinstance(attempt, dict):
-            raise ValueError("public static-v4 attempt is malformed")
-        matched, fake, duplicate = _counts(attempt.get("stats"))
-        scientific = attempt.get("scientific_classification") or {}
-        timing_class = (scientific.get("timing") or {}).get("label", "invalid")
-        latency = attempt.get("latency") or {}
-        resources = attempt.get("resources") or {}
-        rows.append(
-            f'<tr data-classification="{_escape(attempt.get("classification"))}">'
-            f"<td>{_escape(attempt.get('slot'))}</td>"
-            f"<td>{_escape(attempt.get('candidate'))}</td>"
-            f'<td><span class="badge {_escape(attempt.get("classification"))}">{_escape(attempt.get("classification"))}</span></td>'
-            f"<td><code>{_escape(attempt.get('mechanism_key'))}</code></td>"
-            f"<td>{_escape(attempt.get('status'))}</td>"
-            f"<td>{_milliseconds((attempt.get('timing') or {}).get('per_event_nanoseconds'))}</td>"
-            f"<td>{_escape(timing_class)}</td>"
-            f"<td>{_escape(matched)}</td><td>{_escape(fake)}</td><td>{_escape(duplicate)}</td>"
-            f"<td>{_escape(latency.get('build_seconds', 'unavailable'))}</td>"
-            f"<td>{_escape(latency.get('queue_to_immutable_record_seconds', 'unavailable'))}</td>"
-            f"<td>{_escape(resources.get('wall_seconds', 'unavailable'))}</td>"
-            f"<td>{_escape(resources.get('peak_rss_kb', 'unavailable'))}</td>"
-            f"<td>{_escape(scientific.get('overall', 'invalid'))}</td>"
-            f"<td><code>{_escape(attempt.get('implementation_commit'))}</code></td>"
-            "</tr>"
-        )
-
-    composition = status.get("composition") or {}
-    counts = composition.get("counts") or {}
-    total = max(sum(value for value in counts.values() if isinstance(value, int)), 1)
-    cards = []
-    for category, target in (("major", 50), ("minor", 25), ("combination", 25)):
-        count = counts.get(category, 0)
-        actual = count / total * 100
-        fill = min(actual / target * 100, 100)
-        cards.append(
-            f'<article class="composition-card"><span class="eyebrow">{category}</span>'
-            f"<strong>{count}</strong><span>{actual:.1f}% / {target}% target</span>"
-            f'<div class="progress"><i style="width:{fill:.1f}%"></i></div></article>'
-        )
-    control = status.get("control") or {}
-    scheduler = status.get("scheduler") or {}
-    finish_url = (
-        "https://github.com/Aksth070600/autoresearch-acts-seeding/"
-        "actions/workflows/finish-campaign.yml?query=branch%3Amain"
-    )
-    script_data = json.dumps(
-        [
+def _lineage(proposal: Any) -> list[dict[str, str]]:
+    if not isinstance(proposal, dict):
+        return []
+    sources: list[dict[str, str]] = []
+    derives_from = proposal.get("derives_from")
+    if isinstance(derives_from, dict):
+        sources.append(
             {
-                "slot": attempt.get("slot"),
-                "candidate": attempt.get("candidate"),
-                "classification": attempt.get("classification"),
-                "time": (attempt.get("timing") or {}).get("per_event_nanoseconds"),
-                "efficiency": (
-                    (attempt.get("stats") or {}).get("nTotalMatchedParticles", 0)
-                    / (attempt.get("stats") or {}).get("nTotalParticles", 1)
-                ),
-                "rss": (attempt.get("resources") or {}).get("peak_rss_kb"),
-                "latency": (attempt.get("latency") or {}).get(
-                    "queue_to_immutable_record_seconds"
+                "relation": "derives from",
+                "candidate": str(derives_from.get("candidate", "unknown")),
+                "mechanism_key": str(derives_from.get("mechanism_key", "unknown")),
+                "implementation_commit": str(
+                    derives_from.get("implementation_commit", "")
                 ),
             }
-            for attempt in status["attempts"]
-        ],
-        ensure_ascii=False,
-        separators=(",", ":"),
+        )
+    combination = proposal.get("combination_provenance")
+    if isinstance(combination, dict):
+        for source in combination.get("sources", []):
+            if isinstance(source, dict):
+                sources.append(
+                    {
+                        "relation": "combines",
+                        "candidate": str(source.get("candidate", "unknown")),
+                        "mechanism_key": str(source.get("mechanism_key", "unknown")),
+                        "implementation_commit": str(
+                            source.get("implementation_commit", "")
+                        ),
+                    }
+                )
+    return sources
+
+
+def _attempt_model(attempt: dict[str, Any]) -> dict[str, Any]:
+    stats = attempt.get("stats") if isinstance(attempt.get("stats"), dict) else {}
+    timing = attempt.get("timing") if isinstance(attempt.get("timing"), dict) else {}
+    scientific = (
+        attempt.get("scientific_classification")
+        if isinstance(attempt.get("scientific_classification"), dict)
+        else {}
+    )
+    timing_class = scientific.get("timing")
+    if not isinstance(timing_class, dict):
+        timing_class = {}
+    efficiency_class = scientific.get("efficiency")
+    if not isinstance(efficiency_class, dict):
+        efficiency_class = {}
+    genesis_efficiency = _fraction(efficiency_class.get("genesis"))
+    latency = attempt.get("latency") if isinstance(attempt.get("latency"), dict) else {}
+    resources = (
+        attempt.get("resources") if isinstance(attempt.get("resources"), dict) else {}
+    )
+    proposal = (
+        attempt.get("proposal") if isinstance(attempt.get("proposal"), dict) else {}
+    )
+    commit = str(attempt.get("implementation_commit", ""))
+    return {
+        "slot": attempt.get("slot"),
+        "record_path": attempt.get("record_path"),
+        "candidate": str(attempt.get("candidate", "unknown")),
+        "classification": str(attempt.get("classification", "unknown")),
+        "mechanism_key": str(attempt.get("mechanism_key", "unknown")),
+        "status": str(attempt.get("status", "invalid")),
+        "implementation_commit": commit,
+        "commit_url": f"{REPOSITORY_URL}/commit/{commit}"
+        if FULL_SHA.fullmatch(commit)
+        else None,
+        "timing_ms": _milliseconds(timing.get("per_event_nanoseconds")),
+        "candidate_interval_ms": _interval(
+            timing_class.get("candidate_interval_nanoseconds")
+        ),
+        "genesis_interval_ms": _interval(
+            timing_class.get("genesis_interval_nanoseconds")
+        ),
+        "timing_classification": str(timing_class.get("label", "invalid")),
+        "overall": str(scientific.get("overall", "invalid")),
+        "efficiency": _rate(stats, "nTotalMatchedParticles", "nTotalParticles"),
+        "genesis_efficiency": (
+            float(genesis_efficiency) if genesis_efficiency is not None else None
+        ),
+        "fake_rate": _rate(stats, "nTotalFakeTracks", "nTotalTracks"),
+        "duplicate_rate": _rate(stats, "nTotalDuplicateTracks", "nTotalTracks"),
+        "counts": {
+            "matched": stats.get("nTotalMatchedParticles"),
+            "selected": stats.get("nTotalParticles"),
+            "fake": stats.get("nTotalFakeTracks"),
+            "duplicate": stats.get("nTotalDuplicateTracks"),
+            "tracks": stats.get("nTotalTracks"),
+        },
+        "latency": {
+            "preparation_seconds": _decimal(latency.get("preparation_seconds")),
+            "build_seconds": _decimal(latency.get("build_seconds")),
+            "process_seconds": _decimal(resources.get("wall_seconds")),
+            "queue_to_record_seconds": _decimal(
+                latency.get("queue_to_immutable_record_seconds")
+            ),
+        },
+        "peak_rss_kb": resources.get("peak_rss_kb"),
+        "lineage": _lineage(proposal),
+        "changed_symbols": proposal.get("changed_symbols", []),
+    }
+
+
+def _format_rate(value: float | None) -> str:
+    return f"{value * 100:.3f}%" if value is not None else "Unavailable"
+
+
+def _instant(value: Any) -> datetime | None:
+    try:
+        instant = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return instant if instant.tzinfo is not None else None
+
+
+def _format_instant(value: datetime | None) -> str:
+    if value is None:
+        return "Unavailable"
+    months = (
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+    )
+    return f"{months[value.month - 1]} {value.day}, {value.year}, {value:%H:%M} UTC"
+
+
+def _format_duration(value: float | None) -> str:
+    if value is None:
+        return "Unavailable"
+    seconds = max(0, round(value))
+    hours, remainder = divmod(seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    if hours:
+        return f"{hours}h {minutes}m"
+    if minutes:
+        return f"{minutes}m {seconds}s"
+    return f"{seconds}s"
+
+
+def _humanize_candidate(value: str) -> str:
+    value = re.sub(r"V4C$", "", value)
+    words = re.sub(r"[_-]+", " ", value)
+    words = re.sub(r"([a-z0-9])([A-Z][a-z])", r"\1 \2", words)
+    return re.sub(r"\s+", " ", words).strip()
+
+
+def _campaign_label(campaign: dict[str, Any], control: dict[str, Any]) -> str:
+    lifecycle = "Running" if control.get("state") == "open" else "Completed"
+    started = str(campaign.get("started_at", ""))
+    try:
+        year, month, day = (int(part) for part in started[:10].split("-"))
+        month_name = (
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dec",
+        )[month - 1]
+        date = f" · {month_name} {day}, {year}"
+    except (ValueError, IndexError):
+        date = ""
+    return f"{lifecycle} · ACTS Seeding Campaign{date}"
+
+
+def _progress_card(label: str, value: str, percentage: float, note: str = "") -> str:
+    safe_percentage = max(0.0, min(percentage, 100.0))
+    note_html = f'<span class="card-note">{_escape(note)}</span>' if note else ""
+    return (
+        '<div class="card">'
+        f'<span class="card-label">{_escape(label)}</span>'
+        f'<strong class="card-value">{_escape(value)}</strong>{note_html}'
+        '<div class="progress-track">'
+        f'<span class="progress-fill" style="width:{safe_percentage:.2f}%"></span>'
+        "</div></div>"
+    )
+
+
+def _result_card(attempt: dict[str, Any], genesis_ms: float | None) -> str:
+    delta = (
+        attempt["timing_ms"] - genesis_ms
+        if attempt["timing_ms"] is not None and genesis_ms is not None
+        else None
+    )
+    delta_text = (
+        f"{delta:+.3f} ms ({delta / genesis_ms * 100:+.3f}%)"
+        if delta is not None and genesis_ms
+        else "Genesis comparison unavailable"
+    )
+    timing_text = (
+        f"{attempt['timing_ms']:.3f} ms"
+        if attempt["timing_ms"] is not None
+        else "Unavailable"
+    )
+    body = (
+        f'<span class="card-name">{_escape(_humanize_candidate(attempt["candidate"]))}</span>'
+        f'<strong class="card-value">{_escape(timing_text)}</strong>'
+        f'<span class="card-note">{_escape(delta_text)}</span>'
+    )
+    if attempt["commit_url"]:
+        return (
+            f'<a class="card result-card" href="{_escape(attempt["commit_url"])}" '
+            f'target="_blank" rel="noopener noreferrer">{body}</a>'
+        )
+    return f'<div class="card result-card">{body}</div>'
+
+
+def _completion_times(
+    status: dict[str, Any], deployed_commit: str, repository_root: Path
+) -> dict[int, datetime]:
+    completed: dict[int, datetime] = {}
+    for attempt in status.get("attempts", []):
+        slot = attempt.get("slot") if isinstance(attempt, dict) else None
+        record_path = attempt.get("record_path") if isinstance(attempt, dict) else None
+        if not isinstance(slot, int) or not isinstance(record_path, str):
+            continue
+        result = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(repository_root),
+                "log",
+                "-1",
+                "--diff-filter=A",
+                "--format=%cI",
+                deployed_commit,
+                "--",
+                record_path,
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        instant = _instant(result.stdout.strip()) if result.returncode == 0 else None
+        if instant is not None:
+            completed[slot] = instant
+    return completed
+
+
+def _review_panel() -> str:
+    return """
+<section class="lavish-review" data-container="Captain visual decision">
+  <form data-lavish-question="visual-acceptance" onsubmit="event.preventDefault(); const data = new FormData(event.currentTarget); const decision = data.get('decision'); const note = data.get('note'); if (decision) window.lavish.queuePrompt(`Visual review: ${decision}.${note ? ` ${note}` : ''}`, {tag:'visual-decision', text:`${decision}${note ? ` · ${note}` : ''}`, queueKey:'visual-acceptance', element:event.currentTarget, data:{decision,note}});">
+    <strong>Captain visual review</strong>
+    <span class="note">Choose a decision, add optional direction, queue it, then use Send or Send &amp; End.</span>
+    <div class="review-options"><label><input type="radio" name="decision" value="Approve this campaign design"> Approve</label><label><input type="radio" name="decision" value="Revise this campaign design"> Revise</label></div>
+    <textarea name="note" rows="2" placeholder="Optional visual direction"></textarea>
+    <button type="submit">Queue visual decision</button>
+  </form>
+</section>"""
+
+
+def render(
+    status: dict[str, Any],
+    *,
+    deployed_commit: str,
+    plotly_src: str = PLOTLY_SCRIPT_URL,
+    review_mode: bool = False,
+    completion_times: dict[int, datetime] | None = None,
+) -> str:
+    status = _validate(status, deployed_commit)
+    campaign = status["campaign"]
+    attempts = [_attempt_model(attempt) for attempt in status["attempts"]]
+    calibration = (
+        status.get("calibration") if isinstance(status.get("calibration"), dict) else {}
+    )
+    genesis_ms = _milliseconds(calibration.get("median_per_event_nanoseconds"))
+    baseline = (
+        calibration.get("baseline")
+        if isinstance(calibration.get("baseline"), dict)
+        else {}
+    )
+    baseline_stats = (
+        baseline.get("stats") if isinstance(baseline.get("stats"), dict) else {}
+    )
+    genesis_efficiency_summary = _rate(
+        baseline_stats, "nTotalMatchedParticles", "nTotalParticles"
+    )
+    genesis_timings = [
+        value
+        for value in (
+            _milliseconds(item)
+            for item in calibration.get("genesis_per_event_nanoseconds", [])
+        )
+        if value is not None
+    ]
+    envelope = _fraction_text(calibration.get("relative_empirical_noise_envelope"))
+    composition = (
+        status.get("composition") if isinstance(status.get("composition"), dict) else {}
+    )
+    counts = (
+        composition.get("counts") if isinstance(composition.get("counts"), dict) else {}
+    )
+    completed = len(attempts)
+    started_at = _instant(campaign.get("started_at"))
+    generated_at = _instant(status.get("generated_at"))
+    elapsed_seconds = (
+        max((generated_at - started_at).total_seconds(), 0)
+        if started_at is not None and generated_at is not None
+        else None
+    )
+    ordered_completions = [
+        completion_times[attempt["slot"]]
+        for attempt in attempts
+        if completion_times is not None and attempt["slot"] in completion_times
+    ]
+    finish_intervals = [
+        max((current - previous).total_seconds(), 0)
+        for previous, current in zip(ordered_completions, ordered_completions[1:])
+    ]
+    median_candidate_duration = (
+        statistics.median(finish_intervals) if finish_intervals else None
+    )
+    denominator = max(completed, 1)
+    progress_cards = []
+    for category, target in (("major", 50), ("minor", 25), ("combination", 25)):
+        count = (
+            counts.get(category, 0) if isinstance(counts.get(category, 0), int) else 0
+        )
+        actual = count / denominator * 100
+        progress_cards.append(
+            _progress_card(
+                f"{CATEGORY_LABELS[category]} candidates",
+                str(count),
+                actual / target * 100,
+                f"{actual:.1f}% completed / {target}% target",
+            )
+        )
+
+    passed = [
+        attempt
+        for attempt in attempts
+        if attempt["status"] == "passed" and attempt["timing_ms"] is not None
+    ]
+    leaders = sorted(
+        passed, key=lambda attempt: (attempt["timing_ms"], attempt["slot"])
+    )[:3]
+    result_cards = "".join(_result_card(attempt, genesis_ms) for attempt in leaders)
+    if not result_cards:
+        result_cards = '<div class="card"><strong class="card-value">Waiting for complete Development evidence.</strong></div>'
+    genesis_peak_rss_kb = calibration.get("median_peak_rss_kb")
+    genesis_peak_rss = (
+        f"{genesis_peak_rss_kb / 1024 / 1024:.2f} GiB"
+        if isinstance(genesis_peak_rss_kb, int)
+        else "Unavailable"
+    )
+
+    genesis_interval = next(
+        (
+            attempt["genesis_interval_ms"]
+            for attempt in attempts
+            if attempt["genesis_interval_ms"]
+        ),
+        [min(genesis_timings), max(genesis_timings)] if genesis_timings else None,
+    )
+    genesis_efficiency = next(
+        (
+            attempt["genesis_efficiency"]
+            for attempt in attempts
+            if attempt["genesis_efficiency"] is not None
+        ),
+        None,
+    )
+    payload = {
+        "campaign": {
+            "campaign_id": campaign.get("campaign_id"),
+            "branch": campaign.get("branch"),
+            "control_id": campaign.get("control_id"),
+            "protocol_id": campaign.get("protocol_id"),
+            "protocol_revision": campaign.get("protocol_revision"),
+            "dataset_id": campaign.get("dataset_id"),
+            "scientific_genesis_commit": campaign.get("scientific_genesis_commit"),
+            "deployed_commit": deployed_commit,
+        },
+        "genesis": {
+            "median_ms": genesis_ms,
+            "timings_ms": genesis_timings,
+            "interval_ms": genesis_interval,
+            "efficiency": genesis_efficiency,
+            "empirical_envelope": envelope,
+        },
+        "attempts": attempts,
+    }
+    script_data = json.dumps(
+        payload, ensure_ascii=False, separators=(",", ":")
     ).replace("</", "<\\/")
-    chart = _chart(status["attempts"], genesis_ns)
+    control = status.get("control") if isinstance(status.get("control"), dict) else {}
+    scheduler = (
+        status.get("scheduler") if isinstance(status.get("scheduler"), dict) else {}
+    )
+    finish_url = (
+        f"{REPOSITORY_URL}/actions/workflows/finish-campaign.yml?query=branch%3Amain"
+    )
+    extra_styles = """
+    .progress-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .finish-heading-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+    .finish-guidance { color: #cbd5e1; font-size: .86rem; }
+    .identity-boxes { display: grid; gap: 7px; margin-top: 10px !important; }
+    .identity-row { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 7px; }
+    .identity-label, .identity-value { min-width: 0; padding: 7px 10px; border: 1px solid #475569; border-radius: 8px; background: #1e293b; }
+    .identity-label { color: #cbd5e1; font-size: .7rem; letter-spacing: .05em; text-transform: uppercase; }
+    .identity-value { color: #f8fafc; overflow-wrap: anywhere; }
+    .timing-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    #corner-overlays { position: absolute; inset: 28px 30px; z-index: 10; pointer-events: none; }
+    .corner-stack { position: absolute; display: grid; gap: 5px; }
+    .corner-stack.top-left { top: 18px; left: 49px; }
+    .corner-stack.top-right { top: 18px; right: 2px; justify-items: end; }
+    .corner-stack.bottom-left { bottom: 30px; left: 49px; justify-items: start; }
+    .corner-stack.bottom-right { right: 2px; bottom: 30px; justify-items: end; }
+    .corner-badge { width: max-content; padding: 4px 8px; border: 1px solid; border-radius: 999px; font-size: .72rem; font-weight: 750; letter-spacing: .03em; }
+    .corner-badge.better { background: rgba(34,197,94,.85); border-color: #4ade80; color: #052e16; }
+    .corner-badge.worse { background: rgba(239,68,68,.85); border-color: #f87171; color: #450a0a; }
+    .lavish-review { max-width: 1920px; margin: 0 auto 28px; padding: 0 24px; }
+    .lavish-review form { display: grid; gap: 10px; padding: 16px; border: 1px dashed #818cf8; border-radius: 10px; background: #111827; }
+    .review-options { display: flex; flex-wrap: wrap; gap: 16px; }
+    .review-options label { display: flex; grid-template-columns: auto 1fr; align-items: center; }
+    .lavish-review textarea { width: 100%; resize: vertical; border: 1px solid #475569; border-radius: 6px; padding: 8px 10px; background: #1e293b; color: #e5e7eb; font: inherit; }
+    .lavish-review button { width: max-content; padding: 8px 12px; border: 1px solid #818cf8; border-radius: 7px; background: #3730a3; color: #fff; font: inherit; font-weight: 700; }
+    @media (max-width: 700px) { .identity-row { grid-template-columns: 1fr; gap: 3px; } #corner-overlays { inset: 16px; } .corner-badge { font-size: .64rem; } }
+    """
+    review_panel = _review_panel() if review_mode else ""
     return f"""<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
-<title>Continuous owned-static ACTS Seeding v4</title>
-<style>
-:root{{--bg:#07111f;--panel:#101d2f;--panel2:#15263b;--text:#e5eef8;--muted:#9fb0c4;--line:#29415c;--cyan:#38bdf8;--amber:#fbbf24;--violet:#a78bfa;--green:#34d399}}
-*{{box-sizing:border-box}}body{{margin:0;background:radial-gradient(circle at top right,#132a45 0,#07111f 42%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,sans-serif;line-height:1.45}}
-main{{max-width:1500px;margin:auto;padding:32px 24px 64px}}h1{{margin:.2rem 0;font-size:clamp(1.8rem,4vw,3rem)}}h2{{margin:0 0 14px}}p{{color:var(--muted)}}code{{color:#c8e7ff;font-size:.84em;overflow-wrap:anywhere}}.eyebrow{{color:var(--cyan);font-size:.76rem;font-weight:800;text-transform:uppercase;letter-spacing:.12em}}
-.hero,.panel,.controls,.composition-card{{background:linear-gradient(145deg,rgba(21,38,59,.96),rgba(11,25,42,.96));border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.22)}}.hero{{padding:28px;margin-bottom:18px}}.identity{{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:7px 22px;margin-top:18px}}.identity div{{color:var(--muted)}}
-.controls{{display:grid;grid-template-columns:minmax(230px,1fr) minmax(230px,1fr) auto;gap:14px;align-items:end;padding:16px;margin-bottom:18px}}label{{display:grid;gap:6px;color:var(--muted);font-size:.82rem;font-weight:700}}select,.finish-button{{border:1px solid #45617f;border-radius:8px;background:#0a1727;color:var(--text);padding:10px 12px;font:inherit}}.finish-button{{display:inline-flex;text-decoration:none;align-items:center;justify-content:center;background:#991b1b;border-color:#ef4444;font-weight:800}}.finish-button:hover{{background:#b91c1c}}
-.warning{{border-left:4px solid var(--amber);padding:10px 14px;background:rgba(251,191,36,.08);color:#f8d991}}.composition-grid{{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:18px 0}}.composition-card{{padding:16px;display:grid;gap:4px}}.composition-card strong{{font-size:1.8rem}}.progress{{height:7px;background:#23374e;border-radius:9px;overflow:hidden;margin-top:8px}}.progress i{{display:block;height:100%;background:linear-gradient(90deg,var(--cyan),var(--violet));border-radius:inherit}}
-.panel{{padding:20px;margin:18px 0;overflow:hidden}}#metric-chart{{display:block;width:100%;height:auto;min-height:280px;background:#091728;border:1px solid var(--line);border-radius:10px}}.grid-line{{stroke:#233b55;stroke-width:1}}.genesis-line{{stroke:var(--green);stroke-width:2;stroke-dasharray:7 5}}.genesis-label{{fill:var(--green);font-size:12px}}.axis-label,.axis-title,.chart-title{{fill:var(--muted);font-size:12px}}.chart-title{{fill:var(--text);font-weight:700}}.chart-point{{stroke:#e5eef8;stroke-width:1.5;transition:r .15s}}.chart-point:hover,.chart-point:focus{{r:10;outline:none}}
-.table-wrap{{overflow:auto;border:1px solid var(--line);border-radius:10px}}table{{border-collapse:collapse;width:100%;min-width:1450px;font-size:.82rem}}th,td{{padding:9px 10px;border-bottom:1px solid #223a54;text-align:right;vertical-align:top}}th{{position:sticky;top:0;background:#14253a;color:#bcd0e5}}th:nth-child(2),td:nth-child(2),th:nth-child(4),td:nth-child(4){{text-align:left}}tbody tr:hover{{background:#132942}}.badge{{display:inline-block;border-radius:999px;padding:2px 8px;font-weight:800}}.badge.major{{background:rgba(56,189,248,.15);color:var(--cyan)}}.badge.minor{{background:rgba(251,191,36,.15);color:var(--amber)}}.badge.combination{{background:rgba(167,139,250,.15);color:var(--violet)}}.footer-note{{font-size:.9rem}}
-@media(max-width:800px){{main{{padding:18px 12px 40px}}.controls,.composition-grid{{grid-template-columns:1fr}}}}
-</style></head>
-<body><main><header class="hero"><span class="eyebrow">Live Development campaign</span><h1>Continuous owned-static ACTS Seeding v4</h1>
-<div class="identity"><div><b>Campaign ID</b><br><code>{_escape(campaign.get("campaign_id"))}</code></div><div><b>Branch</b><br><code>{_escape(campaign.get("branch"))}</code></div><div><b>Public control ID</b><br><code>{_escape(campaign.get("control_id"))}</code></div><div><b>Deployed commit</b><br><code>{_escape(deployed_commit)}</code></div><div><b>Protocol</b><br><code>{PROTOCOL_ID}</code>, revision {PROTOCOL_REVISION}</div><div><b>Dataset and optimization Genesis</b><br><code>{_escape(campaign.get("scientific_genesis_commit"))}</code></div></div></header>
-<section class="controls" aria-label="Campaign controls"><label>Campaign<select id="campaign-select" disabled><option>{_escape(campaign.get("campaign_id"))}</option></select></label><label>Chart metric<select id="metric-select"><option value="time">GridTriplet time</option><option value="efficiency">Particle efficiency</option><option value="rss">Peak RSS</option><option value="latency">Queue-to-record latency</option></select></label><a class="finish-button" href="{finish_url}" target="_blank" rel="noopener noreferrer">Finish campaign</a></section>
-<p class="warning">Only exact protocol-revision-2 evidence for the canonical owned-static dataset is displayed. Pilot revision 1, v2, v3, generated-input v4, and the shared Athena dump are excluded. Pages availability never controls science or authenticated stop checks.</p>
-<section class="composition-grid">{"".join(cards)}</section>
-<section class="panel"><h2>Fresh Genesis calibration</h2>{calibration_html}<p><b>Control:</b> {_escape(control.get("state"))} · <b>Scheduler:</b> {_escape(scheduler.get("state"))} · <b>Next:</b> {_escape(scheduler.get("next_category"))}</p></section>
-<section class="panel"><h2>Candidate trend</h2>{chart}<p id="chart-status" aria-live="polite">Showing GridTriplet seeding time.</p></section>
-<section class="panel"><h2>Every immutable attempt</h2><div class="table-wrap"><table><thead><tr><th>Slot</th><th>Candidate</th><th>Class</th><th>Mechanism</th><th>Validity</th><th>ms/event</th><th>Timing class</th><th>Matched/selected</th><th>Fake/track</th><th>Duplicate/track</th><th>Build s</th><th>Total s</th><th>Wall s</th><th>Peak RSS KiB</th><th>Overall</th><th>Implementation</th></tr></thead><tbody>{"".join(rows)}</tbody></table></div></section>
-<p class="footer-note">Platform commit <code>{_escape(campaign.get("platform_commit"))}</code> · ACTS <code>{_escape(campaign.get("acts_commit"))}</code> · Dataset <code>{DATASET_ID}</code>. The final archive requires a regular merge commit, never squash. The campaign worker does not merge it and does not run Evaluation.</p>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ACTS Seeding Campaign · Live Dashboard</title>
+<script src="{_escape(plotly_src)}"></script>
+<style>{visual_styles()}\n{extra_styles}</style></head>
+<body><main><h1>ACTS Seeding Live Campaign</h1>
+<section class="controls" aria-label="Campaign selection"><label>Campaign<select id="campaign-select" disabled><option>{_escape(_campaign_label(campaign, control))}</option></select></label>
+<section id="finish-control" class="finish-control" aria-label="Continuous campaign finish control"><div><div class="finish-heading-line"><strong id="finish-heading">Finish campaign</strong><span id="finish-status" class="finish-guidance">(Open the authenticated GitHub workflow, choose main, enter the exact identity below, then confirm Run workflow.)</span></div><div id="finish-identity" class="control-identity identity-boxes"><span class="identity-row"><b class="identity-label">Branch</b><code class="identity-value">{_escape(campaign.get("branch"))}</code></span><span class="identity-row"><b class="identity-label">Campaign ID</b><code class="identity-value">{_escape(campaign.get("campaign_id"))}</code></span><span class="identity-row"><b class="identity-label">Control ID</b><code class="identity-value">{_escape(campaign.get("control_id"))}</code></span></div></div><a id="finish-button" class="finish-button" href="{finish_url}" target="_blank" rel="noopener noreferrer">Finish campaign</a></section></section>
+<div id="dashboard" data-attempt-count="{completed}"><div class="campaign-heading"><h2>ACTS Seeding Campaign</h2><div class="chips"><span class="chip good">{_escape("Running" if control.get("state") == "open" else "Completed")}</span><span class="chip">Next · {_escape(scheduler.get("next_category", "none"))}</span></div></div>
+<section class="grid progress-grid" aria-label="Campaign progress">{"".join(progress_cards)}</section>
+<section class="grid timing-grid" aria-label="Campaign timing"><div class="card"><span class="card-label">Campaign start</span><strong class="card-value">{_escape(_format_instant(started_at))}</strong></div><div class="card"><span class="card-label">Time elapsed</span><strong class="card-value">{_escape(_format_duration(elapsed_seconds))}</strong></div><div class="card"><span class="card-label">Time per experiment</span><strong class="card-value">{_escape(_format_duration(median_candidate_duration))}</strong></div></section>
+<section class="section" aria-labelledby="baseline-heading"><h2 id="baseline-heading">Baseline</h2><div class="grid timing-grid" aria-label="Campaign baseline metrics"><div class="card"><span class="card-label">Time per event</span><strong class="card-value">{f"{genesis_ms:.3f} ms" if genesis_ms is not None else "Unavailable"}</strong></div><div class="card"><span class="card-label">Seeding efficiency</span><strong class="card-value">{_escape(_format_rate(genesis_efficiency_summary))}</strong></div><div class="card"><span class="card-label">Peak RSS</span><strong class="card-value">{_escape(genesis_peak_rss)}</strong></div></div></section>
+<section class="section" aria-labelledby="results-heading"><div class="section-heading"><h2 id="results-heading">Promising Early Results</h2></div><div class="grid results-grid">{result_cards}</div></section>
+<section class="section" aria-label="Campaign results comparison"><div id="chart-frame"><div id="plot-empty" hidden>Interactive chart library could not be loaded.</div><div id="chart" role="img" aria-label="Interactive owned-static v4 candidate comparison chart"></div><div id="corner-overlays" aria-hidden="true"><div class="corner-stack top-left"><span class="corner-badge better">Faster</span><span class="corner-badge better">Higher efficiency</span></div><div class="corner-stack top-right"><span class="corner-badge worse">Slower</span><span class="corner-badge better">Higher efficiency</span></div><div class="corner-stack bottom-left"><span class="corner-badge better">Faster</span><span class="corner-badge worse">Lower efficiency</span></div><div class="corner-stack bottom-right"><span class="corner-badge worse">Slower</span><span class="corner-badge worse">Lower efficiency</span></div></div></div></section>
+</div></main>{review_panel}
 <script>
-const attempts = {script_data};
-const metricConfig = {{
-  time: {{label: 'GridTriplet seeding time', unit: 'ms/event', better: 'lower', value: row => row.time / 1e6}},
-  efficiency: {{label: 'Particle efficiency', unit: 'matched / selected', better: 'higher', value: row => row.efficiency}},
-  rss: {{label: 'Peak RSS', unit: 'KiB', better: 'diagnostic', value: row => row.rss}},
-  latency: {{label: 'Queue-to-record latency', unit: 'seconds', better: 'lower', value: row => Number(row.latency)}}
-}};
-const colors = {{major:'#38bdf8', minor:'#fbbf24', combination:'#a78bfa'}};
-const svg = document.getElementById('metric-chart');
-const statusLine = document.getElementById('chart-status');
-function element(name, attributes, text) {{
-  const node = document.createElementNS('http://www.w3.org/2000/svg', name);
-  Object.entries(attributes).forEach(([key, value]) => node.setAttribute(key, String(value)));
-  if (text !== undefined) node.textContent = text;
-  return node;
+const CAMPAIGN = {script_data};
+const plotEmpty = document.getElementById('plot-empty');
+const pointColors = {{good:'#22c55e', mixed:'#eab308', bad:'#ef4444', unavailable:'#94a3b8', baseline:'#fbbf24'}};
+function validCommitUrl(value) {{ return typeof value === 'string' && /^https:\\/\\/github\\.com\\/Aksth070600\\/autoresearch-acts-seeding\\/commit\\/[0-9a-f]{{40}}$/.test(value); }}
+function formatPercent(value) {{ return Number.isFinite(value) ? `${{(value*100).toFixed(3)}}%` : 'n/a'; }}
+function formatRss(value) {{ return Number.isFinite(value) ? `${{(value/1024/1024).toFixed(2)}} GiB` : 'n/a'; }}
+function escapeHtml(value) {{ return String(value).replace(/[&<>"']/g, character => ({{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}})[character]); }}
+function displayName(value) {{ return String(value).replace(/V4C$/,'').replace(/[_-]+/g,' ').replace(/([a-z0-9])([A-Z][a-z])/g,'$1 $2').replace(/\\s+/g,' ').trim(); }}
+function tooltip(attempt) {{
+  const interval=attempt.candidate_interval_ms ? `${{attempt.candidate_interval_ms[0].toFixed(3)}}–${{attempt.candidate_interval_ms[1].toFixed(3)}} ms` : 'n/a';
+  const decision=attempt.overall==='valid improvement'?'Improvement':attempt.overall==='regression'?'Regression':attempt.candidate==='Genesis'?'Baseline':'Inconclusive';
+  return `<b>${{escapeHtml(displayName(attempt.candidate))}}</b><br><span style="font-family:monospace">T&nbsp;&nbsp;${{attempt.timing_ms?.toFixed(3) ?? 'n/a'}} ms (${{interval}})<br>E&nbsp;&nbsp;${{formatPercent(attempt.efficiency)}}<br>F&nbsp;&nbsp;${{formatPercent(attempt.fake_rate)}}<br>D&nbsp;&nbsp;${{formatPercent(attempt.duplicate_rate)}}<br>RSS&nbsp;&nbsp;${{formatRss(attempt.peak_rss_kb)}}<br>Decision: ${{decision}}</span>`;
 }}
-function renderMetric(metric) {{
-  const config = metricConfig[metric];
-  const rows = attempts.map(row => ({{...row, value: config.value(row)}})).filter(row => Number.isFinite(row.value));
-  const width=920, height=330, left=76, right=30, top=32, bottom=58;
-  const plotWidth=width-left-right, plotHeight=height-top-bottom;
-  const values=rows.map(row=>row.value); let low=Math.min(...values), high=Math.max(...values);
-  if (!values.length) {{ low=0; high=1; }} const padding=Math.max((high-low)*.18, Math.abs(high)*.002, .000001); low-=padding; high+=padding;
-  const maxSlot=Math.max(...rows.map(row=>row.slot),1); const x=slot=>left+(slot-.5)/maxSlot*plotWidth; const y=value=>top+(high-value)/(high-low)*plotHeight;
-  svg.replaceChildren(); svg.append(element('text',{{x:left,y:18,class:'chart-title'}},`${{config.label}} (${{config.unit}}, ${{config.better}})`));
-  for(let index=0;index<5;index++){{const value=high-index*(high-low)/4, py=y(value);svg.append(element('line',{{x1:left,y1:py,x2:width-right,y2:py,class:'grid-line'}}));svg.append(element('text',{{x:left-10,y:py+4,'text-anchor':'end',class:'axis-label'}},value.toFixed(metric==='efficiency'?6:3)));}}
-  rows.forEach(row=>{{const circle=element('circle',{{class:'chart-point',cx:x(row.slot),cy:y(row.value),r:7,fill:colors[row.classification]||'#94a3b8','data-slot':row.slot,tabindex:0}});circle.append(element('title',{{}},`Slot ${{row.slot}}: ${{row.candidate}} · ${{row.value}} ${{config.unit}}`));svg.append(circle);svg.append(element('text',{{x:x(row.slot),y:height-bottom+23,'text-anchor':'middle',class:'axis-label'}},row.slot));}});
-  svg.append(element('text',{{x:width/2,y:height-8,'text-anchor':'middle',class:'axis-title'}},'Immutable candidate slot'));
-  svg.append(element('text',{{x:18,y:height/2,'text-anchor':'middle',transform:`rotate(-90 18 ${{height/2}})`,class:'axis-title'}},config.unit));
-  svg.setAttribute('aria-label',`${{config.label}} by immutable candidate slot`); statusLine.textContent=`Showing ${{config.label}}.`;
+function renderChart() {{
+  const candidates=CAMPAIGN.attempts.filter(attempt=>Number.isFinite(attempt.timing_ms)&&Number.isFinite(attempt.efficiency));
+  const genesis={{candidate:'Genesis',timing_ms:CAMPAIGN.genesis.median_ms,efficiency:CAMPAIGN.genesis.efficiency,candidate_interval_ms:CAMPAIGN.genesis.interval_ms,overall:'baseline',commit_url:''}};
+  const points=Number.isFinite(genesis.timing_ms)&&Number.isFinite(genesis.efficiency)?[...candidates,genesis]:candidates;
+  if (!points.length || typeof Plotly === 'undefined') {{ if(typeof Plotly!=='undefined') Plotly.purge('chart'); plotEmpty.hidden=false; return; }}
+  plotEmpty.hidden=true;
+  const xValues=points.map(point=>point.timing_ms); const yValues=points.map(point=>point.efficiency); const gx=CAMPAIGN.genesis.median_ms,gy=CAMPAIGN.genesis.efficiency;
+  const xMin=Math.min(...xValues),xMax=Math.max(...xValues),xSpan=xMax-xMin||1; const yMin=Math.min(...yValues),yMax=Math.max(...yValues),ySpan=yMax-yMin||Math.max(Math.abs(yMax),1); const xRange=[xMin-xSpan*.2,xMax+xSpan*.2],yRange=[yMin-ySpan*.2,yMax+ySpan*.2];
+  const widths=candidates.map(row=>row.candidate_interval_ms?row.candidate_interval_ms[1]-row.candidate_interval_ms[0]:0); const minWidth=Math.min(...widths),maxWidth=Math.max(...widths),widthSpan=maxWidth-minWidth||1; const pointSize=row=>row.candidate==='Genesis'?18:12+8*((row.candidate_interval_ms?row.candidate_interval_ms[1]-row.candidate_interval_ms[0]:minWidth)-minWidth)/widthSpan;
+  const baselineColor=row=>{{if(row.candidate==='Genesis')return pointColors.baseline;const faster=row.timing_ms<=genesis.timing_ms,moreEfficient=row.efficiency>=genesis.efficiency;if(faster&&moreEfficient)return pointColors.good;if(!faster&&!moreEfficient)return pointColors.bad;return pointColors.mixed;}};
+  const trace={{x:points.map(row=>row.timing_ms),y:points.map(row=>row.efficiency),text:points.map(tooltip),customdata:points.map(row=>row.commit_url||''),mode:'markers',type:'scatter',name:'Candidates',marker:{{size:points.map(pointSize),symbol:points.map(row=>row.candidate==='Genesis'?'star':'circle'),color:points.map(baselineColor),line:{{width:1,color:'#e2e8f0'}}}},hovertemplate:'%{{text}}<extra></extra>'}};
+  const shapes=[]; if(Number.isFinite(gx)&&Number.isFinite(gy)){{[[xRange[0],gx,gy,yRange[1],true,true],[gx,xRange[1],gy,yRange[1],false,true],[xRange[0],gx,yRange[0],gy,true,false],[gx,xRange[1],yRange[0],gy,false,false]].forEach(([x0,x1,y0,y1,xLower,yHigher])=>{{const good=Number(xLower)+Number(yHigher);const fillcolor=good===2?'rgba(34,197,94,0.14)':good===0?'rgba(239,68,68,0.14)':'rgba(234,179,8,0.14)';shapes.push({{type:'rect',x0,x1,y0,y1,layer:'below',fillcolor,line:{{width:0}}}});}});shapes.push({{type:'line',x0:gx,x1:gx,y0:0,y1:1,yref:'paper',layer:'below',line:{{color:'rgba(96,165,250,0.55)',width:2}}}});shapes.push({{type:'line',x0:0,x1:1,xref:'paper',y0:gy,y1:gy,layer:'below',line:{{color:'rgba(96,165,250,0.55)',width:2}}}});}}
+  Plotly.react('chart',[trace],{{xaxis:{{tickformat:'.1f',ticksuffix:' ms',range:xRange,zeroline:false,showgrid:true,gridcolor:'rgba(71,85,105,0.35)',tickfont:{{color:'#cbd5e1',size:14}}}},yaxis:{{tickformat:'.3%',range:yRange,zeroline:false,showgrid:true,gridcolor:'rgba(71,85,105,0.35)',tickfont:{{color:'#cbd5e1',size:14}}}},autosize:true,hovermode:'closest',shapes,margin:{{l:80,r:30,t:45,b:55}},legend:{{orientation:'h',x:0,y:1.12,xanchor:'left',yanchor:'bottom',font:{{color:'#cbd5e1'}}}},paper_bgcolor:'#111827',plot_bgcolor:'#0b1120',font:{{color:'#cbd5e1'}}}},{{responsive:true,displaylogo:false}}).then(()=>{{const chart=document.getElementById('chart');if(chart.campaignClickHandler)chart.removeListener?.('plotly_click',chart.campaignClickHandler);chart.campaignClickHandler=event=>{{const target=event.points?.[0]?.customdata;if(validCommitUrl(target))window.open(target,'_blank','noopener,noreferrer');}};chart.on('plotly_click',chart.campaignClickHandler);}});
 }}
-document.getElementById('metric-select').addEventListener('change', event => renderMetric(event.target.value));
-</script></main></body></html>"""
+let resizeTimer; window.addEventListener('resize',()=>{{clearTimeout(resizeTimer);resizeTimer=setTimeout(renderChart,120);}}); renderChart();
+</script></body></html>"""
 
 
 def main() -> int:
@@ -292,9 +600,17 @@ def main() -> int:
     parser.add_argument("--status", type=Path, required=True)
     parser.add_argument("--deployed-commit", required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--plotly-src", default=PLOTLY_SCRIPT_URL)
+    parser.add_argument("--review-mode", action="store_true")
     args = parser.parse_args()
     status = json.loads(args.status.read_text(encoding="utf-8"))
-    output = render(status, deployed_commit=args.deployed_commit)
+    output = render(
+        status,
+        deployed_commit=args.deployed_commit,
+        plotly_src=args.plotly_src,
+        review_mode=args.review_mode,
+        completion_times=_completion_times(status, args.deployed_commit, PROJECT_ROOT),
+    )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(output, encoding="utf-8")
     print(f"wrote trusted active campaign dashboard: {args.output}")
