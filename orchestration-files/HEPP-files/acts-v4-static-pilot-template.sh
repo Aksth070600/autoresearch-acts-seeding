@@ -5,9 +5,24 @@ MODULE_DIR="${1:?static-v4 module is required}"
 SLOT="${2:?prebuilt Genesis slot is required}"
 TEMPLATE="${3:?new immutable template path is required}"
 GENESIS_OPTIMIZATION="${4:?canonical Genesis optimization tree is required}"
+ACTS_LCG_SETUP="${ACTS_LCG_SETUP:-/cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc13-opt/setup.sh}"
 if [[ -e "$TEMPLATE" || ! -d "$SLOT/source" || ! -d "$SLOT/build" || ! -d "$SLOT/deps" ]]; then
   echo "error: template exists or Genesis slot is incomplete" >&2
   exit 2
+fi
+if [[ ! -f "$ACTS_LCG_SETUP" ]]; then
+  echo "error: pinned LCG setup is missing" >&2
+  exit 2
+fi
+unset CC CXX FC
+set +e +u
+# shellcheck disable=SC1090
+source "$ACTS_LCG_SETUP"
+setup_rc=$?
+set -e -u
+if (( setup_rc != 0 )); then
+  echo "error: LCG setup failed: $setup_rc" >&2
+  exit 1
 fi
 PYTHONDONTWRITEBYTECODE=1 python3 "$MODULE_DIR/apply_overlay.py" verify --source "$SLOT/source" >/dev/null
 python3 - "$SLOT/source" "$GENESIS_OPTIMIZATION" <<'PY'

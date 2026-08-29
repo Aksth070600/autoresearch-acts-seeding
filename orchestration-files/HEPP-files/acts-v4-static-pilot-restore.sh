@@ -5,10 +5,26 @@ MODULE_DIR="${1:?static-v4 module is required}"
 TEMPLATE="${2:?immutable Genesis template is required}"
 SLOT="${3:?task-owned candidate slot is required}"
 GENESIS_OPTIMIZATION="${4:?canonical Genesis optimization tree is required}"
+ACTS_LCG_SETUP="${ACTS_LCG_SETUP:-/cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc13-opt/setup.sh}"
 if [[ ! -d "$TEMPLATE/source" || ! -d "$TEMPLATE/build" || ! -d "$TEMPLATE/identities" ]]; then
   echo "error: immutable Genesis template is incomplete" >&2
   exit 2
 fi
+if [[ ! -f "$ACTS_LCG_SETUP" ]]; then
+  echo "error: pinned LCG setup is missing" >&2
+  exit 2
+fi
+unset CC CXX FC
+set +e +u
+# shellcheck disable=SC1090
+source "$ACTS_LCG_SETUP"
+setup_rc=$?
+set -e
+if (( setup_rc != 0 )); then
+  echo "error: LCG setup failed: $setup_rc" >&2
+  exit 1
+fi
+set -u
 lock_path="$(dirname -- "$TEMPLATE")/.campaign.lock"
 exec 9>"$lock_path"
 flock 9
@@ -35,4 +51,14 @@ if [[ "$dry_run" != *"no work to do"* ]]; then
   echo "error: final Genesis binary closure has pending work" >&2
   exit 1
 fi
+# shellcheck disable=SC1090,SC1091
+source "$SLOT/build/python/setup.sh"
+python3 - <<'PY'
+import acts
+import acts.examples
+import acts.examples.root
+assert tuple(acts.__version__) == (46, 5, 0)
+assert hasattr(acts.examples.root, "OwnedSeedingDatasetReader")
+print("final_genesis_binary_import=passed")
+PY
 printf 'final_genesis_restoration=passed source_binary_consistent=yes slot=%s\n' "$SLOT"

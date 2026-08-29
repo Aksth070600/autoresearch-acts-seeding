@@ -1,1 +1,1 @@
-{"corrections":[],"schema":"acts-v4-owned-static-pilot-corrections-v1"}
+{"corrections":[{"before_scientific_execution":true,"id":"template-pinned-toolchain-path","observed":"The first immutable-template freeze stopped before creating the template because Ninja was not on the persistent container shell PATH.","phase":"pre-dataset template freeze","scientific_process_started":false,"resolution":"Source the pinned LCG 105 environment in template freeze and final restore helpers before Ninja and import checks."}],"schema":"acts-v4-owned-static-pilot-corrections-v1"}
