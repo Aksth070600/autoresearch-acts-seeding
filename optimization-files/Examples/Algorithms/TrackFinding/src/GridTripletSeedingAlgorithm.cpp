@@ -268,22 +268,22 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   for (const auto [bottom, middle, top] : grid.binnedGroup()) {
     ACTS_VERBOSE("Process middle " << middle);
 
+    middleSpRange =
+        coreSpacePoints.range(gridSpacePointRanges.at(middle)).asConst();
+    if (middleSpRange->empty()) {
+      ACTS_DEBUG("No middle space points in this group, skipping");
+      continue;
+    }
+
     bottomSpRanges.clear();
     for (const auto b : bottom) {
       bottomSpRanges.push_back(
           coreSpacePoints.range(gridSpacePointRanges.at(b)).asConst());
     }
-    middleSpRange =
-        coreSpacePoints.range(gridSpacePointRanges.at(middle)).asConst();
     topSpRanges.clear();
     for (const auto t : top) {
       topSpRanges.push_back(
           coreSpacePoints.range(gridSpacePointRanges.at(t)).asConst());
-    }
-
-    if (middleSpRange->empty()) {
-      ACTS_DEBUG("No middle space points in this group, skipping");
-      continue;
     }
 
     // we compute this here since all middle space point candidates belong to
