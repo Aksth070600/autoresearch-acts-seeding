@@ -13,7 +13,7 @@
     "development_only": true,
     "evaluation_authorized": false,
     "name": "ACTS Seeding owned-static v4 Development pilot",
-    "phase": "slot 3 complete; checking combination eligibility",
+    "phase": "slot 4 eligible combination proposal",
     "protocol_id": "acts-seeding-v4-owned-static",
     "started_at": "2026-08-29T16:18:00Z"
   },
@@ -226,10 +226,16 @@
       "status": "passed"
     },
     {
-      "candidate": null,
+      "candidate": "PackedVarianceTripletKinematicsV4",
       "classification": "combination",
+      "eligibility": {
+        "both_parents_passed": true,
+        "physics_exact_for_both": true,
+        "promising_predecessor": "PackedVarianceColumnsV4"
+      },
+      "mechanism_key": "v4-packed-variance-triplet-kinematics-combination",
       "slot": 4,
-      "state": "planned"
+      "state": "proposal drafted"
     }
   ]
 }
