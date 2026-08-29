@@ -112,6 +112,14 @@ class ExperimentPolicyTests(unittest.TestCase):
         self.assertIn("- rss_peak_rss_kb", workflow)
         self.assertNotIn("rss_genesis_offset_peak_rss_kb", workflow)
 
+    def test_report_workflows_fetch_history_for_v2_provenance_validation(self) -> None:
+        for workflow_name in ("reports.yml", "reports-preview.yml"):
+            with self.subTest(workflow=workflow_name):
+                workflow = (
+                    PROJECT_ROOT / ".github" / "workflows" / workflow_name
+                ).read_text(encoding="utf-8")
+                self.assertIn("fetch-depth: 0", workflow)
+
     def test_build_jobs_are_capped_and_forwarded_to_hepp02(self) -> None:
         makefile = (PROJECT_ROOT / "Makefile").read_text(encoding="utf-8")
         helper = (
