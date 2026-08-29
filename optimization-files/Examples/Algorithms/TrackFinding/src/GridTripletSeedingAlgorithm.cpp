@@ -148,8 +148,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
     grid.insert(i, phi, sp.z(), sp.r());
   }
 
-  const std::size_t numberOfBins = grid.numberOfBins();
-  for (std::size_t i = 0; i < numberOfBins; ++i) {
+  for (std::size_t i = 0; i < grid.numberOfBins(); ++i) {
     std::ranges::sort(grid.at(i), [&](const Acts::SpacePointIndex2& a,
                                       const Acts::SpacePointIndex2& b) {
       return spacePoints[a].r() < spacePoints[b].r();
@@ -162,8 +161,8 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
       Acts::SpacePointColumns::CopyFromIndex);
   coreSpacePoints.reserve(grid.numberOfSpacePoints());
   std::vector<Acts::SpacePointIndexRange2> gridSpacePointRanges;
-  gridSpacePointRanges.reserve(numberOfBins);
-  for (std::size_t i = 0; i < numberOfBins; ++i) {
+  gridSpacePointRanges.reserve(grid.numberOfBins());
+  for (std::size_t i = 0; i < grid.numberOfBins(); ++i) {
     std::uint32_t begin = coreSpacePoints.size();
     for (Acts::SpacePointIndex2 spIndex : grid.at(i)) {
       const ConstSpacePointProxy& sp = spacePoints[spIndex];
