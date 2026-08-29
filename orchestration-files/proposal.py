@@ -30,6 +30,13 @@ GROUNDING_SOURCE_TYPES = frozenset(
 FULL_COMMIT_SHA = re.compile(r"[0-9a-f]{40}")
 CANDIDATE_NAME = re.compile(r"[A-Za-z0-9._-]+")
 INTENDED_FILE = re.compile(r"optimization-files/[^#\x00-\x1f]+")
+HISTORICAL_RECORD = re.compile(
+    r"records/(?:Development|Evaluation)/[^/\x00-\x1f]+/summary\.json"
+)
+FILE_LINE_RANGE = re.compile(
+    r"optimization-files/[^#,\x00-\x1f]+#L[1-9][0-9]*-L[1-9][0-9]*"
+    r"(?:,L[1-9][0-9]*-L[1-9][0-9]*)*"
+)
 
 
 class ProposalError(ValueError):
@@ -80,11 +87,22 @@ def normalize_combination_provenance(value: Any, field: str) -> dict[str, Any]:
         "implementation_commit",
         "directly_inspected",
     }
+    historical_fields = {"historical_record", "files_changed"}
     for index, source in enumerate(sources):
         source_field = f"{field}.sources[{index}]"
         if not isinstance(source, dict):
             raise ProposalError(f"{source_field} must be an object")
-        _keys(source, source_field, source_fields, source_fields)
+        present_historical_fields = set(source) & historical_fields
+        if present_historical_fields and present_historical_fields != historical_fields:
+            raise ProposalError(
+                f"{source_field} must provide historical_record and files_changed together"
+            )
+        _keys(
+            source,
+            source_field,
+            source_fields | historical_fields,
+            source_fields | present_historical_fields,
+        )
         candidate = _text(source["candidate"], f"{source_field}.candidate", 80)
         if not CANDIDATE_NAME.fullmatch(candidate):
             raise ProposalError(f"{source_field}.candidate has unsupported characters")
@@ -93,19 +111,46 @@ def normalize_combination_provenance(value: Any, field: str) -> dict[str, Any]:
         candidates.add(candidate)
         if source["directly_inspected"] is not True:
             raise ProposalError(f"{source_field}.directly_inspected must be true")
-        normalized_sources.append(
-            {
-                "candidate": candidate,
-                "mechanism_key": _text(
-                    source["mechanism_key"], f"{source_field}.mechanism_key", 120
-                ),
-                "implementation_commit": _commit(
-                    source["implementation_commit"],
-                    f"{source_field}.implementation_commit",
-                ),
-                "directly_inspected": True,
-            }
-        )
+        normalized_source: dict[str, Any] = {
+            "candidate": candidate,
+            "mechanism_key": _text(
+                source["mechanism_key"], f"{source_field}.mechanism_key", 120
+            ),
+            "implementation_commit": _commit(
+                source["implementation_commit"],
+                f"{source_field}.implementation_commit",
+            ),
+            "directly_inspected": True,
+        }
+        if present_historical_fields:
+            record = _text(
+                source["historical_record"],
+                f"{source_field}.historical_record",
+                500,
+            )
+            if not HISTORICAL_RECORD.fullmatch(record):
+                raise ProposalError(
+                    f"{source_field}.historical_record must name an exact summary path"
+                )
+            files = source["files_changed"]
+            if not isinstance(files, list) or not files:
+                raise ProposalError(
+                    f"{source_field}.files_changed must be a non-empty array"
+                )
+            normalized_files = [
+                _text(item, f"{source_field}.files_changed[{index}]", 300)
+                for index, item in enumerate(files)
+            ]
+            if any(not FILE_LINE_RANGE.fullmatch(item) for item in normalized_files):
+                raise ProposalError(
+                    f"{source_field}.files_changed must contain exact optimization file ranges"
+                )
+            if len(set(normalized_files)) != len(normalized_files):
+                raise ProposalError(f"{source_field}.files_changed must be unique")
+            normalized_source.update(
+                {"historical_record": record, "files_changed": normalized_files}
+            )
+        normalized_sources.append(normalized_source)
     return {
         "sources": normalized_sources,
         "compatibility_rationale": _text(

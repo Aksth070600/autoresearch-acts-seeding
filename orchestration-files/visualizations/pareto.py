@@ -89,7 +89,7 @@ HTML_TEMPLATE = r"""<!doctype html>
     <div class="summary-card"><div class="summary-heading"><span class="summary-label">Y axis baseline</span><span id="summary-y-label" class="summary-chip"></span></div><strong id="summary-y-value" class="summary-value"></strong></div>
   </section>
   <div id="chart-frame">
-    <div id="empty-state" class="note" hidden>No complete v2/v3 seeding-objective summaries yet. Run a fresh Genesis baseline to populate this report.</div>
+    <div id="empty-state" class="note" hidden>No complete active v3 summaries are available for this dataset. Run a v3 Genesis baseline to populate this report.</div>
     <div id="chart" role="img" aria-label="Interactive Pareto comparison chart"></div>
     <div id="corner-overlays" aria-hidden="true">
       <div id="corner-top-left" class="corner-stack top-left"></div>
@@ -139,7 +139,7 @@ const TOOLTIP_ROWS = [
   { label: 'D', type: 'quality', suffix: 'particle_duplicate_ratio' }
 ];
 const TOOLTIP_STAGES = ['seeding'];
-const RSS_PEAK_KEY = REPORT.rss_metric_key || 'rss_genesis_offset_peak_rss_kb';
+const RSS_PEAK_KEY = REPORT.rss_metric_key || 'rss_peak_rss_kb';
 const AXES = ['x', 'y'];
 
 function option(select, value, label) {
@@ -204,7 +204,7 @@ function axisKey(axis) {
 }
 function axisLabel(axis) {
   const elements = axisElements(axis);
-  if (elements.kind.value === 'rss') return 'PEAK RSS (GENESIS-OFFSET ADJUSTED)';
+  if (elements.kind.value === 'rss') return 'SEEDING-ONLY PEAK RSS';
   const stageLabel = STAGES[elements.stage.value].label;
   if (elements.kind.value === 'time') return `${stageLabel} TIME/EVENT`.toUpperCase();
   const metricLabel = QUALITY_METRICS.find(([value]) => value === elements.metric.value)?.[1] || elements.metric.value;
@@ -236,7 +236,7 @@ AXES.forEach((axis) => {
   const elements = axisElements(axis);
   option(elements.kind, 'time', 'Time');
   option(elements.kind, 'metric', 'Metric');
-  option(elements.kind, 'rss', 'RSS (adjusted)');
+  option(elements.kind, 'rss', 'RSS');
 });
 axisDefaults('x', DEFAULTS.x_metric);
 axisDefaults('y', DEFAULTS.y_metric);
@@ -290,7 +290,7 @@ function candidateTooltip(row) {
   }).join('<br>');
   const peakRss = formatPeakRss(row.metrics[RSS_PEAK_KEY], 'n/a');
   const hypothesis = row.proposal ? `<br>Hypothesis&nbsp;&nbsp;${escapeHtml(row.proposal.hypothesis)}` : '';
-  return `<b>${escapeHtml(row.candidate)}</b><br><span style="font-family:monospace">Stage&nbsp;&nbsp;${stageHeading}<br>${metricLines}<br>Peak RSS (adjusted)&nbsp;&nbsp;${peakRss}${timingEvidenceTooltip(row)}${hypothesis}</span>`;
+  return `<b>${escapeHtml(row.candidate)}</b><br><span style="font-family:monospace">Stage&nbsp;&nbsp;${stageHeading}<br>${metricLines}<br>Seeding Peak RSS&nbsp;&nbsp;${peakRss}${timingEvidenceTooltip(row)}${hypothesis}</span>`;
 }
 function validCommitUrl(value) {
   return typeof value === 'string'

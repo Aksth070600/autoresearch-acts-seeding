@@ -21,7 +21,7 @@ on:
         type: choice
         options:
           - timed_seeding_time_per_event_ms
-          - rss_genesis_offset_peak_rss_kb
+          - rss_peak_rss_kb
       y_metric:
         description: Default Y-axis metric
         required: true
@@ -30,7 +30,7 @@ on:
         options:
           - timed_seeding_particle_efficiency
           - timed_seeding_track_efficiency
-          - rss_genesis_offset_peak_rss_kb
+          - rss_peak_rss_kb
       baseline:
         description: Candidate name used for the reference lines
         required: true
