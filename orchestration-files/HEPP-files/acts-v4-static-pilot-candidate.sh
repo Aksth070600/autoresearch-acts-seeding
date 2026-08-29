@@ -53,6 +53,13 @@ flock 9
 mkdir -p -- "$WORKSPACE"
 
 # SLOT is disposable task-owned state. The immutable template is never mutated.
+if [[ -e "$SLOT" || -L "$SLOT" ]]; then
+  if [[ ! -d "$SLOT" || -L "$SLOT" ]]; then
+    echo "error: candidate slot is not a task-owned directory" >&2
+    exit 2
+  fi
+  chmod -R u+w -- "$SLOT"
+fi
 rm -rf -- "$SLOT"
 mkdir -p -- "$SLOT"
 cp -a --reflink=always -- "$TEMPLATE/source" "$SLOT/source"

@@ -54,6 +54,12 @@ class StaticV4CandidateHelperTests(unittest.TestCase):
             for path in template.rglob("*"):
                 if path.is_file():
                     path.chmod(0o444)
+            stale = slot / "read-only deps" / "stale.txt"
+            stale.parent.mkdir(parents=True)
+            stale.write_text("stale\n", encoding="utf-8")
+            stale.chmod(0o444)
+            stale.parent.chmod(0o555)
+            slot.chmod(0o555)
 
             proposal = root / "proposal.json"
             proposal.write_text(
@@ -148,6 +154,7 @@ exec /usr/bin/cp "${args[@]}"
             )
             self.assertTrue(invalidation["all_affected_outputs_absent"])
             self.assertFalse((slot / "build" / "obj" / "x.o").exists())
+            self.assertFalse(stale.exists())
 
 
 if __name__ == "__main__":
