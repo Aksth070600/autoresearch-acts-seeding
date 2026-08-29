@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import base64
 import copy
 import hashlib
 import json
@@ -813,6 +814,8 @@ def _issues_from_gh_axi() -> list[dict[str, Any]]:
             "gh-axi",
             "api",
             "repos/Aksth070600/autoresearch-acts-seeding/issues?state=all&labels=campaign-control&per_page=100&sort=created",
+            "--jq",
+            "[.[] | {number,title,body,html_url,labels,user}] | @base64",
         ],
         check=False,
         text=True,
@@ -823,7 +826,24 @@ def _issues_from_gh_axi() -> list[dict[str, Any]]:
         raise ContinuousCampaignError(
             f"authenticated GitHub issue read failed: {process.stderr.strip()}"
         )
-    value = json.loads(process.stdout)
+    encoded = None
+    truncated = None
+    for line in process.stdout.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("body: "):
+            encoded = stripped.removeprefix("body: ")
+        elif stripped.startswith("truncated: "):
+            truncated = stripped.removeprefix("truncated: ")
+    if encoded is None or truncated != "false":
+        raise ContinuousCampaignError(
+            "authenticated GitHub issue response was missing or truncated"
+        )
+    try:
+        value = json.loads(base64.b64decode(encoded, validate=True))
+    except (ValueError, json.JSONDecodeError) as error:
+        raise ContinuousCampaignError(
+            "authenticated GitHub issue response is malformed"
+        ) from error
     if not isinstance(value, list):
         raise ContinuousCampaignError(
             "authenticated GitHub issue response is malformed"
