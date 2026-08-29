@@ -11,6 +11,7 @@
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
+#include <algorithm>
 #include <stdexcept>
 
 #include <boost/mp11.hpp>
@@ -52,6 +53,10 @@ class Impl final : public DoubletSeedFinder {
     const float rM = middleSp.zr()[1];
     const float varianceZM = middleSp.varianceZ();
     const float varianceRM = middleSp.varianceR();
+    const float collisionDeltaZMinFactor =
+        (zM - m_cfg.collisionRegionMax) / rM;
+    const float collisionDeltaZMaxFactor =
+        (zM - m_cfg.collisionRegionMin) / rM;
 
     // equivalent to impactMax / (rM * rM);
     const float vIPAbs = impactMax * middleSpInfo.uIP2;
@@ -135,32 +140,18 @@ class Impl final : public DoubletSeedFinder {
         deltaZ = zO - zM;
       }
 
-      if (outsideRangeCheck(deltaZ, m_cfg.deltaZMin, m_cfg.deltaZMax)) {
-        continue;
-      }
-
-      // the longitudinal impact parameter zOrigin is defined as (zM - rM *
-      // cotTheta) where cotTheta is the ratio Z/R (forward angle) of space
-      // point duplet but instead we calculate (zOrigin * deltaR) and multiply
-      // collisionRegion by deltaR to avoid divisions
-      const float zOriginTimesDeltaR = zM * deltaR - rM * deltaZ;
-      // check if duplet origin on z axis within collision region
-      if (outsideRangeCheck(zOriginTimesDeltaR,
-                            m_cfg.collisionRegionMin * deltaR,
-                            m_cfg.collisionRegionMax * deltaR)) {
-        continue;
-      }
-
-      // if interactionPointCut is false we apply z cuts before coordinate
-      // transformation to avoid unnecessary calculations. If
-      // interactionPointCut is true we apply the curvature cut first because it
-      // is more frequent but requires the coordinate transformation
       if constexpr (!interactionPointCut) {
-        // check if duplet cotTheta is within the region of interest
-        // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
-        // cotThetaMax by deltaR to avoid division
-        if (outsideRangeCheck(deltaZ, -m_cfg.cotThetaMax * deltaR,
-                              m_cfg.cotThetaMax * deltaR)) {
+        // Intersect the configured z, collision-origin, and cotTheta bounds in
+        // deltaZ. One range check replaces three accepted-path checks.
+        const float deltaZMin =
+            std::max({m_cfg.deltaZMin,
+                      collisionDeltaZMinFactor * deltaR,
+                      -m_cfg.cotThetaMax * deltaR});
+        const float deltaZMax =
+            std::min({m_cfg.deltaZMax,
+                      collisionDeltaZMaxFactor * deltaR,
+                      m_cfg.cotThetaMax * deltaR});
+        if (outsideRangeCheck(deltaZ, deltaZMin, deltaZMax)) {
           continue;
         }
 
@@ -188,6 +179,16 @@ class Impl final : public DoubletSeedFinder {
         // fill output vectors
         compatibleDoublets.emplace_back(indexO, cotTheta, iDeltaR, er, uT, vT,
                                         xNewFrame, yNewFrame);
+        continue;
+      }
+
+      if (outsideRangeCheck(deltaZ, m_cfg.deltaZMin, m_cfg.deltaZMax)) {
+        continue;
+      }
+      const float zOriginTimesDeltaR = zM * deltaR - rM * deltaZ;
+      if (outsideRangeCheck(zOriginTimesDeltaR,
+                            m_cfg.collisionRegionMin * deltaR,
+                            m_cfg.collisionRegionMax * deltaR)) {
         continue;
       }
 
