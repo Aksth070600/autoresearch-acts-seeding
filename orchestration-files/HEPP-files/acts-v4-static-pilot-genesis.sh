@@ -11,8 +11,12 @@ GENESIS_ROOT="${6:?prebuilt Genesis root is required}"
 CORRECTIONS="${7:?pilot correction evidence is required}"
 ACTS_LCG_SETUP="${ACTS_LCG_SETUP:-/cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc13-opt/setup.sh}"
 
-if [[ -e "$WORKSPACE" || ! -f "$GENESIS_ROOT/build/python/setup.sh" ]]; then
-  echo "error: Genesis workspace exists or prebuilt Genesis is missing" >&2
+if [[ ! -f "$GENESIS_ROOT/build/python/setup.sh" ]]; then
+  echo "error: prebuilt Genesis is missing" >&2
+  exit 2
+fi
+if [[ -e "$WORKSPACE" && ! -d "$WORKSPACE" ]]; then
+  echo "error: Genesis workspace is not a directory" >&2
   exit 2
 fi
 ACTS_SOURCE="$GENESIS_ROOT/source"
@@ -40,6 +44,29 @@ set -u
 results=()
 for index in 1 2 3 4 5; do
   run="$WORKSPACE/genesis-$index"
+  if [[ -f "$run/result.json" ]]; then
+    if [[ ! -f "$run/record.json" ]]; then
+      recovery_total="$(python3 - "$run/result.json" <<'PY'
+import json,sys
+print(json.load(open(sys.argv[1], encoding="utf-8"))["resources"]["wall_seconds"])
+PY
+)"
+      PYTHONDONTWRITEBYTECODE=1 python3 "$MODULE_DIR/pilot_record.py" record \
+        --result "$run/result.json" --dataset "$DATASET" --candidate Genesis \
+        --implementation-commit 5ed3b47329ceda4edaab48b1efc3c5635f361a30 \
+        --preparation-seconds 0 --build-seconds 0 --record-preparation-seconds 0 \
+        --total-latency-seconds "$recovery_total" --corrections "$CORRECTIONS" \
+        --output "$run/record.json"
+      chmod 0440 "$run/result.json" "$run/record.json"
+      echo "genesis_recovery=index-$index preserved_result=yes rerun=no"
+    fi
+    results+=(--result "$run/result.json")
+    continue
+  fi
+  if [[ -e "$run" ]]; then
+    echo "error: incomplete Genesis process evidence requires guidance: $run" >&2
+    exit 1
+  fi
   mkdir -- "$run"
   queue_ns="$(date +%s%N)"
   process_log="$run/static-process.log"
