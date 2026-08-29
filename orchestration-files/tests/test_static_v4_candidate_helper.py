@@ -32,6 +32,21 @@ class StaticV4CandidateHelperTests(unittest.TestCase):
         self.assertNotIn("unset PATH", pinned_environment)
         self.assertNotIn("export PATH=", pinned_environment)
 
+    def test_generated_python_setup_runs_without_nounset(self):
+        script = CANDIDATE_HELPER.read_text(encoding="utf-8")
+        setup = 'source "$ACTS_BUILD_DIR/python/setup.sh"'
+        setup_index = script.index(setup)
+
+        self.assertEqual(script.count(setup), 1)
+        self.assertEqual(script[:setup_index].rstrip().splitlines()[-2:], [
+            "set +u",
+            "# shellcheck disable=SC1090,SC1091",
+        ])
+        self.assertEqual(
+            script[setup_index:].splitlines()[1],
+            "set -u",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

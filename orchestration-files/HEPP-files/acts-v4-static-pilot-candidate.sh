@@ -136,8 +136,10 @@ preparation_end_ns="$(date +%s%N)"
 preparation_seconds="$(python3 -c "print(($preparation_end_ns-$queue_ns)/1e9)")"
 proposal_sha256="$(sha256sum "$PROPOSAL" | awk '{print $1}')"
 
+set +u
 # shellcheck disable=SC1090,SC1091
 source "$ACTS_BUILD_DIR/python/setup.sh"
+set -u
 process_log="$WORKSPACE/static-process.log"
 time_log="$WORKSPACE/static-process.time-v"
 set +e
