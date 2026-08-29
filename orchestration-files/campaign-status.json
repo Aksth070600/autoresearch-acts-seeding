@@ -413,7 +413,16 @@
     "request": null,
     "state": "open"
   },
-  "current_attempt": null,
+  "current_attempt": {
+    "candidate": "GridEmptyMiddleEarlyPrune",
+    "classification": "major",
+    "controlled_stage": "queued Development run",
+    "mechanism_family": "grid-neighbor-dataflow-pruning",
+    "mechanism_key": "grid-empty-middle-neighborhood-prune",
+    "scheduling": "ordinary",
+    "started_at": "2026-08-29T01:42:30.133887Z",
+    "state": "queued"
+  },
   "failures": [
     {
       "candidate": "FilterDisabledConfirmationQualityMapElision",
@@ -431,9 +440,9 @@
       "record_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug29/records/Failed/20260828T235932Z-GridEmptyNeighborRangePrune/summary.json"
     }
   ],
-  "generated_at": "2026-08-29T01:40:48.986518Z",
+  "generated_at": "2026-08-29T01:42:30.666107Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/67bf5a7fbc16f1313aee077b5aa6fff74e590d1a",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/a5a4461b5253a5c1241d2cc9cb787d8279c5e41c",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/aug29",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/36"
   },
@@ -460,7 +469,7 @@
         "target_percentage": 25.0
       }
     },
-    "elapsed_seconds": 7683.986518,
+    "elapsed_seconds": 7785.666107,
     "estimated_remaining_seconds": null,
     "eta_basis": "Unavailable until a stop request fixes the exact final candidate target.",
     "eta_sample_count": 2,
@@ -524,9 +533,9 @@
     "blocker": null,
     "combination_eligible": false,
     "decision": {
-      "action": "schedule",
+      "action": "finish-active",
       "category": "major",
-      "reason": "Selected by deterministic target deficit and category-order tie-break."
+      "reason": "Finish the active candidate transaction and record its restoration evidence."
     },
     "final_targets": null,
     "state": "running",
