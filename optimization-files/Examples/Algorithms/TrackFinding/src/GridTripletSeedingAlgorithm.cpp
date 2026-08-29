@@ -148,22 +148,23 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
     grid.insert(i, phi, sp.z(), sp.r());
   }
 
+  for (std::size_t i = 0; i < grid.numberOfBins(); ++i) {
+    std::ranges::sort(grid.at(i), [&](const Acts::SpacePointIndex2& a,
+                                      const Acts::SpacePointIndex2& b) {
+      return spacePoints[a].r() < spacePoints[b].r();
+    });
+  }
+
   Acts::SpacePointContainer2 coreSpacePoints(
       Acts::SpacePointColumns::PackedXY | Acts::SpacePointColumns::PackedZR |
-      Acts::SpacePointColumns::VarianceZ | Acts::SpacePointColumns::VarianceR |
+      Acts::SpacePointColumns::PackedVarianceZR |
       Acts::SpacePointColumns::CopyFromIndex);
   coreSpacePoints.reserve(grid.numberOfSpacePoints());
   std::vector<Acts::SpacePointIndexRange2> gridSpacePointRanges;
   gridSpacePointRanges.reserve(grid.numberOfBins());
   for (std::size_t i = 0; i < grid.numberOfBins(); ++i) {
-    auto& bin = grid.at(i);
-    std::ranges::sort(bin, [&](const Acts::SpacePointIndex2& a,
-                              const Acts::SpacePointIndex2& b) {
-      return spacePoints[a].r() < spacePoints[b].r();
-    });
-
     std::uint32_t begin = coreSpacePoints.size();
-    for (Acts::SpacePointIndex2 spIndex : bin) {
+    for (Acts::SpacePointIndex2 spIndex : grid.at(i)) {
       const ConstSpacePointProxy& sp = spacePoints[spIndex];
 
       auto newSp = coreSpacePoints.createSpacePoint();
@@ -171,8 +172,9 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
                                         static_cast<float>(sp.y())};
       newSp.zr() = std::array<float, 2>{static_cast<float>(sp.z()),
                                         static_cast<float>(sp.r())};
-      newSp.varianceZ() = static_cast<float>(sp.varianceZ());
-      newSp.varianceR() = static_cast<float>(sp.varianceR());
+      newSp.varianceZR() =
+          std::array<float, 2>{static_cast<float>(sp.varianceZ()),
+                               static_cast<float>(sp.varianceR())};
       newSp.copyFromIndex() = sp.index();
     }
     std::uint32_t end = coreSpacePoints.size();
