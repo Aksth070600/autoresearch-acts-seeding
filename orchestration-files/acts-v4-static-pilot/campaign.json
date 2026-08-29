@@ -13,7 +13,7 @@
     "development_only": true,
     "evaluation_authorized": false,
     "name": "ACTS Seeding owned-static v4 Development pilot",
-    "phase": "slot 2 complete; preparing slot 3 minor",
+    "phase": "slot 3 minor proposal",
     "protocol_id": "acts-seeding-v4-owned-static",
     "started_at": "2026-08-29T16:18:00Z"
   },
@@ -167,10 +167,11 @@
       "status": "passed"
     },
     {
-      "candidate": null,
+      "candidate": "GridBinCountCacheV4",
       "classification": "minor",
+      "mechanism_key": "v4-grid-bin-count-cache",
       "slot": 3,
-      "state": "planned"
+      "state": "proposal drafted"
     },
     {
       "candidate": null,
