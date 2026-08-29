@@ -25,7 +25,7 @@ HEPP_APPTAINER ?= /cvmfs/atlas.cern.ch/repo/containers/sw/apptainer/x86_64-el9/c
 HEPP_CONTAINER_IMAGE ?= /cvmfs/atlas.cern.ch/repo/containers/images/singularity/x86_64-almalinux9.img
 HEPP_CONTAINER_BINDS ?= -B /cvmfs -B /storage -B /home/aksth
 
-.PHONY: help test setupActs setup build export-hepp-files hepp02-tmux-create hepp02-tmux-attach hepp02-tmux hepp02-tmux-status hepp02-setupActs hepp02-build hepp02-setup hepp02-setup-and-build hepp02-full-chain-itk evaluate report static-v4-report campaign-status campaign-check-stop campaign-consume-stop campaign-finalize record select-evaluation evaluate-selected
+.PHONY: help test setupActs setup build export-hepp-files hepp02-tmux-create hepp02-tmux-attach hepp02-tmux hepp02-tmux-status hepp02-setupActs hepp02-build hepp02-setup hepp02-setup-and-build hepp02-full-chain-itk evaluate report static-v4-report static-v4-continuous-report static-v4-campaign-status static-v4-campaign-check-stop static-v4-campaign-consume-stop static-v4-campaign-finalize campaign-status campaign-check-stop campaign-consume-stop campaign-finalize record select-evaluation evaluate-selected
 
 help:
 	@printf '%s\n' \
@@ -48,6 +48,11 @@ help:
 	  '  ITK_METRICS=time adds GNU time RSS and CPU metrics; none runs clean.' \
 	  'make evaluate CANDIDATE=name  Run the controlled seeding-only 1 + 3 + 1 matrix.' \
 	  'make report                 Build the results report and live campaign dashboard.' \
+	  'make static-v4-continuous-report       Build the exact revision-2 static-v4 dashboard.' \
+	  'make static-v4-campaign-status         Generate isolated static-v4 status and control bridge.' \
+	  'make static-v4-campaign-check-stop     Observe an authenticated static-v4 stop request.' \
+	  'make static-v4-campaign-consume-stop   Persist the current exact static-v4 block target.' \
+	  'make static-v4-campaign-finalize       Validate and complete the static-v4 archive.' \
 	  'make campaign-status        Generate orchestration-files/campaign-status.json.' \
 	  'make campaign-check-stop    Observe an authenticated continuous stop request.' \
 	  'make campaign-consume-stop  Persist exact final targets at a safe boundary.' \
@@ -121,6 +126,21 @@ static-v4-report:
 		--campaign '$(CAMPAIGN)' --calibration '$(CALIBRATION)' \
 		$(if $(SUMMARY),--summary '$(SUMMARY)',) \
 		--output build/site/static-v4/index.html
+
+static-v4-continuous-report:
+	python3 orchestration-files/acts-v4-static/continuous_report.py
+
+static-v4-campaign-status:
+	/usr/bin/python3 orchestration-files/acts-v4-static/continuous_campaign.py status
+
+static-v4-campaign-check-stop:
+	/usr/bin/python3 orchestration-files/acts-v4-static/continuous_campaign.py check-stop
+
+static-v4-campaign-consume-stop:
+	/usr/bin/python3 orchestration-files/acts-v4-static/continuous_campaign.py consume-stop
+
+static-v4-campaign-finalize:
+	/usr/bin/python3 orchestration-files/acts-v4-static/continuous_campaign.py finalize
 
 campaign-status:
 	/usr/bin/python3 orchestration-files/campaign_status.py
