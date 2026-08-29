@@ -870,6 +870,7 @@ def main() -> int:
     args = parser.parse_args()
     state = _read_state(args.state)
     now = _now()
+    should_write_status = True
     if args.command == "check-stop":
         state, changed = observe_stop(state, _issues_from_gh_axi(), now)
         if changed:
@@ -878,6 +879,7 @@ def main() -> int:
                 f"observed authenticated stop: {state['control']['request']['issue_url']}"
             )
         else:
+            should_write_status = False
             print("no new authenticated stop request")
     elif args.command == "consume-stop":
         state = consume_stop(state, now)
@@ -893,7 +895,8 @@ def main() -> int:
         state["scheduler"]["state"] = "completed"
         atomic_write_json(args.state, state)
         print("static-v4 continuous campaign finalization passed")
-    write_status(state, args.state)
+    if should_write_status:
+        write_status(state, args.state)
     return 0
 
 
