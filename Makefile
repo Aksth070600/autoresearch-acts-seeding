@@ -60,7 +60,8 @@ help:
 	  'Override HEPP_HOST, HEPP_STORAGE, or HEPP_TMUX_TARGET for another remote.'
 
 test:
-	/usr/bin/python3 -m unittest discover -s orchestration-files/tests -v
+	PYTHONDONTWRITEBYTECODE=1 /usr/bin/python3 -m unittest discover -s orchestration-files/tests -v
+	PYTHONDONTWRITEBYTECODE=1 /usr/bin/python3 -m unittest discover -s orchestration-files/acts-v4-static/tests -v
 
 setupActs:
 	ACTS_SOURCE='$(ACTS_SOURCE)' ACTS_BUILD_DIR='$(ACTS_BUILD_DIR)' ACTS_VERSION='$(ACTS_VERSION)' ./orchestration-files/HEPP-files/setupActs.sh

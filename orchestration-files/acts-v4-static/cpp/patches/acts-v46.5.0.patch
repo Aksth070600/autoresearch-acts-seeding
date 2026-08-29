@@ -1,0 +1,182 @@
+--- a/Examples/Io/Root/CMakeLists.txt
++++ b/Examples/Io/Root/CMakeLists.txt
+@@ -1,5 +1,6 @@
+ acts_add_library(
+     ExamplesIoRoot
++    src/OwnedSeedingDataset.cpp
+     src/RootMeasurementWriter.cpp
+     src/RootMaterialWriter.cpp
+     src/RootMaterialTrackReader.cpp
+--- a/Python/Examples/src/plugins/Root.cpp
++++ b/Python/Examples/src/plugins/Root.cpp
+@@ -7,6 +7,7 @@
+ // file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ 
+ #include "ActsExamples/EventData/MeasurementCalibration.hpp"
++#include "ActsExamples/Io/Root/OwnedSeedingDataset.hpp"
+ #include "ActsExamples/Io/Root/RootAthenaDumpReader.hpp"
+ #include "ActsExamples/Io/Root/RootAthenaNTupleReader.hpp"
+ #include "ActsExamples/Io/Root/RootBFieldWriter.hpp"
+@@ -94,6 +95,25 @@
+ 
+     ACTS_PYTHON_DECLARE_READER(RootSimHitReader, root, "RootSimHitReader",
+                                treeName, filePath, outputSimHits);
++
++    {
++      using Reader = OwnedSeedingDatasetReader;
++      auto reader = py::class_<Reader, IReader, std::shared_ptr<Reader>>(
++                        root, "OwnedSeedingDatasetReader")
++                        .def(py::init<const Reader::Config&, Logging::Level>(),
++                             py::arg("config"), py::arg("level"))
++                        .def_property_readonly("config", &Reader::config)
++                        .def("completedEventIds", &Reader::completedEventIds)
++                        .def("completedEventHashes",
++                             &Reader::completedEventHashes);
++      auto config = py::class_<Reader::Config>(reader, "Config").def(py::init<>());
++      ACTS_PYTHON_STRUCT(
++          config, filePath, treeName, outputMeasurements,
++          outputMeasurementSubset, outputSpacePoints, outputParticles,
++          outputSelectedParticles, outputMeasurementParticlesMap,
++          outputParticleMeasurementsMap, expectedEventIds,
++          expectedEventHashes, trackingGeometry);
++    }
+   }
+ 
+   // Output
+@@ -252,6 +272,72 @@
+         RootSpacePointWriter, root, "RootSpacePointWriter", inputSpacePoints,
+         inputMeasurementParticlesMap, filePath, fileMode, treeName);
+ 
++    {
++      using Summary = OwnedSeedingEventSummary;
++      py::class_<Summary>(root, "OwnedSeedingEventSummary")
++          .def_readonly("ordinal", &Summary::ordinal)
++          .def_readonly("eventId", &Summary::eventId)
++          .def_readonly("measurements", &Summary::measurements)
++          .def_readonly("spacePoints", &Summary::spacePoints)
++          .def_readonly("particles", &Summary::particles)
++          .def_readonly("selectedParticles", &Summary::selectedParticles)
++          .def_readonly("measurementParticles", &Summary::measurementParticles)
++          .def_readonly("particleMeasurements", &Summary::particleMeasurements)
++          .def_readonly("measurementsSha256", &Summary::measurementsSha256)
++          .def_readonly("spacePointsSha256", &Summary::spacePointsSha256)
++          .def_readonly("particlesSha256", &Summary::particlesSha256)
++          .def_readonly("selectedParticlesSha256",
++                        &Summary::selectedParticlesSha256)
++          .def_readonly("measurementParticlesSha256",
++                        &Summary::measurementParticlesSha256)
++          .def_readonly("particleMeasurementsSha256",
++                        &Summary::particleMeasurementsSha256)
++          .def_readonly("semanticSha256", &Summary::semanticSha256);
++
++      using Writer = OwnedSeedingDatasetWriter;
++      auto writer = py::class_<Writer, IWriter, std::shared_ptr<Writer>>(
++                        root, "OwnedSeedingDatasetWriter")
++                        .def(py::init<const Writer::Config&, Logging::Level>(),
++                             py::arg("config"), py::arg("level"))
++                        .def_property_readonly("config", &Writer::config)
++                        .def("summaries", &Writer::summaries)
++                        .def("rootUuid", &Writer::rootUuid);
++      auto config = py::class_<Writer::Config>(writer, "Config").def(py::init<>());
++      ACTS_PYTHON_STRUCT(
++          config, inputMeasurements, inputSpacePoints, inputParticles,
++          inputSelectedParticles, inputMeasurementParticlesMap,
++          inputParticleMeasurementsMap, filePath, treeName, compression,
++          compressionLevel);
++    }
++
++    {
++      using Summary = OwnedSeedingDiagnosticsSummary;
++      py::class_<Summary>(root, "OwnedSeedingDiagnosticsSummary")
++          .def_readonly("eventId", &Summary::eventId)
++          .def_readonly("rawSeeds", &Summary::rawSeeds)
++          .def_readonly("estimatedSeeds", &Summary::estimatedSeeds)
++          .def_readonly("estimatedParameters", &Summary::estimatedParameters)
++          .def_readonly("convertedTracks", &Summary::convertedTracks)
++          .def_readonly("matchedTracks", &Summary::matchedTracks)
++          .def_readonly("fakeTracks", &Summary::fakeTracks)
++          .def_readonly("duplicateTracks", &Summary::duplicateTracks)
++          .def_readonly("unknownTracks", &Summary::unknownTracks)
++          .def_readonly("semanticSha256", &Summary::semanticSha256);
++
++      using Writer = OwnedSeedingDiagnosticsWriter;
++      auto writer = py::class_<Writer, IWriter, std::shared_ptr<Writer>>(
++                        root, "OwnedSeedingDiagnosticsWriter")
++                        .def(py::init<const Writer::Config&, Logging::Level>(),
++                             py::arg("config"), py::arg("level"))
++                        .def_property_readonly("config", &Writer::config)
++                        .def("summaries", &Writer::summaries);
++      auto config = py::class_<Writer::Config>(writer, "Config").def(py::init<>());
++      ACTS_PYTHON_STRUCT(
++          config, inputRawSeeds, inputEstimatedSeeds,
++          inputEstimatedParameters, inputTracks, inputTrackParticleMatching,
++          inputParticleTrackMatching);
++    }
++
+     ACTS_PYTHON_DECLARE_WRITER(
+         RootTrackStatesWriter, root, "RootTrackStatesWriter", inputTracks,
+         inputParticles, inputTrackParticleMatching, inputSimHits,
+--- a/Python/Examples/src/PythonSpecific.cpp
++++ b/Python/Examples/src/PythonSpecific.cpp
+@@ -97,6 +97,10 @@
+ 
+   const Config& config() const { return m_cfg; }
+ 
++  TrackFinderPerformanceCollector::Stats stats() const {
++    return m_collector.stats();
++  }
++
+   /// Return all filled histograms as a Python dict keyed by histogram name.
+   py::dict histograms() const {
+     py::dict d;
+@@ -177,6 +181,18 @@
+ namespace ActsPython {
+ 
+ void addPythonSpecific(py::module_& mex) {
++  using Stats = TrackFinderPerformanceCollector::Stats;
++  py::class_<Stats>(mex, "TrackFinderPerformanceStats")
++      .def_readonly("nTotalTracks", &Stats::nTotalTracks)
++      .def_readonly("nTotalMatchedTracks", &Stats::nTotalMatchedTracks)
++      .def_readonly("nTotalFakeTracks", &Stats::nTotalFakeTracks)
++      .def_readonly("nTotalDuplicateTracks", &Stats::nTotalDuplicateTracks)
++      .def_readonly("nTotalParticles", &Stats::nTotalParticles)
++      .def_readonly("nTotalMatchedParticles", &Stats::nTotalMatchedParticles)
++      .def_readonly("nTotalDuplicateParticles",
++                    &Stats::nTotalDuplicateParticles)
++      .def_readonly("nTotalFakeParticles", &Stats::nTotalFakeParticles);
++
+   using Writer = PythonTrackFinderPerformanceWriter;
+   using Config = Writer::Config;
+ 
+@@ -185,6 +201,7 @@
+                .def(py::init<const Config&, Acts::Logging::Level>(),
+                     py::arg("config"), py::arg("level"))
+                .def_property_readonly("config", &Writer::config)
++               .def("stats", &Writer::stats)
+                .def("histograms", &Writer::histograms);
+ 
+   auto c = py::class_<Config>(w, "Config").def(py::init<>());
+--- a/Fatras/include/ActsFatras/EventData/Particle.hpp
++++ b/Fatras/include/ActsFatras/EventData/Particle.hpp
+@@ -26,6 +26,10 @@
+ #include <iosfwd>
+ #include <optional>
+ 
++namespace ActsExamples {
++struct OwnedSeedingParticleDirectionRestorer;
++}
++
+ namespace ActsFatras {
+ 
+ /// Particle identity information and kinematic state.
+@@ -401,6 +405,10 @@
+   SimulationOutcome outcome() const { return m_outcome; }
+ 
+  private:
++  // Narrow project-owned access for bit-exact restoration of directions from
++  // an owned static payload after its complete event has been validated.
++  friend struct ActsExamples::OwnedSeedingParticleDirectionRestorer;
++
+   // identity, i.e. things that do not change over the particle lifetime.
+   /// Particle identifier within the event.
+   Barcode m_particleId;
