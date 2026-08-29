@@ -254,7 +254,16 @@
     "request": null,
     "state": "open"
   },
-  "current_attempt": null,
+  "current_attempt": {
+    "candidate": "CandidateMiddleIndexHoist",
+    "classification": "major",
+    "controlled_stage": "queued Development run",
+    "mechanism_family": "candidate-record-dataflow",
+    "mechanism_key": "candidate-shared-middle-index-storage",
+    "scheduling": "ordinary",
+    "started_at": "2026-08-29T01:02:40.887522Z",
+    "state": "queued"
+  },
   "failures": [
     {
       "candidate": "FilterDisabledConfirmationQualityMapElision",
@@ -272,9 +281,9 @@
       "record_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug29/records/Failed/20260828T235932Z-GridEmptyNeighborRangePrune/summary.json"
     }
   ],
-  "generated_at": "2026-08-29T00:58:21.859658Z",
+  "generated_at": "2026-08-29T01:02:41.372944Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/3e0bf7fa00faf4e84634a112f1ae09e7590c926e",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/c5a0bf9b3056c0d23442187232e41c69a0c8e459",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/aug29",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/36"
   },
@@ -301,7 +310,7 @@
         "target_percentage": 25.0
       }
     },
-    "elapsed_seconds": 5136.859658,
+    "elapsed_seconds": 5396.372944,
     "estimated_remaining_seconds": null,
     "eta_basis": "Unavailable until a stop request fixes the exact final candidate target.",
     "eta_sample_count": 0,
@@ -365,9 +374,9 @@
     "blocker": null,
     "combination_eligible": false,
     "decision": {
-      "action": "schedule",
+      "action": "finish-active",
       "category": "major",
-      "reason": "Selected by deterministic target deficit and category-order tie-break."
+      "reason": "Finish the active candidate transaction and record its restoration evidence."
     },
     "final_targets": null,
     "state": "running",

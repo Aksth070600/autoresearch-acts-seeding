@@ -15,7 +15,16 @@
       "combination_percentage": 25
     }
   },
-  "current_attempt": null,
+  "current_attempt": {
+    "candidate": "CandidateMiddleIndexHoist",
+    "mechanism_key": "candidate-shared-middle-index-storage",
+    "mechanism_family": "candidate-record-dataflow",
+    "classification": "major",
+    "controlled_stage": "queued Development run",
+    "state": "queued",
+    "started_at": "2026-08-29T01:02:40.887522Z",
+    "scheduling": "ordinary"
+  },
   "attempt_metadata": [
     {
       "candidate": "FilterDisabledConfirmationQualityMapElision",
@@ -169,6 +178,60 @@
         "lesson": "The independently sourced empty-range adaptation segfaulted in the one-event smoke stage after a successful build; stop candidate generation pending diagnosis against untouched Genesis.",
         "prediction_assessment": "inconclusive",
         "prediction_assessment_rationale": "The smoke stage crashed before any timed or seeding-efficiency evidence was produced."
+      }
+    },
+    {
+      "candidate": "CandidateMiddleIndexHoist",
+      "mechanism_key": "candidate-shared-middle-index-storage",
+      "mechanism_family": "candidate-record-dataflow",
+      "classification": "major",
+      "proposal": {
+        "schema_version": "1.0.0",
+        "candidate": "CandidateMiddleIndexHoist",
+        "implementation_commit": "c5a0bf9b3056c0d23442187232e41c69a0c8e459",
+        "hypothesis": "Hoisting the middle-space-point index shared by every retained candidate into collector state will shrink each hot candidate record and reduce insertion, replacement, and output memory traffic, lowering median seeding time without changing the reconstructed triplets.",
+        "falsifier": "The prediction fails if median seeding time does not decrease from fresh Genesis or timed seeding particle efficiency changes.",
+        "predicted_directions": {
+          "timed_seeding_time_per_event_ms": "decrease",
+          "timed_seeding_particle_efficiency": "unchanged"
+        },
+        "expected_hot_path": "Acts::CandidatesForMiddleSp2 bounded candidate insertion, replacement, and sorted output for one fixed middle space point.",
+        "changed_symbols": [
+          "Acts::CandidatesForMiddleSp2::StoredCandidate",
+          "Acts::CandidatesForMiddleSp2::clear",
+          "Acts::CandidatesForMiddleSp2::push",
+          "Acts::CandidatesForMiddleSp2::toSortedCandidates"
+        ],
+        "intended_files": [
+          "optimization-files/Core/include/Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp",
+          "optimization-files/Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp"
+        ],
+        "novelty_reason": "Earlier candidate-storage experiments changed heap algorithms, ownership topology, allocation strategy, or whole-record placement; none hoisted only the per-middle invariant index while preserving the existing bounded heaps and output record contract.",
+        "source_references": [
+          {
+            "source_type": "inspected source code",
+            "reference": "https://github.com/acts-project/acts/blob/34edd48852f766e1b9d94d3dc996e27476339f1b/Core/include/Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp",
+            "relevance": "The permanent upstream header shows that TripletCandidate2 stores the middle index in every record while CandidatesForMiddleSp2 owns one collector across a fixed-middle transaction.",
+            "directly_inspected": true,
+            "inspected_scope": "TripletCandidate2 fields plus CandidatesForMiddleSp2 storage, clear, push, and toSortedCandidates declarations at ACTS commit 34edd488.",
+            "acts_mapping": "The upstream CandidatesForMiddleSp2 header is byte-identical to the Genesis optimization file before this change and maps directly to the retained-candidate record layout used by BroadTripletSeedFilter."
+          },
+          {
+            "source_type": "inspected source code",
+            "reference": "https://github.com/acts-project/acts/blob/34edd48852f766e1b9d94d3dc996e27476339f1b/Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp",
+            "relevance": "The permanent upstream implementation shows that every accepted or replaced candidate copies spM and that clear ends the collector lifecycle after sorted output.",
+            "directly_inspected": true,
+            "inspected_scope": "CandidatesForMiddleSp2::clear, public and private push overloads, replacement path, and toSortedCandidates reconstruction at ACTS commit 34edd488.",
+            "acts_mapping": "The upstream implementation is byte-identical to the Genesis optimization file before this change; the candidate keeps its heap ordering and reconstructs the same public TripletCandidate2 output."
+          },
+          {
+            "source_type": "prior record/commit",
+            "reference": "2467a5a4c230ef968b7ba5508f79cb2d43a0efd8",
+            "relevance": "The directly inspected full-record-heap experiment altered ownership and heap payload together; it motivates isolating only the invariant middle-index field without repeating that mechanism.",
+            "directly_inspected": true
+          }
+        ],
+        "combination_provenance": null
       }
     }
   ],
