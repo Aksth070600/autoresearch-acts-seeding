@@ -44,6 +44,10 @@ if (( setup_rc != 0 )); then
   echo "error: pinned LCG setup failed: $setup_rc" >&2
   exit 1
 fi
+set +u
+# shellcheck disable=SC1090,SC1091
+source "$SLOT/build/python/setup.sh"
+set -u
 
 ACTS_SOURCE="$SLOT/source"
 ACTS_BUILD_DIR="$SLOT/build"
@@ -199,10 +203,6 @@ if [[ "$dry_run" != *"no work to do"* ]]; then
   echo "error: restored Genesis target has pending work" >&2
   exit 1
 fi
-set +u
-# shellcheck disable=SC1090,SC1091
-source "$SLOT/build/python/setup.sh"
-set -u
 python3 - <<'PY'
 import acts
 import acts.examples
