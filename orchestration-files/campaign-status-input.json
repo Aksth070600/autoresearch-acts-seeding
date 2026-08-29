@@ -394,6 +394,22 @@
           }
         ]
       },
+      "evidence": {
+        "files_changed": [
+          "optimization-files/Core/include/Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp#L14-L14",
+          "optimization-files/Core/include/Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp#L104-L115",
+          "optimization-files/Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp#L12-L12",
+          "optimization-files/Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp#L27-L27",
+          "optimization-files/Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp#L54-L64",
+          "optimization-files/Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp#L77-L77",
+          "optimization-files/Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp#L93-L106",
+          "optimization-files/Examples/Algorithms/TrackFinding/src/GridTripletSeedingAlgorithm.cpp#L143-L144"
+        ],
+        "lesson": "Combining middle-index storage with selector branch layout preserved seeding efficiency but raised median seeding time by 6.07 ms/event; the two isolated regressions do not interact favorably.",
+        "outcome": "discard",
+        "prediction_assessment": "mixed",
+        "prediction_assessment_rationale": "Timed seeding particle efficiency remained 0.983101 as predicted, but median seeding time increased to 295.97 ms/event from the 289.90 ms/event Genesis baseline."
+      },
       "mechanism_family": "cross-stage-candidate-grid-combination",
       "mechanism_key": "middle-index-selector-layout-combination",
       "proposal": {
@@ -463,7 +479,7 @@
     "genesis_commit": "f8e809e118e41889850cf9cf3c46988e7c583625",
     "mode": "continuous",
     "name": "ACTS Seeding continuous aug29",
-    "phase": "exact 2:1:1 finalization",
+    "phase": "exact 2:1:1 complete; restoring Genesis",
     "started_at": "2026-08-28T23:32:45Z",
     "targets": {
       "combination_percentage": 25,
@@ -489,16 +505,7 @@
     },
     "state": "consumed"
   },
-  "current_attempt": {
-    "candidate": "MiddleIndexSelectorLayoutCombination",
-    "classification": "combination",
-    "controlled_stage": "queued Development finalization run",
-    "mechanism_family": "cross-stage-candidate-grid-combination",
-    "mechanism_key": "middle-index-selector-layout-combination",
-    "scheduling": "finalization",
-    "started_at": "2026-08-29T02:20:49.683087Z",
-    "state": "queued"
-  },
+  "current_attempt": null,
   "pull_request_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/36",
   "scheduler": {
     "blocker": null,

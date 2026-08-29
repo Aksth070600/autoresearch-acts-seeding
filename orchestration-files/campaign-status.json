@@ -462,6 +462,125 @@
       "state": "completed",
       "timed_seeding_particle_efficiency": 0.983101,
       "timed_seeding_time_per_event_ms": 295.07
+    },
+    {
+      "candidate": "MiddleIndexSelectorLayoutCombination",
+      "changed_symbols": [
+        "ActsExamples::GridTripletSeedingAlgorithm::execute",
+        "Acts::CandidatesForMiddleSp2::StoredCandidate",
+        "Acts::CandidatesForMiddleSp2::clear",
+        "Acts::CandidatesForMiddleSp2::push",
+        "Acts::CandidatesForMiddleSp2::toSortedCandidates"
+      ],
+      "classification": "combination",
+      "combination_provenance": {
+        "compatibility_rationale": "The middle-index storage change is confined to candidate retention and reconstruction, while the branch-layout hint is confined to input grid filling; they share no files, state, ordering contract, or cut logic.",
+        "interaction_hypothesis": "Applying the independent candidate-record traffic reduction and grid-fill branch layout together may offset their isolated instruction-layout costs across separate stages while preserving identical reconstructed seeds.",
+        "sources": [
+          {
+            "candidate": "CandidateMiddleIndexHoist",
+            "directly_inspected": true,
+            "implementation_commit": "c5a0bf9b3056c0d23442187232e41c69a0c8e459",
+            "mechanism_key": "candidate-shared-middle-index-storage"
+          },
+          {
+            "candidate": "GridSelectorRejectionUnlikely",
+            "directly_inspected": true,
+            "implementation_commit": "db4bf462e709fb8d20f2e304736ad5b62f49fc78",
+            "mechanism_key": "grid-selector-rejection-branch-layout"
+          }
+        ]
+      },
+      "derives_from": null,
+      "duration_seconds": 1019.519,
+      "files_changed": [
+        "optimization-files/Core/include/Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp#L14-L14",
+        "optimization-files/Core/include/Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp#L104-L115",
+        "optimization-files/Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp#L12-L12",
+        "optimization-files/Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp#L27-L27",
+        "optimization-files/Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp#L54-L64",
+        "optimization-files/Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp#L77-L77",
+        "optimization-files/Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp#L93-L106",
+        "optimization-files/Examples/Algorithms/TrackFinding/src/GridTripletSeedingAlgorithm.cpp#L143-L144"
+      ],
+      "finished_at": "2026-08-29T02:37:57.661355Z",
+      "hot_path_rationale": "Input grid-fill selector control flow plus bounded per-middle candidate insertion, replacement, and output reconstruction.",
+      "implementation_commit": "38ed7c40fe7fc7b344a4c5816e85df906baad52e",
+      "lesson": "Combining middle-index storage with selector branch layout preserved seeding efficiency but raised median seeding time by 6.07 ms/event; the two isolated regressions do not interact favorably.",
+      "links": {
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/38ed7c40fe7fc7b344a4c5816e85df906baad52e",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug29/records/Development/20260829T022058Z-MiddleIndexSelectorLayoutCombination/summary.json"
+      },
+      "mechanism_family": "cross-stage-candidate-grid-combination",
+      "mechanism_key": "middle-index-selector-layout-combination",
+      "novelty_rationale": "This is the first measured v3 interaction between a candidate-retention record-layout mechanism and an input-grid branch-layout mechanism; it exactly combines two completed source implementations without adding cuts, ordering changes, or a third mechanism.",
+      "outcome": "discard",
+      "prediction_assessment": "mixed",
+      "prediction_assessment_rationale": "Timed seeding particle efficiency remained 0.983101 as predicted, but median seeding time increased to 295.97 ms/event from the 289.90 ms/event Genesis baseline.",
+      "proposal": {
+        "candidate": "MiddleIndexSelectorLayoutCombination",
+        "changed_symbols": [
+          "ActsExamples::GridTripletSeedingAlgorithm::execute",
+          "Acts::CandidatesForMiddleSp2::StoredCandidate",
+          "Acts::CandidatesForMiddleSp2::clear",
+          "Acts::CandidatesForMiddleSp2::push",
+          "Acts::CandidatesForMiddleSp2::toSortedCandidates"
+        ],
+        "combination_provenance": {
+          "compatibility_rationale": "The middle-index storage change is confined to candidate retention and reconstruction, while the branch-layout hint is confined to input grid filling; they share no files, state, ordering contract, or cut logic.",
+          "interaction_hypothesis": "Applying the independent candidate-record traffic reduction and grid-fill branch layout together may offset their isolated instruction-layout costs across separate stages while preserving identical reconstructed seeds.",
+          "sources": [
+            {
+              "candidate": "CandidateMiddleIndexHoist",
+              "directly_inspected": true,
+              "implementation_commit": "c5a0bf9b3056c0d23442187232e41c69a0c8e459",
+              "mechanism_key": "candidate-shared-middle-index-storage"
+            },
+            {
+              "candidate": "GridSelectorRejectionUnlikely",
+              "directly_inspected": true,
+              "implementation_commit": "db4bf462e709fb8d20f2e304736ad5b62f49fc78",
+              "mechanism_key": "grid-selector-rejection-branch-layout"
+            }
+          ]
+        },
+        "expected_hot_path": "Input grid-fill selector control flow plus bounded per-middle candidate insertion, replacement, and output reconstruction.",
+        "falsifier": "The prediction fails if median seeding time does not decrease from fresh Genesis or timed seeding particle efficiency changes.",
+        "hypothesis": "Combining the candidate-record middle-index hoist with the independent grid-selector rejection layout may recover stage-local instruction and data-cache benefits that were hidden by isolated run variance, reducing median seeding time while preserving reconstructed seeds and seeding efficiency.",
+        "implementation_commit": "38ed7c40fe7fc7b344a4c5816e85df906baad52e",
+        "intended_files": [
+          "optimization-files/Core/include/Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp",
+          "optimization-files/Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp",
+          "optimization-files/Examples/Algorithms/TrackFinding/src/GridTripletSeedingAlgorithm.cpp"
+        ],
+        "novelty_reason": "This is the first measured v3 interaction between a candidate-retention record-layout mechanism and an input-grid branch-layout mechanism; it exactly combines two completed source implementations without adding cuts, ordering changes, or a third mechanism.",
+        "predicted_directions": {
+          "timed_seeding_particle_efficiency": "unchanged",
+          "timed_seeding_time_per_event_ms": "decrease"
+        },
+        "schema_version": "1.0.0",
+        "source_references": [
+          {
+            "directly_inspected": true,
+            "reference": "c5a0bf9b3056c0d23442187232e41c69a0c8e459",
+            "relevance": "The directly inspected completed v3 source hoists the fixed middle index from retained candidate records and reconstructs the same public triplets.",
+            "source_type": "prior record/commit"
+          },
+          {
+            "directly_inspected": true,
+            "reference": "db4bf462e709fb8d20f2e304736ad5b62f49fc78",
+            "relevance": "The directly inspected completed v3 source changes only the code layout of the grid-selector rejection edge.",
+            "source_type": "prior record/commit"
+          }
+        ]
+      },
+      "proposal_hash": "5a1a3d6df40e0bb740715b9dd1649b13b293c191eb5f9f05616f28724ab0db6e",
+      "record": "records/Development/20260829T022058Z-MiddleIndexSelectorLayoutCombination/summary.json",
+      "run_result": "Passed all controlled Development stages.",
+      "started_at": "2026-08-29T02:20:58.142233Z",
+      "state": "completed",
+      "timed_seeding_particle_efficiency": 0.983101,
+      "timed_seeding_time_per_event_ms": 295.97
     }
   ],
   "blockers": [],
@@ -472,7 +591,7 @@
     "genesis_commit": "f8e809e118e41889850cf9cf3c46988e7c583625",
     "mode": "continuous",
     "name": "ACTS Seeding continuous aug29",
-    "phase": "exact 2:1:1 finalization",
+    "phase": "exact 2:1:1 complete; restoring Genesis",
     "started_at": "2026-08-28T23:32:45Z",
     "targets": {
       "combination_percentage": 25,
@@ -498,16 +617,7 @@
     },
     "state": "consumed"
   },
-  "current_attempt": {
-    "candidate": "MiddleIndexSelectorLayoutCombination",
-    "classification": "combination",
-    "controlled_stage": "queued Development finalization run",
-    "mechanism_family": "cross-stage-candidate-grid-combination",
-    "mechanism_key": "middle-index-selector-layout-combination",
-    "scheduling": "finalization",
-    "started_at": "2026-08-29T02:20:49.683087Z",
-    "state": "queued"
-  },
+  "current_attempt": null,
   "failures": [
     {
       "candidate": "FilterDisabledConfirmationQualityMapElision",
@@ -525,42 +635,42 @@
       "record_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug29/records/Failed/20260828T235932Z-GridEmptyNeighborRangePrune/summary.json"
     }
   ],
-  "generated_at": "2026-08-29T02:20:51.010717Z",
+  "generated_at": "2026-08-29T02:38:44.022645Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/38ed7c40fe7fc7b344a4c5816e85df906baad52e",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/077a3a55ecb7c73b76f2e8aa23a3e4774e9d2740",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/aug29",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/36"
   },
   "progress": {
-    "combination_candidates": 0,
-    "completed_candidates": 3,
+    "combination_candidates": 1,
+    "completed_candidates": 4,
     "composition": {
       "combination": {
-        "completed": 0,
-        "completed_percentage": 0.0,
-        "deficit_candidates": 0.75,
+        "completed": 1,
+        "completed_percentage": 25.0,
+        "deficit_candidates": 0.0,
         "target_percentage": 25.0
       },
       "major": {
         "completed": 2,
-        "completed_percentage": 66.66666666666666,
-        "deficit_candidates": -0.5,
+        "completed_percentage": 50.0,
+        "deficit_candidates": 0.0,
         "target_percentage": 50.0
       },
       "minor": {
         "completed": 1,
-        "completed_percentage": 33.33333333333333,
-        "deficit_candidates": -0.25,
+        "completed_percentage": 25.0,
+        "deficit_candidates": 0.0,
         "target_percentage": 25.0
       }
     },
-    "elapsed_seconds": 10086.010717,
-    "estimated_remaining_seconds": 1017.72737,
-    "eta_basis": "Median of 3 completed attempts; current attempt elapsed time deducted.",
-    "eta_sample_count": 3,
-    "expected_finish_at": "2026-08-29T02:37:48.738087Z",
+    "elapsed_seconds": 11159.022645,
+    "estimated_remaining_seconds": 0.0,
+    "eta_basis": "Campaign attempt targets are complete.",
+    "eta_sample_count": 4,
+    "expected_finish_at": "2026-08-29T02:38:44.022645Z",
     "major_candidates": 2,
-    "median_completed_attempt_duration_seconds": 1019.055,
+    "median_completed_attempt_duration_seconds": 1019.287,
     "minor_candidates": 1
   },
   "promising_results": {
@@ -577,14 +687,14 @@
       "timed_seeding_time_per_event_ms": 289.9
     },
     "best_seeding_efficiency": {
-      "candidate": "GridSortCopyLoopFusion",
+      "candidate": "MiddleIndexSelectorLayoutCombination",
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/9e099cf8f01be9dc235ace9d27e4c13eb41b6ae8",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug29/records/Development/20260829T020240Z-GridSortCopyLoopFusion/summary.json"
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/38ed7c40fe7fc7b344a4c5816e85df906baad52e",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug29/records/Development/20260829T022058Z-MiddleIndexSelectorLayoutCombination/summary.json"
       },
-      "started_at": "2026-08-29T02:02:40.326608Z",
+      "started_at": "2026-08-29T02:20:58.142233Z",
       "timed_seeding_particle_efficiency": 0.983101,
-      "timed_seeding_time_per_event_ms": 295.07
+      "timed_seeding_time_per_event_ms": 295.97
     },
     "latest_genesis": {
       "candidate": "Genesis",
@@ -618,9 +728,14 @@
     "blocker": null,
     "combination_eligible": false,
     "decision": {
-      "action": "finish-active",
-      "category": "combination",
-      "reason": "Finish the active candidate transaction and record its restoration evidence."
+      "action": "finalize",
+      "category": null,
+      "deficits": {
+        "combination": 0,
+        "major": 0,
+        "minor": 0
+      },
+      "reason": "Retained candidates have reached the persisted exact 2:1:1 target."
     },
     "final_targets": {
       "combination_candidates": 1,
