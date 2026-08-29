@@ -646,6 +646,7 @@ def _record_projection(record: dict[str, Any]) -> dict[str, Any]:
         "status": record["status"],
         "mechanism_key": record["mechanism_key"],
         "implementation_commit": record["implementation_commit"],
+        "proposal": record["proposal"],
         "proposal_sha256": record["proposal_sha256"],
         "record_sha256": record["record_sha256"],
         "scientific_classification": record["scientific_classification"],
