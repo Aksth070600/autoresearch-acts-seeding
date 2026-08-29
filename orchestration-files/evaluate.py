@@ -873,7 +873,9 @@ def run_evaluation(args: argparse.Namespace) -> int:
                 category = "Errors"
                 error = "ACTS restoration failed"
             else:
-                rebuild = run_hepp_helper("build.sh", f"{run_id}-restore-build")
+                rebuild = run_hepp_helper(
+                    "build.sh", f"{run_id}-restore-build", "--clean-first"
+                )
                 record_command_output(outputs, "restore_build", rebuild)
                 if rebuild.returncode != 0:
                     category = "Errors"
