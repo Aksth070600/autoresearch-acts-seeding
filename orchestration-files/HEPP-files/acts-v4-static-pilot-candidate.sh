@@ -150,7 +150,7 @@ ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE=1 PYTHONDONTWRITEBYTECODE=1 \
   --identity-dir "$PRODUCTION_IDENTITY_DIR" \
   --candidate-identity-dir "$identity_dir" --proposal-sha256 "$proposal_sha256" \
   --output-dir "$WORKSPACE/output" --raw-result "$WORKSPACE/raw.json" \
-  --protocol-id acts-seeding-v4-owned-static \
+  --protocol-id acts-seeding-v4-owned-static --protocol-revision 2 \
   --dataset-id "$(basename -- "$DATASET")" >"$process_log" 2>&1
 process_rc=$?
 process_end_ns="$(date +%s%N)"

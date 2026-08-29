@@ -78,7 +78,8 @@ PY
     --private-source "$ACTS_SOURCE" --private-build "$ACTS_BUILD_DIR" \
     --identity-dir "$IDENTITY_DIR" --output-dir "$run/output" \
     --raw-result "$run/raw.json" --protocol-id acts-seeding-v4-owned-static \
-    --dataset-id "$(basename -- "$DATASET")" >"$process_log" 2>&1
+    --protocol-revision 2 --dataset-id "$(basename -- "$DATASET")" \
+    >"$process_log" 2>&1
   process_rc=$?
   set -e
   cat "$process_log"

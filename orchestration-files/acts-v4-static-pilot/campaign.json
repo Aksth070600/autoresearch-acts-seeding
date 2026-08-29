@@ -19,9 +19,10 @@
     "development_only": true,
     "evaluation_authorized": false,
     "name": "ACTS Seeding owned-static v4 Development pilot",
-    "phase": "scientific execution complete; Genesis restored; rendering archive report",
+    "phase": "revision 2 infrastructure qualified; five-run Genesis calibration queued",
     "protocol_id": "acts-seeding-v4-owned-static",
-    "scientific_completed_at": "2026-08-29T17:43:07Z",
+    "protocol_revision": 2,
+    "protocol_revision_started_at": "2026-08-29T18:01:44Z",
     "started_at": "2026-08-29T16:18:00Z"
   },
   "corrections": "orchestration-files/acts-v4-static-pilot/corrections.json",
@@ -47,260 +48,51 @@
     "publication_path": "/storage/thomaaks/acts-v4-owned-static/acts-seeding-v4-owned-static-a05ae8663452d52dc2b90e2fa5372091a2cb04feb8cce86646da9f6ccbc2f3fb",
     "qualification_evidence_sha256": "ed16fef43f1b6818e52cf6b0493d9c786a70444d212e7ab521eadd03d4b37237"
   },
-  "final_genesis_restoration": {
-    "build_manifest_sha256": "be4b95d060f4798d724ebe5b3f4fecaa52145822977327965dc6ea6b2f85ef98",
-    "evidence_sha256": "acb19cfddf37d1c4a2d550b7e8edd5255ac4e453c906ff9e24b2734f1acf02e7",
-    "path": "orchestration-files/acts-v4-static-pilot/evidence/final-genesis-restoration.json",
-    "source_binary_consistent": true,
-    "source_manifest_sha256": "22f7d97e2bd08de128467b83cf5a2373bbf36fc064fb9430011e3ffd7e55a183"
+  "final_genesis_restoration": null,
+  "genesis_calibration": null,
+  "invalidated_revision_1": {
+    "invalidation_sha256": "dc422c7e94379244766687832599afd71afc8b9d9db49a56b3b2cf58e13f0a7a",
+    "path": "orchestration-files/acts-v4-static-pilot/invalid-diagnostics/revision-1-invalidation.json",
+    "scientific_validity": "invalid diagnostics only",
+    "timing_selection_allowed": false
   },
-  "genesis_calibration": {
-    "path": "orchestration-files/acts-v4-static-pilot/calibration.json",
-    "runs": 5,
-    "sha256": "df15fb6a291106b05c39830accfe9eac936eefa52d18e8f9aa7dd586a5e08605"
-  },
-  "schema": "acts-v4-owned-static-pilot-campaign-v1",
+  "schema": "acts-v4-owned-static-pilot-campaign-v2",
   "slots": [
     {
       "candidate": "PackedVarianceColumnsV4",
       "classification": "major",
       "implementation_commit": "636a31d0c2f4b1024b39372d8eb7280854c16016",
       "mechanism_key": "v4-core-packed-variance-zr-layout",
-      "per_event_nanoseconds": 294267000,
-      "record": "records/Development/20260829T192315Z-PackedVarianceColumnsV4/summary.json",
-      "record_sha256": "6e6b308746a8e10fa2c979ecb113859668e48b2f9f851c9e611ff1d7ce38a672",
-      "result_sha256": "a3271a589c96af8bfe040d2a2d3da1fa3d6a539c973a78f01e253527deabb70c",
-      "scientific_classification": {
-        "efficiency": {
-          "candidate": {
-            "denominator": 29155,
-            "numerator": 28699
-          },
-          "genesis": {
-            "denominator": 29155,
-            "numerator": 28699
-          },
-          "label": "equal"
-        },
-        "efficiency_regression": false,
-        "overall": "inconclusive",
-        "timing": {
-          "candidate_interval_nanoseconds": {
-            "lower": {
-              "denominator": 1577,
-              "numerator": 457854408000
-            },
-            "upper": {
-              "denominator": 1577,
-              "numerator": 470263710000
-            }
-          },
-          "candidate_per_event_nanoseconds": 294267000,
-          "empirical_noise_envelope": {
-            "denominator": 74119,
-            "numerator": 991
-          },
-          "genesis_interval_nanoseconds": {
-            "lower": {
-              "denominator": 1,
-              "numerator": 292512000
-            },
-            "upper": {
-              "denominator": 1,
-              "numerator": 300440000
-            }
-          },
-          "genesis_median_per_event_nanoseconds": 296476000,
-          "label": "directional faster, inconclusive"
-        },
-        "timing_regression": false
-      },
-      "scientific_processes": 1,
+      "proposal": "orchestration-files/acts-v4-static-pilot/proposals/revision-2/slot-1-packed-variance.json",
       "slot": 1,
-      "state": "completed",
-      "status": "passed"
+      "state": "revision 2 predeclared and queued"
     },
     {
       "candidate": "TripletKinematicsPairV4",
       "classification": "major",
       "implementation_commit": "f7539bf674476baaf366ef9069bbaa2668d112f8",
       "mechanism_key": "v4-triplet-kinematics-pair-layout",
-      "per_event_nanoseconds": 297133000,
-      "record": "records/Development/20260829T192928Z-TripletKinematicsPairV4/summary.json",
-      "record_sha256": "7e0c9502576578c1d60991c6db322b9f3af92fc2a2d5a3c1b3f50081ca1153f9",
-      "result_sha256": "c156e91991df87fa6a5141f8d9cc33ef525b8361895930371cbf6a158e08899e",
-      "scientific_classification": {
-        "efficiency": {
-          "candidate": {
-            "denominator": 29155,
-            "numerator": 28699
-          },
-          "genesis": {
-            "denominator": 29155,
-            "numerator": 28699
-          },
-          "label": "equal"
-        },
-        "efficiency_regression": false,
-        "overall": "inconclusive",
-        "timing": {
-          "candidate_interval_nanoseconds": {
-            "lower": {
-              "denominator": 74119,
-              "numerator": 21728742024000
-            },
-            "upper": {
-              "denominator": 74119,
-              "numerator": 22317659630000
-            }
-          },
-          "candidate_per_event_nanoseconds": 297133000,
-          "empirical_noise_envelope": {
-            "denominator": 74119,
-            "numerator": 991
-          },
-          "genesis_interval_nanoseconds": {
-            "lower": {
-              "denominator": 1,
-              "numerator": 292512000
-            },
-            "upper": {
-              "denominator": 1,
-              "numerator": 300440000
-            }
-          },
-          "genesis_median_per_event_nanoseconds": 296476000,
-          "label": "directional slower, inconclusive"
-        },
-        "timing_regression": false
-      },
-      "scientific_processes": 1,
+      "proposal": "orchestration-files/acts-v4-static-pilot/proposals/revision-2/slot-2-triplet-kinematics.json",
       "slot": 2,
-      "state": "completed",
-      "status": "passed"
+      "state": "revision 2 predeclared and queued"
     },
     {
       "candidate": "GridBinCountCacheV4",
       "classification": "minor",
       "implementation_commit": "6af7ae76c154b656e99f7eecdcf98e6703b8db5b",
       "mechanism_key": "v4-grid-bin-count-cache",
-      "per_event_nanoseconds": 298045000,
-      "record": "records/Development/20260829T193452Z-GridBinCountCacheV4/summary.json",
-      "record_sha256": "2b7834893674a3255d6dd163153920d0be75527f52b6764083fbc06a627932bc",
-      "result_sha256": "85ca54f8540bba388ce22d1940273a343d00c8e3fe9bd254afc17ae54da8e3fd",
-      "scientific_classification": {
-        "efficiency": {
-          "candidate": {
-            "denominator": 29155,
-            "numerator": 28699
-          },
-          "genesis": {
-            "denominator": 29155,
-            "numerator": 28699
-          },
-          "label": "equal"
-        },
-        "efficiency_regression": false,
-        "overall": "inconclusive",
-        "timing": {
-          "candidate_interval_nanoseconds": {
-            "lower": {
-              "denominator": 74119,
-              "numerator": 21795434760000
-            },
-            "upper": {
-              "denominator": 74119,
-              "numerator": 22386159950000
-            }
-          },
-          "candidate_per_event_nanoseconds": 298045000,
-          "empirical_noise_envelope": {
-            "denominator": 74119,
-            "numerator": 991
-          },
-          "genesis_interval_nanoseconds": {
-            "lower": {
-              "denominator": 1,
-              "numerator": 292512000
-            },
-            "upper": {
-              "denominator": 1,
-              "numerator": 300440000
-            }
-          },
-          "genesis_median_per_event_nanoseconds": 296476000,
-          "label": "directional slower, inconclusive"
-        },
-        "timing_regression": false
-      },
-      "scientific_processes": 1,
+      "proposal": "orchestration-files/acts-v4-static-pilot/proposals/revision-2/slot-3-grid-bin-count.json",
       "slot": 3,
-      "state": "completed",
-      "status": "passed"
+      "state": "revision 2 predeclared and queued"
     },
     {
       "candidate": "PackedVarianceTripletKinematicsV4",
       "classification": "combination",
-      "eligibility": {
-        "both_parents_passed": true,
-        "physics_exact_for_both": true,
-        "promising_predecessor": "PackedVarianceColumnsV4"
-      },
       "implementation_commit": "e84e83e5eb41ebd13df27adccc0d52149131a27a",
       "mechanism_key": "v4-packed-variance-triplet-kinematics-combination",
-      "per_event_nanoseconds": 295041000,
-      "record": "records/Development/20260829T194112Z-PackedVarianceTripletKinematicsV4/summary.json",
-      "record_sha256": "7df1d5d609e21eded4d4fa038840d6a3e7706a454f729c3d3589e819ee7a34ee",
-      "result_sha256": "0fd5ac6686e2e8b3d573783d5b91a52d38fdfe7bd2e48f336d269900ede7bca0",
-      "scientific_classification": {
-        "efficiency": {
-          "candidate": {
-            "denominator": 29155,
-            "numerator": 28699
-          },
-          "genesis": {
-            "denominator": 29155,
-            "numerator": 28699
-          },
-          "label": "equal"
-        },
-        "efficiency_regression": false,
-        "overall": "inconclusive",
-        "timing": {
-          "candidate_interval_nanoseconds": {
-            "lower": {
-              "denominator": 74119,
-              "numerator": 21575758248000
-            },
-            "upper": {
-              "denominator": 74119,
-              "numerator": 22160529510000
-            }
-          },
-          "candidate_per_event_nanoseconds": 295041000,
-          "empirical_noise_envelope": {
-            "denominator": 74119,
-            "numerator": 991
-          },
-          "genesis_interval_nanoseconds": {
-            "lower": {
-              "denominator": 1,
-              "numerator": 292512000
-            },
-            "upper": {
-              "denominator": 1,
-              "numerator": 300440000
-            }
-          },
-          "genesis_median_per_event_nanoseconds": 296476000,
-          "label": "directional faster, inconclusive"
-        },
-        "timing_regression": false
-      },
-      "scientific_processes": 1,
+      "proposal": "orchestration-files/acts-v4-static-pilot/proposals/revision-2/slot-4-layout-combination.json",
       "slot": 4,
-      "state": "completed",
-      "status": "passed"
+      "state": "revision 2 predeclared and queued"
     }
   ]
 }

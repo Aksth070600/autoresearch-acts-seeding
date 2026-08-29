@@ -91,10 +91,15 @@ make test
 `acts-v4-static-pilot-*.sh` helpers implement proposal-bound source/build/DSO
 identity, complete Ninja dependency invalidation, immutable reflink template
 reset, five-run Genesis calibration, one-process candidate records, and final
-Genesis restoration. `pilot_record.py` owns the common empirical noise envelope
-and exact timing/efficiency classifications. `static_v4_report.py` is a separate
-exact-protocol and exact-dataset consumer, so the existing v3 consumers remain
-unchanged.
+Genesis restoration. Protocol revision 2 inspects every mapped ACTS shared
+object and Python binding, rejects any object outside the validated private
+build, and hashes the complete loaded closure. Revision 1 pilot records remain
+invalid diagnostics under the captain decision in
+`data/acts-v4-static-pilot/loaded-dso-rerun-decision.md`; they cannot enter
+revision 2 calibration, classification, or reporting. `pilot_record.py` owns the
+common empirical noise envelope and exact timing/efficiency classifications.
+`static_v4_report.py` is a separate exact-protocol, exact-revision, and
+exact-dataset consumer, so the existing v3 consumers remain unchanged.
 
 ## Non-evidence qualification result
 

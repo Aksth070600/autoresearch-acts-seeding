@@ -16,10 +16,12 @@ import acts.examples.root
 
 from candidate_identity import validate_candidate_build
 from identity import input_identities, source_file_identities, validate_private_build
+from loaded_dsos import loaded_acts_dsos
 from pipeline import add_exact_downstream, diagnostics_dict, stats_dict
 from schema import (
     ACTS_COMMIT,
     ACTS_TAG,
+    PILOT_PROTOCOL_REVISION,
     ManifestError,
     atomic_write_json,
     canonical_json_bytes,
@@ -44,6 +46,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--dataset-id", required=True)
     parser.add_argument("--candidate-identity-dir", type=Path)
     parser.add_argument("--proposal-sha256")
+    parser.add_argument(
+        "--protocol-revision", type=int, choices=(1, PILOT_PROTOCOL_REVISION), default=1
+    )
     return parser.parse_args()
 
 
@@ -187,7 +192,7 @@ def _run_static(
             "ordered_diagnostics_sha256",
         )
     }
-    loaded_dsos = _loaded_private_dsos(args.private_build)
+    loaded_dsos = loaded_acts_dsos(args.private_build)
     loaded_dso_manifest_sha256 = sha256_bytes(canonical_json_bytes(loaded_dsos))
     raw = {
         "protocol_id": manifest["protocol"]["id"],
@@ -216,30 +221,16 @@ def _run_static(
         "expected_unmasked_fpes": 0,
         "root_plots": False,
     }
+    if args.protocol_revision == PILOT_PROTOCOL_REVISION:
+        raw["protocol_revision"] = PILOT_PROTOCOL_REVISION
+        raw["loaded_acts_dso_closure"] = {
+            "inspection": "/proc/self/maps",
+            "complete": True,
+            "external_acts_objects_rejected": True,
+            "object_count": len(loaded_dsos),
+        }
     atomic_write_json(staging_output / "diagnostics.json", diagnostic_output)
     return raw
-
-
-def _loaded_private_dsos(build: Path) -> dict[str, str]:
-    build = build.resolve(strict=True)
-    shared_build = Path("/storage/thomaaks/acts-v46.5.0/build")
-    paths: set[Path] = set()
-    for line in Path("/proc/self/maps").read_text(encoding="utf-8").splitlines():
-        fields = line.split()
-        if len(fields) < 6 or not fields[-1].startswith("/"):
-            continue
-        path = Path(fields[-1]).resolve(strict=False)
-        if shared_build == path or shared_build in path.parents:
-            raise ManifestError(f"shared Genesis DSO was loaded: {path}")
-        if build == path or build in path.parents:
-            paths.add(path)
-    if not paths or not any(path.name == "libActsCore.so" for path in paths):
-        raise ManifestError("loaded private ACTS DSO closure is missing ActsCore")
-    return {
-        path.relative_to(build).as_posix(): sha256_file(path)
-        for path in sorted(paths)
-        if path.is_file()
-    }
 
 
 if __name__ == "__main__":

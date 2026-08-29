@@ -72,6 +72,29 @@ LOG = "Processed 2 events in 2.1s\nNo unmasked FPEs encountered\n"
 
 
 class ResultTests(unittest.TestCase):
+    def test_protocol_revision_two_binds_complete_loaded_dso_closure(self) -> None:
+        raw = raw_fixture()
+        raw["protocol_revision"] = 2
+        raw["loaded_acts_dso_closure"] = {
+            "inspection": "/proc/self/maps",
+            "complete": True,
+            "external_acts_objects_rejected": True,
+            "object_count": 1,
+        }
+        result = build_result(
+            raw,
+            timing_csv=TIMING,
+            time_v=TIME_V,
+            process_log=LOG,
+            process_exit_status=0,
+        )
+        self.assertEqual(result["schema"], "acts-seeding-v4-owned-static-result-v2")
+        self.assertEqual(result["protocol_revision"], 2)
+        self.assertTrue(result["loaded_acts_dso_closure"]["complete"])
+
+        raw["loaded_acts_dso_closure"]["object_count"] = 2
+        self.assertRejected(raw=raw)
+
     def test_emits_exact_pairs_resources_and_stable_hash(self) -> None:
         result = build_result(
             raw_fixture(),

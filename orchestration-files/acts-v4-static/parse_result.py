@@ -16,6 +16,7 @@ from schema import (
     ACTS_COMMIT,
     ACTS_TAG,
     CANONICAL_PROTOCOL_ID,
+    PILOT_PROTOCOL_REVISION,
     PROVISIONAL_PROTOCOL_PREFIX,
     ManifestError,
     atomic_write_json,
@@ -33,7 +34,7 @@ STATS = (
     "nTotalDuplicateParticles",
     "nTotalFakeParticles",
 )
-RAW_KEYS = {
+RAW_KEYS_V1 = {
     "protocol_id",
     "dataset_id",
     "event_count",
@@ -48,6 +49,7 @@ RAW_KEYS = {
     "expected_unmasked_fpes",
     "root_plots",
 }
+RAW_KEYS_V2 = RAW_KEYS_V1 | {"protocol_revision", "loaded_acts_dso_closure"}
 DIAGNOSTIC_KEYS = {
     "raw_seed_count",
     "estimated_seed_count",
@@ -216,7 +218,15 @@ def build_result(
     process_exit_status: int,
     total_latency_seconds: str | None = None,
 ) -> dict[str, Any]:
-    raw = _exact_object(raw, RAW_KEYS, "raw result")
+    if not isinstance(raw, dict):
+        raise ManifestError("raw result has unexpected keys")
+    protocol_revision = raw.get("protocol_revision", 1)
+    if protocol_revision == PILOT_PROTOCOL_REVISION:
+        raw = _exact_object(raw, RAW_KEYS_V2, "raw result")
+    elif protocol_revision == 1 and "protocol_revision" not in raw:
+        raw = _exact_object(raw, RAW_KEYS_V1, "raw result")
+    else:
+        raise ManifestError("result protocol revision is unsupported")
     protocol_id = raw["protocol_id"]
     if not isinstance(protocol_id, str) or (
         protocol_id != CANONICAL_PROTOCOL_ID
@@ -332,6 +342,26 @@ def build_result(
         "loaded_dso_manifest_sha256"
     ]:
         raise ManifestError("loaded DSO manifest hash mismatch")
+    loaded_closure = None
+    if protocol_revision == PILOT_PROTOCOL_REVISION:
+        loaded_closure = _exact_object(
+            raw["loaded_acts_dso_closure"],
+            {
+                "inspection",
+                "complete",
+                "external_acts_objects_rejected",
+                "object_count",
+            },
+            "loaded ACTS DSO closure",
+        )
+        if (
+            loaded_closure["inspection"] != "/proc/self/maps"
+            or loaded_closure["complete"] is not True
+            or loaded_closure["external_acts_objects_rejected"] is not True
+            or loaded_closure["object_count"] != len(exact_loaded_dsos)
+        ):
+            raise ManifestError("loaded ACTS DSO closure proof is invalid")
+        loaded_closure = dict(loaded_closure)
 
     if raw["expected_unmasked_fpes"] != 0:
         raise ManifestError("static qualification expected-FPE policy drifted")
@@ -366,7 +396,11 @@ def build_result(
         total_gate = {"seconds": str(total), "target_seconds": 300, "passed": True}
 
     result: dict[str, Any] = {
-        "schema": "acts-seeding-v4-owned-static-result-v1",
+        "schema": (
+            "acts-seeding-v4-owned-static-result-v2"
+            if protocol_revision == PILOT_PROTOCOL_REVISION
+            else "acts-seeding-v4-owned-static-result-v1"
+        ),
         "qualification_only": protocol_id != CANONICAL_PROTOCOL_ID,
         "protocol_id": protocol_id,
         "dataset_id": raw["dataset_id"],
@@ -401,6 +435,9 @@ def build_result(
         "candidate_binding": exact_candidate_binding,
         "loaded_dsos": exact_loaded_dsos,
     }
+    if protocol_revision == PILOT_PROTOCOL_REVISION:
+        result["protocol_revision"] = PILOT_PROTOCOL_REVISION
+        result["loaded_acts_dso_closure"] = loaded_closure
     result["result_sha256"] = sha256_bytes(canonical_json_bytes(result))
     return result
 

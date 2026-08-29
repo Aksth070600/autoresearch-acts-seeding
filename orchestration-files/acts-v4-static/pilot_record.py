@@ -13,6 +13,7 @@ from typing import Any
 from schema import (
     CANONICAL_PROJECT_GENESIS_COMMIT,
     CANONICAL_PROTOCOL_ID,
+    PILOT_PROTOCOL_REVISION,
     ManifestError,
     atomic_write_json,
     canonical_json_bytes,
@@ -21,8 +22,8 @@ from schema import (
     validate_dataset_directory,
 )
 
-CALIBRATION_SCHEMA = "acts-v4-owned-static-genesis-calibration-v1"
-RECORD_SCHEMA = "acts-v4-owned-static-development-record-v1"
+CALIBRATION_SCHEMA = "acts-v4-owned-static-genesis-calibration-v2"
+RECORD_SCHEMA = "acts-v4-owned-static-development-record-v2"
 
 
 def _load(path: Path) -> dict[str, Any]:
@@ -36,7 +37,8 @@ def _load(path: Path) -> dict[str, Any]:
 def _result(path: Path) -> dict[str, Any]:
     value = _load(path)
     if (
-        value.get("schema") != "acts-seeding-v4-owned-static-result-v1"
+        value.get("schema") != "acts-seeding-v4-owned-static-result-v2"
+        or value.get("protocol_revision") != PILOT_PROTOCOL_REVISION
         or value.get("qualification_only") is not False
         or value.get("protocol_id") != CANONICAL_PROTOCOL_ID
         or value.get("events") != 50
@@ -83,14 +85,12 @@ def calibrate(result_paths: list[Path]) -> dict[str, Any]:
     if len(result_paths) != 5:
         raise ManifestError("Genesis calibration requires exactly five results")
     results = [_result(path) for path in result_paths]
+    if any(result["candidate_binding"] is not None for result in results):
+        raise ManifestError("Genesis calibration cannot contain a candidate binding")
     baseline = _identity_projection(results[0])
     for result in results[1:]:
         if _identity_projection(result) != baseline:
             raise ManifestError("Genesis calibration identities or exact counts differ")
-        if result["candidate_binding"] is not None:
-            raise ManifestError(
-                "Genesis calibration cannot contain a candidate binding"
-            )
     timings = [result["timing"]["per_event_nanoseconds"] for result in results]
     if any(
         isinstance(value, bool) or not isinstance(value, int) or value <= 0
@@ -106,6 +106,7 @@ def calibrate(result_paths: list[Path]) -> dict[str, Any]:
     calibration = {
         "schema": CALIBRATION_SCHEMA,
         "protocol_id": CANONICAL_PROTOCOL_ID,
+        "protocol_revision": PILOT_PROTOCOL_REVISION,
         "dataset_id": baseline["dataset_id"],
         "genesis_commit": CANONICAL_PROJECT_GENESIS_COMMIT,
         "genesis_per_event_nanoseconds": timings,
@@ -142,7 +143,10 @@ def _as_fraction(value: dict[str, Any], field: str) -> Fraction:
 def classify_candidate(
     result: dict[str, Any], calibration: dict[str, Any]
 ) -> dict[str, Any]:
-    if calibration.get("schema") != CALIBRATION_SCHEMA:
+    if (
+        calibration.get("schema") != CALIBRATION_SCHEMA
+        or calibration.get("protocol_revision") != PILOT_PROTOCOL_REVISION
+    ):
         raise ManifestError("Genesis calibration schema mismatch")
     if result["dataset_id"] != calibration["dataset_id"]:
         raise ManifestError("candidate dataset differs from Genesis")
@@ -320,6 +324,7 @@ def build_record(
     record: dict[str, Any] = {
         "schema": RECORD_SCHEMA,
         "protocol_id": CANONICAL_PROTOCOL_ID,
+        "protocol_revision": PILOT_PROTOCOL_REVISION,
         "dataset_id": result["dataset_id"],
         "category": "Development",
         "status": "passed",

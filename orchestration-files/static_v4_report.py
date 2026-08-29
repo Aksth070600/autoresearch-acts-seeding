@@ -12,7 +12,8 @@ from typing import Any
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 PROTOCOL_ID = "acts-seeding-v4-owned-static"
-RECORD_SCHEMA = "acts-v4-owned-static-development-record-v1"
+PROTOCOL_REVISION = 2
+RECORD_SCHEMA = "acts-v4-owned-static-development-record-v2"
 
 
 def _load(path: Path) -> dict[str, Any] | None:
@@ -24,6 +25,7 @@ def _load(path: Path) -> dict[str, Any] | None:
         not isinstance(value, dict)
         or value.get("schema") != RECORD_SCHEMA
         or value.get("protocol_id") != PROTOCOL_ID
+        or value.get("protocol_revision") != PROTOCOL_REVISION
         or value.get("category") != "Development"
     ):
         return None
@@ -83,8 +85,9 @@ def build_summary(
             "static-v4 report requires five Genesis and exact slots 1 through 4"
         )
     return {
-        "schema": "acts-v4-owned-static-pilot-summary-v1",
+        "schema": "acts-v4-owned-static-pilot-summary-v2",
         "protocol_id": PROTOCOL_ID,
+        "protocol_revision": PROTOCOL_REVISION,
         "dataset_id": campaign["dataset"]["dataset_id"],
         "campaign": campaign,
         "genesis_calibration": calibration,
