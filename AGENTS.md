@@ -15,3 +15,4 @@ When updating this file, preserve this bar for all agents and keep entries conci
 - For candidate proposal binding, live status, continuous scheduling, authenticated finish control, or archive finalization, follow `orchestration-files/CAMPAIGN_STATUS.md`; proposal normalization and hashing are authoritative in `orchestration-files/proposal.py`.
 - For future continuous archive closure and task-scoped firstmate merge gates, follow `agent-instructions.md`; the campaign worker never merges its own PR.
 - When changing the evaluator transaction or HEPP build helpers, run `orchestration-files/tests/test_evaluator_restoration.py`; it protects restored source and binary agreement.
+- For owned-static v4 production, candidate identity, calibration, records, and exact protocol isolation, follow `orchestration-files/acts-v4-static/README.md`; keep its consumers separate from v3.

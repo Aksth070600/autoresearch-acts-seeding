@@ -25,7 +25,7 @@ HEPP_APPTAINER ?= /cvmfs/atlas.cern.ch/repo/containers/sw/apptainer/x86_64-el9/c
 HEPP_CONTAINER_IMAGE ?= /cvmfs/atlas.cern.ch/repo/containers/images/singularity/x86_64-almalinux9.img
 HEPP_CONTAINER_BINDS ?= -B /cvmfs -B /storage -B /home/aksth
 
-.PHONY: help test setupActs setup build export-hepp-files hepp02-tmux-create hepp02-tmux-attach hepp02-tmux hepp02-tmux-status hepp02-setupActs hepp02-build hepp02-setup hepp02-setup-and-build hepp02-full-chain-itk evaluate report campaign-status campaign-check-stop campaign-consume-stop campaign-finalize record select-evaluation evaluate-selected
+.PHONY: help test setupActs setup build export-hepp-files hepp02-tmux-create hepp02-tmux-attach hepp02-tmux hepp02-tmux-status hepp02-setupActs hepp02-build hepp02-setup hepp02-setup-and-build hepp02-full-chain-itk evaluate report static-v4-report campaign-status campaign-check-stop campaign-consume-stop campaign-finalize record select-evaluation evaluate-selected
 
 help:
 	@printf '%s\n' \
@@ -114,6 +114,13 @@ report:
 		--x-metric '$(REPORT_X_METRIC)' \
 		--y-metric '$(REPORT_Y_METRIC)' \
 		--output build/site
+
+static-v4-report:
+	@if [ -z "$(CAMPAIGN)" ] || [ -z "$(CALIBRATION)" ]; then echo 'usage: make static-v4-report CAMPAIGN=path CALIBRATION=path [SUMMARY=path]' >&2; exit 2; fi
+	python3 orchestration-files/static_v4_report.py \
+		--campaign '$(CAMPAIGN)' --calibration '$(CALIBRATION)' \
+		$(if $(SUMMARY),--summary '$(SUMMARY)',) \
+		--output build/site/static-v4/index.html
 
 campaign-status:
 	/usr/bin/python3 orchestration-files/campaign_status.py

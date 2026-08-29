@@ -19,6 +19,9 @@ MANIFEST_SCHEMA_ID = "acts-owned-seeding-dataset-v1"
 MANIFEST_SCHEMA_VERSION = 1
 CANONICAL_STREAM_ID = "acts-owned-seeding-canonical-v1"
 PROVISIONAL_PROTOCOL_PREFIX = "acts-seeding-v4-owned-static-test"
+CANONICAL_PROTOCOL_ID = "acts-seeding-v4-owned-static"
+CANONICAL_PROJECT_GENESIS_COMMIT = "5ed3b47329ceda4edaab48b1efc3c5635f361a30"
+CANONICAL_DATASET_ID_PLACEHOLDER = f"{CANONICAL_PROTOCOL_ID}-{'0' * 64}"
 ACTS_TAG = "v46.5.0"
 ACTS_COMMIT = "34edd48852f766e1b9d94d3dc996e27476339f1b"
 EVENT_SECTIONS = (
@@ -38,6 +41,7 @@ UNRESOLVED_CAPTAIN_DECISIONS = (
     "publication-actor",
 )
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
+_GIT_SHA = re.compile(r"^[0-9a-f]{40}$")
 _ID = re.compile(r"^[a-z0-9][a-z0-9._-]{0,126}[a-z0-9]$")
 
 
@@ -70,6 +74,21 @@ def sha256_file(path: Path, *, chunk_size: int = 4 * 1024 * 1024) -> str:
         while chunk := stream.read(chunk_size):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def canonical_manifest_digest(manifest: Mapping[str, Any]) -> str:
+    """Hash the complete canonical manifest with its self-referential ID normalized."""
+    normalized = json.loads(canonical_json_bytes(manifest))
+    try:
+        normalized["dataset"]["id"] = CANONICAL_DATASET_ID_PLACEHOLDER
+    except (KeyError, TypeError) as error:
+        raise ManifestError("canonical manifest lacks dataset identity") from error
+    return sha256_bytes(canonical_json_bytes(normalized))
+
+
+def canonical_dataset_id(manifest: Mapping[str, Any]) -> str:
+    """Derive the immutable dataset ID from the normalized complete manifest."""
+    return f"{CANONICAL_PROTOCOL_ID}-{canonical_manifest_digest(manifest)}"
 
 
 def _object(value: Any, path: str, keys: set[str]) -> Mapping[str, Any]:
@@ -105,6 +124,13 @@ def _sha(value: Any, path: str) -> str:
     text = _string(value, path)
     if _SHA256.fullmatch(text) is None:
         raise ManifestError(f"{path} must be a lowercase SHA-256")
+    return text
+
+
+def _git_sha(value: Any, path: str) -> str:
+    text = _string(value, path)
+    if _GIT_SHA.fullmatch(text) is None:
+        raise ManifestError(f"{path} must be a lowercase full Git SHA")
     return text
 
 
@@ -157,25 +183,36 @@ def validate_manifest(
         "$.qualification",
         {"only", "canonical", "unresolved_captain_decisions"},
     )
-    if _strict_bool(qualification["only"], "$.qualification.only") is not True:
-        raise ManifestError("qualification.only must be true")
-    if _strict_bool(qualification["canonical"], "$.qualification.canonical") is not False:
-        raise ManifestError("qualification.canonical must be false")
+    qualification_only = _strict_bool(
+        qualification["only"], "$.qualification.only"
+    )
+    canonical = _strict_bool(
+        qualification["canonical"], "$.qualification.canonical"
+    )
     decisions = _list(
         qualification["unresolved_captain_decisions"],
         "$.qualification.unresolved_captain_decisions",
     )
-    if decisions != list(UNRESOLVED_CAPTAIN_DECISIONS):
-        raise ManifestError("captain decisions were omitted, reordered, or converted to policy")
+    if qualification_only:
+        if canonical or decisions != list(UNRESOLVED_CAPTAIN_DECISIONS):
+            raise ManifestError(
+                "qualification policy was omitted, reordered, or converted to production"
+            )
+    elif not canonical or decisions:
+        raise ManifestError("canonical production must resolve every captain decision")
 
     protocol = _object(root["protocol"], "$.protocol", {"id", "prefix"})
     protocol_id = _identity(protocol["id"], "$.protocol.id")
-    if protocol["prefix"] != PROVISIONAL_PROTOCOL_PREFIX:
-        raise ManifestError("$.protocol.prefix is not the provisional static-v4 prefix")
-    if protocol_id != PROVISIONAL_PROTOCOL_PREFIX and not protocol_id.startswith(
-        PROVISIONAL_PROTOCOL_PREFIX + "-"
-    ):
-        raise ManifestError("$.protocol.id is outside the static-v4 qualification namespace")
+    if canonical:
+        if protocol != {"id": CANONICAL_PROTOCOL_ID, "prefix": CANONICAL_PROTOCOL_ID}:
+            raise ManifestError("canonical protocol identity mismatch")
+    else:
+        if protocol["prefix"] != PROVISIONAL_PROTOCOL_PREFIX:
+            raise ManifestError("$.protocol.prefix is not the provisional static-v4 prefix")
+        if protocol_id != PROVISIONAL_PROTOCOL_PREFIX and not protocol_id.startswith(
+            PROVISIONAL_PROTOCOL_PREFIX + "-"
+        ):
+            raise ManifestError("$.protocol.id is outside the static-v4 qualification namespace")
     if expected_protocol_id is not None and protocol_id != expected_protocol_id:
         raise ManifestError("protocol identity mismatch")
 
@@ -272,11 +309,15 @@ def validate_manifest(
         raise ManifestError("ACTS identity mismatch")
     genesis = production["project_genesis_commit"]
     if genesis is not None:
-        _sha(genesis, "$.production.project_genesis_commit")
-    if _strict_bool(
+        _git_sha(genesis, "$.production.project_genesis_commit")
+    genesis_is_canonical = _strict_bool(
         production["project_genesis_is_canonical"],
         "$.production.project_genesis_is_canonical",
-    ):
+    )
+    if canonical:
+        if genesis != CANONICAL_PROJECT_GENESIS_COMMIT or not genesis_is_canonical:
+            raise ManifestError("canonical project Genesis identity mismatch")
+    elif genesis_is_canonical:
         raise ManifestError("qualification cannot select a canonical project Genesis")
     if production["seed"] != 42 or production["pileup"] != 200:
         raise ManifestError("production random contract mismatch")
@@ -341,12 +382,20 @@ def validate_manifest(
     if contracts["performance_output"] != "exact-json-collector-stats":
         raise ManifestError("performance output contract mismatch")
     if _strict_bool(contracts["root_plots"], "$.contracts.root_plots"):
-        raise ManifestError("ROOT plots must be off for provisional qualification")
+        raise ManifestError("ROOT plots must be off for owned-static runs")
     matcher = _object(contracts["matcher"], "$.contracts.matcher", {"matching_ratio", "double_matching"})
     if matcher["matching_ratio"] != 1.0 or _strict_bool(
         matcher["double_matching"], "$.contracts.matcher.double_matching"
     ):
         raise ManifestError("matcher contract mismatch")
+
+    if canonical:
+        if event_count != 50:
+            raise ManifestError("canonical dataset must contain exactly 50 events")
+        if compression != {"algorithm": "lz4", "level": 4}:
+            raise ManifestError("canonical dataset must use LZ4 level 4")
+        if dataset_id != canonical_dataset_id(root):
+            raise ManifestError("canonical dataset ID is not its complete manifest digest")
 
     # Return a plain object so callers cannot rely on a custom mapping type.
     return dict(root)

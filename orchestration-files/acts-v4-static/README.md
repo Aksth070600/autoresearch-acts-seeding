@@ -1,10 +1,17 @@
 # Owned static ACTS Seeding v4 qualification
 
-This module implements the qualification-only owned static input path for ACTS
-v46.5.0 at commit `34edd48852f766e1b9d94d3dc996e27476339f1b`.
-It does not define a production protocol, canonical dataset, Genesis pool,
-record type, storage location, publication actor, or compression choice.
-Generated data and results must stay outside the repository.
+This module implements the qualified owned static input path for ACTS v46.5.0
+at commit `34edd48852f766e1b9d94d3dc996e27476339f1b`. The original provisional
+qualification profile remains strict. The production profile is the exact
+`acts-seeding-v4-owned-static` Development pilot at project Genesis
+`5ed3b47329ceda4edaab48b1efc3c5635f361a30`.
+
+Production uses LZ4 level 4 and a self-field-normalized complete manifest
+digest in the immutable dataset ID. `promote_dataset.py` accepts only complete
+one-event and 50-event equality, negative-input, and latency evidence. It
+atomically publishes user-owned read-only bytes under
+`/storage/thomaaks/acts-v4-owned-static/`. Generated data and results stay
+outside the repository until their small JSON records are archived.
 
 ## Boundary and data contract
 
@@ -77,6 +84,17 @@ Run repository checks with:
 ```sh
 make test
 ```
+
+## Production pilot helpers
+
+`candidate_identity.py`, `invalidate_candidate.py`, and the
+`acts-v4-static-pilot-*.sh` helpers implement proposal-bound source/build/DSO
+identity, complete Ninja dependency invalidation, immutable reflink template
+reset, five-run Genesis calibration, one-process candidate records, and final
+Genesis restoration. `pilot_record.py` owns the common empirical noise envelope
+and exact timing/efficiency classifications. `static_v4_report.py` is a separate
+exact-protocol and exact-dataset consumer, so the existing v3 consumers remain
+unchanged.
 
 ## Non-evidence qualification result
 
