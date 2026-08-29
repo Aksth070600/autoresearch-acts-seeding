@@ -140,8 +140,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
     const auto& sp = spacePoints[i];
 
     // check if the space point passes the selection
-    if (m_spacePointSelector.connected() &&
-        !m_spacePointSelector(sp)) [[unlikely]] {
+    if (m_spacePointSelector.connected() && !m_spacePointSelector(sp)) {
       continue;
     }
 
