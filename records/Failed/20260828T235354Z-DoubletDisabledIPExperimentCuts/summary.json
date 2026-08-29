@@ -1,0 +1,134 @@
+{
+  "acts_backup": "/storage/thomaaks/acts-v46.5.0-autoresearch-backup",
+  "acts_source": "/storage/thomaaks/acts-v46.5.0",
+  "baseline": false,
+  "build_parallel_jobs": 8,
+  "candidate_identity": {
+    "classification": "major",
+    "derives_from": null,
+    "mechanism_family": "doublet-experiment-cut-pruning",
+    "mechanism_key": "doublet-disabled-ip-experiment-cuts"
+  },
+  "candidate_name": "DoubletDisabledIPExperimentCuts",
+  "category": "Failed",
+  "combination_provenance": null,
+  "error": "candidate failed stage: one_event_seeding_smoke",
+  "execution_target": "HEPP02",
+  "finished_at": "2026-08-28T23:55:24.514002+00:00",
+  "implementation_commit": "c1eb3ec94b03bfd45eacf3933a7137fc4d035d94",
+  "mode": "development",
+  "optimization_files": [
+    "Core/include/Acts/EventData/SpacePointColumnProxy2.hpp",
+    "Core/include/Acts/EventData/SpacePointColumns.hpp",
+    "Core/include/Acts/EventData/SpacePointContainer2.hpp",
+    "Core/include/Acts/EventData/SpacePointContainer2.ipp",
+    "Core/include/Acts/EventData/SpacePointProxy2.hpp",
+    "Core/include/Acts/Seeding/BinnedGroup.hpp",
+    "Core/include/Acts/Seeding/BinnedGroup.ipp",
+    "Core/include/Acts/Seeding/BinnedGroupIterator.hpp",
+    "Core/include/Acts/Seeding/BinnedGroupIterator.ipp",
+    "Core/include/Acts/Seeding2/BroadTripletSeedFilter.hpp",
+    "Core/include/Acts/Seeding2/CylindricalSpacePointGrid2.hpp",
+    "Core/include/Acts/Seeding2/DoubletSeedFinder.hpp",
+    "Core/include/Acts/Seeding2/ITripletSeedFilter.hpp",
+    "Core/include/Acts/Seeding2/TripletSeedFinder.hpp",
+    "Core/include/Acts/Seeding2/TripletSeeder.hpp",
+    "Core/include/Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp",
+    "Core/include/Acts/Utilities/GridBinFinder.hpp",
+    "Core/include/Acts/Utilities/GridBinFinder.ipp",
+    "Core/src/EventData/SpacePointContainer2.cpp",
+    "Core/src/Seeding2/BroadTripletSeedFilter.cpp",
+    "Core/src/Seeding2/CylindricalSpacePointGrid2.cpp",
+    "Core/src/Seeding2/DoubletSeedFinder.cpp",
+    "Core/src/Seeding2/TripletSeedFinder.cpp",
+    "Core/src/Seeding2/TripletSeeder.cpp",
+    "Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp",
+    "Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/GridTripletSeedingAlgorithm.hpp",
+    "Examples/Algorithms/TrackFinding/src/GridTripletSeedingAlgorithm.cpp"
+  ],
+  "pileup": 200,
+  "proposal_binding": {
+    "proposal": {
+      "candidate": "DoubletDisabledIPExperimentCuts",
+      "changed_symbols": [
+        "Acts::DoubletSeedFinder::Impl::createDoubletsImpl"
+      ],
+      "combination_provenance": null,
+      "expected_hot_path": "Acts::DoubletSeedFinder Impl::createDoubletsImpl non-interaction-point branch before compatible-doublet storage.",
+      "falsifier": "The prediction fails if median seeding time does not decrease from fresh Genesis or timed seeding particle efficiency changes.",
+      "hypothesis": "Applying the connected ITk experiment cut when interactionPointCut is disabled will reject incompatible bottom doublets before storage and triplet formation, reducing median seeding time while preserving seeding efficiency.",
+      "implementation_commit": "c1eb3ec94b03bfd45eacf3933a7137fc4d035d94",
+      "intended_files": [
+        "optimization-files/Core/src/Seeding2/DoubletSeedFinder.cpp"
+      ],
+      "novelty_reason": "This activates the already-connected detector experiment cut in the non-interaction-point branch; the earlier interaction-point candidate enabled a separate curvature approximation and therefore did not isolate this pruning mechanism.",
+      "predicted_directions": {
+        "timed_seeding_particle_efficiency": "unchanged",
+        "timed_seeding_time_per_event_ms": "decrease"
+      },
+      "schema_version": "1.0.0",
+      "source_references": [
+        {
+          "acts_mapping": "Upstream Acts::DoubletSeedFinder::Impl::createDoubletsImpl maps directly to optimization-files/Core/src/Seeding2/DoubletSeedFinder.cpp; GridTripletSeedingAlgorithm connects itkFastTrackingCuts to this specialization.",
+          "directly_inspected": true,
+          "inspected_scope": "Commit 941a3c7 DoubletSeedFinder.cpp patch and createDoubletsImpl branches around cotTheta calculation, experimentCuts dispatch, propagated error calculation, and compatibleDoublets.emplace_back.",
+          "reference": "https://github.com/acts-project/acts/blob/941a3c7cfe3bc413647d351a83b4b025d9213903/Core/src/Seeding/DoubletSeedFinder.cpp",
+          "relevance": "The permanent upstream implementation fixes the missing experiment-cut call in the interactionPointCut-disabled branch before doublet storage.",
+          "source_type": "inspected source code"
+        },
+        {
+          "directly_inspected": true,
+          "reference": "188fe967a2f2968ffe92845cfa608fa85ab6d13c",
+          "relevance": "The directly inspected prior implementation enabled interaction-point pruning, which also caused the experiment cut to execute and motivates isolating the missing dispatch.",
+          "source_type": "prior record/commit"
+        }
+      ]
+    },
+    "proposal_hash": "b566dc6ebd11576ff2c0555275c1f87726775e23edf52bf64f38da0dd7b84fb3",
+    "schema_version": "1.0.0"
+  },
+  "protocol": {
+    "acts_version": "v46.5.0",
+    "dataset": "ttbar_pu200",
+    "execution_stage": "seeding",
+    "execution_target": "HEPP02",
+    "expected_unmasked_fpe_handling": "accept only after every requested event completed",
+    "id": "acts-seeding-v3",
+    "pileup": 200,
+    "rss_events": 10,
+    "rss_instrumentation": "GNU time -v",
+    "rss_metrics_mode": "time",
+    "seed": 42,
+    "smoke_events": 1,
+    "smoke_instrumentation": "none",
+    "threads": 1,
+    "timed_aggregation": "median",
+    "timed_repetitions": 3,
+    "timing_events": 10,
+    "timing_instrumentation": "none"
+  },
+  "protocol_id": "acts-seeding-v3",
+  "raw_logs_retained": true,
+  "rss_evidence": null,
+  "seed": 42,
+  "stages": [
+    {
+      "comparison": "smoke",
+      "events": 1,
+      "exit_code": 139,
+      "metrics_mode": "none",
+      "name": "one_event_seeding_smoke",
+      "protocol_id": "acts-seeding-v3",
+      "raw_exit_code": 139,
+      "stage": "seeding",
+      "status": "failed"
+    }
+  ],
+  "started_at": "2026-08-28T23:53:54.241882+00:00",
+  "status": "failed",
+  "threads": 1,
+  "timed_aggregation": "median",
+  "timed_comparison": null,
+  "timed_repetitions": 3,
+  "workload": "ttbar_pu200"
+}

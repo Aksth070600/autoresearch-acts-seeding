@@ -1,0 +1,134 @@
+{
+  "acts_backup": "/storage/thomaaks/acts-v46.5.0-autoresearch-backup",
+  "acts_source": "/storage/thomaaks/acts-v46.5.0",
+  "baseline": false,
+  "build_parallel_jobs": 8,
+  "candidate_identity": {
+    "classification": "major",
+    "derives_from": null,
+    "mechanism_family": "grid-neighbor-dataflow-pruning",
+    "mechanism_key": "grid-empty-neighbor-range-prune"
+  },
+  "candidate_name": "GridEmptyNeighborRangePrune",
+  "category": "Failed",
+  "combination_provenance": null,
+  "error": "candidate failed stage: one_event_seeding_smoke",
+  "execution_target": "HEPP02",
+  "finished_at": "2026-08-29T00:01:01.383634+00:00",
+  "implementation_commit": "8d38f98aa430aa2ac48360cb51db5088b25d5182",
+  "mode": "development",
+  "optimization_files": [
+    "Core/include/Acts/EventData/SpacePointColumnProxy2.hpp",
+    "Core/include/Acts/EventData/SpacePointColumns.hpp",
+    "Core/include/Acts/EventData/SpacePointContainer2.hpp",
+    "Core/include/Acts/EventData/SpacePointContainer2.ipp",
+    "Core/include/Acts/EventData/SpacePointProxy2.hpp",
+    "Core/include/Acts/Seeding/BinnedGroup.hpp",
+    "Core/include/Acts/Seeding/BinnedGroup.ipp",
+    "Core/include/Acts/Seeding/BinnedGroupIterator.hpp",
+    "Core/include/Acts/Seeding/BinnedGroupIterator.ipp",
+    "Core/include/Acts/Seeding2/BroadTripletSeedFilter.hpp",
+    "Core/include/Acts/Seeding2/CylindricalSpacePointGrid2.hpp",
+    "Core/include/Acts/Seeding2/DoubletSeedFinder.hpp",
+    "Core/include/Acts/Seeding2/ITripletSeedFilter.hpp",
+    "Core/include/Acts/Seeding2/TripletSeedFinder.hpp",
+    "Core/include/Acts/Seeding2/TripletSeeder.hpp",
+    "Core/include/Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp",
+    "Core/include/Acts/Utilities/GridBinFinder.hpp",
+    "Core/include/Acts/Utilities/GridBinFinder.ipp",
+    "Core/src/EventData/SpacePointContainer2.cpp",
+    "Core/src/Seeding2/BroadTripletSeedFilter.cpp",
+    "Core/src/Seeding2/CylindricalSpacePointGrid2.cpp",
+    "Core/src/Seeding2/DoubletSeedFinder.cpp",
+    "Core/src/Seeding2/TripletSeedFinder.cpp",
+    "Core/src/Seeding2/TripletSeeder.cpp",
+    "Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp",
+    "Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/GridTripletSeedingAlgorithm.hpp",
+    "Examples/Algorithms/TrackFinding/src/GridTripletSeedingAlgorithm.cpp"
+  ],
+  "pileup": 200,
+  "proposal_binding": {
+    "proposal": {
+      "candidate": "GridEmptyNeighborRangePrune",
+      "changed_symbols": [
+        "ActsExamples::GridTripletSeedingAlgorithm::execute"
+      ],
+      "combination_provenance": null,
+      "expected_hot_path": "ActsExamples::GridTripletSeedingAlgorithm::execute binned-neighborhood range construction before Acts::TripletSeeder dispatch.",
+      "falsifier": "The prediction fails if median seeding time does not decrease from fresh Genesis or timed seeding particle efficiency changes.",
+      "hypothesis": "Pruning empty bottom and top neighbor ranges while constructing the binned-group inputs will preserve the successful historical empty-group mechanism while also avoiding empty range storage and finder dispatch, reducing median seeding time without changing selected seeds.",
+      "implementation_commit": "8d38f98aa430aa2ac48360cb51db5088b25d5182",
+      "intended_files": [
+        "optimization-files/Examples/Algorithms/TrackFinding/src/GridTripletSeedingAlgorithm.cpp"
+      ],
+      "novelty_reason": "The historical source checked empty groups inside TripletSeeder; this adaptation moves the invariant to the producer seam so empty ranges are neither stored nor dispatched, without changing nonempty group order or seeding cuts.",
+      "predicted_directions": {
+        "timed_seeding_particle_efficiency": "unchanged",
+        "timed_seeding_time_per_event_ms": "decrease"
+      },
+      "schema_version": "1.0.0",
+      "source_references": [
+        {
+          "acts_mapping": "The prior TripletSeeder group loops consume the bottomSpRanges and topSpRanges built by ActsExamples::GridTripletSeedingAlgorithm::execute, where this adaptation removes empty producer entries.",
+          "directly_inspected": true,
+          "inspected_scope": "Full optimization-files/Core/src/Seeding2/TripletSeeder.cpp implementation diff for SeederEmptyGroupPrune, including both top and bottom group loops.",
+          "reference": "57b3a2571813146fd1898c74e2662df759d54cb0",
+          "relevance": "The directly inspected successful v2 implementation showed that skipping empty top and bottom groups completed all stages and reduced seeding time; this candidate preserves that mechanism at an earlier data-flow seam.",
+          "source_type": "prior record/commit"
+        },
+        {
+          "directly_inspected": true,
+          "reference": "records/Development/20260828T233358598694Z-Genesis/summary.json",
+          "relevance": "The fresh v3 Genesis provides the current controlled objective baseline for this low-risk traversal adaptation.",
+          "source_type": "Genesis"
+        }
+      ]
+    },
+    "proposal_hash": "24261f389b1a70c24ff54319cbffdfe7dd849edd18fa72937094fac73ad44c79",
+    "schema_version": "1.0.0"
+  },
+  "protocol": {
+    "acts_version": "v46.5.0",
+    "dataset": "ttbar_pu200",
+    "execution_stage": "seeding",
+    "execution_target": "HEPP02",
+    "expected_unmasked_fpe_handling": "accept only after every requested event completed",
+    "id": "acts-seeding-v3",
+    "pileup": 200,
+    "rss_events": 10,
+    "rss_instrumentation": "GNU time -v",
+    "rss_metrics_mode": "time",
+    "seed": 42,
+    "smoke_events": 1,
+    "smoke_instrumentation": "none",
+    "threads": 1,
+    "timed_aggregation": "median",
+    "timed_repetitions": 3,
+    "timing_events": 10,
+    "timing_instrumentation": "none"
+  },
+  "protocol_id": "acts-seeding-v3",
+  "raw_logs_retained": true,
+  "rss_evidence": null,
+  "seed": 42,
+  "stages": [
+    {
+      "comparison": "smoke",
+      "events": 1,
+      "exit_code": 139,
+      "metrics_mode": "none",
+      "name": "one_event_seeding_smoke",
+      "protocol_id": "acts-seeding-v3",
+      "raw_exit_code": 139,
+      "stage": "seeding",
+      "status": "failed"
+    }
+  ],
+  "started_at": "2026-08-28T23:59:32.045875+00:00",
+  "status": "failed",
+  "threads": 1,
+  "timed_aggregation": "median",
+  "timed_comparison": null,
+  "timed_repetitions": 3,
+  "workload": "ttbar_pu200"
+}

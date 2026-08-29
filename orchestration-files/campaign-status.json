@@ -4,498 +4,743 @@
     {
       "candidate": "Genesis",
       "classification": "baseline",
-      "duration_seconds": 800.15,
-      "finished_at": "2026-08-28T11:04:42.448899Z",
-      "implementation_commit": "dd252d3164414f88396fa56f8b1bd012e694bfa6",
+      "duration_seconds": 486.566,
+      "finished_at": "2026-08-28T23:42:05.164674Z",
+      "implementation_commit": "e17a20d914d82fce7aa6309db75786cfdb81dbc0",
       "links": {
         "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T105122298587Z-Genesis/summary.json"
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug29/records/Development/20260828T233358598694Z-Genesis/summary.json"
       },
       "mechanism_family": "fresh Genesis baseline",
       "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260828T105122298587Z-Genesis/summary.json",
-      "started_at": "2026-08-28T10:51:22.298587Z",
+      "record": "records/Development/20260828T233358598694Z-Genesis/summary.json",
+      "started_at": "2026-08-28T23:33:58.598694Z",
       "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 298.25
+      "timed_seeding_particle_efficiency": 0.983101,
+      "timed_seeding_time_per_event_ms": 289.9
     },
     {
-      "candidate": "CorePackedVarianceLayout",
-      "classification": "structural",
-      "duration_seconds": 795.443,
-      "finished_at": "2026-08-28T11:23:08.912395Z",
-      "implementation_commit": "f2b67d563534d56c59d4a39be432a5c36a917b51",
+      "candidate": "FilterDisabledConfirmationQualityMapElision",
+      "changed_symbols": [
+        "Acts::BroadTripletSeedFilter::filterTripletsMiddleFixed"
+      ],
+      "classification": "major",
+      "combination_provenance": null,
+      "derives_from": null,
+      "duration_seconds": 89.898,
+      "files_changed": [
+        "optimization-files/Core/src/Seeding2/BroadTripletSeedFilter.cpp#L372-L377"
+      ],
+      "finished_at": "2026-08-28T23:50:54.166488Z",
+      "hot_path_rationale": "Acts::BroadTripletSeedFilter::filterTripletsMiddleFixed emitted-seed state updates with seedConfirmation disabled.",
+      "implementation_commit": "0bf182617d283e73cc711a1d9fbe98a3a780b991",
+      "lesson": "The one-event smoke segfaulted after a successful build, so the quality-map updates cannot be pruned safely under the assumed disabled-confirmation invariant.",
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/f2b67d563534d56c59d4a39be432a5c36a917b51",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T110953Z-CorePackedVarianceLayout/summary.json"
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/0bf182617d283e73cc711a1d9fbe98a3a780b991",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug29/records/Failed/20260828T234924Z-FilterDisabledConfirmationQualityMapElision/summary.json"
       },
-      "mechanism_family": "core-packed-variance-layout",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260828T110953Z-CorePackedVarianceLayout/summary.json",
-      "started_at": "2026-08-28T11:09:53.469158Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 295.35
-    },
-    {
-      "candidate": "CandidateCachedMinimumRetention",
-      "classification": "structural",
-      "duration_seconds": 814.959,
-      "finished_at": "2026-08-28T11:38:41.059043Z",
-      "implementation_commit": "8e874f98ab80353de2dd3b153f2f095afb31a7b6",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/8e874f98ab80353de2dd3b153f2f095afb31a7b6",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T112506Z-CandidateCachedMinimumRetention/summary.json"
+      "mechanism_family": "filter-confirmation-state-pruning",
+      "mechanism_key": "filter-disabled-confirmation-quality-map-elision",
+      "novelty_rationale": "Prior map work reduced duplicate lookup cost, while this candidate removes the entire inactive map data flow under the existing configuration invariant and does not alter candidate ordering or selection.",
+      "outcome": "crash",
+      "prediction_assessment": "inconclusive",
+      "prediction_assessment_rationale": "The smoke stage crashed before any timed or seeding-efficiency evidence was produced.",
+      "proposal": {
+        "candidate": "FilterDisabledConfirmationQualityMapElision",
+        "changed_symbols": [
+          "Acts::BroadTripletSeedFilter::filterTripletsMiddleFixed"
+        ],
+        "combination_provenance": null,
+        "expected_hot_path": "Acts::BroadTripletSeedFilter::filterTripletsMiddleFixed emitted-seed state updates with seedConfirmation disabled.",
+        "falsifier": "The prediction fails if median seeding time does not decrease from fresh Genesis or timed seeding particle efficiency changes.",
+        "hypothesis": "Moving best-seed-quality map updates inside the seed-confirmation branch will remove three unordered-map operations from every emitted seed in the Development configuration and reduce median seeding time without changing selected seeds.",
+        "implementation_commit": "0bf182617d283e73cc711a1d9fbe98a3a780b991",
+        "intended_files": [
+          "optimization-files/Core/src/Seeding2/BroadTripletSeedFilter.cpp"
+        ],
+        "novelty_reason": "Prior map work reduced duplicate lookup cost, while this candidate removes the entire inactive map data flow under the existing configuration invariant and does not alter candidate ordering or selection.",
+        "predicted_directions": {
+          "timed_seeding_particle_efficiency": "unchanged",
+          "timed_seeding_time_per_event_ms": "decrease"
+        },
+        "schema_version": "1.0.0",
+        "source_references": [
+          {
+            "acts_mapping": "Upstream Acts::BroadTripletSeedFilter::filterTripletsMiddleFixed maps directly to optimization-files/Core/src/Seeding2/BroadTripletSeedFilter.cpp; the Development example leaves Config::seedConfirmation false.",
+            "directly_inspected": true,
+            "inspected_scope": "BroadTripletSeedFilter getBestSeedQuality/setBestSeedQuality helpers and filterTripletsMiddleFixed seed-confirmation and emitted-seed quality-state flow.",
+            "reference": "https://github.com/acts-project/acts/blob/941a3c7cfe3bc413647d351a83b4b025d9213903/Core/src/Seeding/BroadTripletSeedFilter.cpp",
+            "relevance": "The permanent upstream implementation shows best-seed-quality state helpers and the filter output path that maintains this state even though reads are guarded by seed confirmation.",
+            "source_type": "inspected source code"
+          },
+          {
+            "directly_inspected": true,
+            "reference": "0155cb01d2f69992290d8870acc7ab23c7af6866",
+            "relevance": "The directly inspected prior implementation showed map lookup cost was measurable, but optimized each update rather than pruning disabled confirmation state.",
+            "source_type": "prior record/commit"
+          }
+        ]
       },
-      "mechanism_family": "candidate-cached-minimum-retention",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260828T112506Z-CandidateCachedMinimumRetention/summary.json",
-      "started_at": "2026-08-28T11:25:06.100047Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 295.54
-    },
-    {
-      "candidate": "TripletKinematicsPairLayout",
-      "classification": "structural",
-      "duration_seconds": 814.04,
-      "finished_at": "2026-08-28T11:54:04.760346Z",
-      "implementation_commit": "c0fdd671861e00af7c71c710e65787b677b6db38",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/c0fdd671861e00af7c71c710e65787b677b6db38",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T114030Z-TripletKinematicsPairLayout/summary.json"
-      },
-      "mechanism_family": "triplet-kinematics-pair-layout",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260828T114030Z-TripletKinematicsPairLayout/summary.json",
-      "started_at": "2026-08-28T11:40:30.720321Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 294.61
-    },
-    {
-      "candidate": "GridBinAdaptiveRadixSort",
-      "classification": "structural",
-      "duration_seconds": 778.632,
-      "finished_at": "2026-08-28T12:08:46.679581Z",
-      "implementation_commit": "0256a37b6cd54a318e57c32935c1b157fc876843",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/0256a37b6cd54a318e57c32935c1b157fc876843",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T115548Z-GridBinAdaptiveRadixSort/summary.json"
-      },
-      "mechanism_family": "grid-bin-adaptive-radix-sort",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260828T115548Z-GridBinAdaptiveRadixSort/summary.json",
-      "started_at": "2026-08-28T11:55:48.047256Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 294.44
-    },
-    {
-      "candidate": "DoubletSlopeErrorPairLayout",
-      "classification": "structural",
-      "duration_seconds": 808.828,
-      "finished_at": "2026-08-28T12:23:53.051581Z",
-      "implementation_commit": "08250bbb8cef262cd3cc80bf98b8979976ae207f",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/08250bbb8cef262cd3cc80bf98b8979976ae207f",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T121024Z-DoubletSlopeErrorPairLayout/summary.json"
-      },
-      "mechanism_family": "doublet-slope-error-pair-layout",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260828T121024Z-DoubletSlopeErrorPairLayout/summary.json",
-      "started_at": "2026-08-28T12:10:24.223747Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 296.66
-    },
-    {
-      "candidate": "DoubletCotThetaIDeltaRMaterialization",
-      "classification": "structural",
-      "duration_seconds": 815.444,
-      "finished_at": "2026-08-28T12:40:00.543926Z",
-      "implementation_commit": "c1e8be71f49b443e2010da94461896a25fdeb00e",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/c1e8be71f49b443e2010da94461896a25fdeb00e",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T122625Z-DoubletCotThetaIDeltaRMaterialization/summary.json"
-      },
-      "mechanism_family": "doublet-cottheta-ideltar-materialization",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260828T122625Z-DoubletCotThetaIDeltaRMaterialization/summary.json",
-      "started_at": "2026-08-28T12:26:25.099454Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 302.74
-    },
-    {
-      "candidate": "FilterRadiusOrderedCompatibility",
-      "classification": "structural",
-      "duration_seconds": 802.31,
-      "finished_at": "2026-08-28T12:55:13.960458Z",
-      "implementation_commit": "835193fbeaf086710acc5833eb6c6aa987758fa6",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/835193fbeaf086710acc5833eb6c6aa987758fa6",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T124151Z-FilterRadiusOrderedCompatibility/summary.json"
-      },
-      "mechanism_family": "filter-radius-ordered-compatibility-selection",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260828T124151Z-FilterRadiusOrderedCompatibility/summary.json",
-      "started_at": "2026-08-28T12:41:51.650904Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 300.35
-    },
-    {
-      "candidate": "CorePackedXYZRLayout",
-      "classification": "structural",
-      "duration_seconds": 154.203,
-      "finished_at": "2026-08-28T13:00:17.504467Z",
-      "implementation_commit": "86b78fad06516e99372f8951349032ce0af8c52d",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/86b78fad06516e99372f8951349032ce0af8c52d",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Failed/20260828T125743Z-CorePackedXYZRLayout/summary.json"
-      },
-      "mechanism_family": "core-packed-xyzr-layout",
-      "outcome": "candidate failed stage: ten_event_seeding",
-      "record": "records/Failed/20260828T125743Z-CorePackedXYZRLayout/summary.json",
-      "started_at": "2026-08-28T12:57:43.301880Z",
+      "proposal_hash": "aab731c688af107579e55804abbd922c0eb5991e489fb05e66d977a3b098130c",
+      "record": "records/Failed/20260828T234924Z-FilterDisabledConfirmationQualityMapElision/summary.json",
+      "run_result": "candidate failed stage: one_event_seeding_smoke",
+      "started_at": "2026-08-28T23:49:24.268632Z",
       "state": "failed",
-      "timed_ambiguity_particle_efficiency": null,
+      "timed_seeding_particle_efficiency": null,
       "timed_seeding_time_per_event_ms": null
     },
     {
-      "candidate": "CorePackedXYZRLayout",
-      "classification": "structural",
-      "duration_seconds": 852.113,
-      "finished_at": "2026-08-28T13:15:55.812932Z",
-      "implementation_commit": "f35abcd80f64400c9df6ca78b6ea04937bb06f9b",
+      "candidate": "DoubletDisabledIPExperimentCuts",
+      "changed_symbols": [
+        "Acts::DoubletSeedFinder::Impl::createDoubletsImpl"
+      ],
+      "classification": "major",
+      "combination_provenance": null,
+      "derives_from": null,
+      "duration_seconds": 90.272,
+      "files_changed": [
+        "optimization-files/Core/src/Seeding2/DoubletSeedFinder.cpp#L185-L191"
+      ],
+      "finished_at": "2026-08-28T23:55:24.514002Z",
+      "hot_path_rationale": "Acts::DoubletSeedFinder Impl::createDoubletsImpl non-interaction-point branch before compatible-doublet storage.",
+      "implementation_commit": "c1eb3ec94b03bfd45eacf3933a7137fc4d035d94",
+      "lesson": "The one-event smoke segfaulted after a successful build, so the upstream experiment-cut dispatch is unsafe in the controlled v46.5.0 ITk path as applied.",
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/f35abcd80f64400c9df6ca78b6ea04937bb06f9b",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T130143Z-CorePackedXYZRLayout/summary.json"
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/c1eb3ec94b03bfd45eacf3933a7137fc4d035d94",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug29/records/Failed/20260828T235354Z-DoubletDisabledIPExperimentCuts/summary.json"
       },
-      "mechanism_family": "core-packed-xyzr-layout",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260828T130143Z-CorePackedXYZRLayout/summary.json",
-      "started_at": "2026-08-28T13:01:43.699901Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 297.15
+      "mechanism_family": "doublet-experiment-cut-pruning",
+      "mechanism_key": "doublet-disabled-ip-experiment-cuts",
+      "novelty_rationale": "This activates the already-connected detector experiment cut in the non-interaction-point branch; the earlier interaction-point candidate enabled a separate curvature approximation and therefore did not isolate this pruning mechanism.",
+      "outcome": "crash",
+      "prediction_assessment": "inconclusive",
+      "prediction_assessment_rationale": "The smoke stage crashed before any timed or seeding-efficiency evidence was produced.",
+      "proposal": {
+        "candidate": "DoubletDisabledIPExperimentCuts",
+        "changed_symbols": [
+          "Acts::DoubletSeedFinder::Impl::createDoubletsImpl"
+        ],
+        "combination_provenance": null,
+        "expected_hot_path": "Acts::DoubletSeedFinder Impl::createDoubletsImpl non-interaction-point branch before compatible-doublet storage.",
+        "falsifier": "The prediction fails if median seeding time does not decrease from fresh Genesis or timed seeding particle efficiency changes.",
+        "hypothesis": "Applying the connected ITk experiment cut when interactionPointCut is disabled will reject incompatible bottom doublets before storage and triplet formation, reducing median seeding time while preserving seeding efficiency.",
+        "implementation_commit": "c1eb3ec94b03bfd45eacf3933a7137fc4d035d94",
+        "intended_files": [
+          "optimization-files/Core/src/Seeding2/DoubletSeedFinder.cpp"
+        ],
+        "novelty_reason": "This activates the already-connected detector experiment cut in the non-interaction-point branch; the earlier interaction-point candidate enabled a separate curvature approximation and therefore did not isolate this pruning mechanism.",
+        "predicted_directions": {
+          "timed_seeding_particle_efficiency": "unchanged",
+          "timed_seeding_time_per_event_ms": "decrease"
+        },
+        "schema_version": "1.0.0",
+        "source_references": [
+          {
+            "acts_mapping": "Upstream Acts::DoubletSeedFinder::Impl::createDoubletsImpl maps directly to optimization-files/Core/src/Seeding2/DoubletSeedFinder.cpp; GridTripletSeedingAlgorithm connects itkFastTrackingCuts to this specialization.",
+            "directly_inspected": true,
+            "inspected_scope": "Commit 941a3c7 DoubletSeedFinder.cpp patch and createDoubletsImpl branches around cotTheta calculation, experimentCuts dispatch, propagated error calculation, and compatibleDoublets.emplace_back.",
+            "reference": "https://github.com/acts-project/acts/blob/941a3c7cfe3bc413647d351a83b4b025d9213903/Core/src/Seeding/DoubletSeedFinder.cpp",
+            "relevance": "The permanent upstream implementation fixes the missing experiment-cut call in the interactionPointCut-disabled branch before doublet storage.",
+            "source_type": "inspected source code"
+          },
+          {
+            "directly_inspected": true,
+            "reference": "188fe967a2f2968ffe92845cfa608fa85ab6d13c",
+            "relevance": "The directly inspected prior implementation enabled interaction-point pruning, which also caused the experiment cut to execute and motivates isolating the missing dispatch.",
+            "source_type": "prior record/commit"
+          }
+        ]
+      },
+      "proposal_hash": "b566dc6ebd11576ff2c0555275c1f87726775e23edf52bf64f38da0dd7b84fb3",
+      "record": "records/Failed/20260828T235354Z-DoubletDisabledIPExperimentCuts/summary.json",
+      "run_result": "candidate failed stage: one_event_seeding_smoke",
+      "started_at": "2026-08-28T23:53:54.241882Z",
+      "state": "failed",
+      "timed_seeding_particle_efficiency": null,
+      "timed_seeding_time_per_event_ms": null
     },
     {
-      "candidate": "DoubletLongitudinalBoundIntersection",
-      "classification": "structural",
-      "duration_seconds": 857.795,
-      "finished_at": "2026-08-28T13:32:19.989688Z",
-      "implementation_commit": "dcf4503a4902c8f1784a5bacf2d16df1890e7c7c",
+      "candidate": "GridEmptyNeighborRangePrune",
+      "changed_symbols": [
+        "ActsExamples::GridTripletSeedingAlgorithm::execute"
+      ],
+      "classification": "major",
+      "combination_provenance": null,
+      "derives_from": null,
+      "duration_seconds": 89.338,
+      "files_changed": [
+        "optimization-files/Examples/Algorithms/TrackFinding/src/GridTripletSeedingAlgorithm.cpp#L273-L277",
+        "optimization-files/Examples/Algorithms/TrackFinding/src/GridTripletSeedingAlgorithm.cpp#L283-L287"
+      ],
+      "finished_at": "2026-08-29T00:01:01.383634Z",
+      "hot_path_rationale": "ActsExamples::GridTripletSeedingAlgorithm::execute binned-neighborhood range construction before Acts::TripletSeeder dispatch.",
+      "implementation_commit": "8d38f98aa430aa2ac48360cb51db5088b25d5182",
+      "lesson": "The independently sourced empty-range adaptation segfaulted in the one-event smoke stage after a successful build; stop candidate generation pending diagnosis against untouched Genesis.",
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/dcf4503a4902c8f1784a5bacf2d16df1890e7c7c",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T131802Z-DoubletLongitudinalBoundIntersection/summary.json"
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/8d38f98aa430aa2ac48360cb51db5088b25d5182",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug29/records/Failed/20260828T235932Z-GridEmptyNeighborRangePrune/summary.json"
       },
-      "mechanism_family": "doublet-longitudinal-bound-intersection",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260828T131802Z-DoubletLongitudinalBoundIntersection/summary.json",
-      "started_at": "2026-08-28T13:18:02.194746Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 295.8
+      "mechanism_family": "grid-neighbor-dataflow-pruning",
+      "mechanism_key": "grid-empty-neighbor-range-prune",
+      "novelty_rationale": "The historical source checked empty groups inside TripletSeeder; this adaptation moves the invariant to the producer seam so empty ranges are neither stored nor dispatched, without changing nonempty group order or seeding cuts.",
+      "outcome": "crash",
+      "prediction_assessment": "inconclusive",
+      "prediction_assessment_rationale": "The smoke stage crashed before any timed or seeding-efficiency evidence was produced.",
+      "proposal": {
+        "candidate": "GridEmptyNeighborRangePrune",
+        "changed_symbols": [
+          "ActsExamples::GridTripletSeedingAlgorithm::execute"
+        ],
+        "combination_provenance": null,
+        "expected_hot_path": "ActsExamples::GridTripletSeedingAlgorithm::execute binned-neighborhood range construction before Acts::TripletSeeder dispatch.",
+        "falsifier": "The prediction fails if median seeding time does not decrease from fresh Genesis or timed seeding particle efficiency changes.",
+        "hypothesis": "Pruning empty bottom and top neighbor ranges while constructing the binned-group inputs will preserve the successful historical empty-group mechanism while also avoiding empty range storage and finder dispatch, reducing median seeding time without changing selected seeds.",
+        "implementation_commit": "8d38f98aa430aa2ac48360cb51db5088b25d5182",
+        "intended_files": [
+          "optimization-files/Examples/Algorithms/TrackFinding/src/GridTripletSeedingAlgorithm.cpp"
+        ],
+        "novelty_reason": "The historical source checked empty groups inside TripletSeeder; this adaptation moves the invariant to the producer seam so empty ranges are neither stored nor dispatched, without changing nonempty group order or seeding cuts.",
+        "predicted_directions": {
+          "timed_seeding_particle_efficiency": "unchanged",
+          "timed_seeding_time_per_event_ms": "decrease"
+        },
+        "schema_version": "1.0.0",
+        "source_references": [
+          {
+            "acts_mapping": "The prior TripletSeeder group loops consume the bottomSpRanges and topSpRanges built by ActsExamples::GridTripletSeedingAlgorithm::execute, where this adaptation removes empty producer entries.",
+            "directly_inspected": true,
+            "inspected_scope": "Full optimization-files/Core/src/Seeding2/TripletSeeder.cpp implementation diff for SeederEmptyGroupPrune, including both top and bottom group loops.",
+            "reference": "57b3a2571813146fd1898c74e2662df759d54cb0",
+            "relevance": "The directly inspected successful v2 implementation showed that skipping empty top and bottom groups completed all stages and reduced seeding time; this candidate preserves that mechanism at an earlier data-flow seam.",
+            "source_type": "prior record/commit"
+          },
+          {
+            "directly_inspected": true,
+            "reference": "records/Development/20260828T233358598694Z-Genesis/summary.json",
+            "relevance": "The fresh v3 Genesis provides the current controlled objective baseline for this low-risk traversal adaptation.",
+            "source_type": "Genesis"
+          }
+        ]
+      },
+      "proposal_hash": "24261f389b1a70c24ff54319cbffdfe7dd849edd18fa72937094fac73ad44c79",
+      "record": "records/Failed/20260828T235932Z-GridEmptyNeighborRangePrune/summary.json",
+      "run_result": "candidate failed stage: one_event_seeding_smoke",
+      "started_at": "2026-08-28T23:59:32.045875Z",
+      "state": "failed",
+      "timed_seeding_particle_efficiency": null,
+      "timed_seeding_time_per_event_ms": null
     },
     {
-      "candidate": "GridSortedBinRadiusRange",
-      "classification": "structural",
-      "duration_seconds": 793.547,
-      "finished_at": "2026-08-28T13:47:47.974449Z",
-      "implementation_commit": "0874be33c64f06a2f0abca2e641453ca04c3d2f1",
+      "candidate": "CandidateMiddleIndexHoist",
+      "changed_symbols": [
+        "Acts::CandidatesForMiddleSp2::StoredCandidate",
+        "Acts::CandidatesForMiddleSp2::clear",
+        "Acts::CandidatesForMiddleSp2::push",
+        "Acts::CandidatesForMiddleSp2::toSortedCandidates"
+      ],
+      "classification": "major",
+      "combination_provenance": null,
+      "derives_from": null,
+      "duration_seconds": 1025.586,
+      "files_changed": [
+        "optimization-files/Core/include/Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp#L14-L14",
+        "optimization-files/Core/include/Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp#L104-L115",
+        "optimization-files/Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp#L12-L12",
+        "optimization-files/Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp#L27-L27",
+        "optimization-files/Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp#L54-L64",
+        "optimization-files/Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp#L77-L77",
+        "optimization-files/Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp#L93-L106"
+      ],
+      "finished_at": "2026-08-29T01:20:02.778230Z",
+      "hot_path_rationale": "Acts::CandidatesForMiddleSp2 bounded candidate insertion, replacement, and sorted output for one fixed middle space point.",
+      "implementation_commit": "c5a0bf9b3056c0d23442187232e41c69a0c8e459",
+      "lesson": "Hoisting the invariant middle index preserved seeding efficiency but raised median seeding time by 5.65 ms/event; retain direct TripletCandidate2 records.",
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/0874be33c64f06a2f0abca2e641453ca04c3d2f1",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T133434Z-GridSortedBinRadiusRange/summary.json"
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/c5a0bf9b3056c0d23442187232e41c69a0c8e459",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug29/records/Development/20260829T010257Z-CandidateMiddleIndexHoist/summary.json"
       },
-      "mechanism_family": "grid-sorted-bin-radius-range",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260828T133434Z-GridSortedBinRadiusRange/summary.json",
-      "started_at": "2026-08-28T13:34:34.427635Z",
+      "mechanism_family": "candidate-record-dataflow",
+      "mechanism_key": "candidate-shared-middle-index-storage",
+      "novelty_rationale": "Earlier candidate-storage experiments changed heap algorithms, ownership topology, allocation strategy, or whole-record placement; none hoisted only the per-middle invariant index while preserving the existing bounded heaps and output record contract.",
+      "outcome": "discard",
+      "prediction_assessment": "mixed",
+      "prediction_assessment_rationale": "Timed seeding particle efficiency remained 0.983101 as predicted, but median seeding time increased to 295.55 ms/event from the 289.90 ms/event Genesis baseline.",
+      "proposal": {
+        "candidate": "CandidateMiddleIndexHoist",
+        "changed_symbols": [
+          "Acts::CandidatesForMiddleSp2::StoredCandidate",
+          "Acts::CandidatesForMiddleSp2::clear",
+          "Acts::CandidatesForMiddleSp2::push",
+          "Acts::CandidatesForMiddleSp2::toSortedCandidates"
+        ],
+        "combination_provenance": null,
+        "expected_hot_path": "Acts::CandidatesForMiddleSp2 bounded candidate insertion, replacement, and sorted output for one fixed middle space point.",
+        "falsifier": "The prediction fails if median seeding time does not decrease from fresh Genesis or timed seeding particle efficiency changes.",
+        "hypothesis": "Hoisting the middle-space-point index shared by every retained candidate into collector state will shrink each hot candidate record and reduce insertion, replacement, and output memory traffic, lowering median seeding time without changing the reconstructed triplets.",
+        "implementation_commit": "c5a0bf9b3056c0d23442187232e41c69a0c8e459",
+        "intended_files": [
+          "optimization-files/Core/include/Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp",
+          "optimization-files/Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp"
+        ],
+        "novelty_reason": "Earlier candidate-storage experiments changed heap algorithms, ownership topology, allocation strategy, or whole-record placement; none hoisted only the per-middle invariant index while preserving the existing bounded heaps and output record contract.",
+        "predicted_directions": {
+          "timed_seeding_particle_efficiency": "unchanged",
+          "timed_seeding_time_per_event_ms": "decrease"
+        },
+        "schema_version": "1.0.0",
+        "source_references": [
+          {
+            "acts_mapping": "The upstream CandidatesForMiddleSp2 header is byte-identical to the Genesis optimization file before this change and maps directly to the retained-candidate record layout used by BroadTripletSeedFilter.",
+            "directly_inspected": true,
+            "inspected_scope": "TripletCandidate2 fields plus CandidatesForMiddleSp2 storage, clear, push, and toSortedCandidates declarations at ACTS commit 34edd488.",
+            "reference": "https://github.com/acts-project/acts/blob/34edd48852f766e1b9d94d3dc996e27476339f1b/Core/include/Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp",
+            "relevance": "The permanent upstream header shows that TripletCandidate2 stores the middle index in every record while CandidatesForMiddleSp2 owns one collector across a fixed-middle transaction.",
+            "source_type": "inspected source code"
+          },
+          {
+            "acts_mapping": "The upstream implementation is byte-identical to the Genesis optimization file before this change; the candidate keeps its heap ordering and reconstructs the same public TripletCandidate2 output.",
+            "directly_inspected": true,
+            "inspected_scope": "CandidatesForMiddleSp2::clear, public and private push overloads, replacement path, and toSortedCandidates reconstruction at ACTS commit 34edd488.",
+            "reference": "https://github.com/acts-project/acts/blob/34edd48852f766e1b9d94d3dc996e27476339f1b/Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp",
+            "relevance": "The permanent upstream implementation shows that every accepted or replaced candidate copies spM and that clear ends the collector lifecycle after sorted output.",
+            "source_type": "inspected source code"
+          },
+          {
+            "directly_inspected": true,
+            "reference": "2467a5a4c230ef968b7ba5508f79cb2d43a0efd8",
+            "relevance": "The directly inspected full-record-heap experiment altered ownership and heap payload together; it motivates isolating only the invariant middle-index field without repeating that mechanism.",
+            "source_type": "prior record/commit"
+          }
+        ]
+      },
+      "proposal_hash": "11837029fdab49c8eb310254a7569b337149fe7a364fa45df07338daa4bfe005",
+      "record": "records/Development/20260829T010257Z-CandidateMiddleIndexHoist/summary.json",
+      "run_result": "Passed all controlled Development stages.",
+      "started_at": "2026-08-29T01:02:57.192680Z",
       "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 295.78
+      "timed_seeding_particle_efficiency": 0.983101,
+      "timed_seeding_time_per_event_ms": 295.55
     },
     {
-      "candidate": "TripletIdentityImpactPairLayout",
-      "classification": "structural",
-      "duration_seconds": 813.449,
-      "finished_at": "2026-08-28T14:03:14.885311Z",
-      "implementation_commit": "03949c5565ff7a2d48d305cf3dd8d3f25a3cf6f5",
+      "candidate": "GridSelectorRejectionUnlikely",
+      "changed_symbols": [
+        "ActsExamples::GridTripletSeedingAlgorithm::execute"
+      ],
+      "classification": "minor",
+      "combination_provenance": null,
+      "derives_from": null,
+      "duration_seconds": 1019.055,
+      "files_changed": [
+        "optimization-files/Examples/Algorithms/TrackFinding/src/GridTripletSeedingAlgorithm.cpp#L143-L144"
+      ],
+      "finished_at": "2026-08-29T01:40:20.675385Z",
+      "hot_path_rationale": "ActsExamples::GridTripletSeedingAlgorithm::execute per-input space-point selector branch during cylindrical grid fill.",
+      "implementation_commit": "db4bf462e709fb8d20f2e304736ad5b62f49fc78",
+      "lesson": "The selector rejection hint preserved seeding efficiency but raised median seeding time by 7.38 ms/event; leave the grid-fill branch unannotated.",
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/03949c5565ff7a2d48d305cf3dd8d3f25a3cf6f5",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T134941Z-TripletIdentityImpactPairLayout/summary.json"
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/db4bf462e709fb8d20f2e304736ad5b62f49fc78",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug29/records/Development/20260829T012321Z-GridSelectorRejectionUnlikely/summary.json"
       },
-      "mechanism_family": "triplet-identity-impact-pair-layout",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260828T134941Z-TripletIdentityImpactPairLayout/summary.json",
-      "started_at": "2026-08-28T13:49:41.435935Z",
+      "mechanism_family": "grid-input-selection",
+      "mechanism_key": "grid-selector-rejection-branch-layout",
+      "novelty_rationale": "The earlier selector-loop specialization duplicated the entire traversal around event-invariant delegate connectivity; this minor candidate preserves the original single loop and changes only the code layout of the per-space-point rejection edge.",
+      "outcome": "discard",
+      "prediction_assessment": "mixed",
+      "prediction_assessment_rationale": "Timed seeding particle efficiency remained 0.983101 as predicted, but median seeding time increased to 297.28 ms/event from the 289.90 ms/event Genesis baseline.",
+      "proposal": {
+        "candidate": "GridSelectorRejectionUnlikely",
+        "changed_symbols": [
+          "ActsExamples::GridTripletSeedingAlgorithm::execute"
+        ],
+        "combination_provenance": null,
+        "expected_hot_path": "ActsExamples::GridTripletSeedingAlgorithm::execute per-input space-point selector branch during cylindrical grid fill.",
+        "falsifier": "The prediction fails if median seeding time does not decrease from fresh Genesis or timed seeding particle efficiency changes.",
+        "hypothesis": "Marking rejection by the connected ITk space-point selector as unlikely will keep the common accepted grid-fill path contiguous and reduce median seeding time without changing selected space points or seeding efficiency.",
+        "implementation_commit": "db4bf462e709fb8d20f2e304736ad5b62f49fc78",
+        "intended_files": [
+          "optimization-files/Examples/Algorithms/TrackFinding/src/GridTripletSeedingAlgorithm.cpp"
+        ],
+        "novelty_reason": "The earlier selector-loop specialization duplicated the entire traversal around event-invariant delegate connectivity; this minor candidate preserves the original single loop and changes only the code layout of the per-space-point rejection edge.",
+        "predicted_directions": {
+          "timed_seeding_particle_efficiency": "unchanged",
+          "timed_seeding_time_per_event_ms": "decrease"
+        },
+        "schema_version": "1.0.0",
+        "source_references": [
+          {
+            "directly_inspected": true,
+            "reference": "records/Development/20260828T233358598694Z-Genesis/summary.json",
+            "relevance": "The fresh v3 Genesis fixes the objective baseline and confirms the unmodified connected-selector path completes the controlled matrix.",
+            "source_type": "Genesis"
+          },
+          {
+            "directly_inspected": true,
+            "reference": "0d20ab17cbb3fce4de2eecad71a4874db99849ed",
+            "relevance": "The directly inspected selector-loop specialization changed whole-loop topology; its implementation establishes that this branch is a distinct narrower code-layout experiment.",
+            "source_type": "prior record/commit"
+          }
+        ]
+      },
+      "proposal_hash": "e6ee18ad9703d0d4d4de6c04eb5671028685ac66b54b00f4d96e676506902c82",
+      "record": "records/Development/20260829T012321Z-GridSelectorRejectionUnlikely/summary.json",
+      "run_result": "Passed all controlled Development stages.",
+      "started_at": "2026-08-29T01:23:21.619893Z",
       "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 298.6
+      "timed_seeding_particle_efficiency": 0.983101,
+      "timed_seeding_time_per_event_ms": 297.28
     },
     {
-      "candidate": "SeederStreamedBottomGroups",
-      "classification": "structural",
-      "duration_seconds": 807.895,
-      "finished_at": "2026-08-28T14:18:40.229169Z",
-      "implementation_commit": "af0fae5f0de8314a25e2ea28467aa7e0b9fd917b",
+      "candidate": "GridSortCopyLoopFusion",
+      "changed_symbols": [
+        "ActsExamples::GridTripletSeedingAlgorithm::execute"
+      ],
+      "classification": "major",
+      "combination_provenance": null,
+      "derives_from": null,
+      "duration_seconds": 992.501,
+      "files_changed": [
+        "optimization-files/Examples/Algorithms/TrackFinding/src/GridTripletSeedingAlgorithm.cpp#L151-L166"
+      ],
+      "finished_at": "2026-08-29T02:19:12.827526Z",
+      "hot_path_rationale": "ActsExamples::GridTripletSeedingAlgorithm::execute per-event radius sorting and grid-to-core space-point materialization.",
+      "implementation_commit": "9e099cf8f01be9dc235ace9d27e4c13eb41b6ae8",
+      "lesson": "Fusing per-bin sorting with core materialization preserved seeding efficiency but raised median seeding time by 5.17 ms/event; retain separate sort and copy passes.",
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/af0fae5f0de8314a25e2ea28467aa7e0b9fd917b",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T140512Z-SeederStreamedBottomGroups/summary.json"
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/9e099cf8f01be9dc235ace9d27e4c13eb41b6ae8",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug29/records/Development/20260829T020240Z-GridSortCopyLoopFusion/summary.json"
       },
-      "mechanism_family": "seeder-streamed-bottom-groups",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260828T140512Z-SeederStreamedBottomGroups/summary.json",
-      "started_at": "2026-08-28T14:05:12.333928Z",
+      "mechanism_family": "grid-core-materialization-dataflow",
+      "mechanism_key": "grid-sort-copy-loop-fusion",
+      "novelty_rationale": "Earlier grid fusion moved radius-extrema accumulation into the copy or derived extrema from sorted endpoints; this candidate leaves radius-range computation intact and instead fuses the complete per-bin sort pass with the existing contiguous core-copy pass.",
+      "outcome": "discard",
+      "prediction_assessment": "mixed",
+      "prediction_assessment_rationale": "Timed seeding particle efficiency remained 0.983101 as predicted, but median seeding time increased to 295.07 ms/event from the 289.90 ms/event Genesis baseline.",
+      "proposal": {
+        "candidate": "GridSortCopyLoopFusion",
+        "changed_symbols": [
+          "ActsExamples::GridTripletSeedingAlgorithm::execute"
+        ],
+        "combination_provenance": null,
+        "expected_hot_path": "ActsExamples::GridTripletSeedingAlgorithm::execute per-event radius sorting and grid-to-core space-point materialization.",
+        "falsifier": "The prediction fails if median seeding time does not decrease from fresh Genesis or timed seeding particle efficiency changes.",
+        "hypothesis": "Sorting each cylindrical grid bin immediately before copying that bin into contiguous core storage will remove a full grid-bin traversal and keep the sorted index list hot for its only subsequent read, reducing median seeding time without changing bin order, core layout, or seeding efficiency.",
+        "implementation_commit": "9e099cf8f01be9dc235ace9d27e4c13eb41b6ae8",
+        "intended_files": [
+          "optimization-files/Examples/Algorithms/TrackFinding/src/GridTripletSeedingAlgorithm.cpp"
+        ],
+        "novelty_reason": "Earlier grid fusion moved radius-extrema accumulation into the copy or derived extrema from sorted endpoints; this candidate leaves radius-range computation intact and instead fuses the complete per-bin sort pass with the existing contiguous core-copy pass.",
+        "predicted_directions": {
+          "timed_seeding_particle_efficiency": "unchanged",
+          "timed_seeding_time_per_event_ms": "decrease"
+        },
+        "schema_version": "1.0.0",
+        "source_references": [
+          {
+            "directly_inspected": true,
+            "reference": "records/Development/20260828T233358598694Z-Genesis/summary.json",
+            "relevance": "The fresh v3 Genesis fixes the current baseline and contains separate complete grid-bin sort and core-copy traversals.",
+            "source_type": "Genesis"
+          },
+          {
+            "directly_inspected": true,
+            "reference": "4eb7cad7956863101a76572fdc3c05fa0ccba342",
+            "relevance": "The directly inspected failed fusion changed radius-range accumulation but retained separate sorting, establishing a distinct pass-fusion boundary.",
+            "source_type": "prior record/commit"
+          },
+          {
+            "directly_inspected": true,
+            "reference": "59e7fb575596a7adc2936cd40bf1b06a6303b79a",
+            "relevance": "The directly inspected successful batch materialization changed allocation and row creation; this candidate preserves per-row creation and changes only sort-to-copy traversal locality.",
+            "source_type": "prior record/commit"
+          }
+        ]
+      },
+      "proposal_hash": "3a6f3e75aba9bd29eeaf59a332f77b319e5915f9da9c9871d3a6d510ccc79318",
+      "record": "records/Development/20260829T020240Z-GridSortCopyLoopFusion/summary.json",
+      "run_result": "Passed all controlled Development stages.",
+      "started_at": "2026-08-29T02:02:40.326608Z",
       "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 290.85
+      "timed_seeding_particle_efficiency": 0.983101,
+      "timed_seeding_time_per_event_ms": 295.07
     },
     {
-      "candidate": "SeederCrossGroupTopWindowCarry",
-      "classification": "structural",
-      "duration_seconds": 704.478,
-      "finished_at": "2026-08-28T14:31:58.335762Z",
-      "implementation_commit": "8911e4896c20e38b9e458600faab6af4b6785767",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/8911e4896c20e38b9e458600faab6af4b6785767",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T142013Z-SeederCrossGroupTopWindowCarry/summary.json"
+      "candidate": "MiddleIndexSelectorLayoutCombination",
+      "changed_symbols": [
+        "ActsExamples::GridTripletSeedingAlgorithm::execute",
+        "Acts::CandidatesForMiddleSp2::StoredCandidate",
+        "Acts::CandidatesForMiddleSp2::clear",
+        "Acts::CandidatesForMiddleSp2::push",
+        "Acts::CandidatesForMiddleSp2::toSortedCandidates"
+      ],
+      "classification": "combination",
+      "combination_provenance": {
+        "compatibility_rationale": "The middle-index storage change is confined to candidate retention and reconstruction, while the branch-layout hint is confined to input grid filling; they share no files, state, ordering contract, or cut logic.",
+        "interaction_hypothesis": "Applying the independent candidate-record traffic reduction and grid-fill branch layout together may offset their isolated instruction-layout costs across separate stages while preserving identical reconstructed seeds.",
+        "sources": [
+          {
+            "candidate": "CandidateMiddleIndexHoist",
+            "directly_inspected": true,
+            "implementation_commit": "c5a0bf9b3056c0d23442187232e41c69a0c8e459",
+            "mechanism_key": "candidate-shared-middle-index-storage"
+          },
+          {
+            "candidate": "GridSelectorRejectionUnlikely",
+            "directly_inspected": true,
+            "implementation_commit": "db4bf462e709fb8d20f2e304736ad5b62f49fc78",
+            "mechanism_key": "grid-selector-rejection-branch-layout"
+          }
+        ]
       },
-      "mechanism_family": "seeder-cross-group-top-window-carry",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260828T142013Z-SeederCrossGroupTopWindowCarry/summary.json",
-      "started_at": "2026-08-28T14:20:13.858224Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.655284,
-      "timed_seeding_time_per_event_ms": 261.22
-    },
-    {
-      "candidate": "GridRadixFloatKeyLayout",
-      "classification": "structural",
-      "duration_seconds": 798.841,
-      "finished_at": "2026-08-28T14:46:47.925467Z",
-      "implementation_commit": "c3c06d354ade3cf169f80bea69312a027fd97806",
+      "derives_from": null,
+      "duration_seconds": 1019.519,
+      "files_changed": [
+        "optimization-files/Core/include/Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp#L14-L14",
+        "optimization-files/Core/include/Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp#L104-L115",
+        "optimization-files/Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp#L12-L12",
+        "optimization-files/Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp#L27-L27",
+        "optimization-files/Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp#L54-L64",
+        "optimization-files/Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp#L77-L77",
+        "optimization-files/Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp#L93-L106",
+        "optimization-files/Examples/Algorithms/TrackFinding/src/GridTripletSeedingAlgorithm.cpp#L143-L144"
+      ],
+      "finished_at": "2026-08-29T02:37:57.661355Z",
+      "hot_path_rationale": "Input grid-fill selector control flow plus bounded per-middle candidate insertion, replacement, and output reconstruction.",
+      "implementation_commit": "38ed7c40fe7fc7b344a4c5816e85df906baad52e",
+      "lesson": "Combining middle-index storage with selector branch layout preserved seeding efficiency but raised median seeding time by 6.07 ms/event; the two isolated regressions do not interact favorably.",
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/c3c06d354ade3cf169f80bea69312a027fd97806",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T143329Z-GridRadixFloatKeyLayout/summary.json"
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/38ed7c40fe7fc7b344a4c5816e85df906baad52e",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug29/records/Development/20260829T022058Z-MiddleIndexSelectorLayoutCombination/summary.json"
       },
-      "mechanism_family": "grid-radix-float-key-layout",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260828T143329Z-GridRadixFloatKeyLayout/summary.json",
-      "started_at": "2026-08-28T14:33:29.084640Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 289.92
-    },
-    {
-      "candidate": "CoreScalarCoordinateLayout",
-      "classification": "structural",
-      "duration_seconds": 850.241,
-      "finished_at": "2026-08-28T15:02:51.679603Z",
-      "implementation_commit": "9ce229a435c846a836d6f25f194c6f8a162bc975",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/9ce229a435c846a836d6f25f194c6f8a162bc975",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T144841Z-CoreScalarCoordinateLayout/summary.json"
+      "mechanism_family": "cross-stage-candidate-grid-combination",
+      "mechanism_key": "middle-index-selector-layout-combination",
+      "novelty_rationale": "This is the first measured v3 interaction between a candidate-retention record-layout mechanism and an input-grid branch-layout mechanism; it exactly combines two completed source implementations without adding cuts, ordering changes, or a third mechanism.",
+      "outcome": "discard",
+      "prediction_assessment": "mixed",
+      "prediction_assessment_rationale": "Timed seeding particle efficiency remained 0.983101 as predicted, but median seeding time increased to 295.97 ms/event from the 289.90 ms/event Genesis baseline.",
+      "proposal": {
+        "candidate": "MiddleIndexSelectorLayoutCombination",
+        "changed_symbols": [
+          "ActsExamples::GridTripletSeedingAlgorithm::execute",
+          "Acts::CandidatesForMiddleSp2::StoredCandidate",
+          "Acts::CandidatesForMiddleSp2::clear",
+          "Acts::CandidatesForMiddleSp2::push",
+          "Acts::CandidatesForMiddleSp2::toSortedCandidates"
+        ],
+        "combination_provenance": {
+          "compatibility_rationale": "The middle-index storage change is confined to candidate retention and reconstruction, while the branch-layout hint is confined to input grid filling; they share no files, state, ordering contract, or cut logic.",
+          "interaction_hypothesis": "Applying the independent candidate-record traffic reduction and grid-fill branch layout together may offset their isolated instruction-layout costs across separate stages while preserving identical reconstructed seeds.",
+          "sources": [
+            {
+              "candidate": "CandidateMiddleIndexHoist",
+              "directly_inspected": true,
+              "implementation_commit": "c5a0bf9b3056c0d23442187232e41c69a0c8e459",
+              "mechanism_key": "candidate-shared-middle-index-storage"
+            },
+            {
+              "candidate": "GridSelectorRejectionUnlikely",
+              "directly_inspected": true,
+              "implementation_commit": "db4bf462e709fb8d20f2e304736ad5b62f49fc78",
+              "mechanism_key": "grid-selector-rejection-branch-layout"
+            }
+          ]
+        },
+        "expected_hot_path": "Input grid-fill selector control flow plus bounded per-middle candidate insertion, replacement, and output reconstruction.",
+        "falsifier": "The prediction fails if median seeding time does not decrease from fresh Genesis or timed seeding particle efficiency changes.",
+        "hypothesis": "Combining the candidate-record middle-index hoist with the independent grid-selector rejection layout may recover stage-local instruction and data-cache benefits that were hidden by isolated run variance, reducing median seeding time while preserving reconstructed seeds and seeding efficiency.",
+        "implementation_commit": "38ed7c40fe7fc7b344a4c5816e85df906baad52e",
+        "intended_files": [
+          "optimization-files/Core/include/Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp",
+          "optimization-files/Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp",
+          "optimization-files/Examples/Algorithms/TrackFinding/src/GridTripletSeedingAlgorithm.cpp"
+        ],
+        "novelty_reason": "This is the first measured v3 interaction between a candidate-retention record-layout mechanism and an input-grid branch-layout mechanism; it exactly combines two completed source implementations without adding cuts, ordering changes, or a third mechanism.",
+        "predicted_directions": {
+          "timed_seeding_particle_efficiency": "unchanged",
+          "timed_seeding_time_per_event_ms": "decrease"
+        },
+        "schema_version": "1.0.0",
+        "source_references": [
+          {
+            "directly_inspected": true,
+            "reference": "c5a0bf9b3056c0d23442187232e41c69a0c8e459",
+            "relevance": "The directly inspected completed v3 source hoists the fixed middle index from retained candidate records and reconstructs the same public triplets.",
+            "source_type": "prior record/commit"
+          },
+          {
+            "directly_inspected": true,
+            "reference": "db4bf462e709fb8d20f2e304736ad5b62f49fc78",
+            "relevance": "The directly inspected completed v3 source changes only the code layout of the grid-selector rejection edge.",
+            "source_type": "prior record/commit"
+          }
+        ]
       },
-      "mechanism_family": "core-scalar-coordinate-layout",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260828T144841Z-CoreScalarCoordinateLayout/summary.json",
-      "started_at": "2026-08-28T14:48:41.438943Z",
+      "proposal_hash": "5a1a3d6df40e0bb740715b9dd1649b13b293c191eb5f9f05616f28724ab0db6e",
+      "record": "records/Development/20260829T022058Z-MiddleIndexSelectorLayoutCombination/summary.json",
+      "run_result": "Passed all controlled Development stages.",
+      "started_at": "2026-08-29T02:20:58.142233Z",
       "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 298.88
-    },
-    {
-      "candidate": "DoubletNaturalOrderFastPath",
-      "classification": "structural",
-      "duration_seconds": 848.894,
-      "finished_at": "2026-08-28T15:18:54.590938Z",
-      "implementation_commit": "9c857a5991e3212a1aa4509891ddbc8c4d001121",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/9c857a5991e3212a1aa4509891ddbc8c4d001121",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T150445Z-DoubletNaturalOrderFastPath/summary.json"
-      },
-      "mechanism_family": "doublet-natural-order-fast-path",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260828T150445Z-DoubletNaturalOrderFastPath/summary.json",
-      "started_at": "2026-08-28T15:04:45.697032Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 289.87
-    },
-    {
-      "candidate": "DoubletMonotonicDirectionFastPath",
-      "classification": "structural",
-      "duration_seconds": 802.621,
-      "finished_at": "2026-08-28T15:33:31.964177Z",
-      "implementation_commit": "f8950fdd43b9ef0138664824eb614af6647ded09",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/f8950fdd43b9ef0138664824eb614af6647ded09",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T152009Z-DoubletMonotonicDirectionFastPath/summary.json"
-      },
-      "mechanism_family": "doublet-monotonic-direction-fast-path",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260828T152009Z-DoubletMonotonicDirectionFastPath/summary.json",
-      "started_at": "2026-08-28T15:20:09.343450Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 291.0
-    },
-    {
-      "candidate": "GridRadixShortBinBranchHint",
-      "classification": "micro",
-      "duration_seconds": 808.446,
-      "finished_at": "2026-08-28T15:48:00.174421Z",
-      "implementation_commit": "167863816cc2be13633591a7a13bcca9cb08823b",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/167863816cc2be13633591a7a13bcca9cb08823b",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T153431Z-GridRadixShortBinBranchHint/summary.json"
-      },
-      "mechanism_family": "grid-radix-short-bin-branch-hint",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260828T153431Z-GridRadixShortBinBranchHint/summary.json",
-      "started_at": "2026-08-28T15:34:31.728421Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 289.84
-    },
-    {
-      "candidate": "SeederStreamedBottomEmptyBranchHint",
-      "classification": "micro",
-      "duration_seconds": 786.231,
-      "finished_at": "2026-08-28T16:02:03.010000Z",
-      "implementation_commit": "92aa1249ba589d4e93c8ace18f12f37ef8178b4d",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/92aa1249ba589d4e93c8ace18f12f37ef8178b4d",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T154856Z-SeederStreamedBottomEmptyBranchHint/summary.json"
-      },
-      "mechanism_family": "seeder-streamed-bottom-empty-branch-hint",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260828T154856Z-SeederStreamedBottomEmptyBranchHint/summary.json",
-      "started_at": "2026-08-28T15:48:56.779497Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 289.65
-    },
-    {
-      "candidate": "DoubletNaturalOrderFallbackBranchHint",
-      "classification": "micro",
-      "duration_seconds": 800.537,
-      "finished_at": "2026-08-28T16:16:20.626032Z",
-      "implementation_commit": "22e555395ce437ad1a4f25758e989ef25eca2a91",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/22e555395ce437ad1a4f25758e989ef25eca2a91",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T160300Z-DoubletNaturalOrderFallbackBranchHint/summary.json"
-      },
-      "mechanism_family": "doublet-natural-order-fallback-branch-hint",
-      "outcome": "Passed all controlled Development stages.",
-      "record": "records/Development/20260828T160300Z-DoubletNaturalOrderFallbackBranchHint/summary.json",
-      "started_at": "2026-08-28T16:03:00.089126Z",
-      "state": "completed",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 290.82
+      "timed_seeding_particle_efficiency": 0.983101,
+      "timed_seeding_time_per_event_ms": 295.97
     }
   ],
   "blockers": [],
   "campaign": {
-    "branch": "autoresearch-acts-seeding/campaign-v8",
-    "name": "ACTS Seeding Development Campaign V8",
-    "phase": "completed Development campaign; canonical Genesis restored",
-    "started_at": "2026-08-28T10:50:43Z",
+    "branch": "autoresearch-acts-seeding/aug29",
+    "campaign_id": "acts-seeding-aug29-20260829",
+    "control_id": "277074895a3b09a536336bc5ad8b96a6e37f6a3a88c5decfdb47fcfa9842d434",
+    "genesis_commit": "f8e809e118e41889850cf9cf3c46988e7c583625",
+    "mode": "continuous",
+    "name": "ACTS Seeding continuous aug29",
+    "phase": "archive finalization; Genesis restored",
+    "started_at": "2026-08-28T23:32:45Z",
     "targets": {
-      "completed_attempts": 20,
-      "micro_optimization_cap": 5,
-      "structural_attempts": 10
+      "combination_percentage": 25,
+      "major_percentage": 50,
+      "minor_percentage": 25
     }
+  },
+  "control": {
+    "completed_at": "2026-08-29T02:39:28.987159Z",
+    "consumed_at": "2026-08-29T02:01:00.493560Z",
+    "observed_at": "2026-08-29T01:58:19.534901Z",
+    "request": {
+      "campaign_branch": "autoresearch-acts-seeding/aug29",
+      "campaign_id": "acts-seeding-aug29-20260829",
+      "control_id": "277074895a3b09a536336bc5ad8b96a6e37f6a3a88c5decfdb47fcfa9842d434",
+      "issue_number": 39,
+      "issue_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/issues/39",
+      "requested_at": "2026-08-29T01:56:54.019603Z",
+      "requested_by": "Aksth070600",
+      "workflow_run_attempt": 1,
+      "workflow_run_id": 33227702222,
+      "workflow_run_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/actions/runs/33227702222"
+    },
+    "state": "completed"
   },
   "current_attempt": null,
   "failures": [
     {
-      "candidate": "CorePackedXYZRLayout",
-      "message": "candidate failed stage: ten_event_seeding",
-      "record_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Failed/20260828T125743Z-CorePackedXYZRLayout/summary.json"
+      "candidate": "FilterDisabledConfirmationQualityMapElision",
+      "message": "candidate failed stage: one_event_seeding_smoke",
+      "record_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug29/records/Failed/20260828T234924Z-FilterDisabledConfirmationQualityMapElision/summary.json"
+    },
+    {
+      "candidate": "DoubletDisabledIPExperimentCuts",
+      "message": "candidate failed stage: one_event_seeding_smoke",
+      "record_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug29/records/Failed/20260828T235354Z-DoubletDisabledIPExperimentCuts/summary.json"
+    },
+    {
+      "candidate": "GridEmptyNeighborRangePrune",
+      "message": "candidate failed stage: one_event_seeding_smoke",
+      "record_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug29/records/Failed/20260828T235932Z-GridEmptyNeighborRangePrune/summary.json"
     }
   ],
-  "generated_at": "2026-08-28T16:18:03.098392Z",
+  "generated_at": "2026-08-29T02:39:41.090169Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/951c660107089ca9a3a9cc6234c4b5801b555832",
-    "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/campaign-v8",
-    "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/29"
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/b3ec384175c6a121fa1393abb7e1cb93067d0201",
+    "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/aug29",
+    "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/36"
   },
   "progress": {
-    "completed_attempts": 20,
-    "elapsed_seconds": 19640.098392,
+    "combination_candidates": 1,
+    "completed_candidates": 4,
+    "composition": {
+      "combination": {
+        "completed": 1,
+        "completed_percentage": 25.0,
+        "deficit_candidates": 0.0,
+        "target_percentage": 25.0
+      },
+      "major": {
+        "completed": 2,
+        "completed_percentage": 50.0,
+        "deficit_candidates": 0.0,
+        "target_percentage": 50.0
+      },
+      "minor": {
+        "completed": 1,
+        "completed_percentage": 25.0,
+        "deficit_candidates": 0.0,
+        "target_percentage": 25.0
+      }
+    },
+    "elapsed_seconds": 11216.090169,
     "estimated_remaining_seconds": 0.0,
     "eta_basis": "Campaign attempt targets are complete.",
-    "eta_sample_count": 20,
-    "expected_finish_at": "2026-08-28T16:18:03.098392Z",
-    "median_completed_attempt_duration_seconds": 808.1705,
-    "micro_optimizations": 3,
-    "structural_attempts": 17
+    "eta_sample_count": 4,
+    "expected_finish_at": "2026-08-29T02:39:41.090169Z",
+    "major_candidates": 2,
+    "median_completed_attempt_duration_seconds": 1019.287,
+    "minor_candidates": 1
   },
   "promising_results": {
-    "best_ambiguity_efficiency": {
-      "candidate": "TripletKinematicsPairLayout",
-      "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/c0fdd671861e00af7c71c710e65787b677b6db38",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T114030Z-TripletKinematicsPairLayout/summary.json"
-      },
-      "started_at": "2026-08-28T11:40:30.720321Z",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 294.61
-    },
     "best_seeding": {
-      "candidate": "SeederCrossGroupTopWindowCarry",
-      "delta_vs_genesis_ms": -37.02999999999997,
+      "candidate": "Genesis",
+      "delta_vs_genesis_ms": 0.0,
       "links": {
-        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/8911e4896c20e38b9e458600faab6af4b6785767",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T142013Z-SeederCrossGroupTopWindowCarry/summary.json"
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug29/records/Development/20260828T233358598694Z-Genesis/summary.json"
       },
-      "percentage_vs_genesis": -12.415758591785405,
-      "started_at": "2026-08-28T14:20:13.858224Z",
-      "timed_ambiguity_particle_efficiency": 0.655284,
-      "timed_seeding_time_per_event_ms": 261.22
+      "percentage_vs_genesis": 0.0,
+      "started_at": "2026-08-28T23:33:58.598694Z",
+      "timed_seeding_particle_efficiency": 0.983101,
+      "timed_seeding_time_per_event_ms": 289.9
+    },
+    "best_seeding_efficiency": {
+      "candidate": "MiddleIndexSelectorLayoutCombination",
+      "links": {
+        "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/38ed7c40fe7fc7b344a4c5816e85df906baad52e",
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug29/records/Development/20260829T022058Z-MiddleIndexSelectorLayoutCombination/summary.json"
+      },
+      "started_at": "2026-08-29T02:20:58.142233Z",
+      "timed_seeding_particle_efficiency": 0.983101,
+      "timed_seeding_time_per_event_ms": 295.97
     },
     "latest_genesis": {
       "candidate": "Genesis",
       "links": {
         "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding",
-        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T105122298587Z-Genesis/summary.json"
+        "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug29/records/Development/20260828T233358598694Z-Genesis/summary.json"
       },
-      "started_at": "2026-08-28T10:51:22.298587Z",
-      "timed_ambiguity_particle_efficiency": 0.972769,
-      "timed_seeding_time_per_event_ms": 298.25
+      "started_at": "2026-08-28T23:33:58.598694Z",
+      "timed_seeding_particle_efficiency": 0.983101,
+      "timed_seeding_time_per_event_ms": 289.9
     },
     "pareto_front": [
       {
-        "candidate": "SeederCrossGroupTopWindowCarry",
+        "candidate": "Genesis",
         "links": {
-          "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/8911e4896c20e38b9e458600faab6af4b6785767",
-          "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T142013Z-SeederCrossGroupTopWindowCarry/summary.json"
+          "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding",
+          "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug29/records/Development/20260828T233358598694Z-Genesis/summary.json"
         },
-        "started_at": "2026-08-28T14:20:13.858224Z",
-        "timed_ambiguity_particle_efficiency": 0.655284,
-        "timed_seeding_time_per_event_ms": 261.22
-      },
-      {
-        "candidate": "SeederStreamedBottomEmptyBranchHint",
-        "links": {
-          "commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/92aa1249ba589d4e93c8ace18f12f37ef8178b4d",
-          "record": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/campaign-v8/records/Development/20260828T154856Z-SeederStreamedBottomEmptyBranchHint/summary.json"
-        },
-        "started_at": "2026-08-28T15:48:56.779497Z",
-        "timed_ambiguity_particle_efficiency": 0.972769,
-        "timed_seeding_time_per_event_ms": 289.65
+        "started_at": "2026-08-28T23:33:58.598694Z",
+        "timed_seeding_particle_efficiency": 0.983101,
+        "timed_seeding_time_per_event_ms": 289.9
       }
     ]
   },
-  "protocol_id": "acts-seeding-v2",
+  "protocol_id": "acts-seeding-v3",
   "repository": {
     "snapshot_path": "orchestration-files/campaign-status.json",
     "url": "https://github.com/Aksth070600/autoresearch-acts-seeding"
   },
-  "schema_version": "1.0.0",
+  "scheduler": {
+    "blocker": null,
+    "combination_eligible": false,
+    "decision": {
+      "action": "complete",
+      "category": null,
+      "reason": "The completed campaign is immutable."
+    },
+    "final_targets": {
+      "combination_candidates": 1,
+      "completed_candidates": 4,
+      "major_candidates": 2,
+      "minor_candidates": 1
+    },
+    "state": "completed",
+    "strategy": "deterministic-deficit-2:1:1-v1"
+  },
+  "schema_version": "1.1.0",
   "stale_after_seconds": 900
 }
