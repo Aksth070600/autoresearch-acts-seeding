@@ -233,9 +233,10 @@
         "physics_exact_for_both": true,
         "promising_predecessor": "PackedVarianceColumnsV4"
       },
+      "implementation_commit": "e84e83e5eb41ebd13df27adccc0d52149131a27a",
       "mechanism_key": "v4-packed-variance-triplet-kinematics-combination",
       "slot": 4,
-      "state": "proposal drafted"
+      "state": "proposal bound and queued"
     }
   ]
 }
