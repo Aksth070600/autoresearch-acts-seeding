@@ -14,6 +14,7 @@ from objectives import (
     SelectionError,
     choose_baseline,
     improved_over_baseline,
+    is_active_row,
     load_records,
     pareto_front,
     time_first_key,
@@ -50,7 +51,7 @@ def deduplicate(rows: list[dict[str, Any]], baseline: dict[str, Any]) -> list[di
 
 def rank_seeding_efficiency(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return sorted(
-        rows,
+        (row for row in rows if is_active_row(row)),
         key=lambda row: (
             -row["metrics"][f"timed_{PRIMARY_EFFICIENCY_METRIC}"],
             *time_first_key(row),
@@ -59,7 +60,7 @@ def rank_seeding_efficiency(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def rank_seeding_time(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    return sorted(rows, key=time_first_key)
+    return sorted((row for row in rows if is_active_row(row)), key=time_first_key)
 
 
 def eligible_candidates(
@@ -79,11 +80,12 @@ def eligible_candidates(
 def choose(rows: list[dict[str, Any]], baseline_name: str, count: int) -> list[dict[str, Any]]:
     if count < 1:
         raise ValueError("count must be positive")
+    active_rows = [row for row in rows if is_active_row(row)]
     try:
-        baseline = choose_baseline(rows, baseline_name)
+        baseline = choose_baseline(active_rows, baseline_name)
     except SelectionError as error:
         raise ValueError(str(error)) from error
-    candidates = eligible_candidates(rows, baseline)
+    candidates = eligible_candidates(active_rows, baseline)
     efficiency = rank_seeding_efficiency(candidates)
     seeding_time = rank_seeding_time(candidates)
 

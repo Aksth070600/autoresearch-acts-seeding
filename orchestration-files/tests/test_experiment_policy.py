@@ -17,11 +17,11 @@ class ExperimentPolicyTests(unittest.TestCase):
         self.assertIn("protocol.py` owns the controlled evaluator contract", lowered)
         self.assertIn("use it without overrides", lowered)
         self.assertIn("judge complete development results by the two primary objectives", lowered)
-        self.assertIn("captain-approved scientific interpretation", lowered)
-        self.assertIn("complete v2 and v3 records share one evidence family", lowered)
-        self.assertIn("never substitute v2 ambiguity efficiency", lowered)
-        self.assertIn("approximate diagnostic only", lowered)
-        self.assertIn("rss never affects selection", lowered)
+        self.assertIn("exact active v3 summaries only", lowered)
+        self.assertIn("never compare or normalize v2 and v3 metric points", lowered)
+        self.assertIn("v3 peak rss remains its raw seeding-only diagnostic", lowered)
+        self.assertIn("their metrics never become v3 evidence", lowered)
+        self.assertIn("measure the combined implementation entirely under v3", lowered)
         self.assertIn("accept expected unmasked fpes only when every requested event completed", lowered)
         self.assertIn("run a continuous development campaign", lowered)
         self.assertIn("no fixed total before its authenticated stop request", lowered)
@@ -56,12 +56,11 @@ class ExperimentPolicyTests(unittest.TestCase):
         sys.path.insert(0, str(PROJECT_ROOT / "orchestration-files"))
         from protocol import (
             CAMPAIGN_COMPOSITION,
+            PRIMARY_REPORT_METRICS,
             PROTOCOL_ID,
             PROTOCOL_METADATA,
-            SEEDING_OBJECTIVE_FAMILY_ID,
-            SEEDING_OBJECTIVE_METRICS,
             V2_PROTOCOL_METADATA,
-            seeding_objective_protocol,
+            is_compatible_summary,
         )
 
         self.assertEqual(PROTOCOL_ID, "acts-seeding-v3")
@@ -73,29 +72,23 @@ class ExperimentPolicyTests(unittest.TestCase):
         self.assertEqual(PROTOCOL_METADATA["rss_metrics_mode"], "time")
         self.assertNotIn("evaluation_events", PROTOCOL_METADATA)
         self.assertEqual(
-            SEEDING_OBJECTIVE_FAMILY_ID,
-            "acts-seeding-v2-v3-seeding-objectives",
-        )
-        self.assertEqual(
-            SEEDING_OBJECTIVE_METRICS,
+            PRIMARY_REPORT_METRICS,
             (
                 "timed_seeding_time_per_event_ms",
                 "timed_seeding_particle_efficiency",
             ),
         )
-        self.assertEqual(
-            seeding_objective_protocol(
+        self.assertFalse(
+            is_compatible_summary(
                 {
                     "protocol_id": "acts-seeding-v2",
                     "protocol": V2_PROTOCOL_METADATA,
                 }
-            ),
-            V2_PROTOCOL_METADATA,
+            )
         )
-        invalid_v2 = dict(V2_PROTOCOL_METADATA, threads=2)
-        self.assertIsNone(
-            seeding_objective_protocol(
-                {"protocol_id": "acts-seeding-v2", "protocol": invalid_v2}
+        self.assertTrue(
+            is_compatible_summary(
+                {"protocol_id": PROTOCOL_ID, "protocol": PROTOCOL_METADATA}
             )
         )
         self.assertEqual(
@@ -116,8 +109,16 @@ class ExperimentPolicyTests(unittest.TestCase):
         self.assertIn("Y_METRIC: ${{ inputs.y_metric || 'timed_seeding_particle_efficiency' }}", workflow)
         self.assertNotIn("default: timed_ambiguity_particle_efficiency", workflow)
         self.assertNotIn("timed_peak_rss_kb", workflow)
-        self.assertNotIn("- rss_peak_rss_kb", workflow)
-        self.assertIn("rss_genesis_offset_peak_rss_kb", workflow)
+        self.assertIn("- rss_peak_rss_kb", workflow)
+        self.assertNotIn("rss_genesis_offset_peak_rss_kb", workflow)
+
+    def test_report_workflows_fetch_history_for_v2_provenance_validation(self) -> None:
+        for workflow_name in ("reports.yml", "reports-preview.yml"):
+            with self.subTest(workflow=workflow_name):
+                workflow = (
+                    PROJECT_ROOT / ".github" / "workflows" / workflow_name
+                ).read_text(encoding="utf-8")
+                self.assertIn("fetch-depth: 0", workflow)
 
     def test_build_jobs_are_capped_and_forwarded_to_hepp02(self) -> None:
         makefile = (PROJECT_ROOT / "Makefile").read_text(encoding="utf-8")

@@ -48,7 +48,7 @@ class SelectEvaluationTests(unittest.TestCase):
                 "timed_seeding_time_per_event_ms": 100.0,
                 "timed_total_time_per_event_ms": 300.0,
                 "timed_seeding_particle_efficiency": 0.95,
-                "rss_genesis_offset_peak_rss_kb": 1024.0,
+                "rss_peak_rss_kb": 1024.0,
             },
         }
         faster_full_chain = {
@@ -61,7 +61,7 @@ class SelectEvaluationTests(unittest.TestCase):
                 "timed_seeding_time_per_event_ms": 110.0,
                 "timed_total_time_per_event_ms": 250.0,
                 "timed_seeding_particle_efficiency": 0.95,
-                "rss_genesis_offset_peak_rss_kb": 512.0,
+                "rss_peak_rss_kb": 512.0,
             },
         }
         slower_full_chain = {
@@ -69,17 +69,28 @@ class SelectEvaluationTests(unittest.TestCase):
             "candidate": "FasterSeeding",
             "record": "Development/FasterSeeding/summary.json",
             "commit": "faster-seeding",
-            "protocol_id": "acts-seeding-v2",
             "is_baseline": False,
             "metrics": {
                 "timed_seeding_time_per_event_ms": 90.0,
                 "timed_total_time_per_event_ms": 350.0,
                 "timed_seeding_particle_efficiency": 0.95,
-                "rss_genesis_offset_peak_rss_kb": 4096.0,
+                "rss_peak_rss_kb": 4096.0,
             },
         }
 
-        candidates = [faster_full_chain, slower_full_chain]
+        historical = {
+            **slower_full_chain,
+            "candidate": "HistoricalV2",
+            "record": "Development/HistoricalV2/summary.json",
+            "commit": "historical-v2",
+            "protocol_id": "acts-seeding-v2",
+            "metrics": {
+                **slower_full_chain["metrics"],
+                "timed_seeding_time_per_event_ms": 1.0,
+                "timed_seeding_particle_efficiency": 1.0,
+            },
+        }
+        candidates = [faster_full_chain, slower_full_chain, historical]
         self.assertEqual(
             [row["candidate"] for row in select_evaluation.rank_seeding_time(candidates)],
             ["FasterSeeding", "FasterFullChain"],
@@ -87,7 +98,7 @@ class SelectEvaluationTests(unittest.TestCase):
         selected = select_evaluation.choose([baseline, *candidates], "Genesis", 1)
 
         self.assertEqual([row["candidate"] for row in selected], ["Genesis", "FasterSeeding"])
-        self.assertEqual(selected[1]["protocol_id"], "acts-seeding-v2")
+        self.assertEqual(selected[1]["protocol_id"], "acts-seeding-v3")
         self.assertEqual(
             selected[1]["selection_reason"], "highest timed seeding particle efficiency"
         )

@@ -30,6 +30,7 @@ class PrimaryObjectiveTests(unittest.TestCase):
     def setUp(self) -> None:
         self.baseline = {
             "candidate": "Genesis",
+            "protocol_id": "acts-seeding-v3",
             "record": "Development/Genesis",
             "metrics": {
                 "timed_seeding_time_per_event_ms": 100.0,
@@ -37,7 +38,7 @@ class PrimaryObjectiveTests(unittest.TestCase):
                 "timed_ambiguity_particle_efficiency": 0.95,
                 "timed_seeding_particle_efficiency": 0.80,
                 "timed_ckf_particle_efficiency": 0.80,
-                "rss_genesis_offset_peak_rss_kb": 1000.0,
+                "rss_peak_rss_kb": 1000.0,
             },
         }
 
@@ -199,7 +200,7 @@ class PrimaryObjectiveTests(unittest.TestCase):
             }
         return summary
 
-    def test_shared_protocol_family_drives_safe_evaluation_selection(self) -> None:
+    def test_mixed_archive_drives_only_v3_objectives_and_selection(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             records = Path(temporary) / "records"
             summaries = (
@@ -224,6 +225,16 @@ class PrimaryObjectiveTests(unittest.TestCase):
                     self.protocol_summary(
                         "acts-seeding-v2",
                         "ArchivedCandidate",
+                        8.0,
+                        0.91,
+                        bind_candidate_proposal=True,
+                    ),
+                ),
+                (
+                    "Development/V3Candidate",
+                    self.protocol_summary(
+                        "acts-seeding-v3",
+                        "CurrentCandidate",
                         8.0,
                         0.91,
                         bind_candidate_proposal=True,
@@ -262,8 +273,7 @@ class PrimaryObjectiveTests(unittest.TestCase):
         self.assertEqual(
             [(row["candidate"], row["protocol_id"]) for row in rows],
             [
-                ("ArchivedCandidate", "acts-seeding-v2"),
-                ("Genesis", "acts-seeding-v2"),
+                ("CurrentCandidate", "acts-seeding-v3"),
                 ("Genesis", "acts-seeding-v3"),
             ],
         )
@@ -277,7 +287,7 @@ class PrimaryObjectiveTests(unittest.TestCase):
         )
         self.assertEqual(
             {row["candidate"] for row in front},
-            {"ArchivedCandidate"},
+            {"CurrentCandidate"},
         )
         self.assertIsNotNone(candidates[0]["proposal"])
         self.assertIsNotNone(candidates[0]["candidate_identity"])
@@ -285,6 +295,7 @@ class PrimaryObjectiveTests(unittest.TestCase):
     def test_total_time_winner_with_slower_seeding_is_not_recommended(self) -> None:
         diagnostic_winner = {
             "candidate": "DiagnosticWinner",
+            "protocol_id": "acts-seeding-v3",
             "record": "Development/DiagnosticWinner",
             "metrics": {
                 "timed_seeding_time_per_event_ms": 110.0,
@@ -439,6 +450,7 @@ class PrimaryObjectiveTests(unittest.TestCase):
         older = {
             "candidate": "Genesis",
             "category": "Development",
+            "protocol_id": "acts-seeding-v3",
             "record": "Development/20260826T120000000000Z-Genesis/summary.json",
             "is_baseline": True,
             "status": "passed",
@@ -469,22 +481,24 @@ class PrimaryObjectiveTests(unittest.TestCase):
     def test_primary_tradeoffs_remain_on_the_pareto_front(self) -> None:
         faster = {
             "candidate": "Faster",
+            "protocol_id": "acts-seeding-v3",
             "record": "Development/Faster",
             "metrics": {
                 "timed_seeding_time_per_event_ms": 90.0,
                 "timed_total_time_per_event_ms": 290.0,
                 "timed_seeding_particle_efficiency": 0.79,
-                "rss_genesis_offset_peak_rss_kb": 100000.0,
+                "rss_peak_rss_kb": 100000.0,
             },
         }
         more_efficient = {
             "candidate": "MoreEfficient",
+            "protocol_id": "acts-seeding-v3",
             "record": "Development/MoreEfficient",
             "metrics": {
                 "timed_seeding_time_per_event_ms": 110.0,
                 "timed_total_time_per_event_ms": 310.0,
                 "timed_seeding_particle_efficiency": 0.81,
-                "rss_genesis_offset_peak_rss_kb": 1.0,
+                "rss_peak_rss_kb": 1.0,
             },
         }
 

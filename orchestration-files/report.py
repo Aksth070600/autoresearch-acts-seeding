@@ -13,15 +13,12 @@ from typing import Any
 
 from protocol import (
     EVALUATION_TIMING_REPORTING,
+    PRIMARY_REPORT_METRICS,
     PROTOCOL_ID,
     PROTOCOL_METADATA,
-    SEEDING_OBJECTIVE_FAMILY_ID,
-    SEEDING_OBJECTIVE_METRICS,
-    SEEDING_OBJECTIVE_PROTOCOLS,
     is_compatible_summary,
     is_complete_rss_evidence,
     is_complete_stage_matrix,
-    seeding_objective_protocol,
 )
 from proposal import ProposalError, median_absolute_deviation, proposal_from_summary
 
@@ -30,8 +27,7 @@ DEFAULT_RECORDS = PROJECT_ROOT / "records"
 DEFAULT_OUTPUT = PROJECT_ROOT / "build" / "site"
 REPOSITORY_URL = "https://github.com/Aksth070600/autoresearch-acts-seeding"
 FULL_COMMIT_SHA = re.compile(r"[0-9a-fA-F]{40}")
-RSS_DISPLAY_METRIC = "rss_genesis_offset_peak_rss_kb"
-RSS_GENESIS_CANDIDATE = "Genesis"
+RSS_DISPLAY_METRIC = "rss_peak_rss_kb"
 OPTIONAL_REPORT_METRICS = {RSS_DISPLAY_METRIC}
 
 from visualizations.campaign import render as render_campaign
@@ -73,74 +69,6 @@ def commit_url(commit: str) -> str:
     if not FULL_COMMIT_SHA.fullmatch(commit):
         return ""
     return f"{REPOSITORY_URL}/commit/{commit}"
-
-
-def legacy_stage_prefix(stage: dict[str, Any]) -> str | None:
-    name = str(stage.get("name", ""))
-    if "timed" in name or stage.get("metrics_mode") == "time":
-        return "timed"
-    if stage.get("metrics_mode") == "none" and stage.get("events", 0) > 1:
-        return "clean"
-    return None
-
-
-def add_legacy_metrics(
-    metrics: dict[str, float],
-    prefix: str,
-    run_metrics: dict[str, Any],
-    stage: dict[str, Any],
-) -> None:
-    """Flatten v2 full-chain evidence without changing its archived meaning."""
-
-    timing_total = run_metrics.get("timing_total", {})
-    for source, suffix in (
-        ("total_time_ms", "total_time_ms"),
-        ("time_per_event_ms", "total_time_per_event_ms"),
-    ):
-        value = timing_total.get(source)
-        if finite_number(value):
-            metrics[f"{prefix}_{suffix}"] = float(value)
-
-    timing = run_metrics.get("timing", {})
-    for algorithm in ("seeding", "ckf", "ambiguity_resolution"):
-        value = timing.get(algorithm, {}).get("time_per_event_ms")
-        if finite_number(value):
-            algorithm_key = "ambiguity" if algorithm == "ambiguity_resolution" else algorithm
-            metrics[f"{prefix}_{algorithm_key}_time_per_event_ms"] = float(value)
-
-    algorithm_keys = {
-        "ambiguity_resolution": "ambiguity",
-        "seeding": "seeding",
-        "ckf": "ckf",
-    }
-    metric_keys = {
-        "efficiency_particles": "particle_efficiency",
-        "efficiency_tracks": "track_efficiency",
-        "fake_ratio_particles": "particle_fake_ratio",
-        "fake_ratio_tracks": "track_fake_ratio",
-        "duplicate_ratio_particles": "particle_duplicate_ratio",
-        "duplicate_ratio_tracks": "track_duplicate_ratio",
-    }
-    for algorithm, values in run_metrics.get("performance", {}).items():
-        algorithm_key = algorithm_keys.get(algorithm, algorithm)
-        for metric_name, value in values.items():
-            if finite_number(value):
-                metric_key = metric_keys.get(metric_name, metric_name)
-                metrics[f"{prefix}_{algorithm_key}_{metric_key}"] = float(value)
-
-    resource_metrics = run_metrics.get("resource_metrics", {})
-    for source, suffix in (
-        ("peak_rss_kb", "peak_rss_kb"),
-        ("user_seconds", "user_seconds"),
-        ("system_seconds", "system_seconds"),
-    ):
-        value = resource_metrics.get(source)
-        if finite_number(value):
-            metrics[f"{prefix}_{suffix}"] = float(value)
-
-    events = stage.get("events")
-    if finite_number(events):
-        metrics[f"{prefix}_events"] = float(events)
 
 
 def add_metrics(metrics: dict[str, float], prefix: str, run_metrics: dict[str, Any], stage: dict[str, Any]) -> None:
@@ -254,6 +182,7 @@ def flatten_summary(summary: dict[str, Any], path: Path, records_root: Path) -> 
     if (
         timed_comparison.get("complete") is True
         and timed_comparison.get("aggregation") == PROTOCOL_METADATA["timed_aggregation"]
+        and timed_comparison.get("events") == PROTOCOL_METADATA["timing_events"]
         and timed_comparison.get("repetition_count") == PROTOCOL_METADATA["timed_repetitions"]
         and isinstance(timed_comparison.get("repetitions"), list)
         and len(timed_comparison["repetitions"]) == PROTOCOL_METADATA["timed_repetitions"]
@@ -287,7 +216,7 @@ def flatten_summary(summary: dict[str, Any], path: Path, records_root: Path) -> 
             if finite_number(value):
                 metrics[f"rss_{suffix}"] = float(value)
 
-    if not set(SEEDING_OBJECTIVE_METRICS).issubset(metrics):
+    if not set(PRIMARY_REPORT_METRICS).issubset(metrics):
         return None
     category = str(summary.get("category", path.parent.parent.name))
     category = {"development": "Development", "evaluation": "Evaluation"}.get(
@@ -312,98 +241,7 @@ def flatten_summary(summary: dict[str, Any], path: Path, records_root: Path) -> 
     }
 
 
-def flatten_historical_summary(
-    summary: dict[str, Any],
-    path: Path,
-    records_root: Path,
-    protocol: dict[str, Any],
-) -> dict[str, Any] | None:
-    """Read one immutable v2 summary using its original full-chain structure."""
-
-    if (
-        summary.get("status") != "passed"
-        or summary.get("protocol_id") != protocol["id"]
-        or summary.get("protocol") != protocol
-    ):
-        return None
-    stages = summary.get("stages")
-    if (
-        not isinstance(stages, list)
-        or not stages
-        or any(
-            not isinstance(stage, dict) or stage.get("status") != "passed"
-            for stage in stages
-        )
-    ):
-        return None
-
-    metrics: dict[str, float] = {}
-    for stage in stages:
-        if stage.get("comparison") != "clean":
-            continue
-        if legacy_stage_prefix(stage) == "clean" and isinstance(
-            stage.get("run_metrics"), dict
-        ):
-            add_legacy_metrics(metrics, "clean", stage["run_metrics"], stage)
-
-    timed_comparison = summary.get("timed_comparison", {})
-    if not isinstance(timed_comparison, dict):
-        timed_comparison = {}
-    repetitions = timed_comparison.get("repetitions")
-    median_metrics = timed_comparison.get("median_run_metrics")
-    expected_repetitions = int(protocol["timed_repetitions"])
-    if (
-        timed_comparison.get("complete") is True
-        and timed_comparison.get("aggregation") == protocol["timed_aggregation"]
-        and timed_comparison.get("repetition_count") == expected_repetitions
-        and isinstance(repetitions, list)
-        and len(repetitions) == expected_repetitions
-        and all(
-            isinstance(repetition, dict)
-            and repetition.get("status") == "passed"
-            and isinstance(repetition.get("run_metrics"), dict)
-            and bool(repetition.get("run_metrics"))
-            for repetition in repetitions
-        )
-        and isinstance(median_metrics, dict)
-    ):
-        timed_stage = {
-            "events": timed_comparison.get(
-                "events", protocol["development_events"]
-            )
-        }
-        timed_median = dict(median_metrics)
-        timed_median["resource_metrics"] = timed_comparison.get(
-            "median_resource_metrics", {}
-        )
-        add_legacy_metrics(metrics, "timed", timed_median, timed_stage)
-
-    if not set(SEEDING_OBJECTIVE_METRICS).issubset(metrics):
-        return None
-    category = str(summary.get("category", path.parent.parent.name))
-    category = {"development": "Development", "evaluation": "Evaluation"}.get(
-        category.lower(), category
-    )
-    commit = str(summary.get("implementation_commit", ""))
-    try:
-        measured_proposal = proposal_from_summary(summary)
-    except ProposalError as error:
-        raise ValueError(f"{path}: {error}") from error
-    return {
-        "candidate": str(summary.get("candidate_name", path.parent.name)),
-        "category": category,
-        "commit": commit,
-        "commit_url": commit_url(commit),
-        "record": path.relative_to(records_root).as_posix(),
-        "protocol_id": str(protocol["id"]),
-        "source_protocol_id": str(protocol["id"]),
-        "metrics": metrics,
-        "timing_evidence": timing_evidence(timed_comparison),
-        "proposal": measured_proposal,
-    }
-
-
-def seeding_objective_summary_paths(
+def active_summary_paths(
     records_root: Path,
     dataset: str,
 ) -> list[Path]:
@@ -414,13 +252,13 @@ def seeding_objective_summary_paths(
         except (OSError, json.JSONDecodeError):
             continue
         category = str(summary.get("category", path.parent.parent.name)).lower()
-        if category == dataset and seeding_objective_protocol(summary) is not None:
+        if category == dataset and is_compatible_summary(summary):
             paths.append(path)
     return paths
 
 
 def load_records(records_root: Path, dataset: str) -> list[dict[str, Any]]:
-    """Load the captain-approved v2/v3 seeding objective family."""
+    """Load exact, complete active v3 summaries."""
 
     rows: list[dict[str, Any]] = []
     if not records_root.is_dir():
@@ -431,140 +269,22 @@ def load_records(records_root: Path, dataset: str) -> list[dict[str, Any]]:
         except (OSError, json.JSONDecodeError) as error:
             print(f"warning: skipping {path}: {error}", file=sys.stderr)
             continue
-        protocol = seeding_objective_protocol(summary)
-        if protocol is None:
+        if not is_compatible_summary(summary):
             continue
         category = str(summary.get("category", path.parent.parent.name)).lower()
         if category != dataset:
             continue
-        row = (
-            flatten_summary(summary, path, records_root)
-            if protocol["id"] == PROTOCOL_ID
-            else flatten_historical_summary(summary, path, records_root, protocol)
-        )
+        row = flatten_summary(summary, path, records_root)
         if row is not None:
             rows.append(row)
     return rows
 
 
-def _raw_peak_rss(row: dict[str, Any]) -> tuple[str, Any]:
-    protocol_id = str(row.get("source_protocol_id", row.get("protocol_id", "")))
-    key = "timed_peak_rss_kb" if protocol_id == "acts-seeding-v2" else "rss_peak_rss_kb"
-    return key, row.get("metrics", {}).get(key)
-
-
-def _positive_finite(value: Any) -> bool:
-    return finite_number(value) and float(value) > 0
-
-
-def apply_rss_genesis_offset(
-    rows: list[dict[str, Any]], baseline: str, dataset: str
-) -> dict[str, Any]:
-    """Place v2 RSS deltas on the v3 Genesis scale for diagnostics only."""
-
-    scoped_rows = [row for row in rows if str(row.get("category", "")).lower() == dataset]
-    genesis_samples: dict[str, list[float]] = {
-        "acts-seeding-v2": [],
-        "acts-seeding-v3": [],
-    }
-    for row in scoped_rows:
-        if row.get("candidate") != baseline:
-            continue
-        protocol_id = str(row.get("source_protocol_id", row.get("protocol_id", "")))
-        _, raw_rss = _raw_peak_rss(row)
-        if protocol_id in genesis_samples and _positive_finite(raw_rss):
-            genesis_samples[protocol_id].append(float(raw_rss))
-
-    means = {
-        protocol_id: (
-            math.fsum(values) / len(values) if values else None
-        )
-        for protocol_id, values in genesis_samples.items()
-    }
-    v2_mean = means["acts-seeding-v2"]
-    v3_mean = means["acts-seeding-v3"]
-    offset = (
-        float(v3_mean) - float(v2_mean)
-        if _positive_finite(v2_mean) and _positive_finite(v3_mean)
-        else None
-    )
-    if offset is not None and not finite_number(offset):
-        offset = None
-
-    for row in scoped_rows:
-        metrics = row.setdefault("metrics", {})
-        metrics.pop(RSS_DISPLAY_METRIC, None)
-        protocol_id = str(row.get("source_protocol_id", row.get("protocol_id", "")))
-        raw_key, raw_rss = _raw_peak_rss(row)
-        provenance: dict[str, Any] = {
-            "source_protocol_id": protocol_id,
-            "raw_metric_key": raw_key,
-            "raw_peak_rss_kb": raw_rss,
-            "display_metric_key": RSS_DISPLAY_METRIC,
-            "diagnostic_only": True,
-            "display_peak_rss_kb": None,
-        }
-        if protocol_id == "acts-seeding-v3" and _positive_finite(raw_rss):
-            display_rss = float(raw_rss)
-            metrics[RSS_DISPLAY_METRIC] = display_rss
-            provenance.update(
-                {
-                    "display_value_kind": "raw_v3",
-                    "display_peak_rss_kb": display_rss,
-                    "offset_kb": 0.0,
-                }
-            )
-        elif (
-            protocol_id == "acts-seeding-v2"
-            and _positive_finite(raw_rss)
-            and offset is not None
-        ):
-            display_rss = float(raw_rss) + offset
-            if _positive_finite(display_rss):
-                metrics[RSS_DISPLAY_METRIC] = display_rss
-                provenance.update(
-                    {
-                        "display_value_kind": "v2_genesis_offset",
-                        "display_peak_rss_kb": display_rss,
-                        "offset_kb": offset,
-                    }
-                )
-            else:
-                provenance["unavailable_reason"] = "non_positive_adjusted_value"
-        elif protocol_id == "acts-seeding-v2" and offset is None:
-            provenance["unavailable_reason"] = "both_protocol_genesis_means_required"
-        else:
-            provenance["unavailable_reason"] = "invalid_raw_value"
-        row["rss_provenance"] = provenance
-
-    return {
-        "method": "genesis_offset",
-        "diagnostic_only": True,
-        "dataset": dataset,
-        "genesis_candidate": RSS_GENESIS_CANDIDATE,
-        "v2_genesis_mean_kb": v2_mean,
-        "v2_genesis_samples": len(genesis_samples["acts-seeding-v2"]),
-        "v3_genesis_mean_kb": v3_mean,
-        "v3_genesis_samples": len(genesis_samples["acts-seeding-v3"]),
-        "offset_kb": offset,
-    }
-
-
 def metric_label(key: str) -> str:
     labels = {
-        "clean_total_time_ms": "Clean total selected time (ms)",
-        "timed_total_time_ms": "Timed total selected time (ms)",
-        "clean_time_per_event_ms": "Clean selected time/event (ms)",
-        "timed_total_time_per_event_ms": "Legacy diagnostic: full-chain time/event (ms)",
         "timed_seeding_time_per_event_ms": "PRIMARY: seeding time/event (ms)",
-        "timed_ckf_time_per_event_ms": "Legacy diagnostic: CKF time/event (ms)",
-        "timed_ambiguity_time_per_event_ms": "Legacy diagnostic: ambiguity time/event (ms)",
-        "clean_ambiguity_particle_efficiency": "Legacy ambiguity particle efficiency",
-        "timed_ambiguity_particle_efficiency": "Legacy ambiguity particle efficiency",
         "timed_seeding_particle_efficiency": "PRIMARY: seeding particle efficiency",
-        RSS_DISPLAY_METRIC: "Diagnostic Peak RSS (Genesis-offset adjusted, KiB)",
-        "rss_peak_rss_kb": "Raw seeding-only Peak RSS (KiB)",
-        "timed_peak_rss_kb": "Raw v2 full-chain Peak RSS (KiB)",
+        RSS_DISPLAY_METRIC: "Raw seeding-only Peak RSS (KiB)",
         "rss_user_seconds": "Separate RSS-run user CPU (s)",
         "rss_system_seconds": "Separate RSS-run system CPU (s)",
     }
@@ -590,15 +310,21 @@ def aggregate_genesis(
     rows: list[dict[str, Any]],
     baseline: str,
     dataset: str,
-    protocol_id: str = SEEDING_OBJECTIVE_FAMILY_ID,
+    protocol_id: str = PROTOCOL_ID,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     """Replace only Genesis rows with one arithmetic-mean point.
 
     Candidate rows stay independent. Genesis records are complete, passed,
-    seeding-objective-family summaries by the time they reach this function.
+    active v3 summaries by the time they reach this function.
     """
 
-    scoped_rows = [row for row in rows if str(row["category"]).lower() == dataset]
+    scoped_rows = [
+        row
+        for row in rows
+        if str(row["category"]).lower() == dataset
+        and row.get("protocol_id") == PROTOCOL_ID
+        and row.get("source_protocol_id", PROTOCOL_ID) == PROTOCOL_ID
+    ]
     genesis = [row for row in scoped_rows if row["candidate"] == baseline]
     provenance = _genesis_provenance(genesis)
     aggregation: dict[str, Any] = {
@@ -620,13 +346,6 @@ def aggregate_genesis(
         key: math.fsum(float(row["metrics"][key]) for row in genesis) / len(genesis)
         for key in sorted(common_metrics)
     }
-    rss_values = [
-        float(row["metrics"][RSS_DISPLAY_METRIC])
-        for row in genesis
-        if _positive_finite(row["metrics"].get(RSS_DISPLAY_METRIC))
-    ]
-    if rss_values:
-        metrics[RSS_DISPLAY_METRIC] = math.fsum(rss_values) / len(rss_values)
     categories = sorted({str(row["category"]) for row in genesis})
     aggregate_category = dataset.title()
     commits = {str(row.get("commit", "")) for row in genesis}
@@ -681,10 +400,15 @@ def build_report(
     baseline: str,
     dataset: str = "development",
 ) -> dict[str, Any]:
-    rss_normalization = apply_rss_genesis_offset(
-        rows, RSS_GENESIS_CANDIDATE, dataset
+    active_rows = [
+        row
+        for row in rows
+        if row.get("protocol_id") == PROTOCOL_ID
+        and row.get("source_protocol_id", PROTOCOL_ID) == PROTOCOL_ID
+    ]
+    report_rows, genesis_aggregation = aggregate_genesis(
+        active_rows, baseline, dataset
     )
-    report_rows, genesis_aggregation = aggregate_genesis(rows, baseline, dataset)
     if dataset == "evaluation":
         genesis = next(
             (row for row in report_rows if row["candidate"] == baseline), None
@@ -707,15 +431,9 @@ def build_report(
         "baseline": baseline,
         "dataset": dataset,
         "genesis_aggregation": genesis_aggregation,
-        "rss_normalization": rss_normalization,
-        "protocol_id": SEEDING_OBJECTIVE_FAMILY_ID,
-        "active_protocol_id": PROTOCOL_ID,
+        "protocol_id": PROTOCOL_ID,
         "repository_url": REPOSITORY_URL,
-        "protocol": {
-            "id": SEEDING_OBJECTIVE_FAMILY_ID,
-            "members": [protocol["id"] for protocol in SEEDING_OBJECTIVE_PROTOCOLS],
-            "equivalent_metrics": list(SEEDING_OBJECTIVE_METRICS),
-        },
+        "protocol": dict(PROTOCOL_METADATA),
         "rss_metric_key": RSS_DISPLAY_METRIC,
         "primary_objectives": {
             "minimize": "timed_seeding_time_per_event_ms",
@@ -743,7 +461,7 @@ def main() -> int:
     # A freshly reset campaign has no summaries and should still produce a
     # reviewable placeholder. If summaries exist, retain strict metric checks
     # so malformed or incomplete Genesis records do not pass unnoticed.
-    summary_paths = seeding_objective_summary_paths(records_root, args.dataset)
+    summary_paths = active_summary_paths(records_root, args.dataset)
     if rows or summary_paths:
         for axis, metric in (("x", args.x_metric), ("y", args.y_metric)):
             if metric not in report["metric_keys"] and metric not in OPTIONAL_REPORT_METRICS:
@@ -764,18 +482,10 @@ def main() -> int:
                 summary = json.loads(path.read_text(encoding="utf-8"))
             except (OSError, json.JSONDecodeError):
                 continue
-            protocol = seeding_objective_protocol(summary)
             if (
                 summary.get("status") == "passed"
-                and protocol is not None
-                and (
-                    flatten_summary(summary, path, records_root)
-                    if protocol["id"] == PROTOCOL_ID
-                    else flatten_historical_summary(
-                        summary, path, records_root, protocol
-                    )
-                )
-                is None
+                and is_compatible_summary(summary)
+                and flatten_summary(summary, path, records_root) is None
             ):
                 raise SystemExit(f"malformed populated record: {path}")
 
@@ -797,7 +507,7 @@ def main() -> int:
     print(f"wrote {campaign_index}")
     print(
         f"included {len(rows)} passed record(s) from {args.dataset} "
-        f"under {SEEDING_OBJECTIVE_FAMILY_ID}"
+        f"under {PROTOCOL_ID}"
     )
     return 0
 

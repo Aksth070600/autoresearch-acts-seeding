@@ -479,11 +479,28 @@
       "type": "object",
       "additionalProperties": false,
       "required": ["candidate", "mechanism_key", "implementation_commit", "directly_inspected"],
+      "dependentRequired": {
+        "historical_record": ["files_changed"],
+        "files_changed": ["historical_record"]
+      },
       "properties": {
         "candidate": {"$ref": "#/$defs/candidate"},
         "mechanism_key": {"$ref": "#/$defs/label"},
         "implementation_commit": {"$ref": "#/$defs/fullCommit"},
-        "directly_inspected": {"const": true}
+        "directly_inspected": {"const": true},
+        "historical_record": {
+          "type": "string",
+          "pattern": "^records/(Development|Evaluation)/[^/]+/summary\\.json$"
+        },
+        "files_changed": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^optimization-files/[^#,]+#L[1-9][0-9]*-L[1-9][0-9]*(,L[1-9][0-9]*-L[1-9][0-9]*)*$"
+          }
+        }
       }
     },
     "combinationProvenance": {
