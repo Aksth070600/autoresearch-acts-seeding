@@ -13,7 +13,7 @@
 #include "Acts/Seeding2/DoubletSeedFinder.hpp"
 #include "Acts/Utilities/detail/ContainerIterator.hpp"
 
-#include <vector>
+#include <boost/container/small_vector.hpp>
 
 namespace Acts {
 
@@ -104,7 +104,7 @@ class TripletTopCandidates {
   const_iterator end() const { return const_iterator(*this, size()); }
 
  private:
-  std::vector<Entry> m_candidates;
+  boost::container::small_vector<Entry, 64> m_candidates;
 };
 
 /// Interface and a collection of standard implementations for a triplet seed
