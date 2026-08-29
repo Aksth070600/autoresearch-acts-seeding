@@ -3,7 +3,7 @@
   "campaign": {
     "name": "ACTS Seeding continuous aug29",
     "branch": "autoresearch-acts-seeding/aug29",
-    "phase": "empty-range candidate queued Development",
+    "phase": "continuous Development",
     "started_at": "2026-08-28T23:32:45Z",
     "mode": "continuous",
     "campaign_id": "acts-seeding-aug29-20260829",
@@ -15,16 +15,7 @@
       "combination_percentage": 25
     }
   },
-  "current_attempt": {
-    "candidate": "GridEmptyNeighborRangePrune",
-    "mechanism_key": "grid-empty-neighbor-range-prune",
-    "mechanism_family": "grid-neighbor-dataflow-pruning",
-    "classification": "major",
-    "controlled_stage": "queued Development run",
-    "state": "queued",
-    "started_at": "2026-08-28T23:59:18Z",
-    "scheduling": "ordinary"
-  },
+  "current_attempt": null,
   "attempt_metadata": [
     {
       "candidate": "FilterDisabledConfirmationQualityMapElision",
@@ -168,6 +159,16 @@
           }
         ],
         "combination_provenance": null
+      },
+      "evidence": {
+        "files_changed": [
+          "optimization-files/Examples/Algorithms/TrackFinding/src/GridTripletSeedingAlgorithm.cpp#L273-L277",
+          "optimization-files/Examples/Algorithms/TrackFinding/src/GridTripletSeedingAlgorithm.cpp#L283-L287"
+        ],
+        "outcome": "crash",
+        "lesson": "The independently sourced empty-range adaptation segfaulted in the one-event smoke stage after a successful build; stop candidate generation pending diagnosis against untouched Genesis.",
+        "prediction_assessment": "inconclusive",
+        "prediction_assessment_rationale": "The smoke stage crashed before any timed or seeding-efficiency evidence was produced."
       }
     }
   ],
