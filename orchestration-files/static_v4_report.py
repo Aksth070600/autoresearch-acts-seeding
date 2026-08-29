@@ -136,7 +136,9 @@ def render(summary: dict[str, Any]) -> str:
 <style>body{{font-family:system-ui;margin:2rem;max-width:1500px}}table{{border-collapse:collapse}}th,td{{border:1px solid #bbb;padding:.35rem;text-align:right}}th:nth-child(2),td:nth-child(2),th:nth-child(4),td:nth-child(4){{text-align:left}}code{{font-size:.85em}}</style></head>
 <body><h1>ACTS Seeding owned-static v4 Development pilot</h1>
 <p><b>Protocol:</b> <code>{html.escape(summary["protocol_id"])}</code><br>
+<b>Protocol revision:</b> {summary["protocol_revision"]}<br>
 <b>Dataset:</b> <code>{html.escape(summary["dataset_id"])}</code></p>
+<p>Revision 1 evidence is preserved as invalid diagnostics and is excluded from every calibration, classification, ranking, and conclusion below.</p>
 <h2>Genesis calibration</h2>
 <p>Five timings (ms/event): {timings}<br>
 Median G: {calibration["median_per_event_nanoseconds"] / 1_000_000:.6f} ms/event<br>

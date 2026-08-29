@@ -19,10 +19,11 @@
     "development_only": true,
     "evaluation_authorized": false,
     "name": "ACTS Seeding owned-static v4 Development pilot",
-    "phase": "revision 2 wholesale scientific execution complete; final Genesis restoration queued",
+    "phase": "protocol revision 2 complete; Genesis restored; archive report rendered",
     "protocol_id": "acts-seeding-v4-owned-static",
     "protocol_revision": 2,
     "protocol_revision_started_at": "2026-08-29T18:01:44Z",
+    "scientific_completed_at": "2026-08-29T18:33:00Z",
     "started_at": "2026-08-29T16:18:00Z"
   },
   "corrections": "orchestration-files/acts-v4-static-pilot/corrections.json",
@@ -48,7 +49,14 @@
     "publication_path": "/storage/thomaaks/acts-v4-owned-static/acts-seeding-v4-owned-static-a05ae8663452d52dc2b90e2fa5372091a2cb04feb8cce86646da9f6ccbc2f3fb",
     "qualification_evidence_sha256": "ed16fef43f1b6818e52cf6b0493d9c786a70444d212e7ab521eadd03d4b37237"
   },
-  "final_genesis_restoration": null,
+  "final_genesis_restoration": {
+    "build_manifest_sha256": "be4b95d060f4798d724ebe5b3f4fecaa52145822977327965dc6ea6b2f85ef98",
+    "evidence_sha256": "dd61341f067cc67510be1f8228fa02a6c373ddf4615104017ef24b49d9f5d2ae",
+    "path": "orchestration-files/acts-v4-static-pilot/evidence/revision-2-final-genesis-restoration.json",
+    "protocol_revision": 2,
+    "source_binary_consistent": true,
+    "source_manifest_sha256": "22f7d97e2bd08de128467b83cf5a2373bbf36fc064fb9430011e3ffd7e55a183"
+  },
   "genesis_calibration": {
     "path": "orchestration-files/acts-v4-static-pilot/calibration.json",
     "protocol_revision": 2,
