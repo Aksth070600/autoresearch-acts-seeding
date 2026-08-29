@@ -479,7 +479,7 @@
     "genesis_commit": "f8e809e118e41889850cf9cf3c46988e7c583625",
     "mode": "continuous",
     "name": "ACTS Seeding continuous aug29",
-    "phase": "exact 2:1:1 complete; restoring Genesis",
+    "phase": "archive finalization; Genesis restored",
     "started_at": "2026-08-28T23:32:45Z",
     "targets": {
       "combination_percentage": 25,
@@ -488,7 +488,7 @@
     }
   },
   "control": {
-    "completed_at": null,
+    "completed_at": "2026-08-29T02:39:28.987159Z",
     "consumed_at": "2026-08-29T02:01:00.493560Z",
     "observed_at": "2026-08-29T01:58:19.534901Z",
     "request": {
@@ -503,7 +503,7 @@
       "workflow_run_id": 33227702222,
       "workflow_run_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/actions/runs/33227702222"
     },
-    "state": "consumed"
+    "state": "completed"
   },
   "current_attempt": null,
   "pull_request_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/36",
@@ -516,7 +516,7 @@
       "major_candidates": 2,
       "minor_candidates": 1
     },
-    "state": "finishing"
+    "state": "completed"
   },
   "schema_version": "1.1.0"
 }
