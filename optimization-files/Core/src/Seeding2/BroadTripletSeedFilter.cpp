@@ -180,7 +180,7 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
          variableCompTopIndex++) {
       std::size_t compatibleTopSpIndex =
           cache().topSpIndexVec[variableCompTopIndex];
-      if (compatibleTopSpIndex == topSpIndex) {
+      if (compatibleTopSpIndex == topSpIndex) [[unlikely]] {
         continue;
       }
       auto otherSpT = spacePoints[tripletTopCandidates
