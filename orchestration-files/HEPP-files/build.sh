@@ -6,6 +6,19 @@ ACTS_BUILD_DIR="${ACTS_BUILD_DIR:-$ACTS_SOURCE/build}"
 ACTS_BUILD_JOBS="${ACTS_BUILD_JOBS:-8}"
 ACTS_LCG_SETUP="${ACTS_LCG_SETUP:-/cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc13-opt/setup.sh}"
 
+build_options=()
+if (( $# > 1 )); then
+  echo 'error: build.sh accepts only --clean-first' >&2
+  exit 2
+fi
+if (( $# == 1 )); then
+  if [[ "$1" != --clean-first ]]; then
+    echo "error: unsupported build option: $1" >&2
+    exit 2
+  fi
+  build_options+=(--clean-first)
+fi
+
 if [[ -f "$ACTS_LCG_SETUP" ]]; then
   unset CC CXX FC
   set +e +u
@@ -31,5 +44,5 @@ command -v cmake >/dev/null 2>&1 || {
 }
 
 echo "ACTS build parallel jobs: $ACTS_BUILD_JOBS"
-cmake --build "$ACTS_BUILD_DIR" --parallel "$ACTS_BUILD_JOBS"
+cmake --build "$ACTS_BUILD_DIR" "${build_options[@]}" --parallel "$ACTS_BUILD_JOBS"
 echo "ACTS build completed: $ACTS_BUILD_DIR"
