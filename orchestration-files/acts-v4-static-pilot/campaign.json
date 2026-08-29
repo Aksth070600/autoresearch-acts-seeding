@@ -169,9 +169,10 @@
     {
       "candidate": "GridBinCountCacheV4",
       "classification": "minor",
+      "implementation_commit": "6af7ae76c154b656e99f7eecdcf98e6703b8db5b",
       "mechanism_key": "v4-grid-bin-count-cache",
       "slot": 3,
-      "state": "proposal drafted"
+      "state": "proposal bound and queued"
     },
     {
       "candidate": null,
