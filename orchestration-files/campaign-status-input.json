@@ -372,6 +372,87 @@
           }
         ]
       }
+    },
+    {
+      "candidate": "MiddleIndexSelectorLayoutCombination",
+      "classification": "combination",
+      "combination_provenance": {
+        "compatibility_rationale": "The middle-index storage change is confined to candidate retention and reconstruction, while the branch-layout hint is confined to input grid filling; they share no files, state, ordering contract, or cut logic.",
+        "interaction_hypothesis": "Applying the independent candidate-record traffic reduction and grid-fill branch layout together may offset their isolated instruction-layout costs across separate stages while preserving identical reconstructed seeds.",
+        "sources": [
+          {
+            "candidate": "CandidateMiddleIndexHoist",
+            "directly_inspected": true,
+            "implementation_commit": "c5a0bf9b3056c0d23442187232e41c69a0c8e459",
+            "mechanism_key": "candidate-shared-middle-index-storage"
+          },
+          {
+            "candidate": "GridSelectorRejectionUnlikely",
+            "directly_inspected": true,
+            "implementation_commit": "db4bf462e709fb8d20f2e304736ad5b62f49fc78",
+            "mechanism_key": "grid-selector-rejection-branch-layout"
+          }
+        ]
+      },
+      "mechanism_family": "cross-stage-candidate-grid-combination",
+      "mechanism_key": "middle-index-selector-layout-combination",
+      "proposal": {
+        "candidate": "MiddleIndexSelectorLayoutCombination",
+        "changed_symbols": [
+          "ActsExamples::GridTripletSeedingAlgorithm::execute",
+          "Acts::CandidatesForMiddleSp2::StoredCandidate",
+          "Acts::CandidatesForMiddleSp2::clear",
+          "Acts::CandidatesForMiddleSp2::push",
+          "Acts::CandidatesForMiddleSp2::toSortedCandidates"
+        ],
+        "combination_provenance": {
+          "compatibility_rationale": "The middle-index storage change is confined to candidate retention and reconstruction, while the branch-layout hint is confined to input grid filling; they share no files, state, ordering contract, or cut logic.",
+          "interaction_hypothesis": "Applying the independent candidate-record traffic reduction and grid-fill branch layout together may offset their isolated instruction-layout costs across separate stages while preserving identical reconstructed seeds.",
+          "sources": [
+            {
+              "candidate": "CandidateMiddleIndexHoist",
+              "directly_inspected": true,
+              "implementation_commit": "c5a0bf9b3056c0d23442187232e41c69a0c8e459",
+              "mechanism_key": "candidate-shared-middle-index-storage"
+            },
+            {
+              "candidate": "GridSelectorRejectionUnlikely",
+              "directly_inspected": true,
+              "implementation_commit": "db4bf462e709fb8d20f2e304736ad5b62f49fc78",
+              "mechanism_key": "grid-selector-rejection-branch-layout"
+            }
+          ]
+        },
+        "expected_hot_path": "Input grid-fill selector control flow plus bounded per-middle candidate insertion, replacement, and output reconstruction.",
+        "falsifier": "The prediction fails if median seeding time does not decrease from fresh Genesis or timed seeding particle efficiency changes.",
+        "hypothesis": "Combining the candidate-record middle-index hoist with the independent grid-selector rejection layout may recover stage-local instruction and data-cache benefits that were hidden by isolated run variance, reducing median seeding time while preserving reconstructed seeds and seeding efficiency.",
+        "implementation_commit": "38ed7c40fe7fc7b344a4c5816e85df906baad52e",
+        "intended_files": [
+          "optimization-files/Core/include/Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp",
+          "optimization-files/Core/src/Seeding2/detail/CandidatesForMiddleSp2.cpp",
+          "optimization-files/Examples/Algorithms/TrackFinding/src/GridTripletSeedingAlgorithm.cpp"
+        ],
+        "novelty_reason": "This is the first measured v3 interaction between a candidate-retention record-layout mechanism and an input-grid branch-layout mechanism; it exactly combines two completed source implementations without adding cuts, ordering changes, or a third mechanism.",
+        "predicted_directions": {
+          "timed_seeding_particle_efficiency": "unchanged",
+          "timed_seeding_time_per_event_ms": "decrease"
+        },
+        "schema_version": "1.0.0",
+        "source_references": [
+          {
+            "directly_inspected": true,
+            "reference": "c5a0bf9b3056c0d23442187232e41c69a0c8e459",
+            "relevance": "The directly inspected completed v3 source hoists the fixed middle index from retained candidate records and reconstructs the same public triplets.",
+            "source_type": "prior record/commit"
+          },
+          {
+            "directly_inspected": true,
+            "reference": "db4bf462e709fb8d20f2e304736ad5b62f49fc78",
+            "relevance": "The directly inspected completed v3 source changes only the code layout of the grid-selector rejection edge.",
+            "source_type": "prior record/commit"
+          }
+        ]
+      }
     }
   ],
   "blockers": [],
@@ -408,28 +489,20 @@
     },
     "state": "consumed"
   },
-  "current_attempt": null,
+  "current_attempt": {
+    "candidate": "MiddleIndexSelectorLayoutCombination",
+    "classification": "combination",
+    "controlled_stage": "queued Development finalization run",
+    "mechanism_family": "cross-stage-candidate-grid-combination",
+    "mechanism_key": "middle-index-selector-layout-combination",
+    "scheduling": "finalization",
+    "started_at": "2026-08-29T02:20:49.683087Z",
+    "state": "queued"
+  },
   "pull_request_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/36",
   "scheduler": {
     "blocker": null,
-    "combination_readiness": {
-      "compatibility_rationale": "The middle-index storage change is confined to candidate retention and reconstruction, while the branch-layout hint is confined to input grid filling; they share no files, state, ordering contract, or cut logic.",
-      "interaction_hypothesis": "Applying the independent candidate-record traffic reduction and grid-fill branch layout together may offset their isolated instruction-layout costs across separate stages while preserving identical reconstructed seeds.",
-      "sources": [
-        {
-          "candidate": "CandidateMiddleIndexHoist",
-          "directly_inspected": true,
-          "implementation_commit": "c5a0bf9b3056c0d23442187232e41c69a0c8e459",
-          "mechanism_key": "candidate-shared-middle-index-storage"
-        },
-        {
-          "candidate": "GridSelectorRejectionUnlikely",
-          "directly_inspected": true,
-          "implementation_commit": "db4bf462e709fb8d20f2e304736ad5b62f49fc78",
-          "mechanism_key": "grid-selector-rejection-branch-layout"
-        }
-      ]
-    },
+    "combination_readiness": null,
     "final_targets": {
       "combination_candidates": 1,
       "completed_candidates": 4,

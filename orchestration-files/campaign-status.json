@@ -498,7 +498,16 @@
     },
     "state": "consumed"
   },
-  "current_attempt": null,
+  "current_attempt": {
+    "candidate": "MiddleIndexSelectorLayoutCombination",
+    "classification": "combination",
+    "controlled_stage": "queued Development finalization run",
+    "mechanism_family": "cross-stage-candidate-grid-combination",
+    "mechanism_key": "middle-index-selector-layout-combination",
+    "scheduling": "finalization",
+    "started_at": "2026-08-29T02:20:49.683087Z",
+    "state": "queued"
+  },
   "failures": [
     {
       "candidate": "FilterDisabledConfirmationQualityMapElision",
@@ -516,9 +525,9 @@
       "record_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug29/records/Failed/20260828T235932Z-GridEmptyNeighborRangePrune/summary.json"
     }
   ],
-  "generated_at": "2026-08-29T02:20:00.929406Z",
+  "generated_at": "2026-08-29T02:20:51.010717Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/f7cbf968a99e6d93ddd9334cf457ac7c374ce7cc",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/38ed7c40fe7fc7b344a4c5816e85df906baad52e",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/aug29",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/36"
   },
@@ -545,11 +554,11 @@
         "target_percentage": 25.0
       }
     },
-    "elapsed_seconds": 10035.929406,
-    "estimated_remaining_seconds": 1019.055,
-    "eta_basis": "Median of 3 completed attempts.",
+    "elapsed_seconds": 10086.010717,
+    "estimated_remaining_seconds": 1017.72737,
+    "eta_basis": "Median of 3 completed attempts; current attempt elapsed time deducted.",
     "eta_sample_count": 3,
-    "expected_finish_at": "2026-08-29T02:36:59.984406Z",
+    "expected_finish_at": "2026-08-29T02:37:48.738087Z",
     "major_candidates": 2,
     "median_completed_attempt_duration_seconds": 1019.055,
     "minor_candidates": 1
@@ -607,16 +616,11 @@
   },
   "scheduler": {
     "blocker": null,
-    "combination_eligible": true,
+    "combination_eligible": false,
     "decision": {
-      "action": "schedule-finalization",
+      "action": "finish-active",
       "category": "combination",
-      "deficits": {
-        "combination": 1,
-        "major": 0,
-        "minor": 0
-      },
-      "reason": "Selected from only the persisted exact-ratio category deficits."
+      "reason": "Finish the active candidate transaction and record its restoration evidence."
     },
     "final_targets": {
       "combination_candidates": 1,
