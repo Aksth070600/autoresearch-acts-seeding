@@ -231,11 +231,7 @@
       "timed_seeding_time_per_event_ms": null
     }
   ],
-  "blockers": [
-    {
-      "message": "Focused diagnosis found Genesis source and backup hashes match after restore, but preserved old source timestamps leave newer candidate objects and libraries; restore_build reports no work, so an untouched-Genesis runtime comparison is unavailable and candidate generation is stopped."
-    }
-  ],
+  "blockers": [],
   "campaign": {
     "branch": "autoresearch-acts-seeding/aug29",
     "campaign_id": "acts-seeding-aug29-20260829",
@@ -243,7 +239,7 @@
     "genesis_commit": "f8e809e118e41889850cf9cf3c46988e7c583625",
     "mode": "continuous",
     "name": "ACTS Seeding continuous aug29",
-    "phase": "blocked: restored source but stale binaries",
+    "phase": "continuous Development",
     "started_at": "2026-08-28T23:32:45Z",
     "targets": {
       "combination_percentage": 25,
@@ -276,9 +272,9 @@
       "record_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug29/records/Failed/20260828T235932Z-GridEmptyNeighborRangePrune/summary.json"
     }
   ],
-  "generated_at": "2026-08-29T00:03:58.161099Z",
+  "generated_at": "2026-08-29T00:58:21.859658Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/3c38feb4d499d70818b847af1c04f8109cc8e1be",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/3e0bf7fa00faf4e84634a112f1ae09e7590c926e",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/aug29",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/36"
   },
@@ -305,7 +301,7 @@
         "target_percentage": 25.0
       }
     },
-    "elapsed_seconds": 1873.161099,
+    "elapsed_seconds": 5136.859658,
     "estimated_remaining_seconds": null,
     "eta_basis": "Unavailable until a stop request fixes the exact final candidate target.",
     "eta_sample_count": 0,

@@ -3,7 +3,7 @@
   "campaign": {
     "name": "ACTS Seeding continuous aug29",
     "branch": "autoresearch-acts-seeding/aug29",
-    "phase": "blocked: restored source but stale binaries",
+    "phase": "continuous Development",
     "started_at": "2026-08-28T23:32:45Z",
     "mode": "continuous",
     "campaign_id": "acts-seeding-aug29-20260829",
@@ -172,9 +172,7 @@
       }
     }
   ],
-  "blockers": [
-    "Focused diagnosis found Genesis source and backup hashes match after restore, but preserved old source timestamps leave newer candidate objects and libraries; restore_build reports no work, so an untouched-Genesis runtime comparison is unavailable and candidate generation is stopped."
-  ],
+  "blockers": [],
   "pull_request_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/36",
   "control": {
     "state": "open",
