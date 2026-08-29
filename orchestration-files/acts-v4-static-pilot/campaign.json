@@ -13,7 +13,7 @@
     "development_only": true,
     "evaluation_authorized": false,
     "name": "ACTS Seeding owned-static v4 Development pilot",
-    "phase": "slot 2 major proposal",
+    "phase": "slot 2 complete; preparing slot 3 minor",
     "protocol_id": "acts-seeding-v4-owned-static",
     "started_at": "2026-08-29T16:18:00Z"
   },
@@ -112,8 +112,59 @@
       "classification": "major",
       "implementation_commit": "f7539bf674476baaf366ef9069bbaa2668d112f8",
       "mechanism_key": "v4-triplet-kinematics-pair-layout",
+      "per_event_nanoseconds": 297133000,
+      "record": "records/Development/20260829T192928Z-TripletKinematicsPairV4/summary.json",
+      "record_sha256": "7e0c9502576578c1d60991c6db322b9f3af92fc2a2d5a3c1b3f50081ca1153f9",
+      "result_sha256": "c156e91991df87fa6a5141f8d9cc33ef525b8361895930371cbf6a158e08899e",
+      "scientific_classification": {
+        "efficiency": {
+          "candidate": {
+            "denominator": 29155,
+            "numerator": 28699
+          },
+          "genesis": {
+            "denominator": 29155,
+            "numerator": 28699
+          },
+          "label": "equal"
+        },
+        "efficiency_regression": false,
+        "overall": "inconclusive",
+        "timing": {
+          "candidate_interval_nanoseconds": {
+            "lower": {
+              "denominator": 74119,
+              "numerator": 21728742024000
+            },
+            "upper": {
+              "denominator": 74119,
+              "numerator": 22317659630000
+            }
+          },
+          "candidate_per_event_nanoseconds": 297133000,
+          "empirical_noise_envelope": {
+            "denominator": 74119,
+            "numerator": 991
+          },
+          "genesis_interval_nanoseconds": {
+            "lower": {
+              "denominator": 1,
+              "numerator": 292512000
+            },
+            "upper": {
+              "denominator": 1,
+              "numerator": 300440000
+            }
+          },
+          "genesis_median_per_event_nanoseconds": 296476000,
+          "label": "directional slower, inconclusive"
+        },
+        "timing_regression": false
+      },
+      "scientific_processes": 1,
       "slot": 2,
-      "state": "proposal bound and queued"
+      "state": "completed",
+      "status": "passed"
     },
     {
       "candidate": null,
