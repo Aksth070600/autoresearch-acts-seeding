@@ -1,26 +1,77 @@
 {
-  "schema": "acts-v4-owned-static-pilot-campaign-v1",
+  "archive": null,
   "campaign": {
-    "name": "ACTS Seeding owned-static v4 Development pilot",
+    "acts_commit": "34edd48852f766e1b9d94d3dc996e27476339f1b",
     "branch": "fm/acts-v4-static-pilot",
-    "started_at": "2026-08-29T16:18:00Z",
-    "phase": "canonical dataset bootstrap",
+    "canonical_project_genesis_commit": "5ed3b47329ceda4edaab48b1efc3c5635f361a30",
+    "composition": [
+      "major",
+      "major",
+      "minor",
+      "combination"
+    ],
     "development_only": true,
     "evaluation_authorized": false,
-    "canonical_project_genesis_commit": "5ed3b47329ceda4edaab48b1efc3c5635f361a30",
-    "acts_commit": "34edd48852f766e1b9d94d3dc996e27476339f1b",
+    "name": "ACTS Seeding owned-static v4 Development pilot",
+    "phase": "slot 1 major proposal",
     "protocol_id": "acts-seeding-v4-owned-static",
-    "composition": ["major", "major", "minor", "combination"]
+    "started_at": "2026-08-29T16:18:00Z"
   },
-  "dataset": null,
-  "genesis_calibration": null,
-  "slots": [
-    {"slot": 1, "classification": "major", "candidate": null, "state": "planned"},
-    {"slot": 2, "classification": "major", "candidate": null, "state": "planned"},
-    {"slot": 3, "classification": "minor", "candidate": null, "state": "planned"},
-    {"slot": 4, "classification": "combination", "candidate": null, "state": "planned"}
-  ],
   "corrections": "orchestration-files/acts-v4-static-pilot/corrections.json",
+  "dataset": {
+    "dataset_id": "acts-seeding-v4-owned-static-a05ae8663452d52dc2b90e2fa5372091a2cb04feb8cce86646da9f6ccbc2f3fb",
+    "identities": {
+      "build_manifest_sha256": "be4b95d060f4798d724ebe5b3f4fecaa52145822977327965dc6ea6b2f85ef98",
+      "builder_sha256": "f9380cb48b543858c38dff55c8af2988327348cd37c22fa39f9927af2fa45edb",
+      "digitization_sha256": "6a0461596ce79b2f545b007b53dbfddeb8a5d271139da97d54cd8633931514e4",
+      "field_sha256": "5be8bf620f7cb26d7072278f6d6838f8e720eb4dab49ce38f644eb066d0af1df",
+      "geometry_material_sha256": "5e079ef040a01f7bc4613504d3b28e9755a025310f673e2cc8cae9773072225b",
+      "geometry_tgeo_sha256": "9f9db095435b17531276a8aa9fb431a1b61bd4bb4634ed5efb52f5d997b7b1fc",
+      "overlay_manifest_sha256": "089d02f44ee7d39deab9960f6ff71c74a199971b1464acbb5419ffdd2fb937ce",
+      "pixel_geometry_selection_sha256": "18047f98e9e6925c0d453bb092b7bf9cebc5541781811de2a1bffce04fb9948b",
+      "reader_source_sha256": "e75fceac72dc4e6c1da24071c9b4647ea32ec3bcc2a8e914f44b75b2bb9abf52",
+      "seeding_config_sha256": "3015fccbafd5857928886b9c3dcb6fae7c816bb9a9a3ff8b45fc0c7f1e7080af",
+      "source_manifest_sha256": "22f7d97e2bd08de128467b83cf5a2373bbf36fc064fb9430011e3ffd7e55a183",
+      "writer_source_sha256": "e75fceac72dc4e6c1da24071c9b4647ea32ec3bcc2a8e914f44b75b2bb9abf52"
+    },
+    "manifest_identity_sha256": "a05ae8663452d52dc2b90e2fa5372091a2cb04feb8cce86646da9f6ccbc2f3fb",
+    "manifest_sha256": "13274b01178462f1375eebd0cba283551a5ca04ec9724aa189aaf33e4e2f5666",
+    "payload_sha256": "534c14c0cbc2f37aecd091d879c168348d2c2e2cc4f9719c3580bbd54dc6d510",
+    "publication_path": "/storage/thomaaks/acts-v4-owned-static/acts-seeding-v4-owned-static-a05ae8663452d52dc2b90e2fa5372091a2cb04feb8cce86646da9f6ccbc2f3fb",
+    "qualification_evidence_sha256": "ed16fef43f1b6818e52cf6b0493d9c786a70444d212e7ab521eadd03d4b37237"
+  },
   "final_genesis_restoration": null,
-  "archive": null
+  "genesis_calibration": {
+    "path": "orchestration-files/acts-v4-static-pilot/calibration.json",
+    "runs": 5,
+    "sha256": "df15fb6a291106b05c39830accfe9eac936eefa52d18e8f9aa7dd586a5e08605"
+  },
+  "schema": "acts-v4-owned-static-pilot-campaign-v1",
+  "slots": [
+    {
+      "candidate": "PackedVarianceColumnsV4",
+      "classification": "major",
+      "mechanism_key": "v4-core-packed-variance-zr-layout",
+      "slot": 1,
+      "state": "proposal drafted"
+    },
+    {
+      "candidate": null,
+      "classification": "major",
+      "slot": 2,
+      "state": "planned"
+    },
+    {
+      "candidate": null,
+      "classification": "minor",
+      "slot": 3,
+      "state": "planned"
+    },
+    {
+      "candidate": null,
+      "classification": "combination",
+      "slot": 4,
+      "state": "planned"
+    }
+  ]
 }
