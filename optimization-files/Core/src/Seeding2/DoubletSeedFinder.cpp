@@ -46,13 +46,12 @@ class Impl final : public DoubletSeedFinder {
     const float impactMax =
         isBottomCandidate ? -m_cfg.impactMax : m_cfg.impactMax;
 
-    const float xM = middleSp.xy()[0];
-    const float yM = middleSp.xy()[1];
-    const float zM = middleSp.zr()[0];
-    const float rM = middleSp.zr()[1];
-    const auto& varianceZRM = middleSp.varianceZR();
-    const float varianceZM = varianceZRM[0];
-    const float varianceRM = varianceZRM[1];
+    const float xM = middleSpInfo.x;
+    const float yM = middleSpInfo.y;
+    const float zM = middleSpInfo.z;
+    const float rM = middleSpInfo.r;
+    const float varianceZM = middleSpInfo.varianceZ;
+    const float varianceRM = middleSpInfo.varianceR;
 
     // equivalent to impactMax / (rM * rM);
     const float vIPAbs = impactMax * middleSpInfo.uIP2;
@@ -94,15 +93,13 @@ class Impl final : public DoubletSeedFinder {
     }
 
     const SpacePointContainer2& container = candidateSps.container();
-    for (auto [indexO, xyO, zrO, varianceZRO] : candidateSps.zip(
+    for (auto [indexO, xyO, zrO, varianceZO, varianceRO] : candidateSps.zip(
              container.xyColumn(), container.zrColumn(),
-             container.varianceZRColumn())) {
+             container.varianceZColumn(), container.varianceRColumn())) {
       const float xO = xyO[0];
       const float yO = xyO[1];
       const float zO = zrO[0];
       const float rO = zrO[1];
-      const float varianceZO = varianceZRO[0];
-      const float varianceRO = varianceZRO[1];
 
       float deltaR = 0;
       if constexpr (isBottomCandidate) {
@@ -356,7 +353,8 @@ MiddleSpInfo DoubletSeedFinder::computeMiddleSpInfo(
   const float sinPhiM = -spM.xy()[1] * uIP;
   const float uIP2 = uIP * uIP;
 
-  return {uIP, uIP2, cosPhiM, sinPhiM};
+  return {uIP, uIP2, cosPhiM, sinPhiM, spM.xy()[0], spM.xy()[1],
+          spM.zr()[0], rM, spM.varianceZ(), spM.varianceR()};
 }
 
 }  // namespace Acts
