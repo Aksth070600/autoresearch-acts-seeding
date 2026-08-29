@@ -317,6 +317,52 @@
           }
         ]
       }
+    },
+    {
+      "candidate": "GridSortCopyLoopFusion",
+      "classification": "major",
+      "mechanism_family": "grid-core-materialization-dataflow",
+      "mechanism_key": "grid-sort-copy-loop-fusion",
+      "proposal": {
+        "candidate": "GridSortCopyLoopFusion",
+        "changed_symbols": [
+          "ActsExamples::GridTripletSeedingAlgorithm::execute"
+        ],
+        "combination_provenance": null,
+        "expected_hot_path": "ActsExamples::GridTripletSeedingAlgorithm::execute per-event radius sorting and grid-to-core space-point materialization.",
+        "falsifier": "The prediction fails if median seeding time does not decrease from fresh Genesis or timed seeding particle efficiency changes.",
+        "hypothesis": "Sorting each cylindrical grid bin immediately before copying that bin into contiguous core storage will remove a full grid-bin traversal and keep the sorted index list hot for its only subsequent read, reducing median seeding time without changing bin order, core layout, or seeding efficiency.",
+        "implementation_commit": "9e099cf8f01be9dc235ace9d27e4c13eb41b6ae8",
+        "intended_files": [
+          "optimization-files/Examples/Algorithms/TrackFinding/src/GridTripletSeedingAlgorithm.cpp"
+        ],
+        "novelty_reason": "Earlier grid fusion moved radius-extrema accumulation into the copy or derived extrema from sorted endpoints; this candidate leaves radius-range computation intact and instead fuses the complete per-bin sort pass with the existing contiguous core-copy pass.",
+        "predicted_directions": {
+          "timed_seeding_particle_efficiency": "unchanged",
+          "timed_seeding_time_per_event_ms": "decrease"
+        },
+        "schema_version": "1.0.0",
+        "source_references": [
+          {
+            "directly_inspected": true,
+            "reference": "records/Development/20260828T233358598694Z-Genesis/summary.json",
+            "relevance": "The fresh v3 Genesis fixes the current baseline and contains separate complete grid-bin sort and core-copy traversals.",
+            "source_type": "Genesis"
+          },
+          {
+            "directly_inspected": true,
+            "reference": "4eb7cad7956863101a76572fdc3c05fa0ccba342",
+            "relevance": "The directly inspected failed fusion changed radius-range accumulation but retained separate sorting, establishing a distinct pass-fusion boundary.",
+            "source_type": "prior record/commit"
+          },
+          {
+            "directly_inspected": true,
+            "reference": "59e7fb575596a7adc2936cd40bf1b06a6303b79a",
+            "relevance": "The directly inspected successful batch materialization changed allocation and row creation; this candidate preserves per-row creation and changes only sort-to-copy traversal locality.",
+            "source_type": "prior record/commit"
+          }
+        ]
+      }
     }
   ],
   "blockers": [],
@@ -353,7 +399,16 @@
     },
     "state": "consumed"
   },
-  "current_attempt": null,
+  "current_attempt": {
+    "candidate": "GridSortCopyLoopFusion",
+    "classification": "major",
+    "controlled_stage": "queued Development finalization run",
+    "mechanism_family": "grid-core-materialization-dataflow",
+    "mechanism_key": "grid-sort-copy-loop-fusion",
+    "scheduling": "finalization",
+    "started_at": "2026-08-29T02:02:30.786181Z",
+    "state": "queued"
+  },
   "pull_request_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/36",
   "scheduler": {
     "blocker": null,

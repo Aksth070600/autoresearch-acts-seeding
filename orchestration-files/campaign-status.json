@@ -424,7 +424,16 @@
     },
     "state": "consumed"
   },
-  "current_attempt": null,
+  "current_attempt": {
+    "candidate": "GridSortCopyLoopFusion",
+    "classification": "major",
+    "controlled_stage": "queued Development finalization run",
+    "mechanism_family": "grid-core-materialization-dataflow",
+    "mechanism_key": "grid-sort-copy-loop-fusion",
+    "scheduling": "finalization",
+    "started_at": "2026-08-29T02:02:30.786181Z",
+    "state": "queued"
+  },
   "failures": [
     {
       "candidate": "FilterDisabledConfirmationQualityMapElision",
@@ -442,9 +451,9 @@
       "record_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug29/records/Failed/20260828T235932Z-GridEmptyNeighborRangePrune/summary.json"
     }
   ],
-  "generated_at": "2026-08-29T02:01:01.145069Z",
+  "generated_at": "2026-08-29T02:02:32.177930Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/38ea5387b4b89eea9206acf31eed3554b818488c",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/9e099cf8f01be9dc235ace9d27e4c13eb41b6ae8",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/aug29",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/36"
   },
@@ -471,7 +480,7 @@
         "target_percentage": 25.0
       }
     },
-    "elapsed_seconds": 8896.145069,
+    "elapsed_seconds": 8987.17793,
     "estimated_remaining_seconds": null,
     "eta_basis": "Unavailable until 3 completed attempt durations exist (2 available).",
     "eta_sample_count": 2,
@@ -535,14 +544,9 @@
     "blocker": null,
     "combination_eligible": false,
     "decision": {
-      "action": "schedule-finalization",
+      "action": "finish-active",
       "category": "major",
-      "deficits": {
-        "combination": 1,
-        "major": 1,
-        "minor": 0
-      },
-      "reason": "Selected from only the persisted exact-ratio category deficits."
+      "reason": "Finish the active candidate transaction and record its restoration evidence."
     },
     "final_targets": {
       "combination_candidates": 1,
