@@ -19,7 +19,7 @@
     "development_only": true,
     "evaluation_authorized": false,
     "name": "ACTS Seeding owned-static v4 Development pilot",
-    "phase": "revision 2 slots 1-3 complete; combination fixed-gate eligibility passed",
+    "phase": "revision 2 wholesale scientific execution complete; final Genesis restoration queued",
     "protocol_id": "acts-seeding-v4-owned-static",
     "protocol_revision": 2,
     "protocol_revision_started_at": "2026-08-29T18:01:44Z",
@@ -259,9 +259,60 @@
       },
       "implementation_commit": "e84e83e5eb41ebd13df27adccc0d52149131a27a",
       "mechanism_key": "v4-packed-variance-triplet-kinematics-combination",
+      "per_event_nanoseconds": 294378000,
       "proposal": "orchestration-files/acts-v4-static-pilot/proposals/revision-2/slot-4-layout-combination.json",
+      "record": "records/Development/20260829T203202Z-R2-PackedVarianceTripletKinematicsV4/summary.json",
+      "record_sha256": "eb2fc7f228e2bf22fb5ebdde006822008ab6f6f1e8de5281ce866b575f339006",
+      "result_sha256": "edcd3c48f321693c4c51ba63c81c77eedfb39fe52de54fb139a91c8f325636be",
+      "scientific_classification": {
+        "efficiency": {
+          "candidate": {
+            "denominator": 29155,
+            "numerator": 28699
+          },
+          "genesis": {
+            "denominator": 29155,
+            "numerator": 28699
+          },
+          "label": "equal"
+        },
+        "efficiency_regression": false,
+        "overall": "inconclusive",
+        "timing": {
+          "candidate_interval_nanoseconds": {
+            "lower": {
+              "denominator": 24779,
+              "numerator": 7243685851500
+            },
+            "upper": {
+              "denominator": 24779,
+              "numerator": 7345099072500
+            }
+          },
+          "candidate_per_event_nanoseconds": 294378000,
+          "empirical_noise_envelope": {
+            "denominator": 99116,
+            "numerator": 689
+          },
+          "genesis_interval_nanoseconds": {
+            "lower": {
+              "denominator": 1,
+              "numerator": 295281000
+            },
+            "upper": {
+              "denominator": 1,
+              "numerator": 299415000
+            }
+          },
+          "genesis_median_per_event_nanoseconds": 297348000,
+          "label": "directional faster, inconclusive"
+        },
+        "timing_regression": false
+      },
+      "scientific_processes": 1,
       "slot": 4,
-      "state": "revision 2 fixed-gate eligible and queued"
+      "state": "revision 2 completed",
+      "status": "passed"
     }
   ]
 }
