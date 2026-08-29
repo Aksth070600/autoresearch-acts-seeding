@@ -345,7 +345,16 @@
     "request": null,
     "state": "open"
   },
-  "current_attempt": null,
+  "current_attempt": {
+    "candidate": "GridSelectorRejectionUnlikely",
+    "classification": "minor",
+    "controlled_stage": "queued Development run",
+    "mechanism_family": "grid-input-selection",
+    "mechanism_key": "grid-selector-rejection-branch-layout",
+    "scheduling": "ordinary",
+    "started_at": "2026-08-29T01:23:09.384311Z",
+    "state": "queued"
+  },
   "failures": [
     {
       "candidate": "FilterDisabledConfirmationQualityMapElision",
@@ -363,9 +372,9 @@
       "record_url": "https://github.com/Aksth070600/autoresearch-acts-seeding/blob/autoresearch-acts-seeding/aug29/records/Failed/20260828T235932Z-GridEmptyNeighborRangePrune/summary.json"
     }
   ],
-  "generated_at": "2026-08-29T01:21:02.188381Z",
+  "generated_at": "2026-08-29T01:23:09.898814Z",
   "links": {
-    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/01adaf2e5e21154a16532655a944a0daa18b378b",
+    "active_commit": "https://github.com/Aksth070600/autoresearch-acts-seeding/commit/db4bf462e709fb8d20f2e304736ad5b62f49fc78",
     "campaign_branch": "https://github.com/Aksth070600/autoresearch-acts-seeding/tree/autoresearch-acts-seeding/aug29",
     "pull_request": "https://github.com/Aksth070600/autoresearch-acts-seeding/pull/36"
   },
@@ -392,7 +401,7 @@
         "target_percentage": 25.0
       }
     },
-    "elapsed_seconds": 6497.188381,
+    "elapsed_seconds": 6624.898814,
     "estimated_remaining_seconds": null,
     "eta_basis": "Unavailable until a stop request fixes the exact final candidate target.",
     "eta_sample_count": 1,
@@ -456,9 +465,9 @@
     "blocker": null,
     "combination_eligible": false,
     "decision": {
-      "action": "schedule",
+      "action": "finish-active",
       "category": "minor",
-      "reason": "Selected by deterministic target deficit and category-order tie-break."
+      "reason": "Finish the active candidate transaction and record its restoration evidence."
     },
     "final_targets": null,
     "state": "running",

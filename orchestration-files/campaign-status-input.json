@@ -15,7 +15,16 @@
       "combination_percentage": 25
     }
   },
-  "current_attempt": null,
+  "current_attempt": {
+    "candidate": "GridSelectorRejectionUnlikely",
+    "mechanism_key": "grid-selector-rejection-branch-layout",
+    "mechanism_family": "grid-input-selection",
+    "classification": "minor",
+    "controlled_stage": "queued Development run",
+    "state": "queued",
+    "started_at": "2026-08-29T01:23:09.384311Z",
+    "scheduling": "ordinary"
+  },
   "attempt_metadata": [
     {
       "candidate": "FilterDisabledConfirmationQualityMapElision",
@@ -238,6 +247,46 @@
         "lesson": "Hoisting the invariant middle index preserved seeding efficiency but raised median seeding time by 5.65 ms/event; retain direct TripletCandidate2 records.",
         "prediction_assessment": "mixed",
         "prediction_assessment_rationale": "Timed seeding particle efficiency remained 0.983101 as predicted, but median seeding time increased to 295.55 ms/event from the 289.90 ms/event Genesis baseline."
+      }
+    },
+    {
+      "candidate": "GridSelectorRejectionUnlikely",
+      "mechanism_key": "grid-selector-rejection-branch-layout",
+      "mechanism_family": "grid-input-selection",
+      "classification": "minor",
+      "proposal": {
+        "schema_version": "1.0.0",
+        "candidate": "GridSelectorRejectionUnlikely",
+        "implementation_commit": "db4bf462e709fb8d20f2e304736ad5b62f49fc78",
+        "hypothesis": "Marking rejection by the connected ITk space-point selector as unlikely will keep the common accepted grid-fill path contiguous and reduce median seeding time without changing selected space points or seeding efficiency.",
+        "falsifier": "The prediction fails if median seeding time does not decrease from fresh Genesis or timed seeding particle efficiency changes.",
+        "predicted_directions": {
+          "timed_seeding_time_per_event_ms": "decrease",
+          "timed_seeding_particle_efficiency": "unchanged"
+        },
+        "expected_hot_path": "ActsExamples::GridTripletSeedingAlgorithm::execute per-input space-point selector branch during cylindrical grid fill.",
+        "changed_symbols": [
+          "ActsExamples::GridTripletSeedingAlgorithm::execute"
+        ],
+        "intended_files": [
+          "optimization-files/Examples/Algorithms/TrackFinding/src/GridTripletSeedingAlgorithm.cpp"
+        ],
+        "novelty_reason": "The earlier selector-loop specialization duplicated the entire traversal around event-invariant delegate connectivity; this minor candidate preserves the original single loop and changes only the code layout of the per-space-point rejection edge.",
+        "source_references": [
+          {
+            "source_type": "Genesis",
+            "reference": "records/Development/20260828T233358598694Z-Genesis/summary.json",
+            "relevance": "The fresh v3 Genesis fixes the objective baseline and confirms the unmodified connected-selector path completes the controlled matrix.",
+            "directly_inspected": true
+          },
+          {
+            "source_type": "prior record/commit",
+            "reference": "0d20ab17cbb3fce4de2eecad71a4874db99849ed",
+            "relevance": "The directly inspected selector-loop specialization changed whole-loop topology; its implementation establishes that this branch is a distinct narrower code-layout experiment.",
+            "directly_inspected": true
+          }
+        ],
+        "combination_provenance": null
       }
     }
   ],
