@@ -123,7 +123,6 @@ GridTripletSeedingAlgorithm::GridTripletSeedingAlgorithm(
   m_filterConfig.maxQualitySeedsPerSpMConf = m_cfg.maxQualitySeedsPerSpMConf;
   m_filterConfig.useDeltaRinsteadOfTopRadius =
       m_cfg.useDeltaRinsteadOfTopRadius;
-  m_filterConfig.outputUsesCopyFromIndex = true;
 
   m_filterLogger = this->logger().cloneWithSuffix("Filter");
 
@@ -158,27 +157,28 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
 
   Acts::SpacePointContainer2 coreSpacePoints(
       Acts::SpacePointColumns::PackedXY | Acts::SpacePointColumns::PackedZR |
-      Acts::SpacePointColumns::VarianceZ | Acts::SpacePointColumns::VarianceR |
+      Acts::SpacePointColumns::PackedVarianceZR |
       Acts::SpacePointColumns::CopyFromIndex);
-  coreSpacePoints.reserve(grid.numberOfSpacePoints());
+  coreSpacePoints.createSpacePoints(grid.numberOfSpacePoints());
+  std::uint32_t coreIndex = 0;
   std::vector<Acts::SpacePointIndexRange2> gridSpacePointRanges;
   gridSpacePointRanges.reserve(grid.numberOfBins());
   for (std::size_t i = 0; i < grid.numberOfBins(); ++i) {
-    std::uint32_t begin = coreSpacePoints.size();
+    std::uint32_t begin = coreIndex;
     for (Acts::SpacePointIndex2 spIndex : grid.at(i)) {
       const ConstSpacePointProxy& sp = spacePoints[spIndex];
 
-      auto newSp = coreSpacePoints.createSpacePoint();
+      auto newSp = coreSpacePoints[coreIndex++];
       newSp.xy() = std::array<float, 2>{static_cast<float>(sp.x()),
                                         static_cast<float>(sp.y())};
       newSp.zr() = std::array<float, 2>{static_cast<float>(sp.z()),
                                         static_cast<float>(sp.r())};
-      newSp.varianceZ() = static_cast<float>(sp.varianceZ());
-      newSp.varianceR() = static_cast<float>(sp.varianceR());
+      newSp.varianceZR() =
+          std::array<float, 2>{static_cast<float>(sp.varianceZ()),
+                               static_cast<float>(sp.varianceR())};
       newSp.copyFromIndex() = sp.index();
     }
-    std::uint32_t end = coreSpacePoints.size();
-    gridSpacePointRanges.emplace_back(begin, end);
+    gridSpacePointRanges.emplace_back(begin, coreIndex);
   }
 
   // Compute radius range. We rely on the fact the grid is storing the proxies
@@ -304,6 +304,13 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
 
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
                         << spacePoints.size() << " space points");
+
+  // update seed space point indices to original space point container
+  for (auto seed : seeds) {
+    for (auto& spIndex : seed.spacePointIndices()) {
+      spIndex = coreSpacePoints.at(spIndex).copyFromIndex();
+    }
+  }
 
   m_outputSeeds(ctx, std::move(seeds));
   return ProcessCode::SUCCESS;
