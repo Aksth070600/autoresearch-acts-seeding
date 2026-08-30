@@ -95,9 +95,9 @@ class BinnedGroup {
   /// @brief Get the begin iterator
   /// @return The iterator
   BinnedGroupIterator<grid_t> begin() const;
-  /// @brief Get the end iterator
-  /// @return The iterator
-  BinnedGroupIterator<grid_t> end() const;
+  /// @brief Get the end sentinel
+  /// @return The sentinel
+  BinnedGroupSentinel end() const;
 
  private:
   /// @brief The N-dimentional grid
