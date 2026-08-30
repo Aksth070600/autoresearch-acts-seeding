@@ -1,0 +1,4 @@
+attempted exact replacement: if (deltaCotTheta2 > error2 + scatteringInRegion2) {
+assertion: occurrence count must equal 1
+observed: occurrence count equals 2
+result: assertion failed before write
