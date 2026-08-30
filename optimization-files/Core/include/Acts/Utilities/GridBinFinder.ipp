@@ -41,8 +41,35 @@ void GridBinFinder<DIM>::storeValue(first_value_t&& fv, vals&&... others) {
 }
 
 template <std::size_t DIM>
+void GridBinFinder<DIM>::initializeFixedSizePerAxis() {
+  std::array<std::pair<int, int>, DIM> fixed{};
+  bool isFixed = true;
+  for (std::size_t i = 0; i < DIM; ++i) {
+    std::visit(
+        [&fixed, &isFixed, i](const auto& val) {
+          using value_t = typename std::decay_t<decltype(val)>;
+          if constexpr (std::is_same_v<int, value_t>) {
+            fixed[i] = {-val, val};
+          } else if constexpr (std::is_same_v<std::pair<int, int>, value_t>) {
+            fixed[i] = {-val.first, val.second};
+          } else {
+            isFixed = false;
+          }
+        },
+        m_values[i]);
+  }
+  if (isFixed) {
+    m_fixedSizePerAxis = fixed;
+  }
+}
+
+template <std::size_t DIM>
 std::array<std::pair<int, int>, DIM> GridBinFinder<DIM>::getSizePerAxis(
     const std::array<std::size_t, DIM>& locPosition) const {
+  if (m_fixedSizePerAxis.has_value()) {
+    return *m_fixedSizePerAxis;
+  }
+
   std::array<std::pair<int, int>, DIM> output;
   for (std::size_t i(0ul); i < DIM; ++i) {
     output[i] = std::visit(
