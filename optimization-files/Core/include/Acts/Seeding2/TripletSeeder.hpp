@@ -26,8 +26,10 @@ class TripletSeeder {
   /// Cache for storing intermediate results during triplet seeding to avoid
   /// reallocation.
   struct Cache {
-    /// Shared cache for top and bottom doublets associated with one middle.
-    DoubletsForMiddleSp doublets;
+    /// Cache for bottom doublets associated with middle space points
+    DoubletsForMiddleSp bottomDoublets;
+    /// Cache for top doublets associated with middle space points
+    DoubletsForMiddleSp topDoublets;
 
     /// Sorted container of bottom doublet indices with cotangent theta values
     std::vector<DoubletsForMiddleSp::IndexAndCotTheta> sortedBottoms;
