@@ -18,13 +18,12 @@ CandidatesForMiddleSp2::CandidatesForMiddleSp2()
 CandidatesForMiddleSp2::CandidatesForMiddleSp2(Size nLow, Size nHigh)
     : m_maxSizeLow(nLow), m_maxSizeHigh(nHigh) {
   // Reserve enough memory for all collections
-  m_storageLow.reserve(nLow != kNoSize ? nLow : 0);
-  m_storageHigh.reserve(nHigh != kNoSize ? nHigh : 0);
+  m_storage.reserve((nLow != kNoSize ? nLow : 0) +
+                    (nHigh != kNoSize ? nHigh : 0));
 }
 
 void CandidatesForMiddleSp2::clear() {
-  m_storageLow.clear();
-  m_storageHigh.clear();
+  m_storage.clear();
   m_indicesLow.clear();
   m_indicesHigh.clear();
 }
@@ -35,25 +34,25 @@ bool CandidatesForMiddleSp2::push(SpacePointIndex2 spB, SpacePointIndex2 spM,
   // Decide in which collection this candidate may be added to according to the
   // isQuality boolean
   if (isQuality) {
-    return push(m_indicesHigh, m_storageHigh, m_maxSizeHigh, spB, spM, spT,
-                weight, zOrigin, isQuality);
+    return push(m_indicesHigh, m_maxSizeHigh, spB, spM, spT, weight, zOrigin,
+                isQuality);
   }
-  return push(m_indicesLow, m_storageLow, m_maxSizeLow, spB, spM, spT, weight,
-              zOrigin, isQuality);
+  return push(m_indicesLow, m_maxSizeLow, spB, spM, spT, weight, zOrigin,
+              isQuality);
 }
 
-bool CandidatesForMiddleSp2::push(Container& container, Storage& storage,
-                                  Size nMax, SpacePointIndex2 spB,
-                                  SpacePointIndex2 spM, SpacePointIndex2 spT,
-                                  float weight, float zOrigin, bool isQuality) {
+bool CandidatesForMiddleSp2::push(Container& container, Size nMax,
+                                  SpacePointIndex2 spB, SpacePointIndex2 spM,
+                                  SpacePointIndex2 spT, float weight,
+                                  float zOrigin, bool isQuality) {
   if (nMax == 0) {
     return false;
   }
 
   if (container.size() < nMax) {
     // If there is still space, add anything
-    storage.emplace_back(spB, spM, spT, weight, zOrigin, isQuality);
-    container.emplace_back(weight, storage.size() - 1);
+    m_storage.emplace_back(spB, spM, spT, weight, zOrigin, isQuality);
+    container.emplace_back(weight, m_storage.size() - 1);
     std::ranges::push_heap(container, comparator);
     return true;
   }
@@ -66,7 +65,7 @@ bool CandidatesForMiddleSp2::push(Container& container, Storage& storage,
   }
 
   // Remove element with lower weight and add this one
-  storage[smallestIndex] =
+  m_storage[smallestIndex] =
       TripletCandidate2(spB, spM, spT, weight, zOrigin, isQuality);
   std::ranges::pop_heap(container, comparator);
   container.back() = {weight, smallestIndex};
@@ -84,10 +83,10 @@ void CandidatesForMiddleSp2::toSortedCandidates(
   std::ranges::sort_heap(m_indicesLow, comparator);
 
   for (const auto& [weight, index] : m_indicesHigh) {
-    output.emplace_back(m_storageHigh[index]);
+    output.emplace_back(m_storage[index]);
   }
   for (const auto& [weight, index] : m_indicesLow) {
-    output.emplace_back(m_storageLow[index]);
+    output.emplace_back(m_storage[index]);
   }
 
   clear();
