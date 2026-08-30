@@ -42,7 +42,10 @@ BinnedGroupIterator<grid_t>& BinnedGroupIterator<grid_t>::operator++() {
 }
 
 template <typename grid_t>
-typename BinnedGroupIterator<grid_t>::Neighborhood
+std::tuple<
+    boost::container::small_vector<std::size_t, detail::ipow(3, grid_t::DIM)>,
+    std::size_t,
+    boost::container::small_vector<std::size_t, detail::ipow(3, grid_t::DIM)>>
 BinnedGroupIterator<grid_t>::operator*() const {
   /// Get the global and local position from current iterator. This is the bin
   /// with the middle candidate And we know this is not an empty bin
@@ -50,16 +53,38 @@ BinnedGroupIterator<grid_t>::operator*() const {
   std::size_t global_index =
       m_group->grid().globalBinFromLocalBins(localPosition);
 
-  return {m_group->m_bottomBinFinder->findBins(localPosition, m_group->grid()),
-          global_index,
-          m_group->m_topBinFinder->findBins(localPosition, m_group->grid())};
+  /// Get the neighbouring bins
+  boost::container::small_vector<std::size_t, detail::ipow(3, DIM)> bottoms =
+      m_group->m_bottomBinFinder->findBins(localPosition, m_group->grid());
+  boost::container::small_vector<std::size_t, detail::ipow(3, DIM)> tops =
+      m_group->m_topBinFinder->findBins(localPosition, m_group->grid());
+
+  // GCC12+ in Release throws an overread warning here due to the move.
+  // This is from inside boost code, so best we can do is to suppress it.
+#if defined(__GNUC__) && __GNUC__ >= 12 && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-overread"
+#endif
+  return {std::move(bottoms), global_index, std::move(tops)};
+#if defined(__GNUC__) && __GNUC__ >= 12 && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 }
 
 template <typename grid_t>
 void BinnedGroupIterator<grid_t>::findNotEmptyBin() {
-  if (m_gridItr == m_gridItrEnd) {
+  if (m_gridItr == m_gridItrEnd) [[unlikely]] {
     return;
   }
+  /// An unmasked group is the normal path for seeding. Avoid allocating and
+  /// reading a full true mask for that case.
+  if (m_group->mask().empty()) {
+    while (m_gridItr != m_gridItrEnd && (*m_gridItr).empty()) {
+      ++m_gridItr;
+    }
+    return;
+  }
+
   /// Iterate on the grid till we find a not-empty bin
   /// We start from the current bin configuration and move forward
   while (m_gridItr != m_gridItrEnd) {
