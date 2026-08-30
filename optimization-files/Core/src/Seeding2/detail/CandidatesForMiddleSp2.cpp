@@ -9,7 +9,6 @@
 #include "Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp"
 
 #include <algorithm>
-#include <cassert>
 
 namespace Acts {
 
@@ -24,7 +23,6 @@ CandidatesForMiddleSp2::CandidatesForMiddleSp2(Size nLow, Size nHigh)
 }
 
 void CandidatesForMiddleSp2::clear() {
-  m_middleSp.reset();
   m_storage.clear();
   m_indicesLow.clear();
   m_indicesHigh.clear();
@@ -36,14 +34,26 @@ bool CandidatesForMiddleSp2::push(SpacePointIndex2 spB, SpacePointIndex2 spM,
   // Decide in which collection this candidate may be added to according to the
   // isQuality boolean
   if (isQuality) {
-    return push(m_indicesHigh, m_maxSizeHigh, spB, spM, spT, weight, zOrigin,
-                isQuality);
+    return push(m_indicesHigh, m_minimumHigh, m_maxSizeHigh, spB, spM, spT,
+                weight, zOrigin, isQuality);
   }
-  return push(m_indicesLow, m_maxSizeLow, spB, spM, spT, weight, zOrigin,
-              isQuality);
+  return push(m_indicesLow, m_minimumLow, m_maxSizeLow, spB, spM, spT, weight,
+              zOrigin, isQuality);
 }
 
-bool CandidatesForMiddleSp2::push(Container& container, Size nMax,
+CandidatesForMiddleSp2::Size CandidatesForMiddleSp2::findMinimumPosition(
+    const Container& container) {
+  Size minimum = 0;
+  for (Size position = 1; position < container.size(); ++position) {
+    if (container[position].first < container[minimum].first) {
+      minimum = position;
+    }
+  }
+  return minimum;
+}
+
+bool CandidatesForMiddleSp2::push(Container& container,
+                                  Size& minimumPosition, Size nMax,
                                   SpacePointIndex2 spB, SpacePointIndex2 spM,
                                   SpacePointIndex2 spT, float weight,
                                   float zOrigin, bool isQuality) {
@@ -51,33 +61,24 @@ bool CandidatesForMiddleSp2::push(Container& container, Size nMax,
     return false;
   }
 
-  if (m_middleSp.has_value()) {
-    assert(*m_middleSp == spM &&
-           "CandidatesForMiddleSp2 received more than one middle space point");
-  } else {
-    m_middleSp = spM;
-  }
-
   if (container.size() < nMax) {
-    // If there is still space, add anything
-    m_storage.push_back({spB, spT, weight, zOrigin, isQuality});
+    m_storage.emplace_back(spB, spM, spT, weight, zOrigin, isQuality);
     container.emplace_back(weight, m_storage.size() - 1);
-    std::ranges::push_heap(container, comparator);
+    if (container.size() == nMax) {
+      minimumPosition = findMinimumPosition(container);
+    }
     return true;
   }
 
-  // If no space, replace one if quality is enough
-  // Compare to element with lowest weight
-  const auto [smallestWeight, smallestIndex] = container.front();
+  const auto [smallestWeight, smallestIndex] = container[minimumPosition];
   if (weight <= smallestWeight) {
     return false;
   }
 
-  // Remove element with lower weight and add this one
-  m_storage[smallestIndex] = {spB, spT, weight, zOrigin, isQuality};
-  std::ranges::pop_heap(container, comparator);
-  container.back() = {weight, smallestIndex};
-  std::ranges::push_heap(container, comparator);
+  m_storage[smallestIndex] =
+      TripletCandidate2(spB, spM, spT, weight, zOrigin, isQuality);
+  container[minimumPosition] = {weight, smallestIndex};
+  minimumPosition = findMinimumPosition(container);
 
   return true;
 }
@@ -87,22 +88,14 @@ void CandidatesForMiddleSp2::toSortedCandidates(
   output.clear();
   output.reserve(size());
 
-  std::ranges::sort_heap(m_indicesHigh, comparator);
-  std::ranges::sort_heap(m_indicesLow, comparator);
+  std::ranges::sort(m_indicesHigh, comparator);
+  std::ranges::sort(m_indicesLow, comparator);
 
-  assert((m_storage.empty() || m_middleSp.has_value()) &&
-         "retained candidates require a middle space point");
-  const auto appendCandidate = [&](Index index) {
-    const StoredCandidate& candidate = m_storage[index];
-    output.emplace_back(candidate.bottom, *m_middleSp, candidate.top,
-                        candidate.weight, candidate.zOrigin,
-                        candidate.isQuality);
-  };
   for (const auto& [weight, index] : m_indicesHigh) {
-    appendCandidate(index);
+    output.emplace_back(m_storage[index]);
   }
   for (const auto& [weight, index] : m_indicesLow) {
-    appendCandidate(index);
+    output.emplace_back(m_storage[index]);
   }
 
   clear();
