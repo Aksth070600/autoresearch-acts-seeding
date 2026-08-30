@@ -77,7 +77,7 @@ void createSeedsFromGroupsImpl(
   }
 
   // no bottom SP found -> cannot form any triplet
-  if (cache.bottomDoublets.empty()) [[unlikely]] {
+  if (cache.bottomDoublets.empty()) {
     ACTS_VERBOSE("No compatible Bottoms, returning");
     return;
   }
