@@ -21,9 +21,6 @@ namespace Acts {
 template <typename grid_t>
 class BinnedGroup;
 
-/// Stateless end marker for a binned group traversal.
-struct BinnedGroupSentinel {};
-
 /// Iterator over a binned group grid neighborhood.
 /// @tparam grid_t Grid type used by the group.
 template <typename grid_t>
@@ -87,16 +84,6 @@ class BinnedGroupIterator {
   /// @param [in] other The BinnedGroupIterator we are comparing against this one
   /// @return The result of the comparison
   bool operator==(const BinnedGroupIterator<grid_t>& other) const;
-
-  /// @brief Compare against the stateless end marker
-  /// @param [in] sentinel The end marker
-  /// @return Whether the iterator reached its stored end position
-  bool operator==(BinnedGroupSentinel sentinel) const;
-
-  /// @brief Compare against the stateless end marker
-  /// @param [in] sentinel The end marker
-  /// @return Whether the iterator has not reached its stored end position
-  bool operator!=(BinnedGroupSentinel sentinel) const;
 
   /// @brief Increment the iterator by one (pre)
   /// @return The incremented iterator

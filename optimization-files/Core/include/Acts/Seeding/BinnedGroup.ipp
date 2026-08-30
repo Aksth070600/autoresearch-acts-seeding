@@ -20,7 +20,7 @@ BinnedGroup<grid_t>::BinnedGroup(
     const GridBinFinder<BinnedGroup<grid_t>::DIM>& topFinder,
     std::array<std::vector<std::size_t>, BinnedGroup<grid_t>::DIM> navigation)
     : m_grid(std::move(grid)),
-      m_mask(m_grid.size(true), true),
+      m_mask{},
       m_bottomBinFinder(&bottomFinder),
       m_topBinFinder(&topFinder),
       m_bins(std::move(navigation)) {
@@ -89,8 +89,12 @@ BinnedGroupIterator<grid_t> BinnedGroup<grid_t>::begin() const {
 }
 
 template <typename grid_t>
-BinnedGroupSentinel BinnedGroup<grid_t>::end() const {
-  return {};
+BinnedGroupIterator<grid_t> BinnedGroup<grid_t>::end() const {
+  std::array<std::size_t, BinnedGroup<grid_t>::DIM> endline{};
+  for (std::size_t i(0ul); i < BinnedGroup<grid_t>::DIM; ++i) {
+    endline[i] = m_bins[i].size();
+  }
+  return BinnedGroupIterator<grid_t>(*this, endline, m_bins);
 }
 
 }  // namespace Acts
