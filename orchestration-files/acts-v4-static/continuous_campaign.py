@@ -866,7 +866,8 @@ def _issues_from_gh_axi() -> list[dict[str, Any]]:
             "api",
             "repos/Aksth070600/autoresearch-acts-seeding/issues?state=all&labels=campaign-control&per_page=100&sort=created",
             "--jq",
-            "[.[] | {number,title,body,html_url,labels,user}] | @base64",
+            "[.[] | {number,title,body,html_url,"
+            "labels:[.labels[] | {name}],user:{login:.user.login}}] | @base64",
         ],
         check=False,
         text=True,
