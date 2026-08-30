@@ -13,6 +13,7 @@
 #include <boost/container/small_vector.hpp>
 
 #include <limits>
+#include <optional>
 #include <vector>
 
 namespace Acts {
@@ -102,8 +103,18 @@ class CandidatesForMiddleSp2 {
   Size m_maxSizeLow{kNoSize};
   Size m_maxSizeHigh{kNoSize};
 
-  // storage contains the collection of the candidates
-  boost::container::small_vector<TripletCandidate2, 16> m_storage;
+  struct StoredCandidate {
+    SpacePointIndex2 bottom{};
+    SpacePointIndex2 top{};
+    float weight{};
+    float zOrigin{};
+    bool isQuality{};
+  };
+
+  // All retained candidates belong to one fixed middle space point. Store that
+  // index once and keep only candidate-varying fields in each inline record.
+  std::optional<SpacePointIndex2> m_middleSp;
+  boost::container::small_vector<StoredCandidate, 16> m_storage;
 
   Container m_indicesLow;
   Container m_indicesHigh;
