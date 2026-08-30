@@ -1,0 +1,12 @@
+stage=local candidate preparation
+scientific_process_started=false
+scientific_process_allowance_unused=true
+attempted_transformation_commit=f35abcd80f64400c9df6ca78b6ea04937bb06f9b
+command=git show --format= f35abcd80f64400c9df6ca78b6ea04937bb06f9b -- <three intended files> | git apply
+result=failed before implementation commit, remote input copy, build, or scientific process
+stderr:
+error: patch failed: optimization-files/Core/src/Seeding2/DoubletSeedFinder.cpp:94
+error: optimization-files/Core/src/Seeding2/DoubletSeedFinder.cpp: patch does not apply
+error: patch failed: optimization-files/Examples/Algorithms/TrackFinding/src/GridTripletSeedingAlgorithm.cpp:186
+error: optimization-files/Examples/Algorithms/TrackFinding/src/GridTripletSeedingAlgorithm.cpp: patch does not apply
+correction=adapt the directly inspected transformation manually to the exact scientific Genesis contexts, preserve this evidence, then bind a fresh implementation commit before the one authorized process
