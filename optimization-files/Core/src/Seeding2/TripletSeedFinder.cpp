@@ -150,12 +150,9 @@ class Impl final : public TripletSeedFinder {
       const DoubletsForMiddleSp::Proxy& bottomDoublet, TopDoublets& topDoublets,
       TripletTopCandidates& tripletTopCandidates) const {
     const float rM = spM.zr()[1];
-    const float varianceZM = spM.varianceZ();
-    const float varianceRM = spM.varianceR();
-
-    // Reserve enough space, in case current capacity is too little
-    tripletTopCandidates.reserve(tripletTopCandidates.size() +
-                                 topDoublets.size());
+    const auto& varianceZRM = spM.varianceZR();
+    const float varianceZM = varianceZRM[0];
+    const float varianceRM = varianceZRM[1];
 
     const float cotThetaB = bottomDoublet.cotTheta();
     const float erB = bottomDoublet.er();
@@ -206,7 +203,7 @@ class Impl final : public TripletSeedFinder {
       // (scatteringInRegion2). This assumes gaussian error propagation which
       // allows just adding the two errors if they are uncorrelated (which is
       // fair for scattering and measurement uncertainties)
-      if (deltaCotTheta2 > error2 + scatteringInRegion2) [[unlikely]] {
+      if (deltaCotTheta2 > error2 + scatteringInRegion2) {
         if constexpr (sortedByCotTheta) {
           // skip top SPs based on cotTheta sorting when producing triplets
           // break if cotTheta from bottom SP < cotTheta from top SP because
@@ -233,7 +230,7 @@ class Impl final : public TripletSeedFinder {
 
       // sqrt(S2)/B = 2 * helixradius
       // calculated radius must not be smaller than minimum radius
-      if (S2 < B2 * m_cfg.minHelixDiameter2) {
+      if (S2 < B2 * m_cfg.minHelixDiameter2) [[likely]] {
         continue;
       }
 
@@ -282,8 +279,9 @@ class Impl final : public TripletSeedFinder {
     const float rM = spM.zr()[1];
     const float cosPhiM = spM.xy()[0] / rM;
     const float sinPhiM = spM.xy()[1] / rM;
-    const float varianceZM = spM.varianceZ();
-    const float varianceRM = spM.varianceR();
+    const auto& varianceZRM = spM.varianceZR();
+    const float varianceZM = varianceZRM[0];
+    const float varianceRM = varianceZRM[1];
 
     // Reserve enough space, in case current capacity is too little
     tripletTopCandidates.reserve(tripletTopCandidates.size() +
