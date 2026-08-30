@@ -10,8 +10,9 @@
 
 #include "Acts/EventData/Types.hpp"
 
+#include <boost/container/small_vector.hpp>
+
 #include <limits>
-#include <optional>
 #include <vector>
 
 namespace Acts {
@@ -89,7 +90,7 @@ class CandidatesForMiddleSp2 {
 
  private:
   using WeightIndex = std::pair<float, Index>;
-  using Container = std::vector<WeightIndex>;
+  using Container = boost::container::small_vector<WeightIndex, 8>;
 
   static constexpr bool comparator(const WeightIndex& a, const WeightIndex& b) {
     return a.first > b.first;
@@ -101,18 +102,8 @@ class CandidatesForMiddleSp2 {
   Size m_maxSizeLow{kNoSize};
   Size m_maxSizeHigh{kNoSize};
 
-  struct StoredCandidate {
-    SpacePointIndex2 bottom{};
-    SpacePointIndex2 top{};
-    float weight{};
-    float zOrigin{};
-    bool isQuality{};
-  };
-
-  // All retained candidates belong to one fixed middle space point. Store that
-  // index once and keep only candidate-varying fields in each record.
-  std::optional<SpacePointIndex2> m_middleSp;
-  std::vector<StoredCandidate> m_storage;
+  // storage contains the collection of the candidates
+  boost::container::small_vector<TripletCandidate2, 16> m_storage;
 
   Container m_indicesLow;
   Container m_indicesHigh;
