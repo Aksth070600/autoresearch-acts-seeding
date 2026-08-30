@@ -1,0 +1,8 @@
+Final validation preparation failure r1 (no scientific process started)
+
+The first final continuous revalidation invocation used the campaign-start loaded-DSO qualification against binaries that candidate restoration had rebuilt. It failed before writing final revalidation evidence with:
+
+fresh loaded-DSO qualification artifact differs: lib64/libActsCore.so
+ACTS_HELPER_RESULT[v4cont-final-revalidate-20260830t1408z] rc=1
+
+Resolution: generate fresh loaded-DSO qualification for the currently restored private build before revalidation. This exposed the separate immutable-template identity requirement in r2. No candidate or scientific process was run or rerun.

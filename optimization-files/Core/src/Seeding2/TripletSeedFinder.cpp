@@ -150,9 +150,12 @@ class Impl final : public TripletSeedFinder {
       const DoubletsForMiddleSp::Proxy& bottomDoublet, TopDoublets& topDoublets,
       TripletTopCandidates& tripletTopCandidates) const {
     const float rM = spM.zr()[1];
-    const auto& varianceZRM = spM.varianceZR();
-    const float varianceZM = varianceZRM[0];
-    const float varianceRM = varianceZRM[1];
+    const float varianceZM = spM.varianceZ();
+    const float varianceRM = spM.varianceR();
+
+    // Reserve enough space, in case current capacity is too little
+    tripletTopCandidates.reserve(tripletTopCandidates.size() +
+                                 topDoublets.size());
 
     const float cotThetaB = bottomDoublet.cotTheta();
     const float erB = bottomDoublet.er();
@@ -230,7 +233,7 @@ class Impl final : public TripletSeedFinder {
 
       // sqrt(S2)/B = 2 * helixradius
       // calculated radius must not be smaller than minimum radius
-      if (S2 < B2 * m_cfg.minHelixDiameter2) [[likely]] {
+      if (S2 < B2 * m_cfg.minHelixDiameter2) {
         continue;
       }
 
@@ -279,9 +282,8 @@ class Impl final : public TripletSeedFinder {
     const float rM = spM.zr()[1];
     const float cosPhiM = spM.xy()[0] / rM;
     const float sinPhiM = spM.xy()[1] / rM;
-    const auto& varianceZRM = spM.varianceZR();
-    const float varianceZM = varianceZRM[0];
-    const float varianceRM = varianceZRM[1];
+    const float varianceZM = spM.varianceZ();
+    const float varianceRM = spM.varianceR();
 
     // Reserve enough space, in case current capacity is too little
     tripletTopCandidates.reserve(tripletTopCandidates.size() +

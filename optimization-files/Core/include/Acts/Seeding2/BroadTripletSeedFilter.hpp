@@ -17,7 +17,6 @@
 #include "Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-#include <array>
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -167,22 +166,10 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
   /// Cache for intermediate results to avoid reallocations. No information is
   /// carried over between different stages.
   struct Cache {
-    struct CurvatureIndex {
-      float curvature{};
-      std::uint32_t index{};
-    };
-
-    /// Cached curvature keys and top space point indices during compatibility
-    /// search
-    std::vector<CurvatureIndex> topSpCurvatureVec;
-    /// Cache for each triplet top candidate's configured radius value
-    std::vector<float> topSpRadiusVec;
-    /// Inline cache for the common two compatible seed radii.
-    std::array<float, 2> compatibleSeedRInline{};
-    /// Overflow cache for configurations with a larger compatibility limit.
-    std::vector<float> compatibleSeedROverflow;
-    /// Number of radii currently stored across both caches.
-    std::size_t compatibleSeedRSize{};
+    /// Cache for top space point indices during compatibility search
+    std::vector<std::uint32_t> topSpIndexVec;
+    /// Cache for compatible seed radii during score calculation
+    std::vector<float> compatibleSeedR;
     /// Cache for sorted triplet candidates during selection
     std::vector<TripletCandidate2> sortedCandidates;
   };

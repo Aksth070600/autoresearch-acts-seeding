@@ -11,6 +11,10 @@
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
+#include <stdexcept>
+
+#include <boost/mp11.hpp>
+#include <boost/mp11/algorithm.hpp>
 
 namespace Acts {
 
@@ -46,9 +50,8 @@ class Impl final : public DoubletSeedFinder {
     const float yM = middleSp.xy()[1];
     const float zM = middleSp.zr()[0];
     const float rM = middleSp.zr()[1];
-    const auto& varianceZRM = middleSp.varianceZR();
-    const float varianceZM = varianceZRM[0];
-    const float varianceRM = varianceZRM[1];
+    const float varianceZM = middleSp.varianceZ();
+    const float varianceRM = middleSp.varianceR();
 
     // equivalent to impactMax / (rM * rM);
     const float vIPAbs = impactMax * middleSpInfo.uIP2;
@@ -90,14 +93,13 @@ class Impl final : public DoubletSeedFinder {
     }
 
     const SpacePointContainer2& container = candidateSps.container();
-    for (auto [indexO, xyzrO, varianceZRO] : candidateSps.zip(
-             container.xyzrColumn(), container.varianceZRColumn())) {
-      const float xO = xyzrO[0];
-      const float yO = xyzrO[1];
-      const float zO = xyzrO[2];
-      const float rO = xyzrO[3];
-      const float varianceZO = varianceZRO[0];
-      const float varianceRO = varianceZRO[1];
+    for (auto [indexO, xyO, zrO, varianceZO, varianceRO] : candidateSps.zip(
+             container.xyColumn(), container.zrColumn(),
+             container.varianceZColumn(), container.varianceRColumn())) {
+      const float xO = xyO[0];
+      const float yO = xyO[1];
+      const float zO = zrO[0];
+      const float rO = zrO[1];
 
       float deltaR = 0;
       if constexpr (isBottomCandidate) {
@@ -158,7 +160,7 @@ class Impl final : public DoubletSeedFinder {
         // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
         // cotThetaMax by deltaR to avoid division
         if (outsideRangeCheck(deltaZ, -m_cfg.cotThetaMax * deltaR,
-                              m_cfg.cotThetaMax * deltaR)) [[unlikely]] {
+                              m_cfg.cotThetaMax * deltaR)) {
           continue;
         }
 
@@ -213,7 +215,7 @@ class Impl final : public DoubletSeedFinder {
       // The correct computation would be:
       // yNewFrame * yNewFrame * rM * rM > config.impactMax *
       // config.impactMax * deltaR2
-      if (std::abs(rM * yNewFrame) > impactMax * xNewFrame) [[unlikely]] {
+      if (std::abs(rM * yNewFrame) > impactMax * xNewFrame) {
         // in the rotated frame the interaction point is positioned at x = -rM
         // and y ~= impactParam
         const float vIP = (yNewFrame > 0) ? -vIPAbs : vIPAbs;
@@ -235,7 +237,7 @@ class Impl final : public DoubletSeedFinder {
       // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
       // cotThetaMax by deltaR to avoid division
       if (outsideRangeCheck(deltaZ, -m_cfg.cotThetaMax * deltaR,
-                            m_cfg.cotThetaMax * deltaR)) [[unlikely]] {
+                            m_cfg.cotThetaMax * deltaR)) {
         continue;
       }
 
@@ -283,45 +285,56 @@ class Impl final : public DoubletSeedFinder {
 
 std::unique_ptr<DoubletSeedFinder> DoubletSeedFinder::create(
     const DerivedConfig& config) {
-  auto make = [&]<bool isBottomCandidate, bool interactionPointCut,
-                  bool sortedByR, bool experimentCuts>()
-      -> std::unique_ptr<DoubletSeedFinder> {
-    return std::make_unique<
-        Impl<isBottomCandidate, interactionPointCut, sortedByR,
-             experimentCuts>>(config);
-  };
-  auto dispatchExperimentCuts =
-      [&]<bool isBottomCandidate, bool interactionPointCut, bool sortedByR>()
-      -> std::unique_ptr<DoubletSeedFinder> {
-        if (config.experimentCuts.connected()) {
-          return make.template operator()<isBottomCandidate,
-                                          interactionPointCut, sortedByR, true>();
-        }
-        return make.template operator()<isBottomCandidate, interactionPointCut,
-                                        sortedByR, false>();
-      };
-  auto dispatchSortedByR =
-      [&]<bool isBottomCandidate, bool interactionPointCut>()
-      -> std::unique_ptr<DoubletSeedFinder> {
-        if (config.spacePointsSortedByRadius) {
-          return dispatchExperimentCuts.template operator()<
-              isBottomCandidate, interactionPointCut, true>();
-        }
-        return dispatchExperimentCuts.template operator()<
-            isBottomCandidate, interactionPointCut, false>();
-      };
-  auto dispatchInteractionPointCut = [&]<bool isBottomCandidate>()
-      -> std::unique_ptr<DoubletSeedFinder> {
-    if (config.interactionPointCut) {
-      return dispatchSortedByR.template operator()<isBottomCandidate, true>();
-    }
-    return dispatchSortedByR.template operator()<isBottomCandidate, false>();
-  };
+  using BooleanOptions =
+      boost::mp11::mp_list<std::bool_constant<false>, std::bool_constant<true>>;
 
-  if (config.candidateDirection == Direction::Backward()) {
-    return dispatchInteractionPointCut.template operator()<true>();
+  using IsBottomCandidateOptions = BooleanOptions;
+  using InteractionPointCutOptions = BooleanOptions;
+  using SortedByROptions = BooleanOptions;
+  using ExperimentCutsOptions = BooleanOptions;
+
+  using DoubletOptions =
+      boost::mp11::mp_product<boost::mp11::mp_list, IsBottomCandidateOptions,
+                              InteractionPointCutOptions, SortedByROptions,
+                              ExperimentCutsOptions>;
+
+  std::unique_ptr<DoubletSeedFinder> result;
+  boost::mp11::mp_for_each<DoubletOptions>([&](auto option) {
+    using OptionType = decltype(option);
+
+    using IsBottomCandidate = boost::mp11::mp_at_c<OptionType, 0>;
+    using InteractionPointCut = boost::mp11::mp_at_c<OptionType, 1>;
+    using SortedByR = boost::mp11::mp_at_c<OptionType, 2>;
+    using ExperimentCuts = boost::mp11::mp_at_c<OptionType, 3>;
+
+    const bool configIsBottomCandidate =
+        config.candidateDirection == Direction::Backward();
+
+    if (configIsBottomCandidate != IsBottomCandidate::value ||
+        config.interactionPointCut != InteractionPointCut::value ||
+        config.spacePointsSortedByRadius != SortedByR::value ||
+        config.experimentCuts.connected() != ExperimentCuts::value) {
+      return;  // skip if the configuration does not match
+    }
+
+    // check if we already have an implementation for this configuration
+    if (result != nullptr) {
+      throw std::runtime_error(
+          "DoubletSeedFinder: Multiple implementations found for one "
+          "configuration");
+    }
+
+    // create the implementation for the given configuration
+    result = std::make_unique<
+        Impl<IsBottomCandidate::value, InteractionPointCut::value,
+             SortedByR::value, ExperimentCuts::value>>(config);
+  });
+  if (result == nullptr) {
+    throw std::runtime_error(
+        "DoubletSeedFinder: No implementation found for the given "
+        "configuration");
   }
-  return dispatchInteractionPointCut.template operator()<false>();
+  return result;
 }
 
 DoubletSeedFinder::DerivedConfig::DerivedConfig(const Config& config,
