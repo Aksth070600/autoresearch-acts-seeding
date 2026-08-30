@@ -558,6 +558,12 @@ def _bridge_live(state: dict[str, Any]) -> dict[str, Any]:
         "blocked": "blocked",
         "completed": "finishing",
     }[state["scheduler"]["state"]]
+    # The bridge has no static-v4 attempts or metrics, so it cannot claim that
+    # its own v3 candidate deficits are complete. The exact sidecar owns the
+    # terminal state and timestamp.
+    if control["state"] == "completed":
+        control["state"] = "consumed"
+        control["completed_at"] = None
     targets = state["scheduler"]["final_targets"]
     bridge_targets = None
     if targets is not None:
@@ -787,7 +793,7 @@ def finalization_blockers(
     blockers: list[str] = []
     control = state.get("control", {})
     scheduler = state.get("scheduler", {})
-    if control.get("state") != "consumed":
+    if control.get("state") not in {"consumed", "completed"}:
         blockers.append("an authenticated stop request has not been consumed")
     if state.get("current_attempt") is not None:
         blockers.append("a candidate transaction remains active")
@@ -941,11 +947,12 @@ def main() -> int:
         blockers = finalization_blockers(state)
         if blockers:
             raise ContinuousCampaignError("; ".join(blockers))
-        state = copy.deepcopy(state)
-        state["control"]["state"] = "completed"
-        state["control"]["completed_at"] = _iso(now)
-        state["scheduler"]["state"] = "completed"
-        atomic_write_json(args.state, state)
+        if state["control"]["state"] != "completed":
+            state = copy.deepcopy(state)
+            state["control"]["state"] = "completed"
+            state["control"]["completed_at"] = _iso(now)
+            state["scheduler"]["state"] = "completed"
+            atomic_write_json(args.state, state)
         print("static-v4 continuous campaign finalization passed")
     if should_write_status:
         write_status(state, args.state)

@@ -18,6 +18,7 @@ from continuous_campaign import (  # noqa: E402
     DATASET_ID,
     PLATFORM_COMMIT,
     SCIENTIFIC_GENESIS_COMMIT,
+    _bridge_live,
     build_status,
     completed_counts,
     consume_stop,
@@ -305,6 +306,17 @@ class StaticV4ContinuousCampaignTests(unittest.TestCase):
             {"major": 2, "minor": 1, "combination": 1},
         )
         self.assertEqual(consumed["control"]["state"], "consumed")
+
+    def test_completed_static_control_keeps_metric_free_bridge_consumed(self):
+        state = self.state()
+        state["control"].update(
+            {"state": "completed", "completed_at": "2026-08-29T22:00:00Z"}
+        )
+        state["scheduler"]["state"] = "completed"
+        bridge = _bridge_live(state)
+        self.assertEqual(bridge["control"]["state"], "consumed")
+        self.assertIsNone(bridge["control"]["completed_at"])
+        self.assertEqual(bridge["scheduler"]["state"], "finishing")
 
     def test_v3_control_snapshot_remains_v3_and_does_not_import_static_records(self):
         bridge = {
