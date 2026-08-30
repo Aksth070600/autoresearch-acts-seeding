@@ -156,7 +156,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   }
 
   Acts::SpacePointContainer2 coreSpacePoints(
-      Acts::SpacePointColumns::PackedXY | Acts::SpacePointColumns::PackedZR |
+      Acts::SpacePointColumns::PackedXYZR |
       Acts::SpacePointColumns::PackedVarianceZR |
       Acts::SpacePointColumns::CopyFromIndex);
   coreSpacePoints.createSpacePoints(grid.numberOfSpacePoints());
@@ -169,10 +169,11 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
       const ConstSpacePointProxy& sp = spacePoints[spIndex];
 
       auto newSp = coreSpacePoints[coreIndex++];
-      newSp.xy() = std::array<float, 2>{static_cast<float>(sp.x()),
-                                        static_cast<float>(sp.y())};
-      newSp.zr() = std::array<float, 2>{static_cast<float>(sp.z()),
-                                        static_cast<float>(sp.r())};
+      newSp.xyzr() =
+          std::array<float, 4>{static_cast<float>(sp.x()),
+                               static_cast<float>(sp.y()),
+                               static_cast<float>(sp.z()),
+                               static_cast<float>(sp.r())};
       newSp.varianceZR() =
           std::array<float, 2>{static_cast<float>(sp.varianceZ()),
                                static_cast<float>(sp.varianceR())};
@@ -180,6 +181,8 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
     }
     gridSpacePointRanges.emplace_back(begin, coreIndex);
   }
+
+  const Acts::SpacePointContainer2& constCoreSpacePoints = coreSpacePoints;
 
   // Compute radius range. We rely on the fact the grid is storing the proxies
   // with a sorting in the radius
@@ -190,8 +193,8 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
       if (range.first == range.second) {
         continue;
       }
-      auto first = coreSpacePoints[range.first];
-      auto last = coreSpacePoints[range.second - 1];
+      auto first = constCoreSpacePoints[range.first];
+      auto last = constCoreSpacePoints[range.second - 1];
       minRange = std::min(first.zr()[1], minRange);
       maxRange = std::max(last.zr()[1], maxRange);
     }
