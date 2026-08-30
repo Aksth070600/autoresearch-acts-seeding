@@ -145,7 +145,7 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
   std::iota(cache().topSpIndexVec.begin(), cache().topSpIndexVec.end(), 0);
   std::ranges::sort(cache().topSpIndexVec, {},
                     [&tripletTopCandidates](const std::size_t t) {
-                      return tripletTopCandidates[t].curvature();
+                      return tripletTopCandidates.curvatures()[t];
                     });
 
   // vector containing the radius of all compatible seeds
@@ -159,47 +159,48 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
   };
 
   std::size_t beginCompTopIndex = 0;
+  std::size_t endCompTopIndex = 0;
+  const auto& curvatures = tripletTopCandidates.curvatures();
   // loop over top SPs and other compatible top SP candidates
   for (const std::size_t topSpIndex : cache().topSpIndexVec) {
-    auto topSp = tripletTopCandidates[topSpIndex].spacePoint();
+    auto topSp = tripletTopCandidates.topSpacePoints()[topSpIndex];
     auto spT = spacePoints[topSp];
 
     cache().compatibleSeedR.clear();
 
-    float invHelixDiameter = tripletTopCandidates[topSpIndex].curvature();
+    float invHelixDiameter = tripletTopCandidates.curvatures()[topSpIndex];
     float lowerLimitCurv = invHelixDiameter - config().deltaInvHelixDiameter;
     float upperLimitCurv = invHelixDiameter + config().deltaInvHelixDiameter;
     float currentTopR = getTopR(spT);
-    float impact = tripletTopCandidates[topSpIndex].impactParameter();
+    float impact = tripletTopCandidates.impactParameters()[topSpIndex];
 
     float weight = -impact * config().impactWeightFactor;
 
-    // loop over compatible top SP candidates
+    while (beginCompTopIndex < cache().topSpIndexVec.size() &&
+           curvatures[cache().topSpIndexVec[beginCompTopIndex]] <
+               lowerLimitCurv) {
+      ++beginCompTopIndex;
+    }
+    endCompTopIndex = std::max(endCompTopIndex, beginCompTopIndex);
+    while (endCompTopIndex < cache().topSpIndexVec.size() &&
+           curvatures[cache().topSpIndexVec[endCompTopIndex]] <=
+               upperLimitCurv) {
+      ++endCompTopIndex;
+    }
+
+    // loop over the monotonic curvature compatibility window
     for (std::size_t variableCompTopIndex = beginCompTopIndex;
-         variableCompTopIndex < cache().topSpIndexVec.size();
-         variableCompTopIndex++) {
-      std::size_t compatibleTopSpIndex =
+         variableCompTopIndex < endCompTopIndex; ++variableCompTopIndex) {
+      const std::size_t compatibleTopSpIndex =
           cache().topSpIndexVec[variableCompTopIndex];
       if (compatibleTopSpIndex == topSpIndex) {
         continue;
       }
-      auto otherSpT =
-          spacePoints[tripletTopCandidates[compatibleTopSpIndex].spacePoint()];
+      auto otherSpT = spacePoints[tripletTopCandidates
+                                      .topSpacePoints()[compatibleTopSpIndex]];
 
       float otherTopR = getTopR(otherSpT);
 
-      // curvature difference within limits?
-      if (tripletTopCandidates[compatibleTopSpIndex].curvature() <
-          lowerLimitCurv) {
-        // the SPs are sorted in curvature so we skip unnecessary iterations
-        beginCompTopIndex = variableCompTopIndex + 1;
-        continue;
-      }
-      if (tripletTopCandidates[compatibleTopSpIndex].curvature() >
-          upperLimitCurv) {
-        // the SPs are sorted in curvature so we skip unnecessary iterations
-        break;
-      }
       // compared top SP should have at least deltaRMin distance
       float deltaR = currentTopR - otherTopR;
       if (std::abs(deltaR) < config().deltaRMin) {
