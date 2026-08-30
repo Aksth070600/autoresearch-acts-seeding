@@ -257,7 +257,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
 
   // run the seeding
   Acts::BroadTripletSeedFilter::State filterState;
-  Acts::BroadTripletSeedFilter::Cache filterCache;
+  static thread_local Acts::BroadTripletSeedFilter::Cache filterCache;
   Acts::BroadTripletSeedFilter seedFilter(m_filterConfig, filterState,
                                           filterCache, *m_filterLogger);
   static thread_local Acts::TripletSeeder::Cache cache;
