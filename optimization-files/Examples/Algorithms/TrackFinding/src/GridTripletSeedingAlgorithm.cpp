@@ -135,7 +135,6 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
 
   Acts::CylindricalSpacePointGrid2 grid(m_gridConfig,
                                         logger().cloneWithSuffix("Grid"));
-  std::vector<double> radiusByIndex(spacePoints.size());
 
   for (std::size_t i = 0; i < spacePoints.size(); ++i) {
     const auto& sp = spacePoints[i];
@@ -145,42 +144,41 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
       continue;
     }
 
-    const double radius = sp.r();
-    radiusByIndex[i] = radius;
     float phi = std::atan2(sp.y(), sp.x());
-    grid.insert(i, phi, sp.z(), radius);
+    grid.insert(i, phi, sp.z(), sp.r());
   }
 
   for (std::size_t i = 0; i < grid.numberOfBins(); ++i) {
     std::ranges::sort(grid.at(i), [&](const Acts::SpacePointIndex2& a,
                                       const Acts::SpacePointIndex2& b) {
-      return radiusByIndex[a] < radiusByIndex[b];
+      return spacePoints[a].r() < spacePoints[b].r();
     });
   }
 
   Acts::SpacePointContainer2 coreSpacePoints(
       Acts::SpacePointColumns::PackedXY | Acts::SpacePointColumns::PackedZR |
-      Acts::SpacePointColumns::VarianceZ | Acts::SpacePointColumns::VarianceR |
+      Acts::SpacePointColumns::PackedVarianceZR |
       Acts::SpacePointColumns::CopyFromIndex);
-  coreSpacePoints.reserve(grid.numberOfSpacePoints());
+  coreSpacePoints.createSpacePoints(grid.numberOfSpacePoints());
+  std::uint32_t coreIndex = 0;
   std::vector<Acts::SpacePointIndexRange2> gridSpacePointRanges;
   gridSpacePointRanges.reserve(grid.numberOfBins());
   for (std::size_t i = 0; i < grid.numberOfBins(); ++i) {
-    std::uint32_t begin = coreSpacePoints.size();
+    std::uint32_t begin = coreIndex;
     for (Acts::SpacePointIndex2 spIndex : grid.at(i)) {
       const ConstSpacePointProxy& sp = spacePoints[spIndex];
 
-      auto newSp = coreSpacePoints.createSpacePoint();
+      auto newSp = coreSpacePoints[coreIndex++];
       newSp.xy() = std::array<float, 2>{static_cast<float>(sp.x()),
                                         static_cast<float>(sp.y())};
       newSp.zr() = std::array<float, 2>{static_cast<float>(sp.z()),
                                         static_cast<float>(sp.r())};
-      newSp.varianceZ() = static_cast<float>(sp.varianceZ());
-      newSp.varianceR() = static_cast<float>(sp.varianceR());
+      newSp.varianceZR() =
+          std::array<float, 2>{static_cast<float>(sp.varianceZ()),
+                               static_cast<float>(sp.varianceR())};
       newSp.copyFromIndex() = sp.index();
     }
-    std::uint32_t end = coreSpacePoints.size();
-    gridSpacePointRanges.emplace_back(begin, end);
+    gridSpacePointRanges.emplace_back(begin, coreIndex);
   }
 
   // Compute radius range. We rely on the fact the grid is storing the proxies
