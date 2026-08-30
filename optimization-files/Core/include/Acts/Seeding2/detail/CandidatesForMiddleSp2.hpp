@@ -10,7 +10,10 @@
 
 #include "Acts/EventData/Types.hpp"
 
+#include <boost/container/small_vector.hpp>
+
 #include <limits>
+#include <optional>
 #include <vector>
 
 namespace Acts {
@@ -53,11 +56,9 @@ class CandidatesForMiddleSp2 {
   /// @param nHigh Maximum number of candidates in the high-quality collection
   CandidatesForMiddleSp2(Size nLow, Size nHigh);
 
-  /// Reset configured limits and clear all logical candidate state while
-  /// retaining allocated storage.
-  void reset(Size nLow, Size nHigh);
-
-  Size size() const { return m_storage.size(); }
+  Size size() const {
+    return static_cast<Size>(m_indicesLow.size() + m_indicesHigh.size());
+  }
 
   /// @brief Clear the internal storage
   void clear();
@@ -92,7 +93,7 @@ class CandidatesForMiddleSp2 {
 
  private:
   using WeightIndex = std::pair<float, Index>;
-  using Container = std::vector<WeightIndex>;
+  using Container = boost::container::small_vector<WeightIndex, 8>;
 
   static constexpr bool comparator(const WeightIndex& a, const WeightIndex& b) {
     return a.first > b.first;
@@ -104,8 +105,20 @@ class CandidatesForMiddleSp2 {
   Size m_maxSizeLow{kNoSize};
   Size m_maxSizeHigh{kNoSize};
 
-  // storage contains the collection of the candidates
-  std::vector<TripletCandidate2> m_storage;
+  struct StoredCandidate {
+    SpacePointIndex2 bottom{};
+    SpacePointIndex2 top{};
+    float weight{};
+    float zOrigin{};
+    bool isQuality{};
+  };
+
+  // All retained candidates belong to one fixed middle space point. Store that
+  // index once and keep only candidate-varying fields in each inline record.
+  std::optional<SpacePointIndex2> m_middleSp;
+  boost::container::small_vector<StoredCandidate, 16> m_storage;
+  bool m_fixedStorage{};
+  Size m_nextSlot{};
 
   Container m_indicesLow;
   Container m_indicesHigh;
