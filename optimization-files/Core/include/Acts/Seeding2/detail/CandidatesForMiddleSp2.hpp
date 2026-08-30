@@ -10,8 +10,6 @@
 
 #include "Acts/EventData/Types.hpp"
 
-#include <boost/container/small_vector.hpp>
-
 #include <limits>
 #include <vector>
 
@@ -55,7 +53,9 @@ class CandidatesForMiddleSp2 {
   /// @param nHigh Maximum number of candidates in the high-quality collection
   CandidatesForMiddleSp2(Size nLow, Size nHigh);
 
-  Size size() const { return m_storage.size(); }
+  Size size() const {
+    return static_cast<Size>(m_storageLow.size() + m_storageHigh.size());
+  }
 
   /// @brief Clear the internal storage
   void clear();
@@ -90,7 +90,8 @@ class CandidatesForMiddleSp2 {
 
  private:
   using WeightIndex = std::pair<float, Index>;
-  using Container = boost::container::small_vector<WeightIndex, 8>;
+  using Container = std::vector<WeightIndex>;
+  using Storage = std::vector<TripletCandidate2>;
 
   static constexpr bool comparator(const WeightIndex& a, const WeightIndex& b) {
     return a.first > b.first;
@@ -102,15 +103,16 @@ class CandidatesForMiddleSp2 {
   Size m_maxSizeLow{kNoSize};
   Size m_maxSizeHigh{kNoSize};
 
-  // storage contains the collection of the candidates
-  boost::container::small_vector<TripletCandidate2, 16> m_storage;
+  // Each heap uses a local index space to keep quality classes independent.
+  Storage m_storageLow;
+  Storage m_storageHigh;
 
   Container m_indicesLow;
   Container m_indicesHigh;
 
-  bool push(Container& container, Size nMax, SpacePointIndex2 spB,
-            SpacePointIndex2 spM, SpacePointIndex2 spT, float weight,
-            float zOrigin, bool isQuality);
+  bool push(Container& container, Storage& storage, Size nMax,
+            SpacePointIndex2 spB, SpacePointIndex2 spM, SpacePointIndex2 spT,
+            float weight, float zOrigin, bool isQuality);
 };
 
 }  // namespace Acts
