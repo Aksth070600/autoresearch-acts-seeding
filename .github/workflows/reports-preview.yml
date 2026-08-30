@@ -5,6 +5,8 @@ on:
     paths:
       - 'records/**'
       - 'orchestration-files/report.py'
+      - 'orchestration-files/static_v4_public_dashboard.py'
+      - 'orchestration-files/acts-v4-continuous-campaign/status.json'
       - 'orchestration-files/campaign_status.py'
       - 'orchestration-files/campaign_control.py'
       - 'orchestration-files/campaign_scheduler.py'
@@ -16,6 +18,7 @@ on:
       - 'orchestration-files/tests/**'
       - 'orchestration-files/visualizations/**'
       - '.github/workflows/reports-preview.yml'
+      - '.github/workflows/reports.yml'
       - '.github/workflows/finish-campaign.yml'
       - 'Makefile'
 

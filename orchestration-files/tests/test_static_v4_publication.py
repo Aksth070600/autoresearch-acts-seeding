@@ -3,6 +3,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import unittest
 from datetime import datetime, timedelta, timezone
 from html.parser import HTMLParser
@@ -276,24 +277,72 @@ class StaticV4PublicCampaignTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "exact revision-2"):
             render(status, deployed_commit="f" * 40)
 
-    def test_pages_workflow_stays_on_trusted_main_and_fetches_only_campaign_data(self):
+    def test_ordinary_main_publication_generates_terminal_archive_in_both_entries(self):
         workflow = (PROJECT_ROOT / ".github" / "workflows" / "reports.yml").read_text(
             encoding="utf-8"
         )
-        self.assertIn("active_campaign_ref:", workflow)
-        self.assertIn("active_campaign_commit:", workflow)
+        self.assertIn("push:\n    branches:\n      - main", workflow)
         self.assertIn("ref: main", workflow)
-        self.assertIn(
-            "ACTIVE_CAMPAIGN_REF: ${{ inputs.active_campaign_ref }}", workflow
+        self.assertIn("python3 orchestration-files/report.py", workflow)
+        self.assertIn("path: build/site", workflow)
+        self.assertNotIn("active_campaign_ref", workflow)
+        self.assertNotIn("ACTIVE_CAMPAIGN", workflow)
+        self.assertNotIn("git fetch", workflow)
+
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary) / "site"
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(PROJECT_ROOT / "orchestration-files" / "report.py"),
+                    "--dataset",
+                    "development",
+                    "--output",
+                    str(output),
+                ],
+                cwd=PROJECT_ROOT,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            artifacts = {
+                "report": (output / "index.html").read_text(encoding="utf-8"),
+                "campaign": (output / "campaign" / "index.html").read_text(
+                    encoding="utf-8"
+                ),
+            }
+
+        for entry, artifact in artifacts.items():
+            with self.subTest(entry=entry):
+                self.assertIn(
+                    "acts-v4-owned-static-continuous-20260829t185722z-fm",
+                    artifact,
+                )
+                self.assertIn('data-attempt-count="128"', artifact)
+                self.assertIn("64 major / 32 minor / 32 combination", artifact)
+                self.assertIn("297.902 ms/event", artifact)
+                self.assertIn("270.916 / 281.309 ms/event", artifact)
+                self.assertIn("Completed", artifact)
+                self.assertIn("invalid: process crashed", artifact)
+                self.assertIn("GridSelectorRejectionHintV4C", artifact)
+                self.assertIn("CoreSpacePointBufferReuseV4C", artifact)
+                self.assertIn("queue-record", artifact)
+                self.assertIn("Immutable record", artifact)
+                self.assertIn("284ffffbc7863578435a4a5b40aa52c708f1481b", artifact)
+
+        # The historical interactive report remains an exact v3 ranking. The
+        # v4 archive is a separate section, never a row in the REPORT payload.
+        report_payload = re.search(
+            r"const REPORT = (.*?);\nconst DEFAULTS", artifacts["report"], re.DOTALL
         )
-        self.assertIn(
-            "ACTIVE_CAMPAIGN_COMMIT: ${{ inputs.active_campaign_commit }}", workflow
+        self.assertIsNotNone(report_payload)
+        payload = json.loads(report_payload.group(1))
+        self.assertTrue(payload["rows"])
+        self.assertEqual(
+            {row["protocol_id"] for row in payload["rows"]}, {"acts-seeding-v3"}
         )
-        self.assertIn('git fetch --no-tags origin "$ACTIVE_CAMPAIGN_REF"', workflow)
-        self.assertIn("static_v4_public_dashboard.py", workflow)
-        self.assertIn("--output build/site/campaign/index.html", workflow)
-        self.assertNotIn("ref: ${{ inputs.active_campaign_ref }}", workflow)
-        self.assertNotIn("python3 /tmp/", workflow)
+        self.assertNotIn("terminal_campaign", payload)
 
 
 if __name__ == "__main__":
