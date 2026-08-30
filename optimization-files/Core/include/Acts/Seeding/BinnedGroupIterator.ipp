@@ -47,17 +47,11 @@ std::tuple<
     std::size_t,
     boost::container::small_vector<std::size_t, detail::ipow(3, grid_t::DIM)>>
 BinnedGroupIterator<grid_t>::operator*() const {
-  /// Get the global and local position from current iterator. This is the bin
-  /// with the middle candidate And we know this is not an empty bin
-  std::array<std::size_t, DIM> localPosition = m_gridItr.localBinsIndices();
-  std::size_t global_index =
-      m_group->grid().globalBinFromLocalBins(localPosition);
-
-  /// Get the neighbouring bins
+  /// Use the position validated by findNotEmptyBin to get neighbouring bins.
   boost::container::small_vector<std::size_t, detail::ipow(3, DIM)> bottoms =
-      m_group->m_bottomBinFinder->findBins(localPosition, m_group->grid());
+      m_group->m_bottomBinFinder->findBins(m_localPosition, m_group->grid());
   boost::container::small_vector<std::size_t, detail::ipow(3, DIM)> tops =
-      m_group->m_topBinFinder->findBins(localPosition, m_group->grid());
+      m_group->m_topBinFinder->findBins(m_localPosition, m_group->grid());
 
   // GCC12+ in Release throws an overread warning here due to the move.
   // This is from inside boost code, so best we can do is to suppress it.
@@ -65,7 +59,7 @@ BinnedGroupIterator<grid_t>::operator*() const {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstringop-overread"
 #endif
-  return {std::move(bottoms), global_index, std::move(tops)};
+  return {std::move(bottoms), m_globalIndex, std::move(tops)};
 #if defined(__GNUC__) && __GNUC__ >= 12 && !defined(__clang__)
 #pragma GCC diagnostic pop
 #endif
@@ -73,17 +67,34 @@ BinnedGroupIterator<grid_t>::operator*() const {
 
 template <typename grid_t>
 void BinnedGroupIterator<grid_t>::findNotEmptyBin() {
-  if (m_gridItr == m_gridItrEnd) {
+  if (m_gridItr == m_gridItrEnd) [[unlikely]] {
     return;
   }
+  /// An unmasked group is the normal path for seeding. Avoid allocating and
+  /// reading a full true mask for that case.
+  if (m_group->mask().empty()) {
+    while (m_gridItr != m_gridItrEnd && (*m_gridItr).empty()) {
+      ++m_gridItr;
+    }
+    if (m_gridItr != m_gridItrEnd) {
+      m_localPosition = m_gridItr.localBinsIndices();
+      m_globalIndex =
+          m_group->grid().globalBinFromLocalBins(m_localPosition);
+    }
+    return;
+  }
+
   /// Iterate on the grid till we find a not-empty bin
   /// We start from the current bin configuration and move forward
   while (m_gridItr != m_gridItrEnd) {
     std::size_t dimCollection = (*m_gridItr).size();
-    bool passesMask = m_group->mask().at(m_gridItr.globalBinIndex());
+    m_localPosition = m_gridItr.localBinsIndices();
+    m_globalIndex =
+        m_group->grid().globalBinFromLocalBins(m_localPosition);
+    bool passesMask = m_group->mask().at(m_globalIndex);
 
     // Check if current bin is non-empty and passes mask
-    if (dimCollection > 0ul && passesMask) [[unlikely]] {
+    if (dimCollection > 0ul && passesMask) {
       break;
     }
 
