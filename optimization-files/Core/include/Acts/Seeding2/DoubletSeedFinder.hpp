@@ -14,6 +14,8 @@
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/detail/ContainerIterator.hpp"
 
+#include <boost/container/small_vector.hpp>
+
 #include <cstdint>
 #include <vector>
 

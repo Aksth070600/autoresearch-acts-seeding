@@ -1,0 +1,162 @@
+[1/88] Building CXX object Core/CMakeFiles/ActsCore.dir/src/Seeding2/detail/CandidatesForMiddleSp2.cpp.o
+[2/88] Building CXX object Core/CMakeFiles/ActsCore.dir/src/Seeding2/BroadTripletSeedFilter.cpp.o
+FAILED: Core/CMakeFiles/ActsCore.dir/src/Seeding2/BroadTripletSeedFilter.cpp.o 
+/cvmfs/sft.cern.ch/lcg/releases/gcc/13.1.0-b3d18/x86_64-el9/bin/g++ -DACTS_GEOMETRY_MODULE_ABI_TAG="\"acts-46.5.0|sys-Linux|arch-x86_64|cxx-GNU-13.1.0|capi-1\"" -DActsCore_EXPORTS -I/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include -I/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/Core/include -I/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/Core/src/Definitions/codegen/1fb06d98eae48c30a60b4c8acb7ebdbee0670524 -I/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/Core/src/Propagator/codegen/4febcacac24eb26d1d1d0e61b83dbc12bbdd79cd -I/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/Core/src/Propagator/codegen/4456db4833ffa91027fc4b960af806f0afc991b3 -I/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/Core/src/Propagator/codegen/79ce5a7ad1c4f4193db110f5858c7c94f7bc3c10 -isystem /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc13-opt/include/eigen3 -Wall -Wextra -Wpedantic -Wshadow -Wzero-as-null-pointer-constant -Wold-style-cast -Woverloaded-virtual  -O3 -DNDEBUG -std=gnu++20 -fPIC -MD -MT Core/CMakeFiles/ActsCore.dir/src/Seeding2/BroadTripletSeedFilter.cpp.o -MF Core/CMakeFiles/ActsCore.dir/src/Seeding2/BroadTripletSeedFilter.cpp.o.d -o Core/CMakeFiles/ActsCore.dir/src/Seeding2/BroadTripletSeedFilter.cpp.o -c /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/src/Seeding2/BroadTripletSeedFilter.cpp
+In file included from /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/BroadTripletSeedFilter.hpp:15,
+                 from /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/src/Seeding2/BroadTripletSeedFilter.cpp:9:
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp:73:9: error: 'boost' does not name a type
+   73 |   const boost::container::small_vector<SpacePointIndex2, 64>& spacePoints()
+      |         ^~~~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp:79:9: error: 'boost' does not name a type
+   79 |   const boost::container::small_vector<float, 64>& cotTheta() const {
+      |         ^~~~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp:258:3: error: 'boost' does not name a type
+  258 |   boost::container::small_vector<SpacePointIndex2, 64> m_spacePoints;
+      |   ^~~~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp:261:3: error: 'boost' does not name a type
+  261 |   boost::container::small_vector<float, 64> m_cotTheta;
+      |   ^~~~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp: In member function 'bool Acts::DoubletsForMiddleSp::empty() const':
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp:37:45: error: 'm_spacePoints' was not declared in this scope
+   37 |   [[nodiscard]] bool empty() const { return m_spacePoints.empty(); }
+      |                                             ^~~~~~~~~~~~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp: In member function 'Acts::DoubletsForMiddleSp::Index Acts::DoubletsForMiddleSp::size() const':
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp:41:31: error: 'm_spacePoints' was not declared in this scope
+   41 |     return static_cast<Index>(m_spacePoints.size());
+      |                               ^~~~~~~~~~~~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp: In member function 'void Acts::DoubletsForMiddleSp::clear()':
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp:46:5: error: 'm_spacePoints' was not declared in this scope
+   46 |     m_spacePoints.clear();
+      |     ^~~~~~~~~~~~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp:47:5: error: 'm_cotTheta' was not declared in this scope
+   47 |     m_cotTheta.clear();
+      |     ^~~~~~~~~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp: In member function 'void Acts::DoubletsForMiddleSp::emplace_back(Acts::SpacePointIndex2, float, float, float, float, float, float, float)':
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp:64:5: error: 'm_spacePoints' was not declared in this scope
+   64 |     m_spacePoints.push_back(sp);
+      |     ^~~~~~~~~~~~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp:65:5: error: 'm_cotTheta' was not declared in this scope; did you mean 'cotTheta'?
+   65 |     m_cotTheta.push_back(cotTheta);
+      |     ^~~~~~~~~~
+      |     cotTheta
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp: In member function 'void Acts::DoubletsForMiddleSp::sortByCotTheta(const IndexRange&, std::vector<IndexAndCotTheta>&) const':
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp:102:40: error: 'm_cotTheta' was not declared in this scope
+  102 |       indexAndCotTheta.emplace_back(i, m_cotTheta[i]);
+      |                                        ^~~~~~~~~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp: In member function 'Acts::SpacePointIndex2 Acts::DoubletsForMiddleSp::Proxy::spacePointIndex() const':
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp:128:27: error: 'const class Acts::DoubletsForMiddleSp' has no member named 'm_spacePoints'
+  128 |       return m_container->m_spacePoints[m_index];
+      |                           ^~~~~~~~~~~~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp: In member function 'float Acts::DoubletsForMiddleSp::Proxy::cotTheta() const':
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp:133:50: error: 'const class Acts::DoubletsForMiddleSp' has no member named 'm_cotTheta'
+  133 |     float cotTheta() const { return m_container->m_cotTheta[m_index]; }
+      |                                                  ^~~~~~~~~~
+[3/88] Building CXX object Core/CMakeFiles/ActsCore.dir/src/Seeding2/DoubletSeedFinder.cpp.o
+FAILED: Core/CMakeFiles/ActsCore.dir/src/Seeding2/DoubletSeedFinder.cpp.o 
+/cvmfs/sft.cern.ch/lcg/releases/gcc/13.1.0-b3d18/x86_64-el9/bin/g++ -DACTS_GEOMETRY_MODULE_ABI_TAG="\"acts-46.5.0|sys-Linux|arch-x86_64|cxx-GNU-13.1.0|capi-1\"" -DActsCore_EXPORTS -I/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include -I/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/Core/include -I/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/Core/src/Definitions/codegen/1fb06d98eae48c30a60b4c8acb7ebdbee0670524 -I/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/Core/src/Propagator/codegen/4febcacac24eb26d1d1d0e61b83dbc12bbdd79cd -I/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/Core/src/Propagator/codegen/4456db4833ffa91027fc4b960af806f0afc991b3 -I/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/Core/src/Propagator/codegen/79ce5a7ad1c4f4193db110f5858c7c94f7bc3c10 -isystem /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc13-opt/include/eigen3 -Wall -Wextra -Wpedantic -Wshadow -Wzero-as-null-pointer-constant -Wold-style-cast -Woverloaded-virtual  -O3 -DNDEBUG -std=gnu++20 -fPIC -MD -MT Core/CMakeFiles/ActsCore.dir/src/Seeding2/DoubletSeedFinder.cpp.o -MF Core/CMakeFiles/ActsCore.dir/src/Seeding2/DoubletSeedFinder.cpp.o.d -o Core/CMakeFiles/ActsCore.dir/src/Seeding2/DoubletSeedFinder.cpp.o -c /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/src/Seeding2/DoubletSeedFinder.cpp
+In file included from /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/src/Seeding2/DoubletSeedFinder.cpp:9:
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp:73:9: error: 'boost' does not name a type
+   73 |   const boost::container::small_vector<SpacePointIndex2, 64>& spacePoints()
+      |         ^~~~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp:79:9: error: 'boost' does not name a type
+   79 |   const boost::container::small_vector<float, 64>& cotTheta() const {
+      |         ^~~~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp:258:3: error: 'boost' does not name a type
+  258 |   boost::container::small_vector<SpacePointIndex2, 64> m_spacePoints;
+      |   ^~~~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp:261:3: error: 'boost' does not name a type
+  261 |   boost::container::small_vector<float, 64> m_cotTheta;
+      |   ^~~~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp: In member function 'bool Acts::DoubletsForMiddleSp::empty() const':
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp:37:45: error: 'm_spacePoints' was not declared in this scope
+   37 |   [[nodiscard]] bool empty() const { return m_spacePoints.empty(); }
+      |                                             ^~~~~~~~~~~~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp: In member function 'Acts::DoubletsForMiddleSp::Index Acts::DoubletsForMiddleSp::size() const':
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp:41:31: error: 'm_spacePoints' was not declared in this scope
+   41 |     return static_cast<Index>(m_spacePoints.size());
+      |                               ^~~~~~~~~~~~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp: In member function 'void Acts::DoubletsForMiddleSp::clear()':
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp:46:5: error: 'm_spacePoints' was not declared in this scope
+   46 |     m_spacePoints.clear();
+      |     ^~~~~~~~~~~~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp:47:5: error: 'm_cotTheta' was not declared in this scope
+   47 |     m_cotTheta.clear();
+      |     ^~~~~~~~~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp: In member function 'void Acts::DoubletsForMiddleSp::emplace_back(Acts::SpacePointIndex2, float, float, float, float, float, float, float)':
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp:64:5: error: 'm_spacePoints' was not declared in this scope
+   64 |     m_spacePoints.push_back(sp);
+      |     ^~~~~~~~~~~~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp:65:5: error: 'm_cotTheta' was not declared in this scope; did you mean 'cotTheta'?
+   65 |     m_cotTheta.push_back(cotTheta);
+      |     ^~~~~~~~~~
+      |     cotTheta
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp: In member function 'void Acts::DoubletsForMiddleSp::sortByCotTheta(const IndexRange&, std::vector<IndexAndCotTheta>&) const':
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp:102:40: error: 'm_cotTheta' was not declared in this scope
+  102 |       indexAndCotTheta.emplace_back(i, m_cotTheta[i]);
+      |                                        ^~~~~~~~~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp: In member function 'Acts::SpacePointIndex2 Acts::DoubletsForMiddleSp::Proxy::spacePointIndex() const':
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp:128:27: error: 'const class Acts::DoubletsForMiddleSp' has no member named 'm_spacePoints'
+  128 |       return m_container->m_spacePoints[m_index];
+      |                           ^~~~~~~~~~~~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp: In member function 'float Acts::DoubletsForMiddleSp::Proxy::cotTheta() const':
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp:133:50: error: 'const class Acts::DoubletsForMiddleSp' has no member named 'm_cotTheta'
+  133 |     float cotTheta() const { return m_container->m_cotTheta[m_index]; }
+      |                                                  ^~~~~~~~~~
+[4/88] Building CXX object Core/CMakeFiles/ActsCore.dir/src/Seeding2/CylindricalSpacePointKDTree.cpp.o
+[5/88] Building CXX object Core/CMakeFiles/ActsCore.dir/src/EventData/SeedContainer2.cpp.o
+[6/88] Building CXX object Core/CMakeFiles/ActsCore.dir/src/Seeding2/TripletSeedFinder.cpp.o
+FAILED: Core/CMakeFiles/ActsCore.dir/src/Seeding2/TripletSeedFinder.cpp.o 
+/cvmfs/sft.cern.ch/lcg/releases/gcc/13.1.0-b3d18/x86_64-el9/bin/g++ -DACTS_GEOMETRY_MODULE_ABI_TAG="\"acts-46.5.0|sys-Linux|arch-x86_64|cxx-GNU-13.1.0|capi-1\"" -DActsCore_EXPORTS -I/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include -I/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/Core/include -I/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/Core/src/Definitions/codegen/1fb06d98eae48c30a60b4c8acb7ebdbee0670524 -I/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/Core/src/Propagator/codegen/4febcacac24eb26d1d1d0e61b83dbc12bbdd79cd -I/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/Core/src/Propagator/codegen/4456db4833ffa91027fc4b960af806f0afc991b3 -I/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/Core/src/Propagator/codegen/79ce5a7ad1c4f4193db110f5858c7c94f7bc3c10 -isystem /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc13-opt/include/eigen3 -Wall -Wextra -Wpedantic -Wshadow -Wzero-as-null-pointer-constant -Wold-style-cast -Woverloaded-virtual  -O3 -DNDEBUG -std=gnu++20 -fPIC -MD -MT Core/CMakeFiles/ActsCore.dir/src/Seeding2/TripletSeedFinder.cpp.o -MF Core/CMakeFiles/ActsCore.dir/src/Seeding2/TripletSeedFinder.cpp.o.d -o Core/CMakeFiles/ActsCore.dir/src/Seeding2/TripletSeedFinder.cpp.o -c /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/src/Seeding2/TripletSeedFinder.cpp
+In file included from /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/TripletSeedFinder.hpp:13,
+                 from /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/src/Seeding2/TripletSeedFinder.cpp:9:
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp:73:9: error: 'boost' does not name a type
+   73 |   const boost::container::small_vector<SpacePointIndex2, 64>& spacePoints()
+      |         ^~~~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp:79:9: error: 'boost' does not name a type
+   79 |   const boost::container::small_vector<float, 64>& cotTheta() const {
+      |         ^~~~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp:258:3: error: 'boost' does not name a type
+  258 |   boost::container::small_vector<SpacePointIndex2, 64> m_spacePoints;
+      |   ^~~~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp:261:3: error: 'boost' does not name a type
+  261 |   boost::container::small_vector<float, 64> m_cotTheta;
+      |   ^~~~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp: In member function 'bool Acts::DoubletsForMiddleSp::empty() const':
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp:37:45: error: 'm_spacePoints' was not declared in this scope
+   37 |   [[nodiscard]] bool empty() const { return m_spacePoints.empty(); }
+      |                                             ^~~~~~~~~~~~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp: In member function 'Acts::DoubletsForMiddleSp::Index Acts::DoubletsForMiddleSp::size() const':
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp:41:31: error: 'm_spacePoints' was not declared in this scope
+   41 |     return static_cast<Index>(m_spacePoints.size());
+      |                               ^~~~~~~~~~~~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp: In member function 'void Acts::DoubletsForMiddleSp::clear()':
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp:46:5: error: 'm_spacePoints' was not declared in this scope
+   46 |     m_spacePoints.clear();
+      |     ^~~~~~~~~~~~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp:47:5: error: 'm_cotTheta' was not declared in this scope
+   47 |     m_cotTheta.clear();
+      |     ^~~~~~~~~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp: In member function 'void Acts::DoubletsForMiddleSp::emplace_back(Acts::SpacePointIndex2, float, float, float, float, float, float, float)':
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp:64:5: error: 'm_spacePoints' was not declared in this scope
+   64 |     m_spacePoints.push_back(sp);
+      |     ^~~~~~~~~~~~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp:65:5: error: 'm_cotTheta' was not declared in this scope; did you mean 'cotTheta'?
+   65 |     m_cotTheta.push_back(cotTheta);
+      |     ^~~~~~~~~~
+      |     cotTheta
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp: In member function 'void Acts::DoubletsForMiddleSp::sortByCotTheta(const IndexRange&, std::vector<IndexAndCotTheta>&) const':
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp:102:40: error: 'm_cotTheta' was not declared in this scope
+  102 |       indexAndCotTheta.emplace_back(i, m_cotTheta[i]);
+      |                                        ^~~~~~~~~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp: In member function 'Acts::SpacePointIndex2 Acts::DoubletsForMiddleSp::Proxy::spacePointIndex() const':
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp:128:27: error: 'const class Acts::DoubletsForMiddleSp' has no member named 'm_spacePoints'
+  128 |       return m_container->m_spacePoints[m_index];
+      |                           ^~~~~~~~~~~~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp: In member function 'float Acts::DoubletsForMiddleSp::Proxy::cotTheta() const':
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/DoubletSeedFinder.hpp:133:50: error: 'const class Acts::DoubletsForMiddleSp' has no member named 'm_cotTheta'
+  133 |     float cotTheta() const { return m_container->m_cotTheta[m_index]; }
+      |                                                  ^~~~~~~~~~
+[7/88] Building CXX object Core/CMakeFiles/ActsCore.dir/src/Seeding2/CartesianSpacePointGrid.cpp.o
+[8/88] Building CXX object Core/CMakeFiles/ActsCore.dir/src/Seeding2/CylindricalSpacePointGrid2.cpp.o
+[9/88] Building CXX object Core/CMakeFiles/ActsCore.dir/src/EventData/SpacePointContainer2.cpp.o
+ninja: build stopped: subcommand failed.

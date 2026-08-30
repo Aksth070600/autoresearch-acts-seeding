@@ -1,0 +1,6 @@
+scientific_process_started=no
+scientific_process_allowance_unused=yes
+phase=candidate-build
+exit_status=1
+failure=The Genesis-isolated DoubletSeedFinder header used boost::container::small_vector without directly including boost/container/small_vector.hpp; the retained parent had supplied that include but the isolated candidate did not.
+correction=preserve this preparation evidence; add the missing direct include within the same intended file; create and bind a fresh implementation commit; use a fresh r2 preparation path; run exactly one scientific process
