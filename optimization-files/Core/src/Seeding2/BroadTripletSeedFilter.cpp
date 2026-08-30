@@ -373,7 +373,7 @@ void BroadTripletSeedFilter::filterTripletsMiddleFixed(
                                             spacePoints[middle].index(),
                                             spacePoints[top].index()};
 
-    if (config().seedConfirmation) {
+    if (config().seedConfirmation) [[unlikely]] {
       // continue if higher-quality seeds were found
       if (numQualitySeeds > 0 && !qualitySeed) {
         continue;
@@ -386,11 +386,11 @@ void BroadTripletSeedFilter::filterTripletsMiddleFixed(
               getBestSeedQuality(state().bestSeedQualityMap, triplet[2])) {
         continue;
       }
-    }
 
-    // set quality of seed components
-    setBestSeedQuality(state().bestSeedQualityMap, triplet[0], triplet[1],
-                       triplet[2], bestSeedQuality);
+      // set quality of seed components
+      setBestSeedQuality(state().bestSeedQualityMap, triplet[0], triplet[1],
+                         triplet[2], bestSeedQuality);
+    }
 
     ACTS_VERBOSE("Adding seed: original indices=["
                  << triplet[0] << ", " << triplet[1] << ", " << triplet[2]
