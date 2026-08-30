@@ -136,6 +136,17 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   Acts::CylindricalSpacePointGrid2 grid(m_gridConfig,
                                         logger().cloneWithSuffix("Grid"));
 
+  static thread_local std::vector<std::size_t> gridBinCapacityHints;
+  if (gridBinCapacityHints.size() != grid.numberOfBins()) {
+    gridBinCapacityHints.assign(grid.numberOfBins(), 0);
+  } else {
+    for (std::size_t i = 0; i < grid.numberOfBins(); ++i) {
+      if (gridBinCapacityHints[i] != 0) {
+        grid.at(i).reserve(gridBinCapacityHints[i]);
+      }
+    }
+  }
+
   for (std::size_t i = 0; i < spacePoints.size(); ++i) {
     const auto& sp = spacePoints[i];
 
@@ -149,6 +160,8 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   }
 
   for (std::size_t i = 0; i < grid.numberOfBins(); ++i) {
+    gridBinCapacityHints[i] =
+        std::max(gridBinCapacityHints[i], grid.at(i).size());
     std::ranges::sort(grid.at(i), [&](const Acts::SpacePointIndex2& a,
                                       const Acts::SpacePointIndex2& b) {
       return spacePoints[a].r() < spacePoints[b].r();
@@ -190,7 +203,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
     float minRange = std::numeric_limits<float>::max();
     float maxRange = std::numeric_limits<float>::lowest();
     for (const Acts::SpacePointIndexRange2& range : gridSpacePointRanges) {
-      if (range.first == range.second) {
+      if (range.first == range.second) [[likely]] {
         continue;
       }
       auto first = constCoreSpacePoints[range.first];
