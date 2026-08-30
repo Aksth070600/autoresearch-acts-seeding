@@ -1,0 +1,3 @@
+Slot 119 pre-scientific preparation failure r1
+
+The local implementation script assumed `if (spacePointsSortedByRadius) {` was unique in the Genesis TripletSeeder source. The assertion failed because the expression occurs twice, at lines 158 and 187: once around neighbor-range offset initialization and once around per-middle radial clipping. The source remained at Genesis, no implementation commit was created, no candidate workspace was copied to HEPP02, and no scientific process started. The corrected preparation annotates both exact sorted-radius mode branches in the declared one-file closure.
