@@ -280,7 +280,6 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
 
   static thread_local std::vector<Acts::SpacePointContainer2::ConstRange>
       bottomSpRanges;
-  std::optional<Acts::SpacePointContainer2::ConstRange> middleSpRange;
   static thread_local std::vector<Acts::SpacePointContainer2::ConstRange>
       topSpRanges;
 
@@ -295,7 +294,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
       bottomSpRanges.push_back(
           coreSpacePoints.range(gridSpacePointRanges.at(b)).asConst());
     }
-    middleSpRange =
+    auto middleSpRange =
         coreSpacePoints.range(gridSpacePointRanges.at(middle)).asConst();
     topSpRanges.clear();
     for (const auto t : top) {
@@ -303,14 +302,14 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
           coreSpacePoints.range(gridSpacePointRanges.at(t)).asConst());
     }
 
-    if (middleSpRange->empty()) {
+    if (middleSpRange.empty()) {
       ACTS_DEBUG("No middle space points in this group, skipping");
       continue;
     }
 
     // we compute this here since all middle space point candidates belong to
     // the same z-bin
-    Acts::ConstSpacePointProxy2 firstMiddleSp = middleSpRange->front();
+    Acts::ConstSpacePointProxy2 firstMiddleSp = middleSpRange.front();
     std::pair<float, float> radiusRangeForMiddle =
         retrieveRadiusRangeForMiddle(firstMiddleSp, rMiddleSpRange);
     ACTS_VERBOSE("Validity range (radius) for the middle space point is ["
@@ -319,7 +318,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
 
     m_seedFinder->createSeedsFromGroups(
         cache, *bottomDoubletFinder, *topDoubletFinder, *tripletFinder,
-        seedFilter, coreSpacePoints, bottomSpRanges, *middleSpRange,
+        seedFilter, coreSpacePoints, bottomSpRanges, middleSpRange,
         topSpRanges, radiusRangeForMiddle, seeds);
   }
   bottomSpRanges.clear();
