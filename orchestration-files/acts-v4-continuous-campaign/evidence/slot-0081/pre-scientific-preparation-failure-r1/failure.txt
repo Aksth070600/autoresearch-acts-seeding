@@ -1,0 +1,9 @@
+schema=acts-v4-owned-static-pre-scientific-preparation-failure-v1
+slot=81
+candidate=GridRadiusRangeMaterializationFusionV4C
+implementation_commit=d22a3213e0fa67de754e8f49236c61774b23e71c
+proposal_sha256=62e6b2696c8cf49db65d5549b3f97b5d4f2c913fd4d0c6807493fe2b7b38f0b3
+stage=candidate-build
+scientific_process_started=no
+failure=The slot-specific intended closure contained only GridTripletSeedingAlgorithm.cpp, but that implementation had been adapted on the retained slot-80 tree and called SpacePointContainer2::createSpacePoints, which is absent after the helper restores the remaining files to Genesis. The build failed before candidate identity production and before any scientific process started. Correct by implementing the same proposed radius-range fusion against the isolated Genesis Grid file and use a fresh preparation workspace; the one scientific-process allowance remains unused.
+remote_workspace=/storage/thomaaks/acts-v4-continuous-20260829T185722Z-fm/candidates/slot-0081

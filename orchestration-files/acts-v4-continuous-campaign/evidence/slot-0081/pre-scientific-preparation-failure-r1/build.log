@@ -1,0 +1,36 @@
+[1/88] Building CXX object Core/CMakeFiles/ActsCore.dir/src/Seeding2/detail/CandidatesForMiddleSp2.cpp.o
+[2/88] Building CXX object Core/CMakeFiles/ActsCore.dir/src/Seeding2/BroadTripletSeedFilter.cpp.o
+[3/88] Building CXX object Core/CMakeFiles/ActsCore.dir/src/Seeding2/CylindricalSpacePointKDTree.cpp.o
+[4/88] Building CXX object Core/CMakeFiles/ActsCore.dir/src/EventData/SeedContainer2.cpp.o
+[5/88] Building CXX object Core/CMakeFiles/ActsCore.dir/src/Seeding2/DoubletSeedFinder.cpp.o
+[6/88] Building CXX object Core/CMakeFiles/ActsCore.dir/src/Seeding2/CylindricalSpacePointGrid2.cpp.o
+[7/88] Building CXX object Core/CMakeFiles/ActsCore.dir/src/Seeding2/CartesianSpacePointGrid.cpp.o
+[8/88] Building CXX object Core/CMakeFiles/ActsCore.dir/src/Seeding2/TripletSeedFinder.cpp.o
+[9/88] Building CXX object Core/CMakeFiles/ActsCore.dir/src/EventData/SpacePointContainer2.cpp.o
+[10/88] Building CXX object Core/CMakeFiles/ActsCore.dir/src/Seeding2/TripletSeeder.cpp.o
+[11/88] Building CXX object Core/CMakeFiles/ActsCore.dir/src/Vertexing/HoughVertexFinder2.cpp.o
+[12/88] Building CXX object Plugins/Root/CMakeFiles/ActsPluginRoot.dir/src/RootSpacePointIo.cpp.o
+[13/88] Building CXX object Core/CMakeFiles/ActsCore.dir/src/Seeding2/GraphBasedTrackSeeder.cpp.o
+[14/88] Linking CXX shared library lib64/libActsCore.so
+[15/88] Linking CXX shared library lib64/libActsFatras.so
+[16/88] Linking CXX shared library lib64/libActsPluginFpeMonitoring.so
+[17/88] Linking CXX shared library lib64/libActsPluginRoot.so
+[18/88] Building CXX object Plugins/Json/CMakeFiles/ActsPluginJson.dir/src/Seeding2ConfigJsonConverter.cpp.o
+[19/88] Linking CXX shared library lib64/libActsPluginJson.so
+[20/88] Building CXX object Examples/Algorithms/TrackFinding/CMakeFiles/ActsExamplesTrackFinding.dir/src/AdaptiveHoughTransformSeeder.cpp.o
+[21/88] Building CXX object Examples/Algorithms/TrackFinding/CMakeFiles/ActsExamplesTrackFinding.dir/src/GridTripletSeedingAlgorithm.cpp.o
+FAILED: Examples/Algorithms/TrackFinding/CMakeFiles/ActsExamplesTrackFinding.dir/src/GridTripletSeedingAlgorithm.cpp.o 
+/cvmfs/sft.cern.ch/lcg/releases/gcc/13.1.0-b3d18/x86_64-el9/bin/g++ -DActsExamplesTrackFinding_EXPORTS -I/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Examples/Algorithms/TrackFinding/include -I/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Examples/Detectors/MagneticField/include -I/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Examples/Framework/include -I/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Fatras/include -I/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include -I/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/Core/include -I/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Plugins/FpeMonitoring/include -isystem /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc13-opt/include/eigen3 -Wall -Wextra -Wpedantic -Wshadow -Wzero-as-null-pointer-constant -Wold-style-cast -Woverloaded-virtual  -O3 -DNDEBUG -std=gnu++20 -fPIC -MD -MT Examples/Algorithms/TrackFinding/CMakeFiles/ActsExamplesTrackFinding.dir/src/GridTripletSeedingAlgorithm.cpp.o -MF Examples/Algorithms/TrackFinding/CMakeFiles/ActsExamplesTrackFinding.dir/src/GridTripletSeedingAlgorithm.cpp.o.d -o Examples/Algorithms/TrackFinding/CMakeFiles/ActsExamplesTrackFinding.dir/src/GridTripletSeedingAlgorithm.cpp.o -c /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Examples/Algorithms/TrackFinding/src/GridTripletSeedingAlgorithm.cpp
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Examples/Algorithms/TrackFinding/src/GridTripletSeedingAlgorithm.cpp: In member function 'virtual ActsExamples::ProcessCode ActsExamples::GridTripletSeedingAlgorithm::execute(const ActsExamples::AlgorithmContext&) const':
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Examples/Algorithms/TrackFinding/src/GridTripletSeedingAlgorithm.cpp:162:19: error: 'class Acts::SpacePointContainer2' has no member named 'createSpacePoints'; did you mean 'createSpacePoint'?
+  162 |   coreSpacePoints.createSpacePoints(grid.numberOfSpacePoints());
+      |                   ^~~~~~~~~~~~~~~~~
+      |                   createSpacePoint
+[22/88] Building CXX object Examples/Algorithms/TrackFinding/CMakeFiles/ActsExamplesTrackFinding.dir/src/HoughTransformSeeder.cpp.o
+[23/88] Building CXX object Examples/Algorithms/TrackFinding/CMakeFiles/ActsExamplesTrackFinding.dir/src/TrackParamsEstimationAlgorithm.cpp.o
+[24/88] Building CXX object Examples/Algorithms/TrackFinding/CMakeFiles/ActsExamplesTrackFinding.dir/src/GraphBasedSeedingAlgorithm.cpp.o
+[25/88] Building CXX object Examples/Algorithms/TrackFinding/CMakeFiles/ActsExamplesTrackFinding.dir/src/SpacePointMaker.cpp.o
+[26/88] Building CXX object Examples/Algorithms/TrackFinding/CMakeFiles/ActsExamplesTrackFinding.dir/src/OrthogonalTripletSeedingAlgorithm.cpp.o
+[27/88] Building CXX object Examples/Algorithms/TrackFinding/CMakeFiles/ActsExamplesTrackFinding.dir/src/TrackFindingAlgorithmFunction.cpp.o
+[28/88] Building CXX object Examples/Algorithms/TrackFinding/CMakeFiles/ActsExamplesTrackFinding.dir/src/TrackFindingAlgorithm.cpp.o
+ninja: build stopped: subcommand failed.
