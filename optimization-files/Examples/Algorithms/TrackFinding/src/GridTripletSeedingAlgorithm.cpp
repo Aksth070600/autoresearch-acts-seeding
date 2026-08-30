@@ -157,28 +157,27 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
 
   Acts::SpacePointContainer2 coreSpacePoints(
       Acts::SpacePointColumns::PackedXY | Acts::SpacePointColumns::PackedZR |
-      Acts::SpacePointColumns::PackedVarianceZR |
+      Acts::SpacePointColumns::VarianceZ | Acts::SpacePointColumns::VarianceR |
       Acts::SpacePointColumns::CopyFromIndex);
-  coreSpacePoints.createSpacePoints(grid.numberOfSpacePoints());
-  std::uint32_t coreIndex = 0;
+  coreSpacePoints.reserve(grid.numberOfSpacePoints());
   std::vector<Acts::SpacePointIndexRange2> gridSpacePointRanges;
   gridSpacePointRanges.reserve(grid.numberOfBins());
   for (std::size_t i = 0; i < grid.numberOfBins(); ++i) {
-    std::uint32_t begin = coreIndex;
+    std::uint32_t begin = coreSpacePoints.size();
     for (Acts::SpacePointIndex2 spIndex : grid.at(i)) {
       const ConstSpacePointProxy& sp = spacePoints[spIndex];
 
-      auto newSp = coreSpacePoints[coreIndex++];
+      auto newSp = coreSpacePoints.createSpacePoint();
       newSp.xy() = std::array<float, 2>{static_cast<float>(sp.x()),
                                         static_cast<float>(sp.y())};
       newSp.zr() = std::array<float, 2>{static_cast<float>(sp.z()),
                                         static_cast<float>(sp.r())};
-      newSp.varianceZR() =
-          std::array<float, 2>{static_cast<float>(sp.varianceZ()),
-                               static_cast<float>(sp.varianceR())};
+      newSp.varianceZ() = static_cast<float>(sp.varianceZ());
+      newSp.varianceR() = static_cast<float>(sp.varianceR());
       newSp.copyFromIndex() = sp.index();
     }
-    gridSpacePointRanges.emplace_back(begin, coreIndex);
+    std::uint32_t end = coreSpacePoints.size();
+    gridSpacePointRanges.emplace_back(begin, end);
   }
 
   // Compute radius range. We rely on the fact the grid is storing the proxies
@@ -282,7 +281,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
           coreSpacePoints.range(gridSpacePointRanges.at(t)).asConst());
     }
 
-    if (middleSpRange->empty()) {
+    if (middleSpRange->empty()) [[unlikely]] {
       ACTS_DEBUG("No middle space points in this group, skipping");
       continue;
     }
