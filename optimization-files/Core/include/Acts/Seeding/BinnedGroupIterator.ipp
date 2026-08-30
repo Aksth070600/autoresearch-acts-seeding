@@ -73,9 +73,18 @@ BinnedGroupIterator<grid_t>::operator*() const {
 
 template <typename grid_t>
 void BinnedGroupIterator<grid_t>::findNotEmptyBin() {
-  if (m_gridItr == m_gridItrEnd) [[unlikely]] {
+  if (m_gridItr == m_gridItrEnd) {
     return;
   }
+  /// An unmasked group is the normal path for seeding. Avoid allocating and
+  /// reading a full true mask for that case.
+  if (m_group->mask().empty()) {
+    while (m_gridItr != m_gridItrEnd && (*m_gridItr).empty()) {
+      ++m_gridItr;
+    }
+    return;
+  }
+
   /// Iterate on the grid till we find a not-empty bin
   /// We start from the current bin configuration and move forward
   while (m_gridItr != m_gridItrEnd) {
