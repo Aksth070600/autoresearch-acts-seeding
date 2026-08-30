@@ -15,6 +15,8 @@
 #include <ranges>
 
 #include <Eigen/Dense>
+#include <boost/mp11.hpp>
+#include <boost/mp11/algorithm.hpp>
 
 namespace Acts {
 
@@ -148,12 +150,9 @@ class Impl final : public TripletSeedFinder {
       const DoubletsForMiddleSp::Proxy& bottomDoublet, TopDoublets& topDoublets,
       TripletTopCandidates& tripletTopCandidates) const {
     const float rM = spM.zr()[1];
-    const float varianceZM = spM.varianceZ();
-    const float varianceRM = spM.varianceR();
-
-    // Reserve enough space, in case current capacity is too little
-    tripletTopCandidates.reserve(tripletTopCandidates.size() +
-                                 topDoublets.size());
+    const auto& varianceZRM = spM.varianceZR();
+    const float varianceZM = varianceZRM[0];
+    const float varianceRM = varianceZRM[1];
 
     const float cotThetaB = bottomDoublet.cotTheta();
     const float erB = bottomDoublet.er();
@@ -231,7 +230,7 @@ class Impl final : public TripletSeedFinder {
 
       // sqrt(S2)/B = 2 * helixradius
       // calculated radius must not be smaller than minimum radius
-      if (S2 < B2 * m_cfg.minHelixDiameter2) {
+      if (S2 < B2 * m_cfg.minHelixDiameter2) [[likely]] {
         continue;
       }
 
@@ -280,8 +279,9 @@ class Impl final : public TripletSeedFinder {
     const float rM = spM.zr()[1];
     const float cosPhiM = spM.xy()[0] / rM;
     const float sinPhiM = spM.xy()[1] / rM;
-    const float varianceZM = spM.varianceZ();
-    const float varianceRM = spM.varianceR();
+    const auto& varianceZRM = spM.varianceZR();
+    const float varianceZM = varianceZRM[0];
+    const float varianceRM = varianceZRM[1];
 
     // Reserve enough space, in case current capacity is too little
     tripletTopCandidates.reserve(tripletTopCandidates.size() +
@@ -585,21 +585,46 @@ TripletSeedFinder::DerivedConfig::DerivedConfig(const Config& config,
 
 std::unique_ptr<TripletSeedFinder> TripletSeedFinder::create(
     const DerivedConfig& config) {
-  auto make = [&]<bool useStripInfo, bool sortedByCotTheta>()
-      -> std::unique_ptr<TripletSeedFinder> {
-    return std::make_unique<Impl<useStripInfo, sortedByCotTheta>>(config);
-  };
+  using BooleanOptions =
+      boost::mp11::mp_list<std::bool_constant<false>, std::bool_constant<true>>;
 
-  if (config.useStripInfo) {
-    if (config.sortedByCotTheta) {
-      return make.template operator()<true, true>();
+  using UseStripInfoOptions = BooleanOptions;
+  using SortedByCotThetaOptions = BooleanOptions;
+
+  using TripletOptions =
+      boost::mp11::mp_product<boost::mp11::mp_list, UseStripInfoOptions,
+                              SortedByCotThetaOptions>;
+
+  std::unique_ptr<TripletSeedFinder> result;
+  boost::mp11::mp_for_each<TripletOptions>([&](auto option) {
+    using OptionType = decltype(option);
+
+    using UseStripInfo = boost::mp11::mp_at_c<OptionType, 0>;
+    using SortedByCotTheta = boost::mp11::mp_at_c<OptionType, 1>;
+
+    if (config.useStripInfo != UseStripInfo::value ||
+        config.sortedByCotTheta != SortedByCotTheta::value) {
+      return;  // skip if the configuration does not match
     }
-    return make.template operator()<true, false>();
+
+    // check if we already have an implementation for this configuration
+    if (result != nullptr) {
+      throw std::runtime_error(
+          "TripletSeedFinder: Multiple implementations found for one "
+          "configuration");
+    }
+
+    // create the implementation for the given configuration
+    result =
+        std::make_unique<Impl<UseStripInfo::value, SortedByCotTheta::value>>(
+            config);
+  });
+  if (result == nullptr) {
+    throw std::runtime_error(
+        "TripletSeedFinder: No implementation found for the given "
+        "configuration");
   }
-  if (config.sortedByCotTheta) {
-    return make.template operator()<false, true>();
-  }
-  return make.template operator()<false, false>();
+  return result;
 }
 
 }  // namespace Acts
