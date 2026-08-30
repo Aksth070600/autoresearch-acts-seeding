@@ -58,7 +58,6 @@ BroadTripletSeedFilter::BroadTripletSeedFilter(const Config& config,
   state.candidatesCollector =
       CandidatesForMiddleSp2(this->config().maxSeedsPerSpMConf,
                              this->config().maxQualitySeedsPerSpMConf);
-  cache.compatibleSeedR.reserve(this->config().compatSeedLimit);
 }
 
 bool BroadTripletSeedFilter::sufficientTopDoublets(
@@ -141,84 +140,106 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
   bool maxWeightSeed = false;
   float weightMax = std::numeric_limits<float>::lowest();
 
-  // initialize original index locations
-  cache().topSpIndexVec.resize(tripletTopCandidates.size());
-  std::iota(cache().topSpIndexVec.begin(), cache().topSpIndexVec.end(), 0);
-  std::ranges::sort(cache().topSpIndexVec, {},
-                    [&tripletTopCandidates](const std::size_t t) {
-                      return tripletTopCandidates.curvatures()[t];
-                    });
+  // Cache every immutable curvature key with its original index before sorting.
+  cache().topSpCurvatureVec.resize(tripletTopCandidates.size());
+  for (std::uint32_t i = 0; i < tripletTopCandidates.size(); ++i) {
+    cache().topSpCurvatureVec[i] = {tripletTopCandidates[i].curvature(), i};
+  }
+  std::ranges::sort(cache().topSpCurvatureVec, {},
+                    &Cache::CurvatureIndex::curvature);
+
+  // The common compatibility limit fits in the inline cache. Keep an
+  // overflow vector for configurations that request more entries.
+  cache().compatibleSeedROverflow.reserve(config().compatSeedLimit >
+                                                  cache().compatibleSeedRInline.size()
+                                              ? config().compatSeedLimit -
+                                                    cache().compatibleSeedRInline.size()
+                                              : 0);
 
   const auto getTopR = [&](ConstSpacePointProxy2 spT) {
-    if (config().useDeltaRinsteadOfTopRadius) {
+    if (config().useDeltaRinsteadOfTopRadius) [[unlikely]] {
       return fastHypot(spT.zr()[1] - spM.zr()[1], spT.zr()[0] - spM.zr()[0]);
     }
     return spT.zr()[1];
   };
+  cache().topSpRadiusVec.resize(tripletTopCandidates.size());
+  for (std::size_t i = 0; i < tripletTopCandidates.size(); ++i) {
+    cache().topSpRadiusVec[i] =
+        getTopR(spacePoints[tripletTopCandidates[i].spacePoint()]);
+  }
 
   std::size_t beginCompTopIndex = 0;
+  std::size_t endCompTopIndex = 0;
   // loop over top SPs and other compatible top SP candidates
-  for (const std::size_t topSpIndex : cache().topSpIndexVec) {
-    auto topSp = tripletTopCandidates.topSpacePoints()[topSpIndex];
+  for (const Cache::CurvatureIndex& top : cache().topSpCurvatureVec) {
+    const std::size_t topSpIndex = top.index;
+    auto topSp = tripletTopCandidates[topSpIndex].spacePoint();
     auto spT = spacePoints[topSp];
 
-    cache().compatibleSeedR.clear();
+    cache().compatibleSeedRSize = 0;
+    cache().compatibleSeedROverflow.clear();
 
-    float invHelixDiameter = tripletTopCandidates.curvatures()[topSpIndex];
+    float invHelixDiameter = top.curvature;
     float lowerLimitCurv = invHelixDiameter - config().deltaInvHelixDiameter;
     float upperLimitCurv = invHelixDiameter + config().deltaInvHelixDiameter;
-    float currentTopR = getTopR(spT);
-    float impact = tripletTopCandidates.impactParameters()[topSpIndex];
+    float currentTopR = cache().topSpRadiusVec[topSpIndex];
+    float impact = tripletTopCandidates[topSpIndex].impactParameter();
 
     float weight = -impact * config().impactWeightFactor;
 
-    // loop over compatible top SP candidates
+    while (beginCompTopIndex < cache().topSpCurvatureVec.size() &&
+           cache().topSpCurvatureVec[beginCompTopIndex].curvature <
+               lowerLimitCurv) {
+      ++beginCompTopIndex;
+    }
+    endCompTopIndex = std::max(endCompTopIndex, beginCompTopIndex);
+    while (endCompTopIndex < cache().topSpCurvatureVec.size() &&
+           cache().topSpCurvatureVec[endCompTopIndex].curvature <=
+               upperLimitCurv) {
+      ++endCompTopIndex;
+    }
+
+    // loop over the monotonic curvature compatibility window
     for (std::size_t variableCompTopIndex = beginCompTopIndex;
-         variableCompTopIndex < cache().topSpIndexVec.size();
-         variableCompTopIndex++) {
-      std::size_t compatibleTopSpIndex =
-          cache().topSpIndexVec[variableCompTopIndex];
+         variableCompTopIndex < endCompTopIndex; ++variableCompTopIndex) {
+      const std::size_t compatibleTopSpIndex =
+          cache().topSpCurvatureVec[variableCompTopIndex].index;
       if (compatibleTopSpIndex == topSpIndex) {
         continue;
       }
-      auto otherSpT = spacePoints[tripletTopCandidates
-                                      .topSpacePoints()[compatibleTopSpIndex]];
-
-      float otherTopR = getTopR(otherSpT);
-
-      // curvature difference within limits?
-      if (tripletTopCandidates.curvatures()[compatibleTopSpIndex] <
-          lowerLimitCurv) {
-        // the SPs are sorted in curvature so we skip unnecessary iterations
-        beginCompTopIndex = variableCompTopIndex + 1;
-        continue;
-      }
-      if (tripletTopCandidates.curvatures()[compatibleTopSpIndex] >
-          upperLimitCurv) {
-        // the SPs are sorted in curvature so we skip unnecessary iterations
-        break;
-      }
+      float otherTopR = cache().topSpRadiusVec[compatibleTopSpIndex];
       // compared top SP should have at least deltaRMin distance
       float deltaR = currentTopR - otherTopR;
       if (std::abs(deltaR) < config().deltaRMin) {
         continue;
       }
       bool newCompSeed = true;
-      for (const float previousDiameter : cache().compatibleSeedR) {
+      for (std::size_t previousIndex = 0;
+           previousIndex < cache().compatibleSeedRSize; ++previousIndex) {
         // original ATLAS code uses higher min distance for 2nd found compatible
         // seed (20mm instead of 5mm)
         // add new compatible seed only if distance larger than rmin to all
         // other compatible seeds
+        const float previousDiameter =
+            previousIndex < cache().compatibleSeedRInline.size()
+                ? cache().compatibleSeedRInline[previousIndex]
+                : cache().compatibleSeedROverflow[
+                      previousIndex - cache().compatibleSeedRInline.size()];
         if (std::abs(previousDiameter - otherTopR) < config().deltaRMin) {
           newCompSeed = false;
           break;
         }
       }
       if (newCompSeed) {
-        cache().compatibleSeedR.push_back(otherTopR);
+        if (cache().compatibleSeedRSize < cache().compatibleSeedRInline.size()) {
+          cache().compatibleSeedRInline[cache().compatibleSeedRSize] = otherTopR;
+        } else {
+          cache().compatibleSeedROverflow.push_back(otherTopR);
+        }
+        ++cache().compatibleSeedRSize;
         weight += config().compatSeedWeight;
       }
-      if (cache().compatibleSeedR.size() >= config().compatSeedLimit) {
+      if (cache().compatibleSeedRSize >= config().compatSeedLimit) {
         break;
       }
     }
@@ -234,7 +255,7 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
 
     // increment in seed weight if number of compatible seeds is larger than
     // numSeedIncrement
-    if (cache().compatibleSeedR.size() > config().numSeedIncrement) {
+    if (cache().compatibleSeedRSize > config().numSeedIncrement) {
       weight += config().seedWeightIncrement;
     }
 
@@ -254,7 +275,7 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
       // impact parameter, z-origin and number of compatible seeds inside a
       // pre-defined range that also depends on the region of the detector (i.e.
       // forward or central region) defined by SeedConfirmationRange
-      int deltaSeedConf = cache().compatibleSeedR.size() + 1 - nTopSeedConf;
+      int deltaSeedConf = cache().compatibleSeedRSize + 1 - nTopSeedConf;
       if (deltaSeedConf < 0 ||
           (state().candidatesCollector.nHighQualityCandidates() != 0 &&
            deltaSeedConf == 0)) {
@@ -355,7 +376,7 @@ void BroadTripletSeedFilter::filterTripletsMiddleFixed(
                                             spacePoints[middle].index(),
                                             spacePoints[top].index()};
 
-    if (config().seedConfirmation) {
+    if (config().seedConfirmation) [[unlikely]] {
       // continue if higher-quality seeds were found
       if (numQualitySeeds > 0 && !qualitySeed) {
         continue;
@@ -368,11 +389,11 @@ void BroadTripletSeedFilter::filterTripletsMiddleFixed(
               getBestSeedQuality(state().bestSeedQualityMap, triplet[2])) {
         continue;
       }
-    }
 
-    // set quality of seed components
-    setBestSeedQuality(state().bestSeedQualityMap, triplet[0], triplet[1],
-                       triplet[2], bestSeedQuality);
+      // set quality of seed components
+      setBestSeedQuality(state().bestSeedQualityMap, triplet[0], triplet[1],
+                         triplet[2], bestSeedQuality);
+    }
 
     ACTS_VERBOSE("Adding seed: original indices=["
                  << triplet[0] << ", " << triplet[1] << ", " << triplet[2]
