@@ -140,13 +140,13 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
   bool maxWeightSeed = false;
   float weightMax = std::numeric_limits<float>::lowest();
 
-  // initialize original index locations
-  cache().topSpIndexVec.resize(tripletTopCandidates.size());
-  std::iota(cache().topSpIndexVec.begin(), cache().topSpIndexVec.end(), 0);
-  std::ranges::sort(cache().topSpIndexVec, {},
-                    [&tripletTopCandidates](const std::size_t t) {
-                      return tripletTopCandidates[t].curvature();
-                    });
+  // Cache every immutable curvature key with its original index before sorting.
+  cache().topSpCurvatureVec.resize(tripletTopCandidates.size());
+  for (std::uint32_t i = 0; i < tripletTopCandidates.size(); ++i) {
+    cache().topSpCurvatureVec[i] = {tripletTopCandidates[i].curvature(), i};
+  }
+  std::ranges::sort(cache().topSpCurvatureVec, {},
+                    &Cache::CurvatureIndex::curvature);
 
   // The common compatibility limit fits in the inline cache. Keep an
   // overflow vector for configurations that request more entries.
@@ -157,39 +157,45 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
                                               : 0);
 
   const auto getTopR = [&](ConstSpacePointProxy2 spT) {
-    if (config().useDeltaRinsteadOfTopRadius) {
+    if (config().useDeltaRinsteadOfTopRadius) [[unlikely]] {
       return fastHypot(spT.zr()[1] - spM.zr()[1], spT.zr()[0] - spM.zr()[0]);
     }
     return spT.zr()[1];
   };
+  cache().topSpRadiusVec.resize(tripletTopCandidates.size());
+  for (std::size_t i = 0; i < tripletTopCandidates.size(); ++i) {
+    cache().topSpRadiusVec[i] =
+        getTopR(spacePoints[tripletTopCandidates[i].spacePoint()]);
+  }
 
   std::size_t beginCompTopIndex = 0;
   std::size_t endCompTopIndex = 0;
   // loop over top SPs and other compatible top SP candidates
-  for (const std::size_t topSpIndex : cache().topSpIndexVec) {
+  for (const Cache::CurvatureIndex& top : cache().topSpCurvatureVec) {
+    const std::size_t topSpIndex = top.index;
     auto topSp = tripletTopCandidates[topSpIndex].spacePoint();
     auto spT = spacePoints[topSp];
 
     cache().compatibleSeedRSize = 0;
     cache().compatibleSeedROverflow.clear();
 
-    float invHelixDiameter = tripletTopCandidates[topSpIndex].curvature();
+    float invHelixDiameter = top.curvature;
     float lowerLimitCurv = invHelixDiameter - config().deltaInvHelixDiameter;
     float upperLimitCurv = invHelixDiameter + config().deltaInvHelixDiameter;
-    float currentTopR = getTopR(spT);
+    float currentTopR = cache().topSpRadiusVec[topSpIndex];
     float impact = tripletTopCandidates[topSpIndex].impactParameter();
 
     float weight = -impact * config().impactWeightFactor;
 
-    while (beginCompTopIndex < cache().topSpIndexVec.size() &&
-           tripletTopCandidates[cache().topSpIndexVec[beginCompTopIndex]]
-                   .curvature() < lowerLimitCurv) {
+    while (beginCompTopIndex < cache().topSpCurvatureVec.size() &&
+           cache().topSpCurvatureVec[beginCompTopIndex].curvature <
+               lowerLimitCurv) {
       ++beginCompTopIndex;
     }
     endCompTopIndex = std::max(endCompTopIndex, beginCompTopIndex);
-    while (endCompTopIndex < cache().topSpIndexVec.size() &&
-           tripletTopCandidates[cache().topSpIndexVec[endCompTopIndex]]
-                   .curvature() <= upperLimitCurv) {
+    while (endCompTopIndex < cache().topSpCurvatureVec.size() &&
+           cache().topSpCurvatureVec[endCompTopIndex].curvature <=
+               upperLimitCurv) {
       ++endCompTopIndex;
     }
 
@@ -197,14 +203,11 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
     for (std::size_t variableCompTopIndex = beginCompTopIndex;
          variableCompTopIndex < endCompTopIndex; ++variableCompTopIndex) {
       const std::size_t compatibleTopSpIndex =
-          cache().topSpIndexVec[variableCompTopIndex];
+          cache().topSpCurvatureVec[variableCompTopIndex].index;
       if (compatibleTopSpIndex == topSpIndex) {
         continue;
       }
-      auto otherSpT =
-          spacePoints[tripletTopCandidates[compatibleTopSpIndex].spacePoint()];
-
-      float otherTopR = getTopR(otherSpT);
+      float otherTopR = cache().topSpRadiusVec[compatibleTopSpIndex];
       // compared top SP should have at least deltaRMin distance
       float deltaR = currentTopR - otherTopR;
       if (std::abs(deltaR) < config().deltaRMin) {
