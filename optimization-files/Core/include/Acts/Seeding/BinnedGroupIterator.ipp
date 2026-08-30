@@ -88,14 +88,13 @@ void BinnedGroupIterator<grid_t>::findNotEmptyBin() {
   /// We start from the current bin configuration and move forward
   while (m_gridItr != m_gridItrEnd) {
     std::size_t dimCollection = (*m_gridItr).size();
-    m_localPosition = m_gridItr.localBinsIndices();
-    m_globalIndex =
-        m_group->grid().globalBinFromLocalBins(m_localPosition);
-    bool passesMask = m_group->mask().at(m_globalIndex);
-
-    // Check if current bin is non-empty and passes mask
-    if (dimCollection > 0ul && passesMask) {
-      break;
+    if (dimCollection > 0ul) {
+      m_localPosition = m_gridItr.localBinsIndices();
+      m_globalIndex =
+          m_group->grid().globalBinFromLocalBins(m_localPosition);
+      if (m_group->mask().at(m_globalIndex)) {
+        break;
+      }
     }
 
     ++m_gridItr;
