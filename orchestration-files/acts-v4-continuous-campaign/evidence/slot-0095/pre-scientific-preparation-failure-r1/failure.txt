@@ -1,0 +1,3 @@
+Slot 95 pre-scientific preparation failure r1
+
+The first local implementation command restored the intended BroadTripletSeedFilter.cpp closure to scientific Genesis, then stopped before modifying it because a safety assertion expected the text `if (config().seedConfirmation) {` to be unique. The Genesis file contains three such branches. No candidate identity was produced, no remote candidate workspace was created, and no scientific process started. The scientific-process allowance therefore remained unused. The correction targets the final per-candidate branch by its unique surrounding triplet construction context.

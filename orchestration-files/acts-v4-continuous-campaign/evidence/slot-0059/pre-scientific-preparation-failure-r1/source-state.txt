@@ -1,0 +1,2 @@
+candidate_source_sha256=e82dcad618a14009c4ac40c9f633847cce285551b2cfe497fba4baaf84e9f95c
+candidate_source_state=canonical-genesis

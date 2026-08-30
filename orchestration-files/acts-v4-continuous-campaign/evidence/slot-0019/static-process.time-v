@@ -1,0 +1,24 @@
+Command exited with non-zero status 139
+	Command being timed: "python3 /storage/thomaaks/acts-v4-continuous-20260829T185722Z-fm/project/orchestration-files/acts-v4-static/run_static.py --dataset /storage/thomaaks/acts-v4-owned-static/acts-seeding-v4-owned-static-a05ae8663452d52dc2b90e2fa5372091a2cb04feb8cce86646da9f6ccbc2f3fb --geometry-dir /storage/thomaaks/acts-itk --private-source /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source --private-build /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build --identity-dir /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/template/identities --candidate-identity-dir /storage/thomaaks/acts-v4-continuous-20260829T185722Z-fm/candidates/slot-0019/candidate-identity --proposal-sha256 b6125ddd591ca544a3cf972cbda0f85829827c12306a44b4d43854b12a64e5a1 --output-dir /storage/thomaaks/acts-v4-continuous-20260829T185722Z-fm/candidates/slot-0019/output --raw-result /storage/thomaaks/acts-v4-continuous-20260829T185722Z-fm/candidates/slot-0019/raw.json --protocol-id acts-seeding-v4-owned-static --protocol-revision 2 --dataset-id acts-seeding-v4-owned-static-a05ae8663452d52dc2b90e2fa5372091a2cb04feb8cce86646da9f6ccbc2f3fb"
+	User time (seconds): 17.81
+	System time (seconds): 3.15
+	Percent of CPU this job got: 105%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:19.82
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 2121336
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 3655
+	Minor (reclaiming a frame) page faults: 268040
+	Voluntary context switches: 70446
+	Involuntary context switches: 293
+	Swaps: 0
+	File system inputs: 611824
+	File system outputs: 176
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 139

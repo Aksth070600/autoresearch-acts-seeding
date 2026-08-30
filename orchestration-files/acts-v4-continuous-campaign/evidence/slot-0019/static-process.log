@@ -1,0 +1,354 @@
+01:09:02    buildITkGeom   INFO      Adding material from /storage/thomaaks/acts-itk/itk-hgtd/material-maps-ITk-HGTD.json
+Info in <TGeoManager::Import>: Reading geometry from file: /storage/thomaaks/acts-itk/itk-hgtd/ATLAS-ITk-HGTD.tgeo.root
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is BeamPipe__World. Master volume is BeamPipe__World
+Info in <TGeoNavigator::BuildCache>: --- Maximum geometry depth set to 100
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::CountLevels>: max level = 9, max placements = 46975
+Info in <TGeoManager::CloseGeometry>: 233079 nodes/ 703 volume UID's in Geometry imported from GDML
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
+Warning in <TGeoMatrix::dtor>: Registered matrix ITkPixel__ITkPixelDetectorID was removed
+Warning in <TGeoMatrix::dtor>: Registered matrix  was removed
+Warning in <TGeoMatrix::dtor>: Registered matrix ITkPixel__ITkPixelDetectorID was removed
+Warning in <TGeoMatrix::dtor>: Registered matrix  was removed
+Warning in <TGeoMatrix::dtor>: Registered matrix ITkPixel__ITkPixelDetectorID was removed
+Warning in <TGeoMatrix::dtor>: Registered matrix  was removed
+Warning in <TGeoMatrix::dtor>: Registered matrix ITkPixel__ITkPixelDetectorID was removed
+Warning in <TGeoMatrix::dtor>: Registered matrix  was removed
+Warning in <TGeoMatrix::dtor>: Registered matrix ITkPixel__ITkPixelDetectorID was removed
+Warning in <TGeoMatrix::dtor>: Registered matrix  was removed
+Warning in <TGeoMatrix::dtor>: Registered matrix ITkPixel__ITkPixelDetectorID was removed
+Warning in <TGeoMatrix::dtor>: Registered matrix  was removed
+Warning in <TGeoMatrix::dtor>: Registered matrix ITkStrip__ITkStripID was removed
+Warning in <TGeoMatrix::dtor>: Registered matrix  was removed
+Warning in <TGeoMatrix::dtor>: Registered matrix ITkStrip__ITkStripID was removed
+Warning in <TGeoMatrix::dtor>: Registered matrix  was removed
+Warning in <TGeoMatrix::dtor>: Registered matrix ITkStrip__ITkStripID was removed
+Warning in <TGeoMatrix::dtor>: Registered matrix  was removed
+Warning in <TGeoMatrix::dtor>: Registered matrix HGTD__HGTDID was removed
+Warning in <TGeoMatrix::dtor>: Registered matrix HGTD__HGTDID was removed
+01:09:18    Sequencer      INFO      Create Sequencer (single-threaded)
+01:09:18    Sequencer      INFO      Sequencer failOnUnmaskedFpe is enabled based on environment variable ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE
+01:09:18    Sequencer      INFO      Add Reader 'OwnedSeedingDatasetReader'
+01:09:18    Sequencer      INFO      -> OutputMeasurements 'measurements':
+01:09:18    Sequencer      INFO         MeasurementContainer
+01:09:18    Sequencer      INFO      -> OutputMeasurementSubset 'measurement_subset':
+01:09:18    Sequencer      INFO         MeasurementSubset
+01:09:18    Sequencer      INFO      -> OutputSpacePoints 'spacepoints':
+01:09:18    Sequencer      INFO         SpacePointContainer2
+01:09:18    Sequencer      INFO      -> OutputParticles 'particles_simulated':
+01:09:18    Sequencer      INFO         flat_set<SimParticle, detail::CompareParticleId, void>
+01:09:18    Sequencer      INFO      -> OutputSelectedParticles 'particles_selected':
+01:09:18    Sequencer      INFO         flat_set<SimParticle, detail::CompareParticleId, void>
+01:09:18    Sequencer      INFO      -> OutputMeasurementParticlesMap 'measurement_particles_map':
+01:09:18    Sequencer      INFO         flat_multimap<unsigned int, Barcode, less<unsigned int>, void>
+01:09:18    Sequencer      INFO      -> OutputParticleMeasurementsMap 'particle_measurements_map':
+01:09:18    Sequencer      INFO         flat_multimap<Barcode, unsigned int, less<Barcode>, void>
+01:09:18    Sequencer      INFO      Add Algorithm 'GridTripletSeedingAlgorithm'
+01:09:18    Sequencer      INFO      <- InputSpacePoints 'spacepoints':
+01:09:18    Sequencer      INFO         SpacePointContainer2
+01:09:18    Sequencer      INFO      -> OutputSeeds 'seeds':
+01:09:18    Sequencer      INFO         SeedContainer2
+01:09:18    Sequencer      INFO      Add Algorithm 'TrackParamsEstimationAlgorithm'
+01:09:18    Sequencer      INFO      <- InputSeeds 'seeds':
+01:09:18    Sequencer      INFO         SeedContainer2
+01:09:18    Sequencer      INFO      -> OutputTrackParameters 'estimatedparameters':
+01:09:18    Sequencer      INFO         vector<BoundTrackParameters>
+01:09:18    Sequencer      INFO      -> OutputSeeds 'estimatedseeds':
+01:09:18    Sequencer      INFO         SeedContainer2
+01:09:18    Sequencer      INFO      Add Algorithm 'SeedsToProtoTracks'
+01:09:18    Sequencer      INFO      <- InputSeeds 'estimatedseeds':
+01:09:18    Sequencer      INFO         SeedContainer2
+01:09:18    Sequencer      INFO      -> OutputProtoTracks 'seed-protoTracks':
+01:09:18    Sequencer      INFO         vector<small_vector<unsigned int, 3ul, void, void>>
+01:09:18    Sequencer      INFO      Add Algorithm 'ProtoTracksToTracks'
+01:09:18    Sequencer      INFO      <- InputMeasurements 'measurement_subset':
+01:09:18    Sequencer      INFO         MeasurementSubset
+01:09:18    Sequencer      INFO      <- InputTrackParameters 'estimatedparameters':
+01:09:18    Sequencer      INFO         vector<BoundTrackParameters>
+01:09:18    Sequencer      INFO      <- InputProtoTracks 'seed-protoTracks':
+01:09:18    Sequencer      INFO         vector<small_vector<unsigned int, 3ul, void, void>>
+01:09:18    Sequencer      INFO      -> OutputTracks 'seed-tracks':
+01:09:18    Sequencer      INFO            TrackContainer<ConstVectorTrackContainer, ConstVectorMultiTrajectory, shared_ptr>
+01:09:18    Sequencer      INFO      Add Algorithm 'TrackTruthMatcher'
+01:09:18    Sequencer      INFO      <- InputTracks 'seed-tracks':
+01:09:18    Sequencer      INFO            TrackContainer<ConstVectorTrackContainer, ConstVectorMultiTrajectory, shared_ptr>
+01:09:18    Sequencer      INFO      <- InputParticles 'particles_selected':
+01:09:18    Sequencer      INFO         flat_set<SimParticle, detail::CompareParticleId, void>
+01:09:18    Sequencer      INFO      <- InputMeasurementParticlesMap 'measurement_particles_map':
+01:09:18    Sequencer      INFO         flat_multimap<unsigned int, Barcode, less<unsigned int>, void>
+01:09:18    Sequencer      INFO      -> OutputTrackParticleMatching 'seed_particle_matching':
+01:09:18    Sequencer      INFO            map<unsigned int, TrackMatchEntry, less<unsigned int>, allocator<pair<unsigned int const, TrackMatchEntry> > >
+01:09:18    Sequencer      INFO      -> OutputParticleTrackMatching 'particle_seed_matching':
+01:09:18    Sequencer      INFO            map<Barcode, ParticleMatchEntry, less<Barcode>, allocator<pair<Barcode const, ParticleMatchEntry> > >
+01:09:18    Sequencer      INFO      Add Writer 'OwnedSeedingDiagnosticsWriter'
+01:09:18    Sequencer      INFO      <- InputRawSeeds 'seeds':
+01:09:18    Sequencer      INFO         SeedContainer2
+01:09:18    Sequencer      INFO      <- InputEstimatedSeeds 'estimatedseeds':
+01:09:18    Sequencer      INFO         SeedContainer2
+01:09:18    Sequencer      INFO      <- InputEstimatedParameters 'estimatedparameters':
+01:09:18    Sequencer      INFO         vector<BoundTrackParameters>
+01:09:18    Sequencer      INFO      <- InputTracks 'seed-tracks':
+01:09:18    Sequencer      INFO            TrackContainer<ConstVectorTrackContainer, ConstVectorMultiTrajectory, shared_ptr>
+01:09:18    Sequencer      INFO      <- InputTrackParticleMatching 'seed_particle_matching':
+01:09:18    Sequencer      INFO            map<unsigned int, TrackMatchEntry, less<unsigned int>, allocator<pair<unsigned int const, TrackMatchEntry> > >
+01:09:18    Sequencer      INFO      <- InputParticleTrackMatching 'particle_seed_matching':
+01:09:18    Sequencer      INFO            map<Barcode, ParticleMatchEntry, less<Barcode>, allocator<pair<Barcode const, ParticleMatchEntry> > >
+01:09:18    Sequencer      INFO      Add Writer 'PythonTrackFinderPerformanceWriter'
+01:09:18    Sequencer      INFO      <- InputHandle 'seed-tracks':
+01:09:18    Sequencer      INFO            TrackContainer<ConstVectorTrackContainer, ConstVectorMultiTrajectory, shared_ptr>
+01:09:18    Sequencer      INFO      <- InputParticles 'particles_selected':
+01:09:18    Sequencer      INFO         flat_set<SimParticle, detail::CompareParticleId, void>
+01:09:18    Sequencer      INFO      <- InputTrackParticleMatching 'seed_particle_matching':
+01:09:18    Sequencer      INFO            map<unsigned int, TrackMatchEntry, less<unsigned int>, allocator<pair<unsigned int const, TrackMatchEntry> > >
+01:09:18    Sequencer      INFO      <- InputParticleTrackMatching 'particle_seed_matching':
+01:09:18    Sequencer      INFO            map<Barcode, ParticleMatchEntry, less<Barcode>, allocator<pair<Barcode const, ParticleMatchEntry> > >
+01:09:18    Sequencer      INFO      <- InputParticleMeasurementsMap 'particle_measurements_map':
+01:09:18    Sequencer      INFO         flat_multimap<Barcode, unsigned int, less<Barcode>, void>
+01:09:18    Sequencer      INFO      Processing events [0, 50)
+01:09:18    Sequencer      INFO      Starting event loop with 1 threads
+01:09:18    Sequencer      INFO        0 context decorators
+01:09:18    Sequencer      INFO        8 sequence elements
+01:09:18    Sequencer      INFO        1 readers
+01:09:18    Sequencer      INFO        5 algorithms
+01:09:18    Sequencer      INFO        2 writers
+01:09:18    Sequencer      INFO      FPE of type FLTUND exceeded configured per-event threshold of 0 (mask: NONE) (seen: 1 FPEs)
+ 0# 0x00007FC05190F488 in /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/lib64/libActsCore.so
+ 1# 0x00007FC05191BC59 in /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/lib64/libActsCore.so
+ 2# Acts::TripletSeeder::createSeedsFromGroups(Acts::TripletSeeder::Cache&, Acts::DoubletSeedFinder const&, Acts::DoubletSeedFinder const&, Acts::TripletSeedFinder const&, Acts::ITripletSeedFilter const&, Acts::SpacePointContainer2 const&, std::span<Acts::SpacePointContainer2::Range<true>, 18446744073709551615ul> const&, Acts::SpacePointContainer2::Range<true> const&, std::span<Acts::SpacePointContainer2::Range<true>, 18446744073709551615ul> const&, std::pair<float, float> const&, Acts::SeedContainer2&) const in /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/lib64/libActsCore.so
+ 3# ActsExamples::GridTripletSeedingAlgorithm::execute(ActsExamples::AlgorithmContext const&) const in /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/lib64/libActsExamplesTrackFinding.so
+ 4# 0x00007FC0500110EA in /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/lib64/libActsExamplesFramework.so
+ 5# ActsExamples::Sequencer::run() in /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/lib64/libActsExamplesFramework.so
+ 6# 0x00007FC050C2FF99 in /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/python/acts/examples/ActsExamplesPythonBindings.cpython-39-x86_64-linux-gnu.so
+ 7# 0x00007FC050C114CE in /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/python/acts/examples/ActsExamplesPythonBindings.cpython-39-x86_64-linux-gnu.so
+
+01:09:18    Sequencer      INFO      FPE of type FLTINV exceeded configured per-event threshold of 0 (mask: NONE) (seen: 1 FPEs)
+ 0# 0x00007FC051918C2A in /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/lib64/libActsCore.so
+ 1# 0x00007FC05191A3AE in /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/lib64/libActsCore.so
+ 2# 0x00007FC05191BDC3 in /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/lib64/libActsCore.so
+ 3# Acts::TripletSeeder::createSeedsFromGroups(Acts::TripletSeeder::Cache&, Acts::DoubletSeedFinder const&, Acts::DoubletSeedFinder const&, Acts::TripletSeedFinder const&, Acts::ITripletSeedFilter const&, Acts::SpacePointContainer2 const&, std::span<Acts::SpacePointContainer2::Range<true>, 18446744073709551615ul> const&, Acts::SpacePointContainer2::Range<true> const&, std::span<Acts::SpacePointContainer2::Range<true>, 18446744073709551615ul> const&, std::pair<float, float> const&, Acts::SeedContainer2&) const in /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/lib64/libActsCore.so
+ 4# ActsExamples::GridTripletSeedingAlgorithm::execute(ActsExamples::AlgorithmContext const&) const in /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/lib64/libActsExamplesTrackFinding.so
+ 5# 0x00007FC0500110EA in /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/lib64/libActsExamplesFramework.so
+ 6# ActsExamples::Sequencer::run() in /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/lib64/libActsExamplesFramework.so
+ 7# 0x00007FC050C2FF99 in /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/python/acts/examples/ActsExamplesPythonBindings.cpython-39-x86_64-linux-gnu.so
+
+01:09:18    Sequencer      INFO      FPE of type FLTOVF exceeded configured per-event threshold of 0 (mask: NONE) (seen: 1 FPEs)
+ 0# 0x00007FC05190F47C in /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/lib64/libActsCore.so
+ 1# 0x00007FC05191BC59 in /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/lib64/libActsCore.so
+ 2# Acts::TripletSeeder::createSeedsFromGroups(Acts::TripletSeeder::Cache&, Acts::DoubletSeedFinder const&, Acts::DoubletSeedFinder const&, Acts::TripletSeedFinder const&, Acts::ITripletSeedFilter const&, Acts::SpacePointContainer2 const&, std::span<Acts::SpacePointContainer2::Range<true>, 18446744073709551615ul> const&, Acts::SpacePointContainer2::Range<true> const&, std::span<Acts::SpacePointContainer2::Range<true>, 18446744073709551615ul> const&, std::pair<float, float> const&, Acts::SeedContainer2&) const in /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/lib64/libActsCore.so
+ 3# ActsExamples::GridTripletSeedingAlgorithm::execute(ActsExamples::AlgorithmContext const&) const in /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/lib64/libActsExamplesTrackFinding.so
+ 4# 0x00007FC0500110EA in /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/lib64/libActsExamplesFramework.so
+ 5# ActsExamples::Sequencer::run() in /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/lib64/libActsExamplesFramework.so
+ 6# 0x00007FC050C2FF99 in /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/python/acts/examples/ActsExamplesPythonBindings.cpython-39-x86_64-linux-gnu.so
+ 7# 0x00007FC050C114CE in /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/python/acts/examples/ActsExamplesPythonBindings.cpython-39-x86_64-linux-gnu.so
+
+01:09:19    Sequencer      INFO      finished event 0
+
+ *** Break *** segmentation violation
+
+
+
+===========================================================
+There was a crash.
+This is the entire stack trace of all threads:
+===========================================================
+#0  0x00007fc052477afa in wait4 () from /lib64/libc.so.6
+#1  0x00007fc0523ea283 in do_system () from /lib64/libc.so.6
+#2  0x00007fc04ec23519 in TUnixSystem::StackTrace() () from /cvmfs/sft.cern.ch/lcg/releases/ROOT/6.30.02-fb5be/x86_64-el9-gcc13-opt/lib/libCore.so
+#3  0x00007fc04ec22ed4 in TUnixSystem::DispatchSignals(ESignals) () from /cvmfs/sft.cern.ch/lcg/releases/ROOT/6.30.02-fb5be/x86_64-el9-gcc13-opt/lib/libCore.so
+#4  <signal handler called>
+#5  0x00007fc05190c4cc in Acts::(anonymous namespace)::Impl<false, true, true, false>::createDoublets(Acts::SpacePointProxy2<true> const&, Acts::MiddleSpInfo const&, Acts::SpacePointContainer2::Range<true>&, Acts::DoubletsForMiddleSp&) const () from /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/lib64/libActsCore.so
+#6  0x00007fc05191bb6a in void Acts::(anonymous namespace)::createSeedsFromGroupsImpl<std::span<Acts::SpacePointContainer2::Range<true>, 18446744073709551615ul> const>(Acts::Logger const&, Acts::TripletSeeder::Cache&, Acts::DoubletSeedFinder const&, Acts::DoubletSeedFinder const&, Acts::TripletSeedFinder const&, Acts::ITripletSeedFilter const&, Acts::SpacePointContainer2 const&, std::span<Acts::SpacePointContainer2::Range<true>, 18446744073709551615ul> const&, Acts::SpacePointProxy2<true> const&, std::span<Acts::SpacePointContainer2::Range<true>, 18446744073709551615ul> const&, Acts::SeedContainer2&) () from /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/lib64/libActsCore.so
+#7  0x00007fc05191d137 in Acts::TripletSeeder::createSeedsFromGroups(Acts::TripletSeeder::Cache&, Acts::DoubletSeedFinder const&, Acts::DoubletSeedFinder const&, Acts::TripletSeedFinder const&, Acts::ITripletSeedFilter const&, Acts::SpacePointContainer2 const&, std::span<Acts::SpacePointContainer2::Range<true>, 18446744073709551615ul> const&, Acts::SpacePointContainer2::Range<true> const&, std::span<Acts::SpacePointContainer2::Range<true>, 18446744073709551615ul> const&, std::pair<float, float> const&, Acts::SeedContainer2&) const () from /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/lib64/libActsCore.so
+#8  0x00007fc050804f37 in ActsExamples::GridTripletSeedingAlgorithm::execute(ActsExamples::AlgorithmContext const&) const () from /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/lib64/libActsExamplesTrackFinding.so
+#9  0x00007fc0500110ea in ActsExamples::Sequencer::run()::{lambda()#2}::operator()() const::{lambda(tbb::detail::d1::blocked_range<unsigned long> const&)#1}::operator()(tbb::detail::d1::blocked_range<unsigned long> const&) const () from /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/lib64/libActsExamplesFramework.so
+#10 0x00007fc050017310 in ActsExamples::Sequencer::run() () from /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/lib64/libActsExamplesFramework.so
+#11 0x00007fc050c2ff99 in ?? () from /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/python/acts/examples/ActsExamplesPythonBindings.cpython-39-x86_64-linux-gnu.so
+#12 0x00007fc050c114ce in ?? () from /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/python/acts/examples/ActsExamplesPythonBindings.cpython-39-x86_64-linux-gnu.so
+#13 0x00007fc0527c2f63 in cfunction_call (func=0x7fc050f9c4a0, args=<optimized out>, kwargs=<optimized out>) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Objects/methodobject.c:543
+#14 0x00007fc05277f16e in _PyObject_MakeTpCall (tstate=tstate
+entry=0x20ab490, callable=callable
+entry=0x7fc050f9c4a0, args=args
+entry=0x2553a80, nargs=1, keywords=keywords
+entry=0x0) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Objects/call.c:191
+#15 0x00007fc052781ada in _PyObject_VectorcallTstate (kwnames=0x0, nargsf=1, args=0x2553a80, callable=0x7fc050f9c4a0, tstate=0x20ab490) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Include/cpython/abstract.h:116
+#16 _PyObject_VectorcallTstate (kwnames=0x0, nargsf=1, args=0x2553a80, callable=0x7fc050f9c4a0, tstate=0x20ab490) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Include/cpython/abstract.h:103
+#17 method_vectorcall (method=<optimized out>, args=0x2553a88, nargsf=<optimized out>, kwnames=0x0) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Objects/classobject.c:53
+#18 0x00007fc052733ef2 in _PyObject_VectorcallTstate (kwnames=0x0, nargsf=<optimized out>, args=0x2553a88, callable=0x7fc04df43d00, tstate=0x20ab490) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Include/cpython/abstract.h:118
+#19 PyObject_Vectorcall (kwnames=0x0, nargsf=<optimized out>, args=<optimized out>, callable=0x7fc04df43d00) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Include/cpython/abstract.h:127
+#20 call_function (kwnames=0x0, oparg=<optimized out>, pp_stack=<synthetic pointer>, tstate=0x20ab490) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Python/ceval.c:5077
+#21 _PyEval_EvalFrameDefault (tstate=<optimized out>, f=<optimized out>, throwflag=<optimized out>) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Python/ceval.c:3489
+#22 0x00007fc052863a80 in _PyEval_EvalFrame (throwflag=0, f=0x2553860, tstate=0x20ab490) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Include/internal/pycore_ceval.h:40
+#23 _PyEval_EvalCode (tstate=tstate
+entry=0x20ab490, _co=<optimized out>, globals=<optimized out>, locals=locals
+entry=0x0, args=<optimized out>, argcount=<optimized out>, kwnames=0x0, kwargs=0x2424208, kwcount=0, kwstep=1, defs=0x0, defcount=0, kwdefs=0x0, closure=0x0, name=0x7fc0521493f0, qualname=0x7fc0521493f0) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Python/ceval.c:4329
+#24 0x00007fc05277ef9d in _PyFunction_Vectorcall (func=<optimized out>, stack=<optimized out>, nargsf=<optimized out>, kwnames=<optimized out>) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Objects/call.c:396
+#25 0x00007fc052733964 in _PyObject_VectorcallTstate (kwnames=0x0, nargsf=<optimized out>, args=0x24241d8, callable=0x7fc04da0f670, tstate=0x20ab490) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Include/cpython/abstract.h:118
+#26 PyObject_Vectorcall (kwnames=0x0, nargsf=<optimized out>, args=<optimized out>, callable=<optimized out>) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Include/cpython/abstract.h:127
+#27 call_function (kwnames=0x0, oparg=<optimized out>, pp_stack=<synthetic pointer>, tstate=0x20ab490) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Python/ceval.c:5077
+#28 _PyEval_EvalFrameDefault (tstate=<optimized out>, f=<optimized out>, throwflag=<optimized out>) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Python/ceval.c:3520
+#29 0x00007fc052863a80 in _PyEval_EvalFrame (throwflag=0, f=0x2424000, tstate=0x20ab490) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Include/internal/pycore_ceval.h:40
+#30 _PyEval_EvalCode (tstate=tstate
+entry=0x20ab490, _co=<optimized out>, globals=<optimized out>, locals=locals
+entry=0x0, args=<optimized out>, argcount=<optimized out>, kwnames=0x0, kwargs=0x2139008, kwcount=0, kwstep=1, defs=0x0, defcount=0, kwdefs=0x0, closure=0x0, name=0x7fc0521e7db0, qualname=0x7fc0521e7db0) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Python/ceval.c:4329
+#31 0x00007fc05277ef9d in _PyFunction_Vectorcall (func=<optimized out>, stack=<optimized out>, nargsf=<optimized out>, kwnames=<optimized out>) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Objects/call.c:396
+#32 0x00007fc052733964 in _PyObject_VectorcallTstate (kwnames=0x0, nargsf=<optimized out>, args=0x2139008, callable=0x7fc04da0f5e0, tstate=0x20ab490) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Include/cpython/abstract.h:118
+#33 PyObject_Vectorcall (kwnames=0x0, nargsf=<optimized out>, args=<optimized out>, callable=<optimized out>) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Include/cpython/abstract.h:127
+#34 call_function (kwnames=0x0, oparg=<optimized out>, pp_stack=<synthetic pointer>, tstate=0x20ab490) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Python/ceval.c:5077
+#35 _PyEval_EvalFrameDefault (tstate=<optimized out>, f=<optimized out>, throwflag=<optimized out>) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Python/ceval.c:3520
+#36 0x00007fc052863a80 in _PyEval_EvalFrame (throwflag=0, f=0x2138e90, tstate=0x20ab490) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Include/internal/pycore_ceval.h:40
+#37 _PyEval_EvalCode (tstate=0x20ab490, _co=_co
+entry=0x7fc0521c2240, globals=globals
+entry=0x7fc0521d9900, locals=locals
+entry=0x7fc0521d9900, args=args
+entry=0x0, argcount=argcount
+entry=0, kwnames=0x0, kwargs=0x0, kwcount=0, kwstep=2, defs=0x0, defcount=0, kwdefs=0x0, closure=0x0, name=0x0, qualname=0x0) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Python/ceval.c:4329
+#38 0x00007fc052863eb2 in _PyEval_EvalCodeWithName (_co=_co
+entry=0x7fc0521c2240, globals=globals
+entry=0x7fc0521d9900, locals=locals
+entry=0x7fc0521d9900, args=args
+entry=0x0, argcount=argcount
+entry=0, kwnames=kwnames
+entry=0x0, kwargs=0x0, kwcount=0, kwstep=2, defs=0x0, defcount=0, kwdefs=0x0, closure=0x0, name=0x0, qualname=0x0) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Python/ceval.c:4361
+#39 0x00007fc052863efb in PyEval_EvalCodeEx (_co=_co
+entry=0x7fc0521c2240, globals=globals
+entry=0x7fc0521d9900, locals=locals
+entry=0x7fc0521d9900, args=args
+entry=0x0, argcount=argcount
+entry=0, kws=kws
+entry=0x0, kwcount=0, defs=0x0, defcount=0, kwdefs=0x0, closure=0x0) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Python/ceval.c:4377
+#40 0x00007fc052863f2b in PyEval_EvalCode (co=co
+entry=0x7fc0521c2240, globals=globals
+entry=0x7fc0521d9900, locals=locals
+entry=0x7fc0521d9900) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Python/ceval.c:828
+#41 0x00007fc0528a3899 in run_eval_code_obj (locals=0x7fc0521d9900, globals=0x7fc0521d9900, co=0x7fc0521c2240, tstate=0x20ab490) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Python/pythonrun.c:1221
+#42 run_mod (mod=<optimized out>, filename=filename
+entry=0x7fc0521f83a0, globals=globals
+entry=0x7fc0521d9900, locals=locals
+entry=0x7fc0521d9900, flags=flags
+entry=0x7ffe50133858, arena=arena
+entry=0x7fc0522c8910) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Python/pythonrun.c:1242
+#43 0x00007fc0528a52e2 in pyrun_file (flags=0x7ffe50133858, closeit=1, locals=0x7fc0521d9900, globals=0x7fc0521d9900, start=257, filename=0x7fc0521f83a0, fp=0x209d340) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Python/pythonrun.c:1140
+#44 pyrun_simple_file (flags=0x7ffe50133858, closeit=1, filename=0x7fc0521f83a0, fp=0x209d340) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Python/pythonrun.c:450
+#45 PyRun_SimpleFileExFlags (fp=fp
+entry=0x209d340, filename=<optimized out>, closeit=closeit
+entry=1, flags=flags
+entry=0x7ffe50133858) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Python/pythonrun.c:483
+#46 0x00007fc0528a5943 in PyRun_AnyFileExFlags (fp=fp
+entry=0x209d340, filename=<optimized out>, closeit=closeit
+entry=1, flags=flags
+entry=0x7ffe50133858) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Python/pythonrun.c:92
+#47 0x00007fc0528c3588 in pymain_run_file (cf=0x7ffe50133858, config=0x20a7ee0) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Modules/main.c:373
+#48 pymain_run_python (exitcode=0x7ffe50133850) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Modules/main.c:598
+#49 Py_RunMain () at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Modules/main.c:677
+#50 0x00007fc0528c3a67 in pymain_main (args=0x7ffe50133940) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Modules/main.c:707
+#51 Py_BytesMain (argc=<optimized out>, argv=<optimized out>) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Modules/main.c:731
+#52 0x00007fc0523c85d0 in __libc_start_call_main () from /lib64/libc.so.6
+#53 0x00007fc0523c8680 in __libc_start_main_impl () from /lib64/libc.so.6
+#54 0x0000000000401075 in _start ()
+===========================================================
+
+
+The lines below might hint at the cause of the crash. If you see question
+marks as part of the stack trace, try to recompile with debugging information
+enabled and export CLING_DEBUG=1 environment variable before running.
+You may get help by asking at the ROOT forum https://root.cern/forum
+preferably using the command (.forum bug) in the ROOT prompt.
+Only if you are really convinced it is a bug in ROOT then please submit a
+report at https://root.cern/bugs or (preferably) using the command (.gh bug) in
+the ROOT prompt. Please post the ENTIRE stack trace
+from above as an attachment in addition to anything else
+that might help us fixing this issue.
+===========================================================
+#5  0x00007fc05190c4cc in Acts::(anonymous namespace)::Impl<false, true, true, false>::createDoublets(Acts::SpacePointProxy2<true> const&, Acts::MiddleSpInfo const&, Acts::SpacePointContainer2::Range<true>&, Acts::DoubletsForMiddleSp&) const () from /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/lib64/libActsCore.so
+#6  0x00007fc05191bb6a in void Acts::(anonymous namespace)::createSeedsFromGroupsImpl<std::span<Acts::SpacePointContainer2::Range<true>, 18446744073709551615ul> const>(Acts::Logger const&, Acts::TripletSeeder::Cache&, Acts::DoubletSeedFinder const&, Acts::DoubletSeedFinder const&, Acts::TripletSeedFinder const&, Acts::ITripletSeedFilter const&, Acts::SpacePointContainer2 const&, std::span<Acts::SpacePointContainer2::Range<true>, 18446744073709551615ul> const&, Acts::SpacePointProxy2<true> const&, std::span<Acts::SpacePointContainer2::Range<true>, 18446744073709551615ul> const&, Acts::SeedContainer2&) () from /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/lib64/libActsCore.so
+#7  0x00007fc05191d137 in Acts::TripletSeeder::createSeedsFromGroups(Acts::TripletSeeder::Cache&, Acts::DoubletSeedFinder const&, Acts::DoubletSeedFinder const&, Acts::TripletSeedFinder const&, Acts::ITripletSeedFilter const&, Acts::SpacePointContainer2 const&, std::span<Acts::SpacePointContainer2::Range<true>, 18446744073709551615ul> const&, Acts::SpacePointContainer2::Range<true> const&, std::span<Acts::SpacePointContainer2::Range<true>, 18446744073709551615ul> const&, std::pair<float, float> const&, Acts::SeedContainer2&) const () from /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/lib64/libActsCore.so
+#8  0x00007fc050804f37 in ActsExamples::GridTripletSeedingAlgorithm::execute(ActsExamples::AlgorithmContext const&) const () from /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/lib64/libActsExamplesTrackFinding.so
+#9  0x00007fc0500110ea in ActsExamples::Sequencer::run()::{lambda()#2}::operator()() const::{lambda(tbb::detail::d1::blocked_range<unsigned long> const&)#1}::operator()(tbb::detail::d1::blocked_range<unsigned long> const&) const () from /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/lib64/libActsExamplesFramework.so
+#10 0x00007fc050017310 in ActsExamples::Sequencer::run() () from /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/lib64/libActsExamplesFramework.so
+#11 0x00007fc050c2ff99 in ?? () from /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/python/acts/examples/ActsExamplesPythonBindings.cpython-39-x86_64-linux-gnu.so
+#12 0x00007fc050c114ce in ?? () from /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/python/acts/examples/ActsExamplesPythonBindings.cpython-39-x86_64-linux-gnu.so
+#13 0x00007fc0527c2f63 in cfunction_call (func=0x7fc050f9c4a0, args=<optimized out>, kwargs=<optimized out>) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Objects/methodobject.c:543
+#14 0x00007fc05277f16e in _PyObject_MakeTpCall (tstate=tstate
+entry=0x20ab490, callable=callable
+entry=0x7fc050f9c4a0, args=args
+entry=0x2553a80, nargs=1, keywords=keywords
+entry=0x0) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Objects/call.c:191
+#15 0x00007fc052781ada in _PyObject_VectorcallTstate (kwnames=0x0, nargsf=1, args=0x2553a80, callable=0x7fc050f9c4a0, tstate=0x20ab490) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Include/cpython/abstract.h:116
+#16 _PyObject_VectorcallTstate (kwnames=0x0, nargsf=1, args=0x2553a80, callable=0x7fc050f9c4a0, tstate=0x20ab490) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Include/cpython/abstract.h:103
+#17 method_vectorcall (method=<optimized out>, args=0x2553a88, nargsf=<optimized out>, kwnames=0x0) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Objects/classobject.c:53
+#18 0x00007fc052733ef2 in _PyObject_VectorcallTstate (kwnames=0x0, nargsf=<optimized out>, args=0x2553a88, callable=0x7fc04df43d00, tstate=0x20ab490) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Include/cpython/abstract.h:118
+#19 PyObject_Vectorcall (kwnames=0x0, nargsf=<optimized out>, args=<optimized out>, callable=0x7fc04df43d00) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Include/cpython/abstract.h:127
+#20 call_function (kwnames=0x0, oparg=<optimized out>, pp_stack=<synthetic pointer>, tstate=0x20ab490) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Python/ceval.c:5077
+#21 _PyEval_EvalFrameDefault (tstate=<optimized out>, f=<optimized out>, throwflag=<optimized out>) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Python/ceval.c:3489
+#22 0x00007fc052863a80 in _PyEval_EvalFrame (throwflag=0, f=0x2553860, tstate=0x20ab490) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Include/internal/pycore_ceval.h:40
+#23 _PyEval_EvalCode (tstate=tstate
+entry=0x20ab490, _co=<optimized out>, globals=<optimized out>, locals=locals
+entry=0x0, args=<optimized out>, argcount=<optimized out>, kwnames=0x0, kwargs=0x2424208, kwcount=0, kwstep=1, defs=0x0, defcount=0, kwdefs=0x0, closure=0x0, name=0x7fc0521493f0, qualname=0x7fc0521493f0) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Python/ceval.c:4329
+#24 0x00007fc05277ef9d in _PyFunction_Vectorcall (func=<optimized out>, stack=<optimized out>, nargsf=<optimized out>, kwnames=<optimized out>) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Objects/call.c:396
+#25 0x00007fc052733964 in _PyObject_VectorcallTstate (kwnames=0x0, nargsf=<optimized out>, args=0x24241d8, callable=0x7fc04da0f670, tstate=0x20ab490) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Include/cpython/abstract.h:118
+#26 PyObject_Vectorcall (kwnames=0x0, nargsf=<optimized out>, args=<optimized out>, callable=<optimized out>) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Include/cpython/abstract.h:127
+#27 call_function (kwnames=0x0, oparg=<optimized out>, pp_stack=<synthetic pointer>, tstate=0x20ab490) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Python/ceval.c:5077
+#28 _PyEval_EvalFrameDefault (tstate=<optimized out>, f=<optimized out>, throwflag=<optimized out>) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Python/ceval.c:3520
+#29 0x00007fc052863a80 in _PyEval_EvalFrame (throwflag=0, f=0x2424000, tstate=0x20ab490) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Include/internal/pycore_ceval.h:40
+#30 _PyEval_EvalCode (tstate=tstate
+entry=0x20ab490, _co=<optimized out>, globals=<optimized out>, locals=locals
+entry=0x0, args=<optimized out>, argcount=<optimized out>, kwnames=0x0, kwargs=0x2139008, kwcount=0, kwstep=1, defs=0x0, defcount=0, kwdefs=0x0, closure=0x0, name=0x7fc0521e7db0, qualname=0x7fc0521e7db0) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Python/ceval.c:4329
+#31 0x00007fc05277ef9d in _PyFunction_Vectorcall (func=<optimized out>, stack=<optimized out>, nargsf=<optimized out>, kwnames=<optimized out>) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Objects/call.c:396
+#32 0x00007fc052733964 in _PyObject_VectorcallTstate (kwnames=0x0, nargsf=<optimized out>, args=0x2139008, callable=0x7fc04da0f5e0, tstate=0x20ab490) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Include/cpython/abstract.h:118
+#33 PyObject_Vectorcall (kwnames=0x0, nargsf=<optimized out>, args=<optimized out>, callable=<optimized out>) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Include/cpython/abstract.h:127
+#34 call_function (kwnames=0x0, oparg=<optimized out>, pp_stack=<synthetic pointer>, tstate=0x20ab490) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Python/ceval.c:5077
+#35 _PyEval_EvalFrameDefault (tstate=<optimized out>, f=<optimized out>, throwflag=<optimized out>) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Python/ceval.c:3520
+#36 0x00007fc052863a80 in _PyEval_EvalFrame (throwflag=0, f=0x2138e90, tstate=0x20ab490) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Include/internal/pycore_ceval.h:40
+#37 _PyEval_EvalCode (tstate=0x20ab490, _co=_co
+entry=0x7fc0521c2240, globals=globals
+entry=0x7fc0521d9900, locals=locals
+entry=0x7fc0521d9900, args=args
+entry=0x0, argcount=argcount
+entry=0, kwnames=0x0, kwargs=0x0, kwcount=0, kwstep=2, defs=0x0, defcount=0, kwdefs=0x0, closure=0x0, name=0x0, qualname=0x0) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Python/ceval.c:4329
+#38 0x00007fc052863eb2 in _PyEval_EvalCodeWithName (_co=_co
+entry=0x7fc0521c2240, globals=globals
+entry=0x7fc0521d9900, locals=locals
+entry=0x7fc0521d9900, args=args
+entry=0x0, argcount=argcount
+entry=0, kwnames=kwnames
+entry=0x0, kwargs=0x0, kwcount=0, kwstep=2, defs=0x0, defcount=0, kwdefs=0x0, closure=0x0, name=0x0, qualname=0x0) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Python/ceval.c:4361
+#39 0x00007fc052863efb in PyEval_EvalCodeEx (_co=_co
+entry=0x7fc0521c2240, globals=globals
+entry=0x7fc0521d9900, locals=locals
+entry=0x7fc0521d9900, args=args
+entry=0x0, argcount=argcount
+entry=0, kws=kws
+entry=0x0, kwcount=0, defs=0x0, defcount=0, kwdefs=0x0, closure=0x0) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Python/ceval.c:4377
+#40 0x00007fc052863f2b in PyEval_EvalCode (co=co
+entry=0x7fc0521c2240, globals=globals
+entry=0x7fc0521d9900, locals=locals
+entry=0x7fc0521d9900) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Python/ceval.c:828
+#41 0x00007fc0528a3899 in run_eval_code_obj (locals=0x7fc0521d9900, globals=0x7fc0521d9900, co=0x7fc0521c2240, tstate=0x20ab490) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Python/pythonrun.c:1221
+#42 run_mod (mod=<optimized out>, filename=filename
+entry=0x7fc0521f83a0, globals=globals
+entry=0x7fc0521d9900, locals=locals
+entry=0x7fc0521d9900, flags=flags
+entry=0x7ffe50133858, arena=arena
+entry=0x7fc0522c8910) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Python/pythonrun.c:1242
+#43 0x00007fc0528a52e2 in pyrun_file (flags=0x7ffe50133858, closeit=1, locals=0x7fc0521d9900, globals=0x7fc0521d9900, start=257, filename=0x7fc0521f83a0, fp=0x209d340) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Python/pythonrun.c:1140
+#44 pyrun_simple_file (flags=0x7ffe50133858, closeit=1, filename=0x7fc0521f83a0, fp=0x209d340) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Python/pythonrun.c:450
+#45 PyRun_SimpleFileExFlags (fp=fp
+entry=0x209d340, filename=<optimized out>, closeit=closeit
+entry=1, flags=flags
+entry=0x7ffe50133858) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Python/pythonrun.c:483
+#46 0x00007fc0528a5943 in PyRun_AnyFileExFlags (fp=fp
+entry=0x209d340, filename=<optimized out>, closeit=closeit
+entry=1, flags=flags
+entry=0x7ffe50133858) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Python/pythonrun.c:92
+#47 0x00007fc0528c3588 in pymain_run_file (cf=0x7ffe50133858, config=0x20a7ee0) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Modules/main.c:373
+#48 pymain_run_python (exitcode=0x7ffe50133850) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Modules/main.c:598
+#49 Py_RunMain () at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Modules/main.c:677
+#50 0x00007fc0528c3a67 in pymain_main (args=0x7ffe50133940) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Modules/main.c:707
+#51 Py_BytesMain (argc=<optimized out>, argv=<optimized out>) at /build/jenkins/workspace/lcg_release_pipeline/build/externals/Python-3.9.12/src/Python/3.9.12/Modules/main.c:731
+#52 0x00007fc0523c85d0 in __libc_start_call_main () from /lib64/libc.so.6
+#53 0x00007fc0523c8680 in __libc_start_main_impl () from /lib64/libc.so.6
+#54 0x0000000000401075 in _start ()
+===========================================================
+
+

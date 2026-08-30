@@ -1,0 +1,8 @@
+Final validation preparation failure r2 (no scientific process started)
+
+Fresh loaded-DSO closure qualification passed for the candidate-helper-restored Genesis source/build, but final continuous revalidation rejected its relinked binary bytes against immutable template identities with:
+
+schema.ManifestError: build artifact hash mismatch: lib64/libActsCore.so
+ACTS_HELPER_RESULT[v4cont-final-revalidate-r2-20260830t1408z] rc=1
+
+Resolution: run the established final restore helper to replace the private slot from the immutable Genesis template, then generate a new loaded-DSO qualification and rerun final revalidation. Both passed. No candidate or scientific process was run or rerun.

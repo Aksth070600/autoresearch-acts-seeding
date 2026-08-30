@@ -101,6 +101,22 @@ common empirical noise envelope and exact timing/efficiency classifications.
 `static_v4_report.py` is a separate exact-protocol, exact-revision, and
 exact-dataset consumer, so the existing v3 consumers remain unchanged.
 
+## Continuous revision-2 campaigns
+
+`continuous_campaign.py` owns scheduling, exact static-record validation,
+authenticated stop consumption, and archive finalization for continuous
+owned-static v4 campaigns. It accepts only protocol revision 2 and the canonical
+content-addressed dataset. Its tracked `status.json` sidecar is the scientific
+dashboard input. The canonical `campaign-status.json` remains a v3-compatible
+control bridge so the trusted workflow on `main` can authenticate a stop without
+importing static-v4 measurements into v3.
+
+`continuous_report.py` renders every valid or invalid static-v4 attempt from the
+sidecar. The deterministic block order is major, major, minor, combination.
+After a stop is consumed, only the remainder of the current block may run.
+Pilot revision 1, v2, v3, generated-input v4, and shared Athena data are rejected
+from calibration, classification, and reporting.
+
 ## Non-evidence qualification result
 
 The isolated HEPP02 qualification used ITk, seed 42, pileup 200, one thread, 50

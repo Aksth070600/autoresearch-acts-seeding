@@ -1,0 +1,3 @@
+scientific_process_started=no
+phase=candidate-build
+exit_status=1

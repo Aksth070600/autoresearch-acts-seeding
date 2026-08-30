@@ -101,8 +101,12 @@ def _proposal(path: Path, implementation_commit: str) -> tuple[dict[str, Any], s
         raise ManifestError("candidate proposal shape mismatch")
     if proposal["implementation_commit"] != implementation_commit:
         raise ManifestError("proposal implementation commit mismatch")
-    if proposal["slot"] not in {1, 2, 3, 4}:
-        raise ManifestError("proposal slot is invalid")
+    if (
+        isinstance(proposal["slot"], bool)
+        or not isinstance(proposal["slot"], int)
+        or proposal["slot"] < 1
+    ):
+        raise ManifestError("proposal slot must be a positive integer")
     if proposal["classification"] not in {"major", "minor", "combination"}:
         raise ManifestError("proposal classification is invalid")
     files = proposal["intended_files"]

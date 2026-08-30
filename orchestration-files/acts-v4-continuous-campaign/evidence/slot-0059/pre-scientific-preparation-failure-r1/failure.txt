@@ -1,0 +1,4 @@
+scientific_process_started=no
+phase=local-implementation-preparation
+exit_status=1
+reason=target assertion expected one slope condition but found pixel and strip occurrences; no file replacement occurred

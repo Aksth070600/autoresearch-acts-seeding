@@ -1,0 +1,100 @@
+[1/88] Building CXX object Core/CMakeFiles/ActsCore.dir/src/Seeding2/detail/CandidatesForMiddleSp2.cpp.o
+[2/88] Building CXX object Core/CMakeFiles/ActsCore.dir/src/Seeding2/BroadTripletSeedFilter.cpp.o
+FAILED: Core/CMakeFiles/ActsCore.dir/src/Seeding2/BroadTripletSeedFilter.cpp.o 
+/cvmfs/sft.cern.ch/lcg/releases/gcc/13.1.0-b3d18/x86_64-el9/bin/g++ -DACTS_GEOMETRY_MODULE_ABI_TAG="\"acts-46.5.0|sys-Linux|arch-x86_64|cxx-GNU-13.1.0|capi-1\"" -DActsCore_EXPORTS -I/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include -I/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/Core/include -I/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/Core/src/Definitions/codegen/1fb06d98eae48c30a60b4c8acb7ebdbee0670524 -I/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/Core/src/Propagator/codegen/4febcacac24eb26d1d1d0e61b83dbc12bbdd79cd -I/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/Core/src/Propagator/codegen/4456db4833ffa91027fc4b960af806f0afc991b3 -I/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/build/Core/src/Propagator/codegen/79ce5a7ad1c4f4193db110f5858c7c94f7bc3c10 -isystem /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc13-opt/include/eigen3 -Wall -Wextra -Wpedantic -Wshadow -Wzero-as-null-pointer-constant -Wold-style-cast -Woverloaded-virtual  -O3 -DNDEBUG -std=gnu++20 -fPIC -MD -MT Core/CMakeFiles/ActsCore.dir/src/Seeding2/BroadTripletSeedFilter.cpp.o -MF Core/CMakeFiles/ActsCore.dir/src/Seeding2/BroadTripletSeedFilter.cpp.o.d -o Core/CMakeFiles/ActsCore.dir/src/Seeding2/BroadTripletSeedFilter.cpp.o -c /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/src/Seeding2/BroadTripletSeedFilter.cpp
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/src/Seeding2/BroadTripletSeedFilter.cpp: In lambda function:
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/src/Seeding2/BroadTripletSeedFilter.cpp:148:51: error: 'const class Acts::TripletTopCandidates' has no member named 'curvatures'
+  148 |                       return tripletTopCandidates.curvatures()[t];
+      |                                                   ^~~~~~~~~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/src/Seeding2/BroadTripletSeedFilter.cpp: In member function 'virtual void Acts::BroadTripletSeedFilter::filterTripletTopCandidates(const Acts::SpacePointContainer2&, const Acts::ConstSpacePointProxy2&, const Acts::DoubletsForMiddleSp::Proxy&, const Acts::TripletTopCandidates&) const':
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/src/Seeding2/BroadTripletSeedFilter.cpp:146:20: error: no match for call to '(const std::ranges::__sort_fn) (std::vector<unsigned int, std::allocator<unsigned int> >&, <brace-enclosed initializer list>, Acts::BroadTripletSeedFilter::filterTripletTopCandidates(const Acts::SpacePointContainer2&, const Acts::ConstSpacePointProxy2&, const Acts::DoubletsForMiddleSp::Proxy&, const Acts::TripletTopCandidates&) const::<lambda(std::size_t)>)'
+  146 |   std::ranges::sort(cache().topSpIndexVec, {},
+      |   ~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~
+  147 |                     [&tripletTopCandidates](const std::size_t t) {
+      |                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  148 |                       return tripletTopCandidates.curvatures()[t];
+      |                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  149 |                     });
+      |                     ~~
+In file included from /cvmfs/sft.cern.ch/lcg/releases/gcc/13.1.0-b3d18/x86_64-el9/include/c++/13.1.0/algorithm:63,
+                 from /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Utilities/Any.hpp:13,
+                 from /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/EventData/SourceLink.hpp:12,
+                 from /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/EventData/SpacePointContainer2.hpp:11,
+                 from /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/EventData/SeedContainer2.hpp:12,
+                 from /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Seeding2/BroadTripletSeedFilter.hpp:12,
+                 from /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/src/Seeding2/BroadTripletSeedFilter.cpp:9:
+/cvmfs/sft.cern.ch/lcg/releases/gcc/13.1.0-b3d18/x86_64-el9/include/c++/13.1.0/bits/ranges_algo.h:1781:7: note: candidate: 'template<class _Iter, class _Sent, class _Comp, class _Proj>  requires (random_access_iterator<_Iter>) && (sentinel_for<_Sent, _Iter>) && (sortable<_Iter, _Comp, _Proj>) constexpr _Iter std::ranges::__sort_fn::operator()(_Iter, _Sent, _Comp, _Proj) const'
+ 1781 |       operator()(_Iter __first, _Sent __last,
+      |       ^~~~~~~~
+/cvmfs/sft.cern.ch/lcg/releases/gcc/13.1.0-b3d18/x86_64-el9/include/c++/13.1.0/bits/ranges_algo.h:1781:7: note:   template argument deduction/substitution failed:
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/src/Seeding2/BroadTripletSeedFilter.cpp:146:20: note:   couldn't deduce template parameter '_Sent'
+  146 |   std::ranges::sort(cache().topSpIndexVec, {},
+      |   ~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~
+  147 |                     [&tripletTopCandidates](const std::size_t t) {
+      |                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  148 |                       return tripletTopCandidates.curvatures()[t];
+      |                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  149 |                     });
+      |                     ~~
+/cvmfs/sft.cern.ch/lcg/releases/gcc/13.1.0-b3d18/x86_64-el9/include/c++/13.1.0/bits/ranges_algo.h:1794:7: note: candidate: 'template<class _Range, class _Comp, class _Proj>  requires (random_access_range<_Range>) && (sortable<decltype(std::ranges::__cust_access::__begin((declval<_Container&>)())), _Comp, _Proj>) constexpr std::ranges::borrowed_iterator_t<_Range> std::ranges::__sort_fn::operator()(_Range&&, _Comp, _Proj) const'
+ 1794 |       operator()(_Range&& __r, _Comp __comp = {}, _Proj __proj = {}) const
+      |       ^~~~~~~~
+/cvmfs/sft.cern.ch/lcg/releases/gcc/13.1.0-b3d18/x86_64-el9/include/c++/13.1.0/bits/ranges_algo.h:1794:7: note:   template argument deduction/substitution failed:
+/cvmfs/sft.cern.ch/lcg/releases/gcc/13.1.0-b3d18/x86_64-el9/include/c++/13.1.0/bits/ranges_algo.h:1794:7: note: constraints not satisfied
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/src/Seeding2/BroadTripletSeedFilter.cpp: In substitution of 'template<class _Range, class _Comp, class _Proj>  requires (random_access_range<_Range>) && (sortable<decltype(std::ranges::__cust_access::__begin((declval<_Container&>)())), _Comp, _Proj>) constexpr std::ranges::borrowed_iterator_t<_Range> std::ranges::__sort_fn::operator()(_Range&&, _Comp, _Proj) const [with _Range = std::vector<unsigned int, std::allocator<unsigned int> >&; _Comp = std::ranges::less; _Proj = Acts::BroadTripletSeedFilter::filterTripletTopCandidates(const Acts::SpacePointContainer2&, const Acts::ConstSpacePointProxy2&, const Acts::DoubletsForMiddleSp::Proxy&, const Acts::TripletTopCandidates&) const::<lambda(std::size_t)>]':
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/src/Seeding2/BroadTripletSeedFilter.cpp:146:20:   required from here
+/cvmfs/sft.cern.ch/lcg/releases/gcc/13.1.0-b3d18/x86_64-el9/include/c++/13.1.0/bits/iterator_concepts.h:533:13:   required for the satisfaction of '__indirectly_readable_impl<typename std::remove_cvref<_Tp>::type>' [with _In = std::projected<decltype(std::ranges::__cust_access::__begin((declval<_Container&>)())), _Proj>]
+/cvmfs/sft.cern.ch/lcg/releases/gcc/13.1.0-b3d18/x86_64-el9/include/c++/13.1.0/bits/iterator_concepts.h:553:13:   required for the satisfaction of 'indirectly_readable<_I1>' [with _I1 = std::projected<decltype(std::ranges::__cust_access::__begin((declval<_Container&>)())), _Proj>]
+/cvmfs/sft.cern.ch/lcg/releases/gcc/13.1.0-b3d18/x86_64-el9/include/c++/13.1.0/bits/iterator_concepts.h:759:13:   required for the satisfaction of 'indirect_strict_weak_order<_Rel, std::projected<_Iter, _Proj>, std::projected<_Iter, _Proj> >' [with _Rel = std::ranges::less; _Iter = __gnu_cxx::__normal_iterator<unsigned int*, std::vector<unsigned int, std::allocator<unsigned int> > >; _Proj = Acts::BroadTripletSeedFilter::filterTripletTopCandidates::._anon_794]
+/cvmfs/sft.cern.ch/lcg/releases/gcc/13.1.0-b3d18/x86_64-el9/include/c++/13.1.0/bits/iterator_concepts.h:934:13:   required for the satisfaction of 'sortable<decltype (std::ranges::__cust_access::__begin(declval<_Container&>())), _Comp, _Proj>' [with _Range = std::vector<unsigned int, std::allocator<unsigned int> >&; _Comp = std::ranges::less; _Proj = Acts::BroadTripletSeedFilter::filterTripletTopCandidates::._anon_794]
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/src/Seeding2/BroadTripletSeedFilter.cpp:146:20: error: template constraint failure for 'template<class _Iter, class _Proj>  requires (indirectly_readable<_Iter>) && (indirectly_regular_unary_invocable<_Proj, _Iter>) struct std::projected'
+  146 |   std::ranges::sort(cache().topSpIndexVec, {},
+      |   ~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~
+  147 |                     [&tripletTopCandidates](const std::size_t t) {
+      |                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  148 |                       return tripletTopCandidates.curvatures()[t];
+      |                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  149 |                     });
+      |                     ~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/src/Seeding2/BroadTripletSeedFilter.cpp:146:20: note: constraints not satisfied
+In file included from /cvmfs/sft.cern.ch/lcg/releases/gcc/13.1.0-b3d18/x86_64-el9/include/c++/13.1.0/compare:37,
+                 from /cvmfs/sft.cern.ch/lcg/releases/gcc/13.1.0-b3d18/x86_64-el9/include/c++/13.1.0/array:38,
+                 from /cvmfs/sft.cern.ch/lcg/releases/gcc/13.1.0-b3d18/x86_64-el9/include/c++/13.1.0/format:38,
+                 from /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Utilities/OstreamFormatter.hpp:11,
+                 from /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/Geometry/GeometryIdentifier.hpp:11,
+                 from /storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/include/Acts/EventData/SourceLink.hpp:11:
+/cvmfs/sft.cern.ch/lcg/releases/gcc/13.1.0-b3d18/x86_64-el9/include/c++/13.1.0/concepts: In substitution of 'template<class _Iter, class _Proj>  requires (indirectly_readable<_Iter>) && (indirectly_regular_unary_invocable<_Proj, _Iter>) struct std::projected [with _Iter = __gnu_cxx::__normal_iterator<unsigned int*, std::vector<unsigned int, std::allocator<unsigned int> > >; _Proj = Acts::BroadTripletSeedFilter::filterTripletTopCandidates(const Acts::SpacePointContainer2&, const Acts::ConstSpacePointProxy2&, const Acts::DoubletsForMiddleSp::Proxy&, const Acts::TripletTopCandidates&) const::<lambda(std::size_t)>]':
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/src/Seeding2/BroadTripletSeedFilter.cpp:146:20:   recursively required by substitution of 'template<class _Range, class _Comp, class _Proj>  requires (random_access_range<_Range>) && (sortable<decltype(std::ranges::__cust_access::__begin((declval<_Container&>)())), _Comp, _Proj>) constexpr std::ranges::borrowed_iterator_t<_Range> std::ranges::__sort_fn::operator()(_Range&&, _Comp, _Proj) const [with _Range = std::vector<unsigned int, std::allocator<unsigned int> >&; _Comp = std::ranges::less; _Proj = Acts::BroadTripletSeedFilter::filterTripletTopCandidates(const Acts::SpacePointContainer2&, const Acts::ConstSpacePointProxy2&, const Acts::DoubletsForMiddleSp::Proxy&, const Acts::TripletTopCandidates&) const::<lambda(std::size_t)>]'
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/src/Seeding2/BroadTripletSeedFilter.cpp:146:20:   required from here
+/cvmfs/sft.cern.ch/lcg/releases/gcc/13.1.0-b3d18/x86_64-el9/include/c++/13.1.0/concepts:352:13:   required for the satisfaction of 'invocable<_Fn, _Args ...>' [with _Fn = Acts::BroadTripletSeedFilter::filterTripletTopCandidates::._anon_794&; _Args = {unsigned int&}]
+/cvmfs/sft.cern.ch/lcg/releases/gcc/13.1.0-b3d18/x86_64-el9/include/c++/13.1.0/concepts:356:13:   required for the satisfaction of 'regular_invocable<_Fn&, typename std::__detail::__iter_traits_impl<typename std::remove_cvref<_Tp2>::type, std::indirectly_readable_traits<typename std::remove_cvref<_Tp2>::type> >::type::value_type&>' [with _Fn = Acts::BroadTripletSeedFilter::filterTripletTopCandidates::._anon_794; _Iter = __gnu_cxx::__normal_iterator<unsigned int*, std::vector<unsigned int, std::allocator<unsigned int> > >]
+/cvmfs/sft.cern.ch/lcg/releases/gcc/13.1.0-b3d18/x86_64-el9/include/c++/13.1.0/bits/iterator_concepts.h:721:13:   required for the satisfaction of 'indirectly_regular_unary_invocable<_Proj, _Iter>' [with _Proj = Acts::BroadTripletSeedFilter::filterTripletTopCandidates::._anon_794; _Iter = __gnu_cxx::__normal_iterator<unsigned int*, std::vector<unsigned int, std::allocator<unsigned int> > >]
+/cvmfs/sft.cern.ch/lcg/releases/gcc/13.1.0-b3d18/x86_64-el9/include/c++/13.1.0/concepts:352:25: note: the expression 'is_invocable_v<_Fn, _Args ...> [with _Fn = Acts::BroadTripletSeedFilter::filterTripletTopCandidates::._anon_794&; _Args = {unsigned int&}]' evaluated to 'false'
+  352 |     concept invocable = is_invocable_v<_Fn, _Args...>;
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/src/Seeding2/BroadTripletSeedFilter.cpp:164:39: error: 'const class Acts::TripletTopCandidates' has no member named 'topSpacePoints'
+  164 |     auto topSp = tripletTopCandidates.topSpacePoints()[topSpIndex];
+      |                                       ^~~~~~~~~~~~~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/src/Seeding2/BroadTripletSeedFilter.cpp:169:51: error: 'const class Acts::TripletTopCandidates' has no member named 'curvatures'
+  169 |     float invHelixDiameter = tripletTopCandidates.curvatures()[topSpIndex];
+      |                                                   ^~~~~~~~~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/src/Seeding2/BroadTripletSeedFilter.cpp:173:41: error: 'const class Acts::TripletTopCandidates' has no member named 'impactParameters'
+  173 |     float impact = tripletTopCandidates.impactParameters()[topSpIndex];
+      |                                         ^~~~~~~~~~~~~~~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/src/Seeding2/BroadTripletSeedFilter.cpp:187:40: error: 'const class Acts::TripletTopCandidates' has no member named 'topSpacePoints'
+  187 |                                       .topSpacePoints()[compatibleTopSpIndex]];
+      |                                        ^~~~~~~~~~~~~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/src/Seeding2/BroadTripletSeedFilter.cpp:192:32: error: 'const class Acts::TripletTopCandidates' has no member named 'curvatures'
+  192 |       if (tripletTopCandidates.curvatures()[compatibleTopSpIndex] <
+      |                                ^~~~~~~~~~
+/storage/thomaaks/acts-v4-static-pilot-20260829T163530Z-fm/slot/source/Core/src/Seeding2/BroadTripletSeedFilter.cpp:198:32: error: 'const class Acts::TripletTopCandidates' has no member named 'curvatures'
+  198 |       if (tripletTopCandidates.curvatures()[compatibleTopSpIndex] >
+      |                                ^~~~~~~~~~
+[3/88] Building CXX object Core/CMakeFiles/ActsCore.dir/src/Seeding2/CylindricalSpacePointKDTree.cpp.o
+[4/88] Building CXX object Core/CMakeFiles/ActsCore.dir/src/EventData/SeedContainer2.cpp.o
+[5/88] Building CXX object Core/CMakeFiles/ActsCore.dir/src/Seeding2/DoubletSeedFinder.cpp.o
+[6/88] Building CXX object Core/CMakeFiles/ActsCore.dir/src/Seeding2/CartesianSpacePointGrid.cpp.o
+[7/88] Building CXX object Core/CMakeFiles/ActsCore.dir/src/Seeding2/CylindricalSpacePointGrid2.cpp.o
+[8/88] Building CXX object Core/CMakeFiles/ActsCore.dir/src/Seeding2/TripletSeedFinder.cpp.o
+[9/88] Building CXX object Core/CMakeFiles/ActsCore.dir/src/EventData/SpacePointContainer2.cpp.o
+ninja: build stopped: subcommand failed.

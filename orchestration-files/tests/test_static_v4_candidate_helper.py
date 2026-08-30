@@ -10,9 +10,18 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 HEPP_FILES = PROJECT_ROOT / "orchestration-files" / "HEPP-files"
 STATIC_MODULE = PROJECT_ROOT / "orchestration-files" / "acts-v4-static"
 CANDIDATE_HELPER = HEPP_FILES / "acts-v4-static-pilot-candidate.sh"
+CONTINUOUS_REVALIDATION = HEPP_FILES / "acts-v4-static-continuous-revalidate.sh"
 
 
 class StaticV4CandidateHelperTests(unittest.TestCase):
+    def test_continuous_revalidation_loads_private_python_before_identity_checks(self):
+        helper = CONTINUOUS_REVALIDATION.read_text(encoding="utf-8")
+        setup = 'source "$SLOT/build/python/setup.sh"'
+        validation = 'python3 - "$MODULE_DIR" "$DATASET"'
+        self.assertIn(setup, helper)
+        self.assertIn(validation, helper)
+        self.assertLess(helper.index(setup), helper.index(validation))
+
     def test_invalidation_receives_ninja_from_pinned_environment(self):
         temporary_parent = PROJECT_ROOT / "build"
         temporary_parent.mkdir(exist_ok=True)

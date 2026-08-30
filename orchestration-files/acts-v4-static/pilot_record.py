@@ -294,8 +294,16 @@ def build_record(
         mechanism_key = "canonical-genesis"
         proposal_hash = None
     else:
-        if slot not in {1, 2, 3, 4} or proposal is None or calibration_path is None:
-            raise ManifestError("candidate record lacks slot, proposal, or calibration")
+        if (
+            isinstance(slot, bool)
+            or not isinstance(slot, int)
+            or slot < 1
+            or proposal is None
+            or calibration_path is None
+        ):
+            raise ManifestError(
+                "candidate record lacks a positive slot, proposal, or calibration"
+            )
         proposal_hash = sha256_bytes(canonical_json_bytes(proposal))
         if (
             proposal.get("candidate") != candidate
