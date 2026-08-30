@@ -110,6 +110,10 @@ class BinnedGroupIterator {
   typename grid_t::local_iterator_t m_gridItr;
   /// @brief End iterator;
   typename grid_t::local_iterator_t m_gridItrEnd;
+  /// Local position validated by the latest non-empty-bin search.
+  std::array<std::size_t, DIM> m_localPosition{};
+  /// Global index corresponding to the validated local position.
+  std::size_t m_globalIndex{};
 };
 
 }  // namespace Acts
