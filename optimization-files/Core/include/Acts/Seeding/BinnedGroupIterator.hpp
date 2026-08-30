@@ -12,7 +12,6 @@
 #include "Acts/Utilities/detail/grid_helper.hpp"
 
 #include <array>
-#include <tuple>
 
 #include <boost/container/small_vector.hpp>
 
@@ -89,15 +88,22 @@ class BinnedGroupIterator {
   /// @return The incremented iterator
   BinnedGroupIterator<grid_t>& operator++();
 
+  /// Bin indices for one side of a grid neighborhood.
+  using BinIndices = boost::container::small_vector<
+      std::size_t, detail::ipow(3, grid_t::DIM)>;
+
+  /// Bottom, middle, and top bins for one productive grid position.
+  struct Neighborhood {
+    BinIndices bottom;
+    std::size_t middle;
+    BinIndices top;
+  };
+
   /// @brief Return the current bin with the middle candidate, as well as all the
   /// bins with the possible bottom and top candidates
   ///
   /// @return The collection of all the bins in the grid
-  std::tuple<
-      boost::container::small_vector<std::size_t, detail::ipow(3, grid_t::DIM)>,
-      std::size_t,
-      boost::container::small_vector<std::size_t, detail::ipow(3, grid_t::DIM)>>
-  operator*() const;
+  Neighborhood operator*() const;
 
  private:
   /// @brief Move to the next not-empty bin in the grid
