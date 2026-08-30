@@ -27,6 +27,10 @@ void createAndFilterTriplets(TripletSeeder::Cache& cache,
                              const ConstSpacePointProxy2& spM,
                              DoubletCollections topDoublets) {
   for (auto bottomDoublet : bottomDoublets) {
+    if (topDoublets.empty()) {
+      break;
+    }
+
     cache.tripletTopCandidates.clear();
     tripletFinder.createTripletTopCandidates(spacePoints, spM, bottomDoublet,
                                              topDoublets,
@@ -147,23 +151,34 @@ void TripletSeeder::createSeedsFromGroups(
   const bool spacePointsSortedByRadius =
       bottomFinder.config().spacePointsSortedByRadius;
 
-  if (middleSpGroup.empty()) {
+  auto middleSpBegin = middleSpGroup.begin();
+  auto middleSpEnd = middleSpGroup.end();
+  if (middleSpBegin == middleSpEnd) {
     return;
   }
 
   if (spacePointsSortedByRadius) {
+    const auto radius = [](const ConstSpacePointProxy2& sp) {
+      return sp.zr()[1];
+    };
+    middleSpBegin = std::ranges::lower_bound(
+        middleSpBegin, middleSpEnd, radiusRangeForMiddle.first, {}, radius);
+    middleSpEnd = std::ranges::upper_bound(
+        middleSpBegin, middleSpEnd, radiusRangeForMiddle.second, {}, radius);
+    if (middleSpBegin == middleSpEnd) {
+      return;
+    }
+
     // Initialize initial offsets for bottom and top space points with binary
-    // search. This requires at least one middle space point to be present which
-    // is already checked above.
-    const ConstSpacePointProxy2 firstMiddleSp = middleSpGroup.front();
-    const float firstMiddleSpR = firstMiddleSp.zr()[1];
+    // search from the first middle point inside the radial region of interest.
+    const float firstMiddleSpR = radius(*middleSpBegin);
 
     for (auto& bottomSpGroup : bottomSpGroups) {
       // Find the first bottom space point that is within the deltaRMax of the
       // first middle space point.
       const auto low = std::ranges::lower_bound(
           bottomSpGroup, firstMiddleSpR - bottomFinder.config().deltaRMax, {},
-          [&](const ConstSpacePointProxy2& sp) { return sp.zr()[1]; });
+          radius);
       bottomSpGroup = bottomSpGroup.subrange(low - bottomSpGroup.begin());
     }
 
@@ -171,26 +186,14 @@ void TripletSeeder::createSeedsFromGroups(
       // Find the first top space point that is within the deltaRMin of the
       // first middle space point.
       const auto low = std::ranges::lower_bound(
-          topSpGroup, firstMiddleSpR + topFinder.config().deltaRMin, {},
-          [&](const ConstSpacePointProxy2& sp) { return sp.zr()[1]; });
+          topSpGroup, firstMiddleSpR + topFinder.config().deltaRMin, {}, radius);
       topSpGroup = topSpGroup.subrange(low - topSpGroup.begin());
     }
   }
 
-  for (ConstSpacePointProxy2 spM : middleSpGroup) {
-    const float rM = spM.zr()[1];
-
-    if (spacePointsSortedByRadius) {
-      // check if spM is outside our radial region of interest
-      if (rM < radiusRangeForMiddle.first) {
-        continue;
-      }
-      if (rM > radiusRangeForMiddle.second) {
-        // break because SPs are sorted in r
-        break;
-      }
-    }
-
+  for (auto middleSpIt = middleSpBegin; middleSpIt != middleSpEnd;
+       ++middleSpIt) {
+    ConstSpacePointProxy2 spM = *middleSpIt;
     createSeedsFromGroupsImpl(*m_logger, cache, bottomFinder, topFinder,
                               tripletFinder, filter, spacePoints,
                               bottomSpGroups, spM, topSpGroups, outputSeeds);
