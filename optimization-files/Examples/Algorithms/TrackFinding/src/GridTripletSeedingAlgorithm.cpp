@@ -160,10 +160,13 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   }
 
   for (std::size_t i = 0; i < grid.numberOfBins(); ++i) {
-    gridBinCapacityHints[i] =
-        std::max(gridBinCapacityHints[i], grid.at(i).size());
-    std::ranges::sort(grid.at(i), [&](const Acts::SpacePointIndex2& a,
-                                      const Acts::SpacePointIndex2& b) {
+    auto& bin = grid.at(i);
+    gridBinCapacityHints[i] = std::max(gridBinCapacityHints[i], bin.size());
+    if (bin.size() < 2) {
+      continue;
+    }
+    std::ranges::sort(bin, [&](const Acts::SpacePointIndex2& a,
+                               const Acts::SpacePointIndex2& b) {
       return spacePoints[a].r() < spacePoints[b].r();
     });
   }

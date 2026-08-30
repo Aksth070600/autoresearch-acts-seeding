@@ -213,7 +213,7 @@ class Impl final : public DoubletSeedFinder {
       // The correct computation would be:
       // yNewFrame * yNewFrame * rM * rM > config.impactMax *
       // config.impactMax * deltaR2
-      if (std::abs(rM * yNewFrame) > impactMax * xNewFrame) {
+      if (std::abs(rM * yNewFrame) > impactMax * xNewFrame) [[unlikely]] {
         // in the rotated frame the interaction point is positioned at x = -rM
         // and y ~= impactParam
         const float vIP = (yNewFrame > 0) ? -vIPAbs : vIPAbs;
