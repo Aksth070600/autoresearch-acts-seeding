@@ -18,14 +18,18 @@ CandidatesForMiddleSp2::CandidatesForMiddleSp2()
 
 CandidatesForMiddleSp2::CandidatesForMiddleSp2(Size nLow, Size nHigh)
     : m_maxSizeLow(nLow), m_maxSizeHigh(nHigh) {
-  // Reserve enough memory for all collections
-  m_storage.reserve((nLow != kNoSize ? nLow : 0) +
-                    (nHigh != kNoSize ? nHigh : 0));
+  m_fixedStorage = nLow != kNoSize && nHigh != kNoSize;
+  if (m_fixedStorage) {
+    m_storage.resize(nLow + nHigh);
+  }
 }
 
 void CandidatesForMiddleSp2::clear() {
   m_middleSp.reset();
-  m_storage.clear();
+  if (!m_fixedStorage) {
+    m_storage.clear();
+  }
+  m_nextSlot = 0;
   m_indicesLow.clear();
   m_indicesHigh.clear();
 }
@@ -59,9 +63,15 @@ bool CandidatesForMiddleSp2::push(Container& container, Size nMax,
   }
 
   if (container.size() < nMax) {
-    // If there is still space, add anything
-    m_storage.push_back({spB, spT, weight, zOrigin, isQuality});
-    container.emplace_back(weight, m_storage.size() - 1);
+    Index slot = 0;
+    if (m_fixedStorage) {
+      slot = m_nextSlot++;
+      m_storage[slot] = {spB, spT, weight, zOrigin, isQuality};
+    } else {
+      m_storage.push_back({spB, spT, weight, zOrigin, isQuality});
+      slot = static_cast<Index>(m_storage.size() - 1);
+    }
+    container.emplace_back(weight, slot);
     std::ranges::push_heap(container, comparator);
     return true;
   }
@@ -90,7 +100,7 @@ void CandidatesForMiddleSp2::toSortedCandidates(
   std::ranges::sort_heap(m_indicesHigh, comparator);
   std::ranges::sort_heap(m_indicesLow, comparator);
 
-  assert((m_storage.empty() || m_middleSp.has_value()) &&
+  assert((size() == 0 || m_middleSp.has_value()) &&
          "retained candidates require a middle space point");
   const auto appendCandidate = [&](Index index) {
     const StoredCandidate& candidate = m_storage[index];
