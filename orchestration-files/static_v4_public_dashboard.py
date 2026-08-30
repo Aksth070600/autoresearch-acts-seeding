@@ -379,6 +379,179 @@ def _review_panel() -> str:
 </section>"""
 
 
+def public_campaign_model(status: dict[str, Any], deployed_commit: str) -> dict[str, Any]:
+    """Build a display model without mixing static-v4 evidence into v3 rows."""
+
+    status = _validate(status, deployed_commit)
+    campaign = status["campaign"]
+    attempts = [_attempt_model(attempt) for attempt in status["attempts"]]
+    calibration = (
+        status.get("calibration") if isinstance(status.get("calibration"), dict) else {}
+    )
+    genesis_ms = _milliseconds(calibration.get("median_per_event_nanoseconds"))
+    genesis_timings = [
+        value
+        for value in (
+            _milliseconds(item)
+            for item in calibration.get("genesis_per_event_nanoseconds", [])
+        )
+        if value is not None
+    ]
+    genesis_interval = next(
+        (
+            attempt["genesis_interval_ms"]
+            for attempt in attempts
+            if attempt["genesis_interval_ms"]
+        ),
+        [min(genesis_timings), max(genesis_timings)] if genesis_timings else None,
+    )
+    genesis_efficiency = next(
+        (
+            attempt["genesis_efficiency"]
+            for attempt in attempts
+            if attempt["genesis_efficiency"] is not None
+        ),
+        None,
+    )
+    passed = [
+        attempt
+        for attempt in attempts
+        if attempt["status"] == "passed" and attempt["timing_ms"] is not None
+    ]
+    control = status.get("control") if isinstance(status.get("control"), dict) else {}
+    composition = (
+        status.get("composition") if isinstance(status.get("composition"), dict) else {}
+    )
+    return {
+        "campaign": {
+            "campaign_id": campaign.get("campaign_id"),
+            "branch": campaign.get("branch"),
+            "control_id": campaign.get("control_id"),
+            "protocol_id": campaign.get("protocol_id"),
+            "protocol_revision": campaign.get("protocol_revision"),
+            "dataset_id": campaign.get("dataset_id"),
+            "platform_commit": campaign.get("platform_commit"),
+            "scientific_genesis_commit": campaign.get("scientific_genesis_commit"),
+            "acts_commit": campaign.get("acts_commit"),
+            "deployed_commit": deployed_commit,
+        },
+        "genesis": {
+            "median_ms": genesis_ms,
+            "timings_ms": genesis_timings,
+            "interval_ms": genesis_interval,
+            "efficiency": genesis_efficiency,
+            "empirical_envelope": _fraction_text(
+                calibration.get("relative_empirical_noise_envelope")
+            ),
+            "peak_rss_kb": calibration.get("median_peak_rss_kb"),
+        },
+        "composition": composition,
+        "terminal_status": control.get("state", "unknown"),
+        "completed_at": control.get("completed_at"),
+        "best_attempt": min(
+            passed, key=lambda attempt: (attempt["timing_ms"], attempt["slot"])
+        ) if passed else None,
+        "terminal_attempt": attempts[-1] if attempts else None,
+        "attempts": attempts,
+    }
+
+
+def archive_styles() -> str:
+    return """
+    .archive { margin-top: 28px; padding-top: 20px; border-top: 1px solid #334155; }
+    .archive h2, .archive h3 { margin-bottom: 8px; }
+    .archive-summary { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 10px; margin: 14px 0; }
+    .archive-card { display: grid; gap: 4px; padding: 12px; background: #111827; border: 1px solid #334155; border-radius: 10px; }
+    .archive-label { color: #94a3b8; font-size: .75rem; font-weight: 700; text-transform: uppercase; }
+    .archive-ledger { width: 100%; border-collapse: collapse; font-size: .78rem; }
+    .archive-ledger th, .archive-ledger td { padding: 7px; border-bottom: 1px solid #334155; text-align: left; vertical-align: top; }
+    .archive-ledger th { position: sticky; top: 0; background: #111827; color: #c4b5fd; }
+    .archive-table-wrap { max-height: 720px; overflow: auto; border: 1px solid #334155; border-radius: 10px; }
+    .archive code { overflow-wrap: anywhere; }
+    .archive a { color: #a5b4fc; }
+    @media (max-width: 800px) { .archive-summary { grid-template-columns: 1fr 1fr; } .archive-table-wrap { overflow-x: auto; } }
+    """
+
+
+def render_archive(model: dict[str, Any], *, heading_level: int = 2) -> str:
+    """Render the immutable terminal campaign as a separate evidence section."""
+
+    campaign = model["campaign"]
+    attempts = model["attempts"]
+    counts = model.get("composition", {}).get("counts", {})
+    genesis = model["genesis"]
+    best = model.get("best_attempt") or {}
+    terminal = model.get("terminal_attempt") or {}
+    commit_links = []
+    for label, key in (
+        ("Archive", "deployed_commit"),
+        ("Platform", "platform_commit"),
+        ("Scientific Genesis", "scientific_genesis_commit"),
+        ("ACTS", "acts_commit"),
+    ):
+        commit = str(campaign.get(key, ""))
+        if FULL_SHA.fullmatch(commit):
+            commit_links.append(
+                f'<a href="{REPOSITORY_URL}/commit/{commit}" target="_blank" '
+                f'rel="noopener noreferrer">{_escape(label)} {_escape(commit[:7])}</a>'
+            )
+    rows = []
+    for attempt in attempts:
+        timing = attempt.get("timing_ms")
+        counts_data = attempt.get("counts", {})
+        latency = attempt.get("latency", {})
+        commit = attempt.get("implementation_commit", "")
+        mechanism = _escape(attempt.get("mechanism_key", "unknown"))
+        if attempt.get("commit_url"):
+            mechanism = (
+                f'<a href="{_escape(attempt["commit_url"])}" target="_blank" '
+                f'rel="noopener noreferrer">{mechanism}</a><br><code>{_escape(str(commit)[:12])}</code>'
+            )
+        physics = (
+            f'E {_format_rate(attempt.get("efficiency"))}<br>'
+            f'F {_format_rate(attempt.get("fake_rate"))}<br>'
+            f'D {_format_rate(attempt.get("duplicate_rate"))}<br>'
+            f'matched {counts_data.get("matched", "n/a")} / selected {counts_data.get("selected", "n/a")}'
+        )
+        latency_text = "<br>".join(
+            f'{label} {value:.3f}s' if isinstance(value, (int, float)) else f'{label} n/a'
+            for label, value in (
+                ("prep", latency.get("preparation_seconds")),
+                ("build", latency.get("build_seconds")),
+                ("process", latency.get("process_seconds")),
+                ("queue-record", latency.get("queue_to_record_seconds")),
+            )
+        )
+        rss = attempt.get("peak_rss_kb")
+        rss_text = f"{rss / 1024 / 1024:.2f} GiB" if isinstance(rss, (int, float)) else "n/a"
+        rows.append(
+            "<tr>"
+            f'<td>{_escape(attempt.get("slot"))}</td>'
+            f'<td>{_escape(attempt.get("classification"))}</td>'
+            f'<td><strong>{_escape(attempt.get("status"))}</strong><br>{_escape(attempt.get("overall"))}</td>'
+            f'<td>{_escape(attempt.get("candidate"))}</td><td>{mechanism}</td>'
+            f'<td>{f"{timing:.3f} ms/event" if isinstance(timing, (int, float)) else "n/a"}<br>{_escape(attempt.get("timing_classification"))}</td>'
+            f'<td>{physics}</td><td>{latency_text}<br>RSS {rss_text}</td>'
+            f'<td><code>{_escape(attempt.get("record_path"))}</code></td></tr>'
+        )
+    heading = f"h{heading_level}"
+    genesis_ms = genesis.get("median_ms")
+    return f"""
+<section class="archive" id="terminal-static-v4" data-attempt-count="{len(attempts)}" data-terminal-status="{_escape(model.get('terminal_status'))}">
+  <{heading}>Terminal owned-static v4 campaign</{heading}>
+  <p>Immutable protocol-isolated archive. It is displayed separately and is not imported into v3 ranking or conclusions.</p>
+  <p><strong>Campaign ID:</strong> <code>{_escape(campaign.get('campaign_id'))}</code><br>{' · '.join(commit_links)}</p>
+  <div class="archive-summary">
+    <div class="archive-card"><span class="archive-label">Terminal status</span><strong>{_escape(model.get('terminal_status')).title()}</strong></div>
+    <div class="archive-card"><span class="archive-label">Attempts</span><strong>{len(attempts)}</strong><span>{counts.get('major', 0)} major / {counts.get('minor', 0)} minor / {counts.get('combination', 0)} combination</span></div>
+    <div class="archive-card"><span class="archive-label">Genesis</span><strong>{genesis_ms:.3f} ms/event</strong><span>Peak RSS {genesis.get('peak_rss_kb', 0) / 1024 / 1024:.2f} GiB</span></div>
+    <div class="archive-card"><span class="archive-label">Best / terminal result</span><strong>{best.get('timing_ms'):.3f} / {terminal.get('timing_ms'):.3f} ms/event</strong><span>slots {best.get('slot')} / {terminal.get('slot')}</span></div>
+  </div>
+  <details open><summary><strong>All {len(attempts)} attempts, including invalid and crash evidence</strong></summary>
+  <div class="archive-table-wrap"><table class="archive-ledger"><thead><tr><th>Slot</th><th>Class</th><th>Status</th><th>Candidate</th><th>Mechanism / commit</th><th>Timing</th><th>Physics</th><th>Latency / resource</th><th>Immutable record</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div></details>
+</section>"""
+
+
 def render(
     status: dict[str, Any],
     *,
@@ -388,12 +561,13 @@ def render(
     completion_times: dict[int, datetime] | None = None,
 ) -> str:
     status = _validate(status, deployed_commit)
+    payload = public_campaign_model(status, deployed_commit)
     campaign = status["campaign"]
-    attempts = [_attempt_model(attempt) for attempt in status["attempts"]]
+    attempts = payload["attempts"]
     calibration = (
         status.get("calibration") if isinstance(status.get("calibration"), dict) else {}
     )
-    genesis_ms = _milliseconds(calibration.get("median_per_event_nanoseconds"))
+    genesis_ms = payload["genesis"]["median_ms"]
     baseline = (
         calibration.get("baseline")
         if isinstance(calibration.get("baseline"), dict)
@@ -405,15 +579,6 @@ def render(
     genesis_efficiency_summary = _rate(
         baseline_stats, "nTotalMatchedParticles", "nTotalParticles"
     )
-    genesis_timings = [
-        value
-        for value in (
-            _milliseconds(item)
-            for item in calibration.get("genesis_per_event_nanoseconds", [])
-        )
-        if value is not None
-    ]
-    envelope = _fraction_text(calibration.get("relative_empirical_noise_envelope"))
     composition = (
         status.get("composition") if isinstance(status.get("composition"), dict) else {}
     )
@@ -474,42 +639,6 @@ def render(
         else "Unavailable"
     )
 
-    genesis_interval = next(
-        (
-            attempt["genesis_interval_ms"]
-            for attempt in attempts
-            if attempt["genesis_interval_ms"]
-        ),
-        [min(genesis_timings), max(genesis_timings)] if genesis_timings else None,
-    )
-    genesis_efficiency = next(
-        (
-            attempt["genesis_efficiency"]
-            for attempt in attempts
-            if attempt["genesis_efficiency"] is not None
-        ),
-        None,
-    )
-    payload = {
-        "campaign": {
-            "campaign_id": campaign.get("campaign_id"),
-            "branch": campaign.get("branch"),
-            "control_id": campaign.get("control_id"),
-            "protocol_id": campaign.get("protocol_id"),
-            "protocol_revision": campaign.get("protocol_revision"),
-            "dataset_id": campaign.get("dataset_id"),
-            "scientific_genesis_commit": campaign.get("scientific_genesis_commit"),
-            "deployed_commit": deployed_commit,
-        },
-        "genesis": {
-            "median_ms": genesis_ms,
-            "timings_ms": genesis_timings,
-            "interval_ms": genesis_interval,
-            "efficiency": genesis_efficiency,
-            "empirical_envelope": envelope,
-        },
-        "attempts": attempts,
-    }
     script_data = json.dumps(
         payload, ensure_ascii=False, separators=(",", ":")
     ).replace("</", "<\\/")
@@ -552,7 +681,7 @@ def render(
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ACTS Seeding Campaign · Live Dashboard</title>
 <script src="{_escape(plotly_src)}"></script>
-<style>{visual_styles()}\n{extra_styles}</style></head>
+<style>{visual_styles()}\n{extra_styles}\n{archive_styles()}</style></head>
 <body><main><h1>ACTS Seeding Live Campaign</h1>
 <section class="controls" aria-label="Campaign selection"><label>Campaign<select id="campaign-select" disabled><option>{_escape(_campaign_label(campaign, control))}</option></select></label>
 <section id="finish-control" class="finish-control" aria-label="Continuous campaign finish control"><div><div class="finish-heading-line"><strong id="finish-heading">Finish campaign</strong><span id="finish-status" class="finish-guidance">(Open the authenticated GitHub workflow, choose main, enter the exact identity below, then confirm Run workflow.)</span></div><div id="finish-identity" class="control-identity identity-boxes"><span class="identity-row"><b class="identity-label">Branch</b><code class="identity-value">{_escape(campaign.get("branch"))}</code></span><span class="identity-row"><b class="identity-label">Campaign ID</b><code class="identity-value">{_escape(campaign.get("campaign_id"))}</code></span><span class="identity-row"><b class="identity-label">Control ID</b><code class="identity-value">{_escape(campaign.get("control_id"))}</code></span></div></div><a id="finish-button" class="finish-button" href="{finish_url}" target="_blank" rel="noopener noreferrer">Finish campaign</a></section></section>
@@ -562,6 +691,7 @@ def render(
 <section class="section" aria-labelledby="baseline-heading"><h2 id="baseline-heading">Baseline</h2><div class="grid timing-grid" aria-label="Campaign baseline metrics"><div class="card"><span class="card-label">Time per event</span><strong class="card-value">{f"{genesis_ms:.3f} ms" if genesis_ms is not None else "Unavailable"}</strong></div><div class="card"><span class="card-label">Seeding efficiency</span><strong class="card-value">{_escape(_format_rate(genesis_efficiency_summary))}</strong></div><div class="card"><span class="card-label">Peak RSS</span><strong class="card-value">{_escape(genesis_peak_rss)}</strong></div></div></section>
 <section class="section" aria-labelledby="results-heading"><div class="section-heading"><h2 id="results-heading">Promising Early Results</h2></div><div class="grid results-grid">{result_cards}</div></section>
 <section class="section" aria-label="Campaign results comparison"><div id="chart-frame"><div id="plot-empty" hidden>Interactive chart library could not be loaded.</div><div id="chart" role="img" aria-label="Interactive owned-static v4 candidate comparison chart"></div><div id="corner-overlays" aria-hidden="true"><div class="corner-stack top-left"><span class="corner-badge better">Faster</span><span class="corner-badge better">Higher efficiency</span></div><div class="corner-stack top-right"><span class="corner-badge worse">Slower</span><span class="corner-badge better">Higher efficiency</span></div><div class="corner-stack bottom-left"><span class="corner-badge better">Faster</span><span class="corner-badge worse">Lower efficiency</span></div><div class="corner-stack bottom-right"><span class="corner-badge worse">Slower</span><span class="corner-badge worse">Lower efficiency</span></div></div></div></section>
+{render_archive(payload, heading_level=2)}
 </div></main>{review_panel}
 <script>
 const CAMPAIGN = {script_data};

@@ -7,6 +7,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from static_v4_public_dashboard import archive_styles, render_archive
+
 
 HTML_TEMPLATE = r"""<!doctype html>
 <html lang="en">
@@ -56,6 +58,7 @@ HTML_TEMPLATE = r"""<!doctype html>
     #empty-state { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; }
     #empty-state[hidden] { display: none; }
     code { background: #334155; padding: 2px 5px; border-radius: 4px; }
+    __ARCHIVE_STYLES__
   </style>
 </head>
 <body>
@@ -98,7 +101,7 @@ HTML_TEMPLATE = r"""<!doctype html>
       <div id="corner-bottom-right" class="corner-stack bottom-right"></div>
     </div>
   </div>
-
+  __TERMINAL_ARCHIVE__
 </main>
 <script>
 const REPORT = __REPORT_JSON__;
@@ -455,7 +458,13 @@ render();
 """
 
 
-def render(report: dict[str, Any], output: Path, *, defaults: dict[str, str]) -> None:
+def render(
+    report: dict[str, Any],
+    output: Path,
+    *,
+    defaults: dict[str, str],
+    terminal_campaign: dict[str, Any] | None = None,
+) -> None:
     payload = json.dumps(report, sort_keys=True, separators=(",", ":")).replace("</", "<\\/")
     default_json = json.dumps(defaults, sort_keys=True)
     selected_protocol = str(report.get("protocol_id", ""))
@@ -468,9 +477,16 @@ def render(report: dict[str, Any], output: Path, *, defaults: dict[str, str]) ->
     else:
         protocol_context = ""
     output.parent.mkdir(parents=True, exist_ok=True)
+    archive_html = (
+        render_archive(terminal_campaign, heading_level=2)
+        if terminal_campaign is not None
+        else ""
+    )
     output.write_text(
         HTML_TEMPLATE.replace("__REPORT_JSON__", payload)
         .replace("__DEFAULTS_JSON__", default_json)
-        .replace("__PROTOCOL_CONTEXT__", html.escape(protocol_context)),
+        .replace("__PROTOCOL_CONTEXT__", html.escape(protocol_context))
+        .replace("__ARCHIVE_STYLES__", archive_styles() if archive_html else "")
+        .replace("__TERMINAL_ARCHIVE__", archive_html),
         encoding="utf-8",
     )

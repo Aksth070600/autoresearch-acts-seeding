@@ -36,16 +36,6 @@ on:
         required: true
         default: Genesis
         type: string
-      active_campaign_ref:
-        description: Optional exact active owned-static v4 campaign branch
-        required: false
-        default: ''
-        type: string
-      active_campaign_commit:
-        description: Full commit expected at the active campaign branch
-        required: false
-        default: ''
-        type: string
 
 permissions:
   contents: read
@@ -82,38 +72,6 @@ jobs:
             --y-metric "$Y_METRIC" \
             --baseline "$BASELINE" \
             --output build/site
-      - name: Render a trusted active owned-static v4 campaign
-        env:
-          ACTIVE_CAMPAIGN_REF: ${{ inputs.active_campaign_ref }}
-          ACTIVE_CAMPAIGN_COMMIT: ${{ inputs.active_campaign_commit }}
-        run: |
-          if [[ -z "$ACTIVE_CAMPAIGN_REF" && -z "$ACTIVE_CAMPAIGN_COMMIT" ]]; then
-            exit 0
-          fi
-          if [[ ! "$ACTIVE_CAMPAIGN_REF" =~ ^(fm/acts-v4-continuous-[A-Za-z0-9._/-]+|autoresearch-acts-seeding/[A-Za-z0-9._/-]+)$ ]]; then
-            echo 'error: active campaign ref is outside the trusted campaign namespace' >&2
-            exit 2
-          fi
-          if ! git check-ref-format --branch "$ACTIVE_CAMPAIGN_REF" >/dev/null; then
-            echo 'error: active campaign ref is malformed' >&2
-            exit 2
-          fi
-          if [[ ! "$ACTIVE_CAMPAIGN_COMMIT" =~ ^[0-9a-f]{40}$ ]]; then
-            echo 'error: active campaign commit must be a full lowercase Git SHA' >&2
-            exit 2
-          fi
-          git fetch --no-tags origin "$ACTIVE_CAMPAIGN_REF"
-          resolved="$(git rev-parse 'FETCH_HEAD^{commit}')"
-          if [[ "$resolved" != "$ACTIVE_CAMPAIGN_COMMIT" ]]; then
-            echo 'error: active campaign branch moved from the requested commit' >&2
-            exit 1
-          fi
-          status_path='orchestration-files/acts-v4-continuous-campaign/status.json'
-          git show "$resolved:$status_path" > "$RUNNER_TEMP/active-static-v4-status.json"
-          python3 orchestration-files/static_v4_public_dashboard.py \
-            --status "$RUNNER_TEMP/active-static-v4-status.json" \
-            --deployed-commit "$resolved" \
-            --output build/site/campaign/index.html
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload Pages artifact

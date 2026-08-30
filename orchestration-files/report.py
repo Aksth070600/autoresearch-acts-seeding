@@ -21,17 +21,24 @@ from protocol import (
     is_complete_stage_matrix,
 )
 from proposal import ProposalError, median_absolute_deviation, proposal_from_summary
+from static_v4_public_dashboard import (
+    _completion_times as static_v4_completion_times,
+    public_campaign_model,
+    render as render_static_v4_campaign,
+)
+from visualizations.pareto import render as render_pareto
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_RECORDS = PROJECT_ROOT / "records"
 DEFAULT_OUTPUT = PROJECT_ROOT / "build" / "site"
+TERMINAL_STATIC_V4_STATUS = (
+    PROJECT_ROOT / "orchestration-files" / "acts-v4-continuous-campaign" / "status.json"
+)
+TERMINAL_STATIC_V4_COMMIT = "284ffffbc7863578435a4a5b40aa52c708f1481b"
 REPOSITORY_URL = "https://github.com/Aksth070600/autoresearch-acts-seeding"
 FULL_COMMIT_SHA = re.compile(r"[0-9a-fA-F]{40}")
 RSS_DISPLAY_METRIC = "rss_peak_rss_kb"
 OPTIONAL_REPORT_METRICS = {RSS_DISPLAY_METRIC}
-
-from visualizations.campaign import render as render_campaign
-from visualizations.pareto import render as render_pareto
 
 VISUALIZATIONS = {"pareto": render_pareto}
 
@@ -452,6 +459,10 @@ def main() -> int:
     output_root = args.output.resolve()
     rows = load_records(records_root, args.dataset)
     report = build_report(rows, args.baseline, args.dataset)
+    terminal_status = json.loads(TERMINAL_STATIC_V4_STATUS.read_text(encoding="utf-8"))
+    terminal_campaign = public_campaign_model(
+        terminal_status, TERMINAL_STATIC_V4_COMMIT
+    )
 
     if args.list_metrics:
         for key in report["metric_keys"]:
@@ -500,9 +511,20 @@ def main() -> int:
             "y_metric": args.y_metric,
             "baseline": args.baseline,
         },
+        terminal_campaign=terminal_campaign,
     )
     campaign_index = output_root / "campaign" / "index.html"
-    render_campaign(campaign_index)
+    campaign_index.parent.mkdir(parents=True, exist_ok=True)
+    campaign_index.write_text(
+        render_static_v4_campaign(
+            terminal_status,
+            deployed_commit=TERMINAL_STATIC_V4_COMMIT,
+            completion_times=static_v4_completion_times(
+                terminal_status, TERMINAL_STATIC_V4_COMMIT, PROJECT_ROOT
+            ),
+        ),
+        encoding="utf-8",
+    )
     print(f"wrote {index}")
     print(f"wrote {campaign_index}")
     print(
