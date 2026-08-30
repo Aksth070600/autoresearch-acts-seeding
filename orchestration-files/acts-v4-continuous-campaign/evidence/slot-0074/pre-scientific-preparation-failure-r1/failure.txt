@@ -1,0 +1,6 @@
+scientific_process_started=no
+scientific_process_allowance_unused=yes
+phase=candidate-build
+exit_status=1
+failure=GridTripletSeedingAlgorithm.cpp used retained createSpacePoints batch materialization, but the proposal intended-file closure omitted its supporting SpacePointContainer2 header and implementation, so the isolated Genesis build did not expose that method
+correction=preserve this complete preparation evidence; bind the two supporting retained files in the proposal closure; use a fresh r2 preparation path; run the candidate scientific process exactly once
