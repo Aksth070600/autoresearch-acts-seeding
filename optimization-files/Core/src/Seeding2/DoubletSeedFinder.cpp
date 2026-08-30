@@ -11,6 +11,7 @@
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
+#include <algorithm>
 #include <stdexcept>
 
 #include <boost/mp11.hpp>
@@ -50,9 +51,8 @@ class Impl final : public DoubletSeedFinder {
     const float yM = middleSp.xy()[1];
     const float zM = middleSp.zr()[0];
     const float rM = middleSp.zr()[1];
-    const auto& varianceZRM = middleSp.varianceZR();
-    const float varianceZM = varianceZRM[0];
-    const float varianceRM = varianceZRM[1];
+    const float varianceZM = middleSp.varianceZ();
+    const float varianceRM = middleSp.varianceR();
 
     // equivalent to impactMax / (rM * rM);
     const float vIPAbs = impactMax * middleSpInfo.uIP2;
@@ -72,37 +72,26 @@ class Impl final : public DoubletSeedFinder {
     };
 
     if constexpr (sortedByR) {
-      // find the first SP inside the radius region of interest and update
-      // the iterator so we don't need to look at the other SPs again
-      std::uint32_t offset = 0;
-      for (ConstSpacePointProxy2 otherSp : candidateSps) {
-        if constexpr (isBottomCandidate) {
-          // if r-distance is too big, try next SP in bin
-          if (rM - otherSp.zr()[1] <= m_cfg.deltaRMax) {
-            break;
-          }
-        } else {
-          // if r-distance is too small, try next SP in bin
-          if (otherSp.zr()[1] - rM >= m_cfg.deltaRMin) {
-            break;
-          }
-        }
-
-        ++offset;
-      }
-      candidateSps = candidateSps.subrange(offset);
+      // The input is sorted by radius. Find the first candidate in the
+      // direction-specific radius window without scanning discarded points.
+      const float firstRadius = isBottomCandidate
+                                    ? rM - m_cfg.deltaRMax
+                                    : rM + m_cfg.deltaRMin;
+      const auto first = std::ranges::lower_bound(
+          candidateSps, firstRadius, {},
+          [](const ConstSpacePointProxy2& sp) { return sp.zr()[1]; });
+      candidateSps = candidateSps.subrange(
+          static_cast<std::uint32_t>(first - candidateSps.begin()));
     }
 
     const SpacePointContainer2& container = candidateSps.container();
-    for (auto [indexO, xyO, zrO, varianceZRO] : candidateSps.zip(
+    for (auto [indexO, xyO, zrO, varianceZO, varianceRO] : candidateSps.zip(
              container.xyColumn(), container.zrColumn(),
-             container.varianceZRColumn())) {
+             container.varianceZColumn(), container.varianceRColumn())) {
       const float xO = xyO[0];
       const float yO = xyO[1];
       const float zO = zrO[0];
       const float rO = zrO[1];
-      const float varianceZO = varianceZRO[0];
-      const float varianceRO = varianceZRO[1];
 
       float deltaR = 0;
       if constexpr (isBottomCandidate) {
