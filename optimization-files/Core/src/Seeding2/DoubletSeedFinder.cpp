@@ -50,9 +50,8 @@ class Impl final : public DoubletSeedFinder {
     const float yM = middleSp.xy()[1];
     const float zM = middleSp.zr()[0];
     const float rM = middleSp.zr()[1];
-    const auto& varianceZRM = middleSp.varianceZR();
-    const float varianceZM = varianceZRM[0];
-    const float varianceRM = varianceZRM[1];
+    const float varianceZM = middleSp.varianceZ();
+    const float varianceRM = middleSp.varianceR();
 
     // equivalent to impactMax / (rM * rM);
     const float vIPAbs = impactMax * middleSpInfo.uIP2;
@@ -94,15 +93,13 @@ class Impl final : public DoubletSeedFinder {
     }
 
     const SpacePointContainer2& container = candidateSps.container();
-    for (auto [indexO, xyO, zrO, varianceZRO] : candidateSps.zip(
+    for (auto [indexO, xyO, zrO, varianceZO, varianceRO] : candidateSps.zip(
              container.xyColumn(), container.zrColumn(),
-             container.varianceZRColumn())) {
+             container.varianceZColumn(), container.varianceRColumn())) {
       const float xO = xyO[0];
       const float yO = xyO[1];
       const float zO = zrO[0];
       const float rO = zrO[1];
-      const float varianceZO = varianceZRO[0];
-      const float varianceRO = varianceZRO[1];
 
       float deltaR = 0;
       if constexpr (isBottomCandidate) {
@@ -138,7 +135,8 @@ class Impl final : public DoubletSeedFinder {
         deltaZ = zO - zM;
       }
 
-      if (outsideRangeCheck(deltaZ, m_cfg.deltaZMin, m_cfg.deltaZMax)) {
+      if (outsideRangeCheck(deltaZ, m_cfg.deltaZMin, m_cfg.deltaZMax))
+          [[unlikely]] {
         continue;
       }
 
