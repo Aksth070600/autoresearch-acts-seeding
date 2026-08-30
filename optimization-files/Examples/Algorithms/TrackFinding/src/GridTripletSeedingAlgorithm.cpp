@@ -262,9 +262,11 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
                                           filterCache, *m_filterLogger);
   static thread_local Acts::TripletSeeder::Cache cache;
 
-  std::vector<Acts::SpacePointContainer2::ConstRange> bottomSpRanges;
+  static thread_local std::vector<Acts::SpacePointContainer2::ConstRange>
+      bottomSpRanges;
   std::optional<Acts::SpacePointContainer2::ConstRange> middleSpRange;
-  std::vector<Acts::SpacePointContainer2::ConstRange> topSpRanges;
+  static thread_local std::vector<Acts::SpacePointContainer2::ConstRange>
+      topSpRanges;
 
   Acts::SeedContainer2 seeds;
   seeds.assignSpacePointContainer(spacePoints);
@@ -304,6 +306,8 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
         seedFilter, coreSpacePoints, bottomSpRanges, *middleSpRange,
         topSpRanges, radiusRangeForMiddle, seeds);
   }
+  bottomSpRanges.clear();
+  topSpRanges.clear();
 
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
                         << spacePoints.size() << " space points");

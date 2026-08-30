@@ -162,7 +162,7 @@ class Impl final : public DoubletSeedFinder {
         // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
         // cotThetaMax by deltaR to avoid division
         if (outsideRangeCheck(deltaZ, -m_cfg.cotThetaMax * deltaR,
-                              m_cfg.cotThetaMax * deltaR)) {
+                              m_cfg.cotThetaMax * deltaR)) [[unlikely]] {
           continue;
         }
 
@@ -239,7 +239,7 @@ class Impl final : public DoubletSeedFinder {
       // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
       // cotThetaMax by deltaR to avoid division
       if (outsideRangeCheck(deltaZ, -m_cfg.cotThetaMax * deltaR,
-                            m_cfg.cotThetaMax * deltaR)) {
+                            m_cfg.cotThetaMax * deltaR)) [[unlikely]] {
         continue;
       }
 
