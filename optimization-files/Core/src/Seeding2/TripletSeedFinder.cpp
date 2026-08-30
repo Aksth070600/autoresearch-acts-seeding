@@ -150,12 +150,9 @@ class Impl final : public TripletSeedFinder {
       const DoubletsForMiddleSp::Proxy& bottomDoublet, TopDoublets& topDoublets,
       TripletTopCandidates& tripletTopCandidates) const {
     const float rM = spM.zr()[1];
-    const float varianceZM = spM.varianceZ();
-    const float varianceRM = spM.varianceR();
-
-    // Reserve enough space, in case current capacity is too little
-    tripletTopCandidates.reserve(tripletTopCandidates.size() +
-                                 topDoublets.size());
+    const auto& varianceZRM = spM.varianceZR();
+    const float varianceZM = varianceZRM[0];
+    const float varianceRM = varianceZRM[1];
 
     const float cotThetaB = bottomDoublet.cotTheta();
     const float erB = bottomDoublet.er();
@@ -178,9 +175,9 @@ class Impl final : public TripletSeedFinder {
     const float scatteringInRegion2 = m_cfg.multipleScattering2 * iSinTheta2;
 
     std::size_t topDoubletOffset = 0;
-    std::size_t nextTopDoubletIndex = 0;
-    for (auto topDoublet : topDoublets) {
-      const std::size_t topDoubletIndex = nextTopDoubletIndex++;
+    for (auto [topDoublet, topDoubletIndex] :
+         zip(topDoublets, std::ranges::iota_view<std::size_t, std::size_t>(
+                              0, topDoublets.size()))) {
       const SpacePointIndex2 spT = topDoublet.spacePointIndex();
       const float cotThetaT = topDoublet.cotTheta();
 
@@ -233,7 +230,7 @@ class Impl final : public TripletSeedFinder {
 
       // sqrt(S2)/B = 2 * helixradius
       // calculated radius must not be smaller than minimum radius
-      if (S2 < B2 * m_cfg.minHelixDiameter2) {
+      if (S2 < B2 * m_cfg.minHelixDiameter2) [[likely]] {
         continue;
       }
 
@@ -282,8 +279,9 @@ class Impl final : public TripletSeedFinder {
     const float rM = spM.zr()[1];
     const float cosPhiM = spM.xy()[0] / rM;
     const float sinPhiM = spM.xy()[1] / rM;
-    const float varianceZM = spM.varianceZ();
-    const float varianceRM = spM.varianceR();
+    const auto& varianceZRM = spM.varianceZR();
+    const float varianceZM = varianceZRM[0];
+    const float varianceRM = varianceZRM[1];
 
     // Reserve enough space, in case current capacity is too little
     tripletTopCandidates.reserve(tripletTopCandidates.size() +
