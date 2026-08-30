@@ -1,0 +1,8 @@
+stage=local candidate closure validation
+scientific_process_started=false
+scientific_process_allowance_unused=true
+candidate_source_changes_present=true
+implementation_commit_created=false
+command=compare proposal intended_files to every optimization-files path differing from Genesis
+result=failed because the check incorrectly included the retained slot-72 background closure instead of isolating slot-73 intended files
+correction=preserve this evidence; verify each intended slot-73 file differs from Genesis and no additional file was changed by the slot-73 transformation relative to the retained/preparation parent; then create and bind the implementation commit before the one authorized process
