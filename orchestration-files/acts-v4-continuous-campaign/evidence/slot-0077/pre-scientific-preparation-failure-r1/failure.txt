@@ -1,0 +1,7 @@
+stage=proposal source-reference validation
+scientific_process_started=false
+scientific_process_allowance_unused=true
+implementation_commit_created=false
+attempt_queued=false
+result=failed because two typed prior-record timestamp paths did not exist
+correction=preserve this evidence; bind the authoritative record paths from campaign.json before committing the proposal; then prepare and run exactly one scientific process
