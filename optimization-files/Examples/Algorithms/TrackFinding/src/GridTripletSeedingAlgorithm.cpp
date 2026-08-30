@@ -23,6 +23,8 @@
 #include <cstddef>
 #include <stdexcept>
 
+#include <boost/container/small_vector.hpp>
+
 namespace ActsExamples {
 
 namespace {
@@ -278,9 +280,9 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
                                           filterCache, *m_filterLogger);
   static thread_local Acts::TripletSeeder::Cache cache;
 
-  static thread_local std::vector<Acts::SpacePointContainer2::ConstRange>
+  static thread_local boost::container::small_vector<Acts::SpacePointContainer2::ConstRange, 27>
       bottomSpRanges;
-  static thread_local std::vector<Acts::SpacePointContainer2::ConstRange>
+  static thread_local boost::container::small_vector<Acts::SpacePointContainer2::ConstRange, 27>
       topSpRanges;
 
   Acts::SeedContainer2 seeds;
