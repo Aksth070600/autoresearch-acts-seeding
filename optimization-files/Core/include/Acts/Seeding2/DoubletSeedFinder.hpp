@@ -32,24 +32,31 @@ class DoubletsForMiddleSp {
   /// Type alias for subset of indices in doublets container
   using IndexSubset = std::span<const Index>;
 
+  /// A complete derived doublet stored contiguously for producer/consumer
+  /// locality.
+  struct Entry {
+    SpacePointIndex2 spacePoint{};
+    float cotTheta{};
+    float er{};
+    float iDeltaR{};
+    float u{};
+    float v{};
+    float x{};
+    float y{};
+  };
+
   /// Check if the doublets container is empty
   /// @return True if container has no doublets
-  [[nodiscard]] bool empty() const { return m_spacePoints.empty(); }
+  [[nodiscard]] bool empty() const { return m_doublets.empty(); }
   /// Get the number of doublets in container
   /// @return Number of doublets stored
   [[nodiscard]] Index size() const {
-    return static_cast<Index>(m_spacePoints.size());
+    return static_cast<Index>(m_doublets.size());
   }
 
   /// Clear all stored doublets and associated data
   void clear() {
-    m_spacePoints.clear();
-    m_cotTheta.clear();
-    m_er.clear();
-    m_iDeltaR.clear();
-    m_u.clear();
-    m_v.clear();
-    m_xy.clear();
+    m_doublets.clear();
   }
 
   /// Add a new doublet with associated parameters
@@ -63,23 +70,8 @@ class DoubletsForMiddleSp {
   /// @param y Y coordinate
   void emplace_back(SpacePointIndex2 sp, float cotTheta, float iDeltaR,
                     float er, float u, float v, float x, float y) {
-    m_spacePoints.push_back(sp);
-    m_cotTheta.push_back(cotTheta);
-    m_er.push_back(er);
-    m_iDeltaR.push_back(iDeltaR);
-    m_u.push_back(u);
-    m_v.push_back(v);
-    m_xy.push_back({x, y});
+    m_doublets.emplace_back(Entry{sp, cotTheta, er, iDeltaR, u, v, x, y});
   }
-
-  /// Get reference to space point indices container
-  /// @return Const reference to space point indices vector
-  const std::vector<SpacePointIndex2>& spacePoints() const {
-    return m_spacePoints;
-  }
-  /// Get reference to cotTheta values container
-  /// @return Const reference to cotTheta values vector
-  const std::vector<float>& cotTheta() const { return m_cotTheta; }
 
   /// Pair of doublet index and cotTheta value.
   struct IndexAndCotTheta {
@@ -100,7 +92,7 @@ class DoubletsForMiddleSp {
     indexAndCotTheta.clear();
     indexAndCotTheta.reserve(range.second - range.first);
     for (Index i = range.first; i < range.second; ++i) {
-      indexAndCotTheta.emplace_back(i, m_cotTheta[i]);
+      indexAndCotTheta.emplace_back(i, m_doublets[i].cotTheta);
     }
     std::ranges::sort(indexAndCotTheta, {}, [](const IndexAndCotTheta& item) {
       return item.cotTheta;
@@ -126,30 +118,30 @@ class DoubletsForMiddleSp {
     /// Get space point index pair
     /// @return The space point index
     SpacePointIndex2 spacePointIndex() const {
-      return m_container->m_spacePoints[m_index];
+      return m_container->m_doublets[m_index].spacePoint;
     }
 
     /// Get cotangent of theta
     /// @return The cotTheta value
-    float cotTheta() const { return m_container->m_cotTheta[m_index]; }
+    float cotTheta() const { return m_container->m_doublets[m_index].cotTheta; }
     /// Get er value
     /// @return The er value
-    float er() const { return m_container->m_er[m_index]; }
+    float er() const { return m_container->m_doublets[m_index].er; }
     /// Get inverse delta r
     /// @return The inverse delta r value
-    float iDeltaR() const { return m_container->m_iDeltaR[m_index]; }
+    float iDeltaR() const { return m_container->m_doublets[m_index].iDeltaR; }
     /// Get u coordinate
     /// @return The u value
-    float u() const { return m_container->m_u[m_index]; }
+    float u() const { return m_container->m_doublets[m_index].u; }
     /// Get v coordinate
     /// @return The v value
-    float v() const { return m_container->m_v[m_index]; }
+    float v() const { return m_container->m_doublets[m_index].v; }
     /// Get x coordinate
     /// @return The x value
-    float x() const { return m_container->m_xy[m_index][0]; }
+    float x() const { return m_container->m_doublets[m_index].x; }
     /// Get y coordinate
     /// @return The y value
-    float y() const { return m_container->m_xy[m_index][1]; }
+    float y() const { return m_container->m_doublets[m_index].y; }
 
    private:
     const DoubletsForMiddleSp* m_container{};
@@ -256,15 +248,8 @@ class DoubletsForMiddleSp {
   }
 
  private:
-  std::vector<SpacePointIndex2> m_spacePoints;
-
-  // parameters required to calculate a circle with linear equation
-  std::vector<float> m_cotTheta;
-  std::vector<float> m_er;
-  std::vector<float> m_iDeltaR;
-  std::vector<float> m_u;
-  std::vector<float> m_v;
-  std::vector<std::array<float, 2>> m_xy;
+  // Parameters required to calculate a circle with linear equation.
+  std::vector<Entry> m_doublets;
 };
 
 /// Derived quantities for the middle space point in a doublet.
