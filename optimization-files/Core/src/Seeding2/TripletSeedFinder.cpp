@@ -154,10 +154,6 @@ class Impl final : public TripletSeedFinder {
     const float varianceZM = varianceZRM[0];
     const float varianceRM = varianceZRM[1];
 
-    // Reserve enough space, in case current capacity is too little
-    tripletTopCandidates.reserve(tripletTopCandidates.size() +
-                                 topDoublets.size());
-
     const float cotThetaB = bottomDoublet.cotTheta();
     const float erB = bottomDoublet.er();
     const float iDeltaRB = bottomDoublet.iDeltaR();
@@ -234,7 +230,7 @@ class Impl final : public TripletSeedFinder {
 
       // sqrt(S2)/B = 2 * helixradius
       // calculated radius must not be smaller than minimum radius
-      if (S2 < B2 * m_cfg.minHelixDiameter2) {
+      if (S2 < B2 * m_cfg.minHelixDiameter2) [[likely]] {
         continue;
       }
 
