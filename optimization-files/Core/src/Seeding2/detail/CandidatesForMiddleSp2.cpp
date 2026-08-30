@@ -60,7 +60,7 @@ bool CandidatesForMiddleSp2::push(Container& container, Size nMax,
   // If no space, replace one if quality is enough
   // Compare to element with lowest weight
   const auto [smallestWeight, smallestIndex] = container.front();
-  if (weight <= smallestWeight) [[likely]] {
+  if (weight <= smallestWeight) {
     return false;
   }
 
