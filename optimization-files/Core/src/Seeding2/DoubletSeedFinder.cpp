@@ -11,10 +11,6 @@
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
-#include <stdexcept>
-
-#include <boost/mp11.hpp>
-#include <boost/mp11/algorithm.hpp>
 
 namespace Acts {
 
@@ -287,56 +283,45 @@ class Impl final : public DoubletSeedFinder {
 
 std::unique_ptr<DoubletSeedFinder> DoubletSeedFinder::create(
     const DerivedConfig& config) {
-  using BooleanOptions =
-      boost::mp11::mp_list<std::bool_constant<false>, std::bool_constant<true>>;
-
-  using IsBottomCandidateOptions = BooleanOptions;
-  using InteractionPointCutOptions = BooleanOptions;
-  using SortedByROptions = BooleanOptions;
-  using ExperimentCutsOptions = BooleanOptions;
-
-  using DoubletOptions =
-      boost::mp11::mp_product<boost::mp11::mp_list, IsBottomCandidateOptions,
-                              InteractionPointCutOptions, SortedByROptions,
-                              ExperimentCutsOptions>;
-
-  std::unique_ptr<DoubletSeedFinder> result;
-  boost::mp11::mp_for_each<DoubletOptions>([&](auto option) {
-    using OptionType = decltype(option);
-
-    using IsBottomCandidate = boost::mp11::mp_at_c<OptionType, 0>;
-    using InteractionPointCut = boost::mp11::mp_at_c<OptionType, 1>;
-    using SortedByR = boost::mp11::mp_at_c<OptionType, 2>;
-    using ExperimentCuts = boost::mp11::mp_at_c<OptionType, 3>;
-
-    const bool configIsBottomCandidate =
-        config.candidateDirection == Direction::Backward();
-
-    if (configIsBottomCandidate != IsBottomCandidate::value ||
-        config.interactionPointCut != InteractionPointCut::value ||
-        config.spacePointsSortedByRadius != SortedByR::value ||
-        config.experimentCuts.connected() != ExperimentCuts::value) {
-      return;  // skip if the configuration does not match
+  auto make = [&]<bool isBottomCandidate, bool interactionPointCut,
+                  bool sortedByR, bool experimentCuts>()
+      -> std::unique_ptr<DoubletSeedFinder> {
+    return std::make_unique<
+        Impl<isBottomCandidate, interactionPointCut, sortedByR,
+             experimentCuts>>(config);
+  };
+  auto dispatchExperimentCuts =
+      [&]<bool isBottomCandidate, bool interactionPointCut, bool sortedByR>()
+      -> std::unique_ptr<DoubletSeedFinder> {
+        if (config.experimentCuts.connected()) {
+          return make.template operator()<isBottomCandidate,
+                                          interactionPointCut, sortedByR, true>();
+        }
+        return make.template operator()<isBottomCandidate, interactionPointCut,
+                                        sortedByR, false>();
+      };
+  auto dispatchSortedByR =
+      [&]<bool isBottomCandidate, bool interactionPointCut>()
+      -> std::unique_ptr<DoubletSeedFinder> {
+        if (config.spacePointsSortedByRadius) {
+          return dispatchExperimentCuts.template operator()<
+              isBottomCandidate, interactionPointCut, true>();
+        }
+        return dispatchExperimentCuts.template operator()<
+            isBottomCandidate, interactionPointCut, false>();
+      };
+  auto dispatchInteractionPointCut = [&]<bool isBottomCandidate>()
+      -> std::unique_ptr<DoubletSeedFinder> {
+    if (config.interactionPointCut) {
+      return dispatchSortedByR.template operator()<isBottomCandidate, true>();
     }
+    return dispatchSortedByR.template operator()<isBottomCandidate, false>();
+  };
 
-    // check if we already have an implementation for this configuration
-    if (result != nullptr) {
-      throw std::runtime_error(
-          "DoubletSeedFinder: Multiple implementations found for one "
-          "configuration");
-    }
-
-    // create the implementation for the given configuration
-    result = std::make_unique<
-        Impl<IsBottomCandidate::value, InteractionPointCut::value,
-             SortedByR::value, ExperimentCuts::value>>(config);
-  });
-  if (result == nullptr) {
-    throw std::runtime_error(
-        "DoubletSeedFinder: No implementation found for the given "
-        "configuration");
+  if (config.candidateDirection == Direction::Backward()) {
+    return dispatchInteractionPointCut.template operator()<true>();
   }
-  return result;
+  return dispatchInteractionPointCut.template operator()<false>();
 }
 
 DoubletSeedFinder::DerivedConfig::DerivedConfig(const Config& config,
