@@ -155,10 +155,11 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
     });
   }
 
-  Acts::SpacePointContainer2 coreSpacePoints(
+  static thread_local Acts::SpacePointContainer2 coreSpacePoints(
       Acts::SpacePointColumns::PackedXY | Acts::SpacePointColumns::PackedZR |
       Acts::SpacePointColumns::PackedVarianceZR |
       Acts::SpacePointColumns::CopyFromIndex);
+  coreSpacePoints.clear();
   coreSpacePoints.createSpacePoints(grid.numberOfSpacePoints());
   std::uint32_t coreIndex = 0;
   std::vector<Acts::SpacePointIndexRange2> gridSpacePointRanges;
