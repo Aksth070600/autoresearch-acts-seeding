@@ -73,7 +73,7 @@ BinnedGroupIterator<grid_t>::operator*() const {
 
 template <typename grid_t>
 void BinnedGroupIterator<grid_t>::findNotEmptyBin() {
-  if (m_gridItr == m_gridItrEnd) {
+  if (m_gridItr == m_gridItrEnd) [[unlikely]] {
     return;
   }
   /// An unmasked group is the normal path for seeding. Avoid allocating and
