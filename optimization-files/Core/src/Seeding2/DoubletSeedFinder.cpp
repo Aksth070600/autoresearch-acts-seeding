@@ -50,8 +50,9 @@ class Impl final : public DoubletSeedFinder {
     const float yM = middleSp.xy()[1];
     const float zM = middleSp.zr()[0];
     const float rM = middleSp.zr()[1];
-    const float varianceZM = middleSp.varianceZ();
-    const float varianceRM = middleSp.varianceR();
+    const auto& varianceZRM = middleSp.varianceZR();
+    const float varianceZM = varianceZRM[0];
+    const float varianceRM = varianceZRM[1];
 
     // equivalent to impactMax / (rM * rM);
     const float vIPAbs = impactMax * middleSpInfo.uIP2;
@@ -93,13 +94,14 @@ class Impl final : public DoubletSeedFinder {
     }
 
     const SpacePointContainer2& container = candidateSps.container();
-    for (auto [indexO, xyO, zrO, varianceZO, varianceRO] : candidateSps.zip(
-             container.xyColumn(), container.zrColumn(),
-             container.varianceZColumn(), container.varianceRColumn())) {
-      const float xO = xyO[0];
-      const float yO = xyO[1];
-      const float zO = zrO[0];
-      const float rO = zrO[1];
+    for (auto [indexO, xyzrO, varianceZRO] : candidateSps.zip(
+             container.xyzrColumn(), container.varianceZRColumn())) {
+      const float xO = xyzrO[0];
+      const float yO = xyzrO[1];
+      const float zO = xyzrO[2];
+      const float rO = xyzrO[3];
+      const float varianceZO = varianceZRO[0];
+      const float varianceRO = varianceZRO[1];
 
       float deltaR = 0;
       if constexpr (isBottomCandidate) {
@@ -160,7 +162,7 @@ class Impl final : public DoubletSeedFinder {
         // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
         // cotThetaMax by deltaR to avoid division
         if (outsideRangeCheck(deltaZ, -m_cfg.cotThetaMax * deltaR,
-                              m_cfg.cotThetaMax * deltaR)) [[unlikely]] {
+                              m_cfg.cotThetaMax * deltaR)) {
           continue;
         }
 
@@ -237,7 +239,7 @@ class Impl final : public DoubletSeedFinder {
       // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
       // cotThetaMax by deltaR to avoid division
       if (outsideRangeCheck(deltaZ, -m_cfg.cotThetaMax * deltaR,
-                            m_cfg.cotThetaMax * deltaR)) [[unlikely]] {
+                            m_cfg.cotThetaMax * deltaR)) {
         continue;
       }
 
