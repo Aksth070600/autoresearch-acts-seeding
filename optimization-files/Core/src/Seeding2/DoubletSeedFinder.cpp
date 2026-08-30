@@ -50,8 +50,9 @@ class Impl final : public DoubletSeedFinder {
     const float yM = middleSp.xy()[1];
     const float zM = middleSp.zr()[0];
     const float rM = middleSp.zr()[1];
-    const float varianceZM = middleSp.varianceZ();
-    const float varianceRM = middleSp.varianceR();
+    const auto& varianceZRM = middleSp.varianceZR();
+    const float varianceZM = varianceZRM[0];
+    const float varianceRM = varianceZRM[1];
 
     // equivalent to impactMax / (rM * rM);
     const float vIPAbs = impactMax * middleSpInfo.uIP2;
@@ -93,13 +94,15 @@ class Impl final : public DoubletSeedFinder {
     }
 
     const SpacePointContainer2& container = candidateSps.container();
-    for (auto [indexO, xyO, zrO, varianceZO, varianceRO] : candidateSps.zip(
+    for (auto [indexO, xyO, zrO, varianceZRO] : candidateSps.zip(
              container.xyColumn(), container.zrColumn(),
-             container.varianceZColumn(), container.varianceRColumn())) {
+             container.varianceZRColumn())) {
       const float xO = xyO[0];
       const float yO = xyO[1];
       const float zO = zrO[0];
       const float rO = zrO[1];
+      const float varianceZO = varianceZRO[0];
+      const float varianceRO = varianceZRO[1];
 
       float deltaR = 0;
       if constexpr (isBottomCandidate) {
@@ -107,7 +110,7 @@ class Impl final : public DoubletSeedFinder {
 
         if constexpr (sortedByR) {
           // if r-distance is too small we are done
-          if (deltaR < m_cfg.deltaRMin) [[unlikely]] {
+          if (deltaR < m_cfg.deltaRMin) {
             break;
           }
         }
@@ -116,7 +119,7 @@ class Impl final : public DoubletSeedFinder {
 
         if constexpr (sortedByR) {
           // if r-distance is too big we are done
-          if (deltaR > m_cfg.deltaRMax) [[unlikely]] {
+          if (deltaR > m_cfg.deltaRMax) {
             break;
           }
         }
