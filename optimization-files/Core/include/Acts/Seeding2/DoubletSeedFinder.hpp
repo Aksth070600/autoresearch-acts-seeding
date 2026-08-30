@@ -14,6 +14,8 @@
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/detail/ContainerIterator.hpp"
 
+#include <boost/container/small_vector.hpp>
+
 #include <cstdint>
 #include <vector>
 
@@ -98,9 +100,16 @@ class DoubletsForMiddleSp {
     for (Index i = range.first; i < range.second; ++i) {
       indexAndCotTheta.emplace_back(i, m_cotTheta[i]);
     }
-    std::ranges::sort(indexAndCotTheta, {}, [](const IndexAndCotTheta& item) {
-      return item.cotTheta;
-    });
+    for (std::size_t i = 1; i < indexAndCotTheta.size(); ++i) {
+      const IndexAndCotTheta value = indexAndCotTheta[i];
+      std::size_t insertion = i;
+      while (insertion > 0 &&
+             value.cotTheta < indexAndCotTheta[insertion - 1].cotTheta) {
+        indexAndCotTheta[insertion] = indexAndCotTheta[insertion - 1];
+        --insertion;
+      }
+      indexAndCotTheta[insertion] = value;
+    }
   }
 
   /// Proxy accessor for a single doublet entry.
@@ -256,9 +265,9 @@ class DoubletsForMiddleSp {
 
   // parameters required to calculate a circle with linear equation
   std::vector<float> m_cotTheta;
-  std::vector<std::array<float, 2>> m_er_iDeltaR;
-  std::vector<std::array<float, 2>> m_uv;
-  std::vector<std::array<float, 2>> m_xy;
+  boost::container::small_vector<std::array<float, 2>, 64> m_er_iDeltaR;
+  boost::container::small_vector<std::array<float, 2>, 64> m_uv;
+  boost::container::small_vector<std::array<float, 2>, 64> m_xy;
 };
 
 /// Derived quantities for the middle space point in a doublet.
@@ -271,13 +280,6 @@ struct MiddleSpInfo {
   float cosPhiM{};
   /// ratio between middle SP y position and radius
   float sinPhiM{};
-  /// Middle-space-point coordinates and variances reused by every group.
-  float x{};
-  float y{};
-  float z{};
-  float r{};
-  float varianceZ{};
-  float varianceR{};
 };
 
 /// Interface and a collection of standard implementations for a doublet seed
